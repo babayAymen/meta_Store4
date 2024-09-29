@@ -143,7 +143,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
         mutableIntStateOf(-1)
     }
     var paid by remember {
-        mutableStateOf(PaymentStatus.NOT_PAID)
+        mutableStateOf(PaymentStatus.NOT_PAID)//test push git
     }
 
     when(invoiceMode){
