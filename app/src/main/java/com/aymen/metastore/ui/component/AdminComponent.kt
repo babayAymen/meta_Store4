@@ -796,9 +796,7 @@ fun ParentCard(parent: Parent) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
-//    var invoiceType by remember {
-//        mutableStateOf(false)
-//    }
+
     Column(
         modifier = Modifier.padding(5.dp)
     ) {

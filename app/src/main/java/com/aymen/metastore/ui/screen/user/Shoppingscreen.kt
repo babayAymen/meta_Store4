@@ -38,9 +38,12 @@ import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderLine
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.ViewModel.AppViewModel
+import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.store.ui.component.ButtonSubmit
+import com.aymen.store.ui.component.DividerComponent
 import com.aymen.store.ui.component.DividerTextComponent
+import com.aymen.store.ui.component.InvoiceCard
 import com.aymen.store.ui.component.LodingShape
 import com.aymen.store.ui.component.OrderShow
 import com.aymen.store.ui.screen.admin.OrderScreen
@@ -54,10 +57,13 @@ fun ShoppingScreen() {
     val shoppingViewModel : ShoppingViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
+    val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = Unit) {
         shoppingViewModel.getAllMyOrders()
+        shoppingViewModel.getAllMyInvoicesNotAccepted()
     }
+    val invoicesNotAccepted by shoppingViewModel.allMyInvoiceNotAccepted.collectAsStateWithLifecycle()
     DisposableEffect(Unit) {
         onDispose {
 
@@ -119,13 +125,12 @@ fun ShoppingScreen() {
                             }
                         }
                     }
-                    DividerTextComponent()
                     Row {
                         Row(
                             modifier = Modifier.weight(1f)
                         ) {
                             ButtonSubmit(labelValue = "Cancel All", color = Color.Red, enabled = true) {
-                                shoppingViewModel.orderArray = emptyList()
+                                shoppingViewModel.returnAllMyMony()
                             }
                         }
                         Row (
@@ -134,12 +139,27 @@ fun ShoppingScreen() {
                     ButtonSubmit(labelValue = "Send All", color = Color.Green, enabled = true) {
                         shoppingViewModel.sendOrder(-1)
                         }
+                    DividerComponent()
                     }
                     }
                 }
                 }
             }
-            Row(
+            Row ( // all my invoices those do not accepted
+                modifier = Modifier.fillMaxWidth()
+            ){
+                LazyColumn {
+                    items(invoicesNotAccepted){invoice ->
+                        InvoiceCard(
+                            invoice = invoice,
+                            appViewModel = appViewModel,
+                            invoiceViewModel = invoiceViewModel,
+                            asProvider = false
+                        )
+                    }
+                }
+            }
+            Row( // all my orders those do not accepted
                 modifier = Modifier.fillMaxWidth()
             ) {
                 LazyColumn (

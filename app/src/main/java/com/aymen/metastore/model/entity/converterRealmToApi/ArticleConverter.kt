@@ -44,7 +44,8 @@ fun  mapArticleCompanyToDto(art : ArticleCompany):ArticleCompanyDto{
         margin = art.sellingPrice,
         sellingPrice = art.sellingPrice,
         company = mapCompanyToCompanyDto(art.company!!),
-        article = mapRealmArticleToApi(art.article!!)
+        article = mapRealmArticleToApi(art.article!!),
+        isEnabledToComment = art.isEnabledToComment
     )
 }
 
@@ -58,5 +59,6 @@ fun mapArticleCompanyToRealm(art : ArticleCompanyDto): ArticleCompany{
         sellingPrice = art.sellingPrice
         company = mapcompanyDtoToCompanyRealm(art.company)
         article = mapApiArticleToRealm(art.article)
+        isEnabledToComment = art.isEnabledToComment
     }
 }

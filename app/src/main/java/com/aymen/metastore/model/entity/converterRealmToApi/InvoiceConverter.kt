@@ -3,6 +3,7 @@ package com.aymen.metastore.model.entity.converterRealmToApi
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
+import com.aymen.store.model.entity.api.CompanyDto
 import com.aymen.store.model.entity.api.InvoiceDto
 import com.aymen.store.model.entity.api.UserDto
 import com.aymen.store.model.entity.realm.Invoice
@@ -32,7 +33,7 @@ fun mapInvoiceToInvoiceDto(invoice : Invoice): InvoiceDto{
 fun mapInvoiceToRealmInvoice(invoice : InvoiceDto): Invoice{
     return Invoice().apply {
         id = invoice.id
-        code = invoice.code!!
+        code = invoice.code?: 0
         tot_tva_invoice = invoice.tot_tva_invoice
         prix_invoice_tot = invoice.prix_invoice_tot
         prix_article_tot = invoice.prix_article_tot
@@ -40,13 +41,13 @@ fun mapInvoiceToRealmInvoice(invoice : InvoiceDto): Invoice{
         status = invoice.status.toString()
         person = invoice.person?.let { mapUserDtoToUserRealm(it) }
         client = invoice.client?.let { mapcompanyDtoToCompanyRealm(it) }
-        provider = mapcompanyDtoToCompanyRealm(invoice.provider!!)
+        provider = mapcompanyDtoToCompanyRealm(invoice.provider?:CompanyDto())
         paid = invoice.paid.toString()
         rest = invoice.rest
         createdDate = invoice.createdDate.toString()
         lastModifiedDate = invoice.lastModifiedDate.toString()
-        lastModifiedBy = invoice.lastModifiedBy!!
-        createdBy = invoice.createdBy!!
+        lastModifiedBy = invoice.lastModifiedBy?:""
+        createdBy = invoice.createdBy?:""
         type = invoice.type.toString()
 
     }

@@ -5,6 +5,7 @@ import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.realm.PaymentForProviders
 import com.aymen.store.model.Enum.CompanyCategory
+import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
 import com.aymen.store.model.entity.realm.Client
@@ -295,6 +296,12 @@ override suspend fun changeStatusLocally(status: String, id: Long, isAll: Boolea
         )
             .find()
             .filter { it.id !in associatedArticleIds }
+    }
+
+    override fun getAllMyInvoicesNotAcceptedLocally(id: Long): List<Invoice> {
+      return realm.query<Invoice>(
+          query = "status == $0 and (client.id == $1 or person.id == $1 or provider.id == $1)",Status.INWAITING.toString() , id
+      ).find()
     }
 
 

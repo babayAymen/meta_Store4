@@ -171,6 +171,8 @@ interface ServiceApi {
                            @Path("clientType") clientType : AccountType,
                            @Path("invoiceMode") invoiceMode: InvoiceMode
                            ):Response<Void>
+    @GET("werehouse/invoice/get_all_my_invoices_not_accepted")
+    suspend fun getAllMyInvoicesNotAccepted():Response<List<Invoice>>
     @GET("werehouse/commandline/getcommandline/{invoiceId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("invoiceId") invoiceId : Long):Response<List<CommandLine>>
     @GET("werehouse/client/get_all_my_containing/{clientName}/{companyId}")

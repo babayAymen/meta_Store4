@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -39,6 +40,7 @@ import kotlin.coroutines.CoroutineContext
 class SharedViewModel @Inject constructor(
     private val authDataStore: DataStore<AuthenticationResponse>,
     private val companyDataStore: DataStore<Company>,
+    private val userDatastore : DataStore<User>,
     private val realm: Realm,
     private  val context: Context
 ): ViewModel() {
@@ -72,8 +74,40 @@ class SharedViewModel @Inject constructor(
         }
     }
 
+    fun updateUserBalance(newBalance : Double){
+        viewModelScope.launch {
+            try {
+                userDatastore.updateData { currentUser ->
+                    currentUser.apply {
+                        balance = newBalance
+                    }.also{
+                        _user.value = currentUser
+                    }
+                }
+            }catch (ex : Exception){
+                Log.e("updateUserBalance","exception :${ex.message}")
+            }
+        }
+    }
 
-     fun changeAccountType(type : AccountType){
+    fun updateCompanyBalance(newBalance : Double){
+        viewModelScope.launch {
+            try {
+                companyDataStore.updateData { currentCompany ->
+                    currentCompany.apply {
+                        balance = newBalance
+                    }.also{
+                        _company.value = currentCompany
+                    }
+                }
+            }catch (ex : Exception){
+                Log.e("updateUserBalance","exception :${ex.message}")
+            }
+        }
+    }
+
+
+    fun changeAccountType(type : AccountType){
         accountType = type
          viewModelScope.launch {
         realm.write {
@@ -188,16 +222,26 @@ class SharedViewModel @Inject constructor(
         }
     }
 
-    fun updateBalance(balancee : Double){
-        viewModelScope.launch {
-            companyDataStore.updateData { company ->
-                company.apply {
-                    balance = balancee
-                }
-            }
+    fun updateBalance(balancee : BigDecimal){
+        if(accountType == AccountType.USER){
+            updateUserBalance(balancee.toDouble())
+        }
+        if(accountType == AccountType.COMPANY){
+            updateCompanyBalance(balancee.toDouble())
         }
     }
 
+    fun returnThePrevioseBalance(newBalance : BigDecimal){
+        if(accountType == AccountType.USER){
+            Log.e("cost","userbalance : ${_user.value.balance} new balance : $newBalance")
+            val balancee = BigDecimal(_user.value.balance!!) + newBalance
+            updateUserBalance(balancee.toDouble())
+        }
+        if(accountType == AccountType.COMPANY){
+            val balancee = BigDecimal(_company.value.balance!!) + newBalance
+            updateCompanyBalance(balancee.toDouble())
+        }
+    }
 
     fun getToken(onTokenRetrieved: (String?) -> Unit) {
         viewModelScope.launch {

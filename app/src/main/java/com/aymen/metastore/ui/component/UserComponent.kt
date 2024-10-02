@@ -468,7 +468,7 @@ fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
                 onClicked()
             }
     ) {
-        ShowImage(image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${article.sharedPoint}")
+        ShowImage(image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${CompanyCategory.valueOf(article.company?.category!!).ordinal}")
         NormalText(value = article.article!!.libelle, aligne = TextAlign.Start)
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -883,9 +883,8 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                                 ) {
                                     openDialog = false
                                     shoppingViewModel.randomArtilce = article
-                                    shoppingViewModel.submitShopping()
+                                    shoppingViewModel.submitShopping(restBalance)
                                     val s = gson.toJson(shoppingViewModel.orderArray)
-                                    Log.e("aymenbbayarray", s)
                                 }
                             }
                             Row(
@@ -899,7 +898,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                                 ) {
                                     openDialog = false
                                     shoppingViewModel.randomArtilce = article
-                                    shoppingViewModel.submitShopping()
+                                    shoppingViewModel.submitShopping(restBalance)
                                     shoppingViewModel.sendOrder(-1)
                                 }
                             }
@@ -928,7 +927,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
 
 @Composable
 fun updateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
-    val appViewModel : AppViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
     val context = LocalContext.current
     var image by remember {
         mutableStateOf<Uri?>(null)

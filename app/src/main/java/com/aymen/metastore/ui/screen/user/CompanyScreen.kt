@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -64,22 +65,21 @@ import com.aymen.store.ui.navigation.SystemBackButtonHandler
 
 @Composable
 fun CompanyScreen(company: Company) {
-    val articleViewModel : ArticleViewModel = hiltViewModel()
-    val appViewModel : AppViewModel = hiltViewModel()
-    val messageViewModel : MessageViewModel = hiltViewModel()
-    val companyViewModel : CompanyViewModel = hiltViewModel()
-    val ratingViewModel : RatingViewModel = hiltViewModel()
-    val clientViewModel : ClientViewModel = hiltViewModel()
-    val sharedViewModel : SharedViewModel = hiltViewModel()
+    val articleViewModel: ArticleViewModel = hiltViewModel()
+    val appViewModel: AppViewModel = hiltViewModel()
+    val messageViewModel: MessageViewModel = hiltViewModel()
+    val companyViewModel: CompanyViewModel = hiltViewModel()
+    val ratingViewModel: RatingViewModel = hiltViewModel()
+    val clientViewModel: ClientViewModel = hiltViewModel()
+    val sharedViewModel: SharedViewModel = hiltViewModel()
     val context = LocalContext.current
     var myCompany by remember {
         mutableStateOf(Company())
     }
     LaunchedEffect(key1 = Unit) {
-        articleViewModel.getAllMyArticlesApi()// changre
-        if(sharedViewModel.accountType == AccountType.COMPANY) {
-                    myCompany = sharedViewModel._company.value
-
+        articleViewModel.getAllMyArticlesApi()
+        if (sharedViewModel.accountType == AccountType.COMPANY) {
+            myCompany = sharedViewModel._company.value
         }
     }
     var rating by remember {
@@ -89,148 +89,160 @@ fun CompanyScreen(company: Company) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(5.dp)
+            .padding(3.dp, 36.dp, 3.dp, 3.dp)
     ) {
-Column {
-    LazyColumn(
-        state = listState,
-    ) {
-        item {
-            Row {
-                if (company.logo == "") {
-                    val painter: Painter = painterResource(id = R.drawable.emptyprofile)
-                    Image(
-                        painter = painter,
-                        contentDescription = "empty photo profil",
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(
-                                RoundedCornerShape(10.dp)
-                            )
-                    )
-                } else {
-                    ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                }
-                Icon(
-                    imageVector = Icons.Default.Verified,
-                    contentDescription = "verification account",
-                    tint = Color.Green
-                )
-                Text(text = company.name)
-
-            }
-            Row(
-                modifier = Modifier.padding(2.dp)
+        Column {
+            LazyColumn(
+                state = listState
             ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 2.dp)
-                ) {
-                    AddTypeDialog(isOpen = false, company.id!!, true){
-                        clientViewModel.sendClientRequest(company.id!!,it)
+                item {
+                    Row {
+                        if (company.logo == "") {
+                            val painter: Painter = painterResource(id = R.drawable.emptyprofile)
+                            Image(
+                                painter = painter,
+                                contentDescription = "empty photo profil",
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(
+                                        RoundedCornerShape(10.dp)
+                                    )
+                            )
+                        } else {
+                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Verified,
+                            contentDescription = "verification account",
+                            tint = Color.Green
+                        )
+                        Text(text = company.name)
+
                     }
-                }
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "send a message",
-                        Modifier.clickable {
+                    Row(
+                        modifier = Modifier.padding(2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 2.dp)
+                        ) {
+                            AddTypeDialog(isOpen = false, company.id!!, true) {
+                                clientViewModel.sendClientRequest(company.id!!, it)
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "send a message",
+                                Modifier.clickable {
 //                            messageViewModel.senderId = company.user?.id!!
 //                            messageViewModel.getAllMyMessageByConversationId()
 //                            RouteController.navigateTo(Screen.HomeScreen)
-                            messageViewModel.getConversationByCaleeId(company.id!!)
-                            appViewModel.updateShow("message")
-                            appViewModel.updateScreen(IconType.MESSAGE)
-                            messageViewModel.receiverAccountType = AccountType.COMPANY
+                                    messageViewModel.getConversationByCaleeId(company.id!!)
+                                    appViewModel.updateShow("message")
+                                    appViewModel.updateScreen(IconType.MESSAGE)
+                                    messageViewModel.receiverAccountType = AccountType.COMPANY
+                                }
+                            )
+
                         }
-                    )
-
-                }
-                if (myCompany.isPointsSeller!!) {
-                    Row(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        SendPointDialog(isOpen = false, User(), company)
-                    }
-                }
-                Toast.makeText(context, "${company.id}", Toast.LENGTH_SHORT).show()
-                if (appViewModel.userRole == RoleEnum.AYMEN) {
-                    Row(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        if(!company.isPointsSeller!!){
-                            ButtonSubmit(labelValue = "make as seller", color = Color.Green, enabled = true) {
-                        companyViewModel.MakeAsPointSeller(true,company.id!!)
-                            }
-                        }else{
-
-                            ButtonSubmit(labelValue = "remove as seller", color = Color.Red, enabled = true) {
-                                companyViewModel.MakeAsPointSeller(false, company.id!!)
+                        if (myCompany.isPointsSeller!!) {
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                SendPointDialog(isOpen = false, User(), company)
                             }
                         }
+                        if (appViewModel.userRole == RoleEnum.AYMEN) {
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (!company.isPointsSeller!!) {
+                                    ButtonSubmit(
+                                        labelValue = "make as seller",
+                                        color = Color.Green,
+                                        enabled = true
+                                    ) {
+                                        companyViewModel.MakeAsPointSeller(true, company.id!!)
+                                    }
+                                } else {
+
+                                    ButtonSubmit(
+                                        labelValue = "remove as seller",
+                                        color = Color.Red,
+                                        enabled = true
+                                    ) {
+                                        companyViewModel.MakeAsPointSeller(false, company.id!!)
+                                    }
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (!rating) {
+
+                                Column(
+                                    modifier = Modifier.clickable {
+                                        rating = !rating
+                                    }
+                                ) {
+
+                                    Icon(
+                                        imageVector = Icons.Outlined.StarOutline,
+                                        contentDescription = "rate"
+                                    )
+                                }
+                            } else {
+
+                                StarRating(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    onRatingChanged = { newRating ->
+                                        ratingViewModel.rating = true
+                                        ratingViewModel.rate = newRating
+                                        // Update the rating state or perform any other action with the new rating
+                                    }
+                                )
+                            }
+                            Text(text = company.raters.toString())
+                        }
                     }
                 }
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (!rating){
+                item {
+                    company.address?.let { it1 -> Text(text = it1) }
+                    company.phone?.let { it1 -> Text(text = it1) }
+                    company.email?.let { Text(text = it) }
+                    company.code?.let { it1 -> Text(text = it1) }
+                    company.matfisc?.let { it1 -> Text(text = it1) }
+                }
 
-                    Column(
-                        modifier = Modifier.clickable {
-                            rating = !rating
+
+
+
+                if (!rating) {
+                    items(articleViewModel.adminArticles) {
+                        ArticleCardForSearch(article = it) {
+                            companyViewModel.myCompany = it.company!!
+                            articleViewModel.articleCompany = it
+                            RouteController.navigateTo(Screen.ArticleDetailScreen)
                         }
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Outlined.StarOutline,
-                            contentDescription = "rate"
-                        )
                     }
-                }else{
-
-                    StarRating(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        onRatingChanged = { newRating ->
-                            ratingViewModel.rating = true
-                            ratingViewModel.rate = newRating
-                            // Update the rating state or perform any other action with the new rating
-                        }
-                    )
+                } else {
+                    item {
+                    RatingScreen(AccountType.COMPANY, company, null)
                     }
-                        Text(text = company.raters.toString())
+
                 }
             }
+            SystemBackButtonHandler {
+                RouteController.navigateTo(Screen.HomeScreen)
+            }
         }
-        item {
-            company.address?.let { it1 -> Text(text = it1) }
-            company.phone?.let { it1 -> Text(text = it1) }
-            company.email?.let { Text(text = it) }
-            company.code?.let { it1 -> Text(text = it1) }
-            company.matfisc?.let { it1 -> Text(text = it1) }
-        }
-
-
     }
-
-    if (!rating) {
-
-        articleViewModel.adminArticles.forEach {
-            ArticleCardForSearch(article = it) {}
-        }
-    } else {
-
-        RatingScreen(AccountType.COMPANY, company, null)
-
-    }
-}
-    SystemBackButtonHandler {
-        RouteController.navigateTo(Screen.HomeScreen)
-    }
-        }
 }
 
 

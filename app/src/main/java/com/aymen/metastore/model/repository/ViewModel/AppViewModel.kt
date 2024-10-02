@@ -316,7 +316,37 @@ class AppViewModel @Inject constructor(
         }
     }
 
+    fun updateCompanyName(newName: String, onUpdated: (Company) -> Unit) {
+        viewModelScope.launch {
+            try {
+                datastore1.updateData { currentCompany ->
+                    currentCompany.apply {
+                        logo = newName
+                    }.also {
+                        onUpdated(currentCompany)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("storeCompanyError", "Error storing company name: ${e.message}")
+            }
+        }
+    }
 
+    fun updateUserName(newName: String) {
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                userdatastore.updateData { currentUser ->
+                    currentUser.apply {
+                        image = newName
+                    }.also {
+                        sharedViewModel._user.value = currentUser
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("storeCompanyError", "Error storing company name: ${e.message}")
+            }
+        }
+    }
 
 
     fun updateImage(file : File){
@@ -326,11 +356,13 @@ class AppViewModel @Inject constructor(
                 if(response.isSuccessful){
                     when(sharedViewModel.accountType){
                         AccountType.COMPANY ->{
-                        sharedViewModel._company.value.logo = file.name
+
+                            updateCompanyName(file.name){
+                        sharedViewModel._company.value = it
+                            }
                         }
                         AccountType.USER ->{
-                            Log.e("updateImage", "updateImage name: ${file.name}")
-                           sharedViewModel._user.value.image = file.name
+                          updateUserName(file.name)
                     }
                         else ->{
                             Log.e("updateImageError", "updateImage in else statement")

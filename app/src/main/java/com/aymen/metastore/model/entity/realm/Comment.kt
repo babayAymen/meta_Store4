@@ -1,5 +1,6 @@
 package com.aymen.store.model.entity.realm
 
+import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.User
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
@@ -11,9 +12,9 @@ class Comment :RealmObject {
 
      var user: User? = null
 
-     var companie: Company? = null
+     var company: Company? = null
 
-     var article: Article? = null
+     var article: ArticleCompany? = null
 
      var createdDate : String = ""
 

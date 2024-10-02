@@ -121,7 +121,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import kotlin.math.exp
 
-const val BASE_URL = "http://192.168.162.154:8080/"
+const val BASE_URL = "http://192.168.1.3:8080/"
 private const val DATABASE_NAME = "database"
 
 @Module
@@ -177,7 +177,7 @@ class MetaStoreModule {
                     ArticleCompany::class
                 )
             )
-                .schemaVersion(12)
+                .schemaVersion(14)
                 .build()
         )
     }
@@ -249,10 +249,11 @@ class MetaStoreModule {
     fun provideSharedViewModel(
         authDataStore : DataStore<AuthenticationResponse>,
         companyDataStore: DataStore<Company>,
+        userDataStore: DataStore<User>,
         realm: Realm,
         context: Context
                                ):SharedViewModel{
-        return SharedViewModel(authDataStore,companyDataStore,realm, context)
+        return SharedViewModel(authDataStore,companyDataStore, userDataStore,realm, context)
     }
 
     @Provides

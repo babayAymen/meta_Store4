@@ -85,4 +85,6 @@ interface RealmRepository {
      fun getAllMyProfitsLocally(): List<PaymentForProviderPerDay>
 
      fun getAllArticlesByCategoryLocaly(myCompanyId: Long, myCompanyCategory: String) : List<Article>
+
+     fun getAllMyInvoicesNotAcceptedLocally(id : Long):List<Invoice>
 }

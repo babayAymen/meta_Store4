@@ -131,7 +131,7 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
                 viewModelScope.launch {
                     withContext(Dispatchers.IO) {
                         try {
-                            val response = repository.getAll(sharedViewModel.company.value.id!!, offset, pageSize)
+                            val response = repository.getAll(companyId, offset, pageSize)
                             if(response.isSuccessful) {
                                 response.body()?.forEach { article ->
                                     realm.write {
@@ -142,7 +142,7 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
                         } catch (ex: Exception) {
                             Log.e("aymenbabayarticle", "error is : $ex")
                         }
-                        adminArticles = repository.getAllArticlesLocaly(sharedViewModel.company.value.id!!)
+                        adminArticles = repository.getAllArticlesLocaly(companyId)
                     }
                 }
 
@@ -202,6 +202,7 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
                             likeNumber = it.likeNumber
                             commentNumber = it.commentNumber
                             article = it.article
+                            isEnabledToComment = it.isEnabledToComment
 
                         }
                         copyToRealm(articled, UpdatePolicy.ALL)
@@ -211,7 +212,6 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
                 Log.e("aymenbabaycategory", "random article size ${_ex.message}")
             }
             _randomArticles.value = repository.getRandomArticleByCompanyCategoryLocally(categName)
-            Log.e("aymenbabaycategory", "random article is fav _random : ${_randomArticles.value.size} ${response.count()}")
         }
     }
 
@@ -319,6 +319,13 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
                             Log.e("aymenbabaycomment", "comment api size : ${comments.body()!!.size}")
                             Log.e("aymenbabaycomment", "article id : ${articleCompany.id}")
                             comments.body()!!.forEach {
+//                                val comment = Comment().apply {
+//                                    id = it.id
+//                                    content = it.content
+//                                    user = it.user
+//                                    company = it.company
+//                                    article = it.article
+//                                }
                                 realm.write {
                                     copyToRealm(it, UpdatePolicy.ALL)
                                 }

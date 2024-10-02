@@ -18,6 +18,7 @@ import com.aymen.store.model.entity.api.CommandLineDto
 import com.aymen.store.model.entity.api.ConversationDto
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
 import com.aymen.store.model.entity.realm.Conversation
+import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.realmRepository.RealmRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -137,6 +138,9 @@ class GlobalRepositoryImpl  @Inject constructor
                                     clientId : Long, invoiceCode : Long,
                                     discount : Double, clientType : AccountType,
                                     invoiceMode: InvoiceMode) = invoiceRepository.addInvoice(commandLineDtos, clientId, invoiceCode,discount, clientType, invoiceMode)
+
+    override suspend fun getAllMyInvoicesNotAccepted() = invoiceRepository.getAllMyInvoicesNotAccepted()
+
     override suspend fun getAllMyConversations() = messageRepository.getAllMyConversations()
     override suspend fun getAllMyMessageByConversationId(conversationId: Long) = messageRepository.getAllMyMessageByConversationId(conversationId)
     override suspend fun sendMessage(conversation: ConversationDto) = messageRepository.sendMessage(conversation)
@@ -206,6 +210,7 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllMyPaymentsHistoryLocally(id: Long) = realmRepository.getAllMyPaymentsHistoryLocally(id)
     override fun getAllMyProfitsLocally() = realmRepository.getAllMyProfitsLocally()
     override fun getAllArticlesByCategoryLocaly(myCompanyId: Long, myCompanyCategory: String) = realmRepository.getAllArticlesByCategoryLocaly(myCompanyId = myCompanyId, myCompanyCategory = myCompanyCategory)
+    override fun getAllMyInvoicesNotAcceptedLocally(id: Long) = realmRepository.getAllMyInvoicesNotAcceptedLocally(id = id)
 
     override fun getAllMyProviderLocally() = realmRepository.getAllMyProviderLocally()
 

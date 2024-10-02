@@ -21,10 +21,12 @@ import com.aymen.store.model.entity.realm.PurchaseOrder
 import com.aymen.store.model.entity.realm.PurchaseOrderLine
 import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.entity.converterRealmToApi.mapApiArticleToRealm
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
 import com.aymen.store.model.entity.converterRealmToApi.mapRealmArticleToApi
+import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.Realm
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 import javax.inject.Inject
 @HiltViewModel
 class ShoppingViewModel @Inject constructor(
@@ -53,9 +56,12 @@ class ShoppingViewModel @Inject constructor(
     private val _allMyOrdersLine = MutableStateFlow<List<PurchaseOrderLine>>(emptyList())
     val allMyOrdersLine: StateFlow<List<PurchaseOrderLine>> = _allMyOrdersLine
 
+    private val _allMyInvoiceNotAccepted = MutableStateFlow<List<Invoice>>(emptyList())
+    val allMyInvoiceNotAccepted: StateFlow<List<Invoice>> = _allMyInvoiceNotAccepted
+
     var allMyOrders by mutableStateOf(emptyList<PurchaseOrder>())
     var Order by mutableStateOf(PurchaseOrder())
-    var cost by mutableStateOf(0.0)
+    var cost by mutableStateOf(BigDecimal.ZERO)
     var isLoading by mutableStateOf(false)
 
     fun clearAllOrdersLine() {
@@ -63,10 +69,16 @@ class ShoppingViewModel @Inject constructor(
     }
 
     fun removeOrderById(index: Int) {
-        orderArray = orderArray.toMutableList().also { it.removeAt(index) }
+        orderArray = orderArray.toMutableList().also {
+            val quantity = it[index].quantity
+            val sellingPrice = it[index].article.sellingPrice
+            val price = BigDecimal(quantity).multiply(BigDecimal(sellingPrice))
+            sharedViewModel.returnThePrevioseBalance(price)
+            it.removeAt(index)
+        }
     }
 
-fun submitShopping() {
+fun submitShopping(newBalance : BigDecimal) {
     val existingOrder = orderArray.find { it.article.id == randomArtilce.id }
     if (existingOrder != null) {
         val updatedOrderArray = orderArray.map {
@@ -94,6 +106,9 @@ fun submitShopping() {
         orderArray = orderArray + newOrder
 
     }
+   calculateCost()
+    Log.e("balancecost","cost : $cost")
+    sharedViewModel.updateBalance(newBalance)
     remiseAZero()
 }
 
@@ -105,18 +120,29 @@ fun submitShopping() {
         randomArtilce = ArticleCompany()
     }
 
+    fun returnAllMyMony(){
+        viewModelScope.launch {
+            calculateCost()
+            Log.e("cost","cost : $cost")
+            sharedViewModel.returnThePrevioseBalance(cost)
+            orderArray = emptyList()
+        }
+    }
+
+    fun calculateCost(){
+        cost = BigDecimal.ZERO
+        orderArray.forEach {
+            cost = cost.add(BigDecimal(it.article.sellingPrice).multiply(BigDecimal(it.quantity)))
+        Log.e("cost","cost for each itiration : $cost")
+        }
+    }
     fun sendOrder(index : Int) {
         if (orderArray.isNotEmpty() && index == -1) {
             viewModelScope.launch(Dispatchers.IO){
                 try {
                     val response = repository.sendOrder(orderArray)
                     if(response.isSuccessful){
-                        orderArray.forEach {
-                            cost += (it.article.sellingPrice * it.quantity)
-                        }
-                        sharedViewModel.updateBalance(sharedViewModel._company.value.balance?.minus(
-                            cost
-                        )!!)
+                      calculateCost()
                     }
                 } catch (_ex: Exception) {
                     Log.e("aymenbabayorder", "error : $_ex")
@@ -134,13 +160,6 @@ fun submitShopping() {
                     newOrderArray.retainAll { newOrderArray.indexOf(it) == index }
                     val response = repository.sendOrder(newOrderArray)
                     if (response.isSuccessful) {
-                        orderArray.forEach {
-                            cost += (it.article.sellingPrice * it.quantity)
-                        }
-                        sharedViewModel._company.value.balance =
-                            sharedViewModel._company.value.balance?.minus(
-                                cost
-                            )
                         removeOrderById(index)
                         sharedViewModel.getMyCompany {
                             sharedViewModel._company.value = it ?: Company()
@@ -225,6 +244,31 @@ fun submitShopping() {
 //        }
 //    }
 
+    fun getAllMyInvoicesNotAccepted(){
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.e("getAllMyInvoicesNotAccepted","launched")
+            try{
+                val response = repository.getAllMyInvoicesNotAccepted()
+                Log.e("getAllMyInvoicesNotAccepted","response size : ${response.body()!!.size}")
+                if(response.isSuccessful){
+                    response.body()?.forEach { invoice ->
+                    Log.e("getAllMyInvoicesNotAccepted",invoice.paid)
+                    realm.write {
+                        Invoice().apply {
+                            copyToRealm(invoice, updatePolicy = UpdatePolicy.ALL)
+                        }                    }
+                    }
+                }
+            }catch (ex : Exception){
+                Log.e("getAllMyInvoicesNotAccepted","exception : ${ex.message}")
+            }
+            if (sharedViewModel.accountType == AccountType.USER){
+                _allMyInvoiceNotAccepted.value = repository.getAllMyInvoicesNotAcceptedLocally(sharedViewModel.user.value.id!!)
+            }
+        }
+    }
+
+
     fun getAllMyOrders(){
         isLoading = true
         companyViewModel.getMyCompany { myCompany ->
@@ -232,12 +276,10 @@ fun submitShopping() {
                 withContext(Dispatchers.IO){
                     try {
                     val allMyOrder = myCompany?.let { repository.getAllMyOrdersLines(myCompany.id?:0) }
-//                        Log.e("aymenbabayOrder","myCompany size: ${allMyOrder?.body()!!.size}")
                         if (allMyOrder != null) {
                             if(allMyOrder.isSuccessful){
                                 isLoading = false
                                 allMyOrder.body()?.forEach{
-                                    Log.e("aymenbabayOrder","${it.createdDate}")
                                     realm.write {
                                         val pur = PurchaseOrder().apply {
                                             id = it.id

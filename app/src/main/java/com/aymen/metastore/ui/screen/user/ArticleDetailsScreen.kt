@@ -1,6 +1,7 @@
 package com.aymen.store.ui.screen.user
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -51,6 +53,7 @@ import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
 import com.aymen.store.model.Enum.CompanyCategory
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Composable
 fun ArticleDetailsScreen() {
@@ -64,7 +67,6 @@ fun ArticleDetailsScreen() {
         mutableStateOf(false)
     }
     LaunchedEffect(articleViewModel.articleCompany) {
-        Log.e("aymenbabaycomment", "article details: ${article.id}")
         articleViewModel.getAllArticleComments()
     }
     var comment by remember {
@@ -79,9 +81,9 @@ fun ArticleDetailsScreen() {
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(1.dp)
+            .padding(3.dp, 36.dp, 3.dp, 10.dp)
     ) {
-        Column (modifier = Modifier.fillMaxSize()){
+        Column (modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f)
@@ -128,7 +130,7 @@ fun ArticleDetailsScreen() {
                                 .weight(1f)
                                 .padding(end = 2.dp)
                         ) {
-                            AddTypeDialog(isOpen = false, company.id!!,true){}
+                            AddTypeDialog(isOpen = false, company.id!!, true) {}
                         }
                         Row(
                             modifier = Modifier
@@ -154,51 +156,57 @@ fun ArticleDetailsScreen() {
                     company.matfisc?.let { it1 -> Text(text = it1) }
                     ArticleCardForAdmin(
                         article = article,
-                        image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${CompanyCategory.valueOf(article.company?.category!!).ordinal}"
-                    ){}
-                    if(articleViewModel.allComments.isNotEmpty()) {
-                        Column {
-                            articleViewModel.allComments.forEach {
-                                Text(text = if (it.user == null) it.companie?.name!! else it.user?.username!!)
-                                Text(text = it.content)
-                                DividerTextComponent()
-                            }
-                        }
-                    }
-                    if(showComment){
-
-                    Row {
-                        Text(text = if(company.name != "") company.name else "aymen babay")
-                        Text(text = articleViewModel.myComment)
+                        image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${
+                            CompanyCategory.valueOf(
+                                article.company?.category!!
+                            ).ordinal
+                        }"
+                    ) {}
+                }
+                if (articleViewModel.allComments.isNotEmpty()) {
+                    items(articleViewModel.allComments) {
+                        Text(text = if (it.user == null) it.company?.name!! else it.user?.username!!)
+                        Text(text = it.content)
                         DividerTextComponent()
                     }
+
+                }
+                if (showComment) {
+                    item {
+
+                        Row {
+                            Text(text = if (company.name != "") company.name else "aymen babay")
+                            Text(text = articleViewModel.myComment)
+                            DividerTextComponent()
+                        }
                     }
                 }
             }
-                    Row{
+            Log.e("isenabledtocomment","is : ${article.isEnabledToComment}")
+            if (article.isEnabledToComment) {
+                Row {
 
-                        InputTextField(
-                            labelValue = comment,
-                            label = "Type a comment",
-                            singleLine = false,
-                            maxLine = 6,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Send
-                            ),
-                            onValueChange = {
-                                comment = it
-                            }
-                            , onImage = {}
-                            , true
-                        ) {
-                            if (comment.isNotEmpty()) {
-                                Log.e("comment", "comment : $comment")
-                                showComment = true
-                                articleViewModel.myComment = comment
-                                article.id?.let { articleViewModel.sendComment(comment, it) }
-                                comment = ""
-                            }
+                    InputTextField(
+                        labelValue = comment,
+                        label = "Type a comment",
+                        singleLine = false,
+                        maxLine = 6,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Send
+                        ),
+                        onValueChange = {
+                            comment = it
+                        }, onImage = {}, true
+                    ) {
+                        if (comment.isNotEmpty()) {
+                            Log.e("comment", "comment : $comment")
+                            showComment = true
+                            articleViewModel.myComment = comment
+                            article.id?.let { articleViewModel.sendComment(comment, it) }
+                            comment = ""
+                        }
+                    }
                 }
             }
         }

@@ -28,4 +28,5 @@ class ArticleCompany : RealmObject{
     var commentNumber : Long? = null
     var isVisible : String = PrivacySetting.ONLY_ME.toString()
     var article : Article? = null
+    var isEnabledToComment : Boolean = false
 }

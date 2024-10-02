@@ -17,4 +17,6 @@ interface InvoiceRepository {
                            discount : Double,
                            clientType :  AccountType,
                            invoiceMode: InvoiceMode):Response<Void>
+
+    suspend fun getAllMyInvoicesNotAccepted():Response<List<Invoice>>
 }

@@ -23,5 +23,6 @@ data class ArticleCompanyDto(
     var isVisible: PrivacySetting = PrivacySetting.PUBLIC,
     var sellingPrice: Double = 0.0,
     var isFav : Boolean = false,
-    var article : ArticleDto = ArticleDto()
+    var article : ArticleDto = ArticleDto(),
+    var isEnabledToComment : Boolean = false
 )

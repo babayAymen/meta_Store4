@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -405,6 +406,21 @@ fun DividerTextComponent(){
             .weight(1f),
             color = Color.Gray,
             thickness = 1.dp
+        )
+    }
+}
+
+@Composable
+fun DividerComponent(){
+    Row (modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            thickness = 1.dp,
+            color = Color.Gray
         )
     }
 }
