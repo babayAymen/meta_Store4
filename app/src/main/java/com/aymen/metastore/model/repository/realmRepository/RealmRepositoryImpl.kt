@@ -40,25 +40,43 @@ class RealmRepositoryImpl @Inject constructor(
 )
     : RealmRepository {
 
-    override fun getAllSubCategoriesLocally(): List<SubCategory> {
+    override fun getAllSubCategoriesLocally(companyId: Long): List<SubCategory> {
         return realm
-            .query<SubCategory>()
+            .query<SubCategory>(
+                query = "category.company.id == $0",companyId
+            )
             .find()
     }
 
-    override fun getSubCategoriesByCategory(categoryId: Long): List<SubCategory> {
+    override fun getSubCategoriesByCategoryLocally(categoryId: Long,companyId: Long): List<SubCategory> {
         return realm
             .query<SubCategory>(
                 query = "category.id == $0",categoryId
             ).find()
-
-
-
     }
 
-    override fun getAllCategoriesLocally(): List<Category> {
+    override fun getAllCategoriesLocally(companyId : Long): List<Category> {
         return realm
-            .query<Category>()
+            .query<Category>(
+                query = "company.id == $0",companyId
+            )
+            .find()
+    }
+
+    override fun getRandomArticlesByCategoryLocally(categoryId: Long, companyId: Long): List<ArticleCompany> {
+        return realm.query<ArticleCompany>(
+            query = "category.id == $0 and company.id == $1", categoryId, companyId
+        )
+            .find()
+    }
+
+    override fun getRandomArticlesBySubCategoryLocally(
+        subcategoryId: Long,
+        companyId: Long
+    ): List<ArticleCompany> {
+        return realm.query<ArticleCompany>(
+            query = "subCategory.id == $0 and category.company.id == $1",subcategoryId , companyId
+        )
             .find()
     }
 
@@ -111,9 +129,7 @@ class RealmRepositoryImpl @Inject constructor(
     }
 
     override fun getAllMyOrdersLocally(): List<PurchaseOrder> {
-        return realm
-            .query<PurchaseOrder>()
-            .find()
+     return realm.query<PurchaseOrder>().find()
     }
 
     override fun getAllMyWorkerLocally(): List<Worker> {
@@ -152,11 +168,18 @@ class RealmRepositoryImpl @Inject constructor(
     }
 
     override fun getAllMyInvoicesAsClientLocally(myCompanyId : Long): List<Invoice> {
-        return realm
-            .query<Invoice>(
-                query = "client.id == $0",myCompanyId
-            )
-            .find()
+        return if(myCompanyId != 0L) {
+            realm
+                .query<Invoice>(
+                    query = "client.id == $0", myCompanyId
+                )
+                .find()
+        }else{
+            realm
+                .query<Invoice>(
+                    query = "status == $0", Status.ACCEPTED.toString()
+                ).find()
+        }
     }
 
     override fun getAllMyConversationsLocally(): List<Conversation> {

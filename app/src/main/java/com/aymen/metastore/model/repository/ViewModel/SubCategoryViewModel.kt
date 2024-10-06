@@ -14,6 +14,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -30,13 +32,13 @@ class SubCategoryViewModel @Inject constructor(
 //    val companyId by mutableLongStateOf(1)
 
 
-    var subCategories  by mutableStateOf(emptyList<SubCategory>())
+    private val _subCategories = MutableStateFlow<List<SubCategory>>(emptyList())
+    var subCategories: StateFlow<List<SubCategory>> = _subCategories
 
     @SuppressLint("SuspiciousIndentation")
-    fun insertsubcategory(categoryId : Long) {
+    fun insertsubcategory(categoryId : Long) {// a verifier
         if (categoryId != 0L) {
             companyViewModel.getMyCompany{
-
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
                     try {
@@ -79,7 +81,7 @@ class SubCategoryViewModel @Inject constructor(
                                     }
                                 }
                             }
-                            getAllSubCategories()
+//                            getAllSubCategories()
                         } catch (_ex: Exception) {
                         }
                     }
@@ -88,14 +90,40 @@ class SubCategoryViewModel @Inject constructor(
         }
     }
 
-    fun getAllSubCategories(){
-        subCategories = repository.getAllSubCategoriesLocally()
+    fun getAllSubCategories(companyId : Long){
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = repository.getAllSubCategories(companyId = companyId)
+                if(response.isSuccessful){
+                    response.body()!!.forEach { subCategory ->
+                        realm.write {
+                            copyToRealm(subCategory, UpdatePolicy.ALL)
+                        }
+                    }
+                }
+            }catch (ex : Exception){
+                Log.e("getAllSubCategories","exception : ${ex.message}")
+            }
+        _subCategories.value = repository.getAllSubCategoriesLocally(companyId = companyId)
+        }
     }
 
-    fun getAllSubCtaegoriesByCategory(categoryId : Long){
-        subCategories = repository.getSubCategoriesByCategory(categoryId)
-        if(subCategories.isNotEmpty()){
-            subCategoryId = subCategories[0].id!!
+    fun getAllSubCtaegoriesByCategory(categoryId : Long,companyId : Long){
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.e("getAllSubCtaegoriesByCategory","categ id : $categoryId and company id : $companyId")
+            try{
+                val response = repository.getSubCategoryByCategory(categoryId,companyId)
+                if(response.isSuccessful){
+                    response.body()!!.forEach {
+                        realm.write {
+                            copyToRealm(it,UpdatePolicy.ALL)
+                        }
+                    }
+                }
+            }catch (ex : Exception){
+            Log.e("getAllSubCtaegoriesByCategory","exception : ${ex.message}")
+            }
+            _subCategories.value = repository.getSubCategoriesByCategoryLocally(categoryId, companyId)
         }
     }
 

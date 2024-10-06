@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.LiveData
@@ -62,6 +63,13 @@ class AppViewModel @Inject constructor(
     private val _messages = MutableStateFlow<List<String>>(emptyList())
     val messages = _messages.asStateFlow()
 
+    private val _currentScreen = mutableStateOf(IconType.HOME)
+    val currentScreen: State<IconType> get() = _currentScreen
+    var _historySelected = mutableStateOf(currentScreen.value) // Match the type here
+    val historySelected: State<IconType> get() = _historySelected
+
+//    val historySelected : State<IconType> get() = _historySelected
+
     init {
 //        connectWebSocket()
     }
@@ -92,8 +100,6 @@ class AppViewModel @Inject constructor(
         webSocket.close(1000, "App closed")
         client.dispatcher.executorService.shutdown()
     }
-    private val _currentScreen = mutableStateOf(IconType.HOME)
-    val currentScreen: State<IconType> get() = _currentScreen
     var userRole by mutableStateOf(RoleEnum.USER)
     var authsize by mutableStateOf(1)
 
@@ -131,6 +137,7 @@ class AppViewModel @Inject constructor(
     }
 
     fun updateScreen(newValue: IconType) {
+        _historySelected.value = currentScreen.value
         _currentScreen.value = newValue
         if(newValue == IconType.MESSAGE && show.value != "message"){
             updateShow("conversation")

@@ -1,6 +1,7 @@
 package com.aymen.store.ui.screen.admin
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,12 +49,14 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
+import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.api.InvoiceDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
 import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.ui.component.ArticleDialog
+import com.aymen.store.ui.component.ButtonSubmit
 import com.aymen.store.ui.component.ClientDialog
 import com.aymen.store.ui.component.DiscountTextField
 import com.aymen.store.ui.component.LodingShape
@@ -80,7 +83,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val currentDateTime = LocalDateTime.now()
     val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) // HH:mm:ss
     LaunchedEffect(key1 = Unit) {
+        if (invoiceMode == InvoiceMode.CREATE) {
         invoiceViewModel.getLastInvoiceCode()
+        }
+        Toast.makeText(context, "in add invoice screen", Toast.LENGTH_SHORT).show()
     }
     var totgen by remember {
         mutableStateOf(BigDecimal.ZERO)
@@ -802,6 +808,11 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
+                            if(invoice.status == Status.INWAITING.toString()){
+                            ButtonSubmit(labelValue = "Accept", color = Color.Green, enabled = true) {
+                                Toast.makeText(context, "salem", Toast.LENGTH_SHORT).show()
+                            }
+                            }
                         }
                     }
                     Row {

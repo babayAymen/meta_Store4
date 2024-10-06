@@ -1,6 +1,7 @@
 package com.aymen.store.model.repository.remoteRepository.articleRepository
 
 import android.util.Log
+import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Comment
@@ -18,6 +19,11 @@ class ArticleRepositoryImpl @Inject constructor
     override suspend fun getRandomArticles() = api.getRandomArticles()
 
     override suspend fun getRandomArticlesByCompanyCategory(categName : String) = api.getRandomArticlesByCompanyCategory(categName)
+    override suspend fun getRandomArticlesByCategory(categoryId: Long, companyId : Long) = api.getRandomArticlesByCategory(categoryId, companyId)
+    override suspend fun getRandomArticlesBySubCategory(
+        subcategoryId: Long,
+        companyId: Long
+    ) = api.getRandomArticlesBySubCategory(subcategoryId, companyId)
 
     override suspend fun getAll(companyId : Long, offset : Int, pageSize : Int) = api.getAll(companyId = companyId, offset = offset, pageSize = pageSize)
 

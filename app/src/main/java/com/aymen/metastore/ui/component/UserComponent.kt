@@ -210,7 +210,8 @@ fun SearchField(label : String, labelValue : String, value : (String) -> Unit, c
 }
 
 @Composable
-fun InputTextField(labelValue: String, label:String, singleLine: Boolean, maxLine : Int, keyboardOptions: KeyboardOptions, onValueChange: (String) -> Unit, onImage: (Uri?)-> Unit,
+fun InputTextField(labelValue: String, label:String, singleLine: Boolean, maxLine : Int, keyboardOptions: KeyboardOptions, onValueChange: (String) -> Unit,
+                   onImage: (Uri?)-> Unit,
                   enabled  : Boolean? = true, onImeAction: (File?) -> Unit ){
     var image by remember {
         mutableStateOf<Uri?>(null)

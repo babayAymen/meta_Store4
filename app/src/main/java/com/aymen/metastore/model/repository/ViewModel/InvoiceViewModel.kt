@@ -91,7 +91,8 @@ class InvoiceViewModel @Inject constructor(
     fun getAllMyInvoicesAsClient(){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val invoicesAsClient = repository.getAllMyInvoicesAsClient(company.id!!)
+                val invoicesAsClient = repository.getAllMyInvoicesAsClient(company.id?:0)
+                Log.e("getAllMyInvoicesAsClient","size: ${invoicesAsClient.body()?.size}")
                 if(invoicesAsClient.isSuccessful){
                 invoicesAsClient.body()?.forEach {
                     realm.write {
@@ -105,9 +106,9 @@ class InvoiceViewModel @Inject constructor(
                 Log.e("getAllMyInvoicesAsClient","exception: ${ex.message}")
 
             }
-            _myInvoicesAsClient.value = repository.getAllMyInvoicesAsClientLocally(sharedViewModel.company.value.id!!)
             isLoading = false
-
+            _myInvoicesAsClient.value = repository.getAllMyInvoicesAsClientLocally(sharedViewModel.company.value.id!!)
+            Log.e("getAllMyInvoicesAsClient","size: ${_myInvoicesAsClient.value.size}")
 
         }
     }

@@ -3,9 +3,6 @@ package com.aymen.store.dependencyInjection
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import com.aymen.metastore.datastore
 import com.aymen.metastore.datastore1
@@ -121,7 +118,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import kotlin.math.exp
 
-const val BASE_URL = "http://192.168.1.3:8080/"
+const val BASE_URL = "http://192.168.162.154:8080/"
 private const val DATABASE_NAME = "database"
 
 @Module
@@ -177,7 +174,7 @@ class MetaStoreModule {
                     ArticleCompany::class
                 )
             )
-                .schemaVersion(14)
+                .schemaVersion(15)
                 .build()
         )
     }
@@ -200,8 +197,8 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providerCategoryViewModel(repository: GlobalRepository, realm: Realm,companyViewModel: CompanyViewModel):CategoryViewModel{
-        return CategoryViewModel(repository,realm, companyViewModel)
+    fun providerCategoryViewModel(repository: GlobalRepository, realm: Realm,sharedViewModel: SharedViewModel):CategoryViewModel{
+        return CategoryViewModel(repository,realm, sharedViewModel)
     }
 
     @Provides

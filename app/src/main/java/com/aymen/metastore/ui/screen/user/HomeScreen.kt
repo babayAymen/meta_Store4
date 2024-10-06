@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -196,15 +197,13 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
 @Composable
 fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedViewModel : SharedViewModel)   {
     val viewModel : AppViewModel = hiltViewModel()
+    val companyViewModel : CompanyViewModel = hiltViewModel()
     val selectedIcon by viewModel.currentScreen
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
-    val companyViewModel : CompanyViewModel = hiltViewModel()
     val accountType = sharedViewModel.accountType
     val userRole = viewModel.userRole
-    var historySelected by remember {
-        mutableStateOf(selectedIcon)
-    }
+    val historySelected by viewModel.historySelected
     var isPopupVisible by remember {
         mutableStateOf(false)
     }
@@ -353,7 +352,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.Home,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-                            historySelected = selectedIcon
+//                            viewModel._historySelected = selectedIcon
                             viewModel.updateScreen(IconType.HOME)
                         },
                         description = "home"
@@ -365,7 +364,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.Notifications,
                         badgeCount = 9, // Example of a message badge
                         onClick = {
-                            historySelected = selectedIcon
+//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.NOTIFICATIONS)
                         },
                         description = "notification"
@@ -377,7 +376,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.ChatBubbleOutline,
                         badgeCount = 8, // Example of a message badge
                         onClick = {
-                            historySelected = selectedIcon
+//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.MESSAGE)
                         },
                         description = "email"
@@ -391,7 +390,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             iconUnselected = Icons.Outlined.HomeWork,
                             badgeCount = 0, // Example of a message badge
                             onClick = {
-                                historySelected = selectedIcon
+//                                historySelected = selectedIcon
                                 viewModel.updateShow("dash")
                                 viewModel.updateScreen(IconType.COMPANY)
                             },
@@ -405,7 +404,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.ShoppingCart,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-                            historySelected = selectedIcon
+//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.SHOPPING)
                         },
                         description = "shopping"
@@ -417,7 +416,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.AccountBalanceWallet,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-                            historySelected = selectedIcon
+//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.WALLET)
                         },
                         description = "wallet"
@@ -429,7 +428,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.Search,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-                            historySelected = selectedIcon
+//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.SEARCH)
                         },
                         description = "search"
@@ -441,7 +440,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.GroupAdd,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-                            historySelected = selectedIcon
+//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.USER)
                         },
                         description = "user"
@@ -455,18 +454,19 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     val scope = rememberCoroutineScope()
     val doubleBackToExitPressedOnce = remember { mutableStateOf(false) }
     SystemBackButtonHandler {
-        if (historySelected == IconType.HOME && viewModel.currentScreen.value == IconType.HOME) { //doubleBackToExitPressedOnce.value
+        Toast.makeText(context, "show: ${viewModel.show.value} /icon: ${viewModel.currentScreen.value} /hist: $historySelected", Toast.LENGTH_SHORT).show()
+        if (historySelected == selectedIcon && viewModel.currentScreen.value == IconType.HOME) { //doubleBackToExitPressedOnce.value
 
             (context as? Activity)?.moveTaskToBack(true)
 
         }
 
-        if( viewModel.show.value == "dash" || viewModel.show.value == "conversation" || viewModel.show.value == "payment"){
-
+        if( viewModel.show.value == "dash" || viewModel.show.value == "conversation" || viewModel.show.value == "payment" || viewModel.show.value == "order"){
+            if(historySelected == IconType.COMPANY){
+                viewModel.updateShow("dash")
+            }
             viewModel.updateScreen(historySelected)
-
-            historySelected = IconType.HOME
-
+            viewModel._historySelected.value = IconType.HOME
         }
         else{
             when(viewModel.show.value){

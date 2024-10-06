@@ -9,9 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.repository.ViewModel.AppViewModel
@@ -19,14 +22,17 @@ import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.ui.component.ButtonSubmit
 import com.aymen.store.ui.component.CategoryCardForAdmin
 import com.aymen.metastore.R
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 
 @Composable
 fun CategoryScreen() {
-    val appViewModel : AppViewModel = viewModel()
-    val categoryViewModel : CategoryViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val categoryViewModel : CategoryViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     LaunchedEffect(key1 = true) {
-        categoryViewModel.getAllCategoryByCompany()
+        categoryViewModel.getAllCategoryByCompany(sharedViewModel.company.value.id!!)
     }
+    val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -44,7 +50,7 @@ fun CategoryScreen() {
                         .fillMaxWidth()
                 ) {
                     Column {
-                        categoryViewModel.categories.forEach() {
+                        categories.forEach {
                             SwipeToDeleteContainer(
                                 it,
                                 onDelete = {

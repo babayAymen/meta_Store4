@@ -106,8 +106,8 @@ class MessageViewModel @Inject constructor(
                         if (conversations != null) {
                              realm.write {
                             conversations.forEach {
-                                 var user5 : User? = User()
-                                var company5 : Company? = Company()
+                                 var user5 = User()
+                                var company5 = Company()
                                     if (it.user1 != null &&
                                         (sharedViewModel.accountType ==  AccountType.COMPANY ||
                                                 (sharedViewModel.accountType == AccountType.USER && it.user1?.id != user.id))) {
@@ -129,7 +129,7 @@ class MessageViewModel @Inject constructor(
                                         user5 = user3
                                         copyToRealm(user3, UpdatePolicy.ALL)
                                     }
-Log.e("aymenbabayviewModel","user5 : ${user5?.image}")
+Log.e("aymenbabayviewModel","user5 : ${user5.image}")
                                     if (it.company1 != null &&
                                         (sharedViewModel.accountType == AccountType.USER ||
                                                 (sharedViewModel.accountType == AccountType.COMPANY && it.company1?.id != company.id))) {

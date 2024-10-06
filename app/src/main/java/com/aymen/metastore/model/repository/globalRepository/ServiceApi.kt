@@ -58,6 +58,10 @@ interface ServiceApi {
     suspend fun getRandomArticles(): Response<List<ArticleCompany>>
     @GET("werehouse/article/getrandom/{categname}")
     suspend fun getRandomArticlesByCompanyCategory(@Path("categname") categName : String): Response<List<ArticleCompany>>
+    @GET("werehouse/article/category/{categId}/{companyId}")
+    suspend fun getRandomArticlesByCategory(@Path("categId") categoryId : Long, @Path("companyId") companyId : Long): Response<List<ArticleCompany>>
+    @GET("werehouse/article/subcategory/{subcategId}/{companyId}")
+    suspend fun getRandomArticlesBySubCategory(@Path("subcategId") subcategoryId : Long , @Path("companyId") companyId : Long) : Response<List<ArticleCompany>>
     @DELETE("werehouse/article/delete/{id}")
     suspend fun deleteArticle(@Path("id") id: String): Response<Void>
     @Multipart

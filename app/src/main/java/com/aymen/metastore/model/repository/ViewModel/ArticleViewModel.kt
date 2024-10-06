@@ -44,11 +44,14 @@ class ArticleViewModel @Inject constructor(
     : ViewModel() {
 
     var companyId by mutableLongStateOf(0)
-    var adminArticles by mutableStateOf(emptyList<ArticleCompany>())
+    private val _adminArticles = MutableStateFlow<List<ArticleCompany>>(emptyList())
+    var adminArticles : StateFlow<List<ArticleCompany>> = _adminArticles
+
+    private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList())
+    val randomArticles: StateFlow<List<ArticleCompany>> = _randomArticles
 
     private val _articles = MutableStateFlow<List<Article>>(emptyList())
     val articles: StateFlow<List<Article>> = _articles
-
 
     private val _articleFlow = MutableStateFlow("")
     val response : Flow<List<ArticleCompany>> = _articleFlow
@@ -111,8 +114,6 @@ class ArticleViewModel @Inject constructor(
 
 
 
-private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList())
-    val randomArticles: StateFlow<List<ArticleCompany>> = _randomArticles
 
     var searchArticles by mutableStateOf(emptyList<ArticleCompany>())
     private var offset by mutableIntStateOf(1)
@@ -142,7 +143,7 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
                         } catch (ex: Exception) {
                             Log.e("aymenbabayarticle", "error is : $ex")
                         }
-                        adminArticles = repository.getAllArticlesLocaly(companyId)
+                        _adminArticles.value = repository.getAllArticlesLocaly(companyId)
                     }
                 }
 
@@ -215,7 +216,45 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
         }
     }
 
+    fun getRandomArticlesByCategory(categoryId : Long, companyId : Long){
+        viewModelScope.launch(Dispatchers.IO){
+            try {
+                val response  = repository.getRandomArticlesByCategory(categoryId,companyId)
+                Log.e("getRandomArticlesByCategory", "size response : ${response.body()!!.size}")
+                if(response.isSuccessful){
+                    response.body()?.forEach{
+                        realm.write {
+                            copyToRealm(it, UpdatePolicy.ALL)
+                        }
+                    }
+                }
+            }catch(ex : Exception){
+                Log.e("getRandomArticlesByCategory", "exception : ${ex.message}")
+            }
+            _adminArticles.value = repository.getRandomArticlesByCategoryLocally(categoryId, companyId)
+            Log.e("getRandomArticlesByCategory", "size locally : ${_randomArticles.value.size}")
+        }
+    }
 
+    fun getRandomArticlesBySubCategory(categoryId : Long, companyId : Long){
+        viewModelScope.launch(Dispatchers.IO){
+            try {
+                val response  = repository.getRandomArticlesBySubCategory(categoryId,companyId)
+                Log.e("getRandomArticlesByCategory", "size response : ${response.body()!!.size}")
+                if(response.isSuccessful){
+                    response.body()?.forEach{
+                        realm.write {
+                            copyToRealm(it, UpdatePolicy.ALL)
+                        }
+                    }
+                }
+            }catch(ex : Exception){
+                Log.e("getRandomArticlesByCategory", "exception : ${ex.message}")
+            }
+            _adminArticles.value = repository.getRandomArticlesBySubCategoryLocally(categoryId, companyId)
+            Log.e("getRandomArticlesByCategory", "size locally : ${_randomArticles.value.size}")
+        }
+    }
 
     fun addArticle(articlee : ArticleCompany,article : String , file : File){
         viewModelScope.launch (Dispatchers.IO){
@@ -223,7 +262,7 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
             val response = repository.addArticle(article, file)
                 if(response.isSuccessful){
                insertArticleLocally(Article(),articlee)
-                adminArticles = repository.getAllArticlesLocaly(companyId)
+                _adminArticles.value = repository.getAllArticlesLocaly(companyId)
         }
             }catch (ex : Exception){
                 Log.e("addarticlefun","exeprtion : ${ex.message}")
@@ -241,7 +280,7 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
                     if (success.isSuccessful) {
                         insertArticleLocally(Article(),articlee)
                         _articles.value.drop(1)
-                        adminArticles = repository.getAllArticlesLocaly(companyId)
+                        _adminArticles.value = repository.getAllArticlesLocaly(companyId)
                     } else {
                         // Handle unsuccessful response
                     }
@@ -296,7 +335,7 @@ private val _randomArticles = MutableStateFlow<List<ArticleCompany>>(emptyList()
             article.id?.let { repository.likeAnArticle(it, !article.isFav) }
          repository.makeItAsFav(article)
                 _randomArticles.value = repository.getRandomArticleLocally()
-            adminArticles = repository.getAllArticlesLocaly(companyId)
+            _adminArticles.value = repository.getAllArticlesLocaly(companyId)
             }
         }
     }

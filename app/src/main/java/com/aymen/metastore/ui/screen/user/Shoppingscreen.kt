@@ -24,6 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -34,8 +37,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderLineDtoToRealm
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
@@ -46,6 +51,7 @@ import com.aymen.store.ui.component.DividerTextComponent
 import com.aymen.store.ui.component.InvoiceCard
 import com.aymen.store.ui.component.LodingShape
 import com.aymen.store.ui.component.OrderShow
+import com.aymen.store.ui.screen.admin.AddInvoiceScreen
 import com.aymen.store.ui.screen.admin.OrderScreen
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -59,9 +65,13 @@ fun ShoppingScreen() {
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myInvoicesAccepted by invoiceViewModel.myInvoicesAsClient.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = Unit) {
         shoppingViewModel.getAllMyOrders()
+        if(sharedViewModel.accountType == AccountType.USER){
         shoppingViewModel.getAllMyInvoicesNotAccepted()
+            invoiceViewModel.getAllMyInvoicesAsClient()
+        }
     }
     val invoicesNotAccepted by shoppingViewModel.allMyInvoiceNotAccepted.collectAsStateWithLifecycle()
     DisposableEffect(Unit) {
@@ -69,127 +79,164 @@ fun ShoppingScreen() {
 
         }
     }
+
+
     val context = LocalContext.current
     val show by appViewModel.show
-    when(show){
+    when(show) {
+        "add invoice" -> AddInvoiceScreen(InvoiceMode.VERIFY)
         "orderLine" -> OrderScreen()
         "orderLineDetails" -> PurchaseOrderDetailsScreen(shoppingViewModel = shoppingViewModel)
         else -> {
-
-
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(3.dp)
-    ) {
-        Column (
-            modifier =  Modifier.fillMaxWidth()
-        ){
-            Row(
-                modifier = Modifier.fillMaxWidth()
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(3.dp)
             ) {
-                Column {
-
-                if (shoppingViewModel.orderArray.isNotEmpty()) {
-
-                    LazyColumn(
-
-                        modifier =  Modifier.fillMaxWidth()
-                    ) {
-                        itemsIndexed(shoppingViewModel.orderArray) {index , it ->
-                            Row {
-                                Row(
-                                    modifier = Modifier.weight(0.8f)
-                                ) {
-
-                            OrderShow(order = mapPurchaseOrderLineDtoToRealm(it))
-                                }
-                                Row (
-                                    modifier = Modifier.weight(0.1f)
-                                ){
-                                    IconButton(onClick = {
-                                        shoppingViewModel.sendOrder(index)
-                                    }) {
-                                        Icon(imageVector = Icons.Default.Check, contentDescription = "send", tint = Color.Magenta)
-                                    }
-                                }
-                                Row (
-                                    modifier = Modifier.weight(0.1f)
-                                ){
-                                    IconButton(onClick = {
-                                        shoppingViewModel.removeOrderById(index)
-                                    }) {
-                                        Icon(imageVector = Icons.Default.Remove, contentDescription = "remove", tint = Color.Red)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Row {
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            ButtonSubmit(labelValue = "Cancel All", color = Color.Red, enabled = true) {
-                                shoppingViewModel.returnAllMyMony()
-                            }
-                        }
-                        Row (
-                            modifier = Modifier.weight(1f)
-                        ){
-                    ButtonSubmit(labelValue = "Send All", color = Color.Green, enabled = true) {
-                        shoppingViewModel.sendOrder(-1)
-                        }
-                    DividerComponent()
-                    }
-                    }
-                }
-                }
-            }
-            Row ( // all my invoices those do not accepted
-                modifier = Modifier.fillMaxWidth()
-            ){
-                LazyColumn {
-                    items(invoicesNotAccepted){invoice ->
-                        InvoiceCard(
-                            invoice = invoice,
-                            appViewModel = appViewModel,
-                            invoiceViewModel = invoiceViewModel,
-                            asProvider = false
-                        )
-                    }
-                }
-            }
-            Row( // all my orders those do not accepted
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                LazyColumn (
-                    modifier =  Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    Row(// all my orders those not send yet
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column {
 
-                    if (shoppingViewModel.isLoading) {
-                        item {
-                            LodingShape()
+                            if (shoppingViewModel.orderArray.isNotEmpty()) {
+
+                                LazyColumn(
+
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    itemsIndexed(shoppingViewModel.orderArray) { index, it ->
+                                        Row {
+                                            Row(
+                                                modifier = Modifier.weight(0.8f)
+                                            ) {
+
+                                                OrderShow(order = mapPurchaseOrderLineDtoToRealm(it))
+                                            }
+                                            Row(
+                                                modifier = Modifier.weight(0.1f)
+                                            ) {
+                                                IconButton(onClick = {
+                                                    shoppingViewModel.sendOrder(index)
+                                                }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = "send",
+                                                        tint = Color.Magenta
+                                                    )
+                                                }
+                                            }
+                                            Row(
+                                                modifier = Modifier.weight(0.1f)
+                                            ) {
+                                                IconButton(onClick = {
+                                                    shoppingViewModel.removeOrderById(index)
+                                                }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Remove,
+                                                        contentDescription = "remove",
+                                                        tint = Color.Red
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Row {
+                                    Row(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        ButtonSubmit(
+                                            labelValue = "Cancel All",
+                                            color = Color.Red,
+                                            enabled = true
+                                        ) {
+                                            shoppingViewModel.returnAllMyMony()
+                                        }
+                                    }
+                                    Row(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        ButtonSubmit(
+                                            labelValue = "Send All",
+                                            color = Color.Green,
+                                            enabled = true
+                                        ) {
+                                            shoppingViewModel.sendOrder(-1)
+                                        }
+                                    }
+                                }
+                                        DividerComponent()
+                            }
                         }
                     }
-                        items(shoppingViewModel.allMyOrders) {
-                            val dateTime = LocalDateTime.parse(it.createdDate)
-                            val date = dateTime.toLocalDate()
-                            Text(text =
-                            if (it.company?.id == myCompany.id) "you have an order from ${it.person?.username ?: it.client?.name}" else "you have sent an order to ${it.company?.name}",
-                                modifier = Modifier.clickable {
-                                    shoppingViewModel.Order = it
-                                    appViewModel.updateShow("orderLineDetails")
-                                }
-                            )
-                            Text(text = date.toString(),
-                                style = TextStyle(fontSize = 8.sp)
-                            )
+                    Row( // all my invoices those do not accepted
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        LazyColumn {
+                            items(invoicesNotAccepted) { invoice ->
+                                InvoiceCard(
+                                    invoice = invoice,
+                                    appViewModel = appViewModel,
+                                    invoiceViewModel = invoiceViewModel,
+                                    asProvider = false
+                                )
+                            }
+                            item {
+                                DividerComponent()
+                            }
                         }
+                    }
+                    Row( // all my orders those do not accepted
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
 
+                            if (shoppingViewModel.isLoading) {
+                                item {
+                                    LodingShape()
+                                }
+                            }
+                            items(shoppingViewModel.allMyOrders) {
+                                val dateTime = LocalDateTime.parse(it.createdDate)
+                                val date = dateTime.toLocalDate()
+                                Text(text =
+                                if (it.company?.id == myCompany.id) "you have an order from ${it.person?.username ?: it.client?.name}" else "you have sent an order to ${it.company?.name}",
+                                    modifier = Modifier.clickable {
+                                        shoppingViewModel.Order = it
+                                        appViewModel.updateShow("orderLineDetails")
+                                    }
+                                )
+                                Text(
+                                    text = date.toString(),
+                                    style = TextStyle(fontSize = 8.sp)
+                                )
+                            }
+                            item {
+                                DividerComponent()
+                            }
+
+                        }
+                    }
+                    Row (// all my invoices those are accepted and orders also accepted
+                        modifier = Modifier.fillMaxWidth()
+                    ){
+                        LazyColumn {
+                            items(myInvoicesAccepted){
+                                InvoiceCard(
+                                    invoice = it,
+                                    appViewModel = appViewModel,
+                                    invoiceViewModel = invoiceViewModel,
+                                    asProvider = false)
+                            }
+                        }
+                    }
                 }
             }
-        }
-    }
         }
     }
 }

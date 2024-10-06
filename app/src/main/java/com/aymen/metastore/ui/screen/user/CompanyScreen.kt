@@ -1,28 +1,41 @@
 package com.aymen.store.ui.screen.user
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.filled.StarPurple500
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
@@ -49,11 +63,16 @@ import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.store.model.Enum.CompanyCategory
+import com.aymen.store.model.entity.realm.Category
+import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
+import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.model.repository.ViewModel.ClientViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.model.repository.ViewModel.MessageViewModel
+import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.store.ui.component.AddTypeDialog
 import com.aymen.store.ui.component.ArticleCardForSearch
 import com.aymen.store.ui.component.ButtonSubmit
@@ -72,19 +91,41 @@ fun CompanyScreen(company: Company) {
     val ratingViewModel: RatingViewModel = hiltViewModel()
     val clientViewModel: ClientViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
+    val categoryViewModel : CategoryViewModel = hiltViewModel()
+    val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
+    val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
+    val subCategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
+    val randomArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
+    var category by remember {
+        mutableStateOf(Category())
+    }
     val context = LocalContext.current
     var myCompany by remember {
         mutableStateOf(Company())
     }
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            ratingViewModel.rating = false
+        }
+    }
     LaunchedEffect(key1 = Unit) {
         articleViewModel.getAllMyArticlesApi()
+        categoryViewModel.getAllCategoryByCompany(company.id)
         if (sharedViewModel.accountType == AccountType.COMPANY) {
             myCompany = sharedViewModel._company.value
         }
     }
-    var rating by remember {
-        mutableStateOf(false)
+    LaunchedEffect(key1 = categories) {
+        if(categories.isNotEmpty()) {
+            category = categories[0]
+        }
     }
+    LaunchedEffect(key1 = category) {
+        if(categories.isNotEmpty()) {
+            subCategoryViewModel.getAllSubCtaegoriesByCategory(category.id!!,company.id!!)
+        }
+    }
+    val rating = ratingViewModel.rating
     val listState = rememberLazyListState()
     Surface(
         modifier = Modifier
@@ -98,7 +139,8 @@ fun CompanyScreen(company: Company) {
                 item {
                     Row {
                         if (company.logo == "") {
-                            val painter: Painter = painterResource(id = R.drawable.emptyprofile)
+                            val painter: Painter =
+                                painterResource(id = R.drawable.emptyprofile)
                             Image(
                                 painter = painter,
                                 contentDescription = "empty photo profil",
@@ -122,137 +164,78 @@ fun CompanyScreen(company: Company) {
                     Row(
                         modifier = Modifier.padding(2.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 2.dp)
+                        companyDetails(
+                            messageViewModel,
+                            appViewModel,
+                            clientViewModel,
+                            companyViewModel,
+                            ratingViewModel,
+                            company,
+                            myCompany.isPointsSeller!!
                         ) {
-                            AddTypeDialog(isOpen = false, company.id!!, true) {
-                                clientViewModel.sendClientRequest(company.id!!, it)
-                            }
                         }
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "send a message",
-                                Modifier.clickable {
-//                            messageViewModel.senderId = company.user?.id!!
-//                            messageViewModel.getAllMyMessageByConversationId()
-//                            RouteController.navigateTo(Screen.HomeScreen)
-                                    messageViewModel.getConversationByCaleeId(company.id!!)
-                                    appViewModel.updateShow("message")
-                                    appViewModel.updateScreen(IconType.MESSAGE)
-                                    messageViewModel.receiverAccountType = AccountType.COMPANY
-                                }
-                            )
+                    }
+                    Column {
+                        company.address?.let { it1 -> Text(text = it1) }
+                        company.phone?.let { it1 -> Text(text = it1) }
+                        company.email?.let { Text(text = it) }
+                        company.code?.let { it1 -> Text(text = it1) }
+                        company.matfisc?.let { it1 -> Text(text = it1) }
+                    }
+                }
+                    if (!rating) {
+                item {
 
-                        }
-                        if (myCompany.isPointsSeller!!) {
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                SendPointDialog(isOpen = false, User(), company)
-                            }
-                        }
-                        if (appViewModel.userRole == RoleEnum.AYMEN) {
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                if (!company.isPointsSeller!!) {
-                                    ButtonSubmit(
-                                        labelValue = "make as seller",
-                                        color = Color.Green,
-                                        enabled = true
-                                    ) {
-                                        companyViewModel.MakeAsPointSeller(true, company.id!!)
-                                    }
-                                } else {
-
-                                    ButtonSubmit(
-                                        labelValue = "remove as seller",
-                                        color = Color.Red,
-                                        enabled = true
-                                    ) {
-                                        companyViewModel.MakeAsPointSeller(false, company.id!!)
-                                    }
-                                }
-                            }
-                        }
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (!rating) {
-
-                                Column(
-                                    modifier = Modifier.clickable {
-                                        rating = !rating
-                                    }
-                                ) {
-
-                                    Icon(
-                                        imageVector = Icons.Outlined.StarOutline,
-                                        contentDescription = "rate"
-                                    )
-                                }
-                            } else {
-
-                                StarRating(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    onRatingChanged = { newRating ->
-                                        ratingViewModel.rating = true
-                                        ratingViewModel.rate = newRating
-                                        // Update the rating state or perform any other action with the new rating
-                                    }
+                        Column {
+                            ScreenByCompanyCategory(categories) { categ ->
+                                category = categ
+                                articleViewModel.getRandomArticlesByCategory(
+                                    categ.id!!,
+                                    categ.company?.id!!
                                 )
                             }
-                            Text(text = company.raters.toString())
+                            ScreenByCompanySubCategory(items = subCategories) { categ ->
+                                articleViewModel.getRandomArticlesBySubCategory(
+                                    categ.id!!,
+                                    categ.category?.company?.id!!
+                                )
+                            }
                         }
-                    }
                 }
-                item {
-                    company.address?.let { it1 -> Text(text = it1) }
-                    company.phone?.let { it1 -> Text(text = it1) }
-                    company.email?.let { Text(text = it) }
-                    company.code?.let { it1 -> Text(text = it1) }
-                    company.matfisc?.let { it1 -> Text(text = it1) }
-                }
+                items(randomArticles) {
+                    ArticleCardForSearch(article = it) {
+                        companyViewModel.myCompany = it.company!!
+                        articleViewModel.articleCompany = it
+                        RouteController.navigateTo(Screen.ArticleDetailScreen)
 
-
-
-
-                if (!rating) {
-                    items(articleViewModel.adminArticles) {
-                        ArticleCardForSearch(article = it) {
-                            companyViewModel.myCompany = it.company!!
-                            articleViewModel.articleCompany = it
-                            RouteController.navigateTo(Screen.ArticleDetailScreen)
-                        }
                     }
-                } else {
-                    item {
-                    RatingScreen(AccountType.COMPANY, company, null)
                     }
-
                 }
             }
-            SystemBackButtonHandler {
-                RouteController.navigateTo(Screen.HomeScreen)
+            if(rating){
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    RatingScreen(AccountType.COMPANY, company, null)
+                }
             }
         }
     }
+            SystemBackButtonHandler {
+                RouteController.navigateTo(Screen.HomeScreen)
+            }
 }
 
 
 @Composable
 fun StarRating(
+    rate : Int,
     modifier: Modifier = Modifier,
     starCount: Int = 5,
     onRatingChanged: (Int) -> Unit
 ) {
-    var rating by remember { mutableIntStateOf(0) }
+    var rating by remember { mutableIntStateOf(rate) }
 
     Row(
         modifier = modifier,
@@ -271,6 +254,146 @@ fun StarRating(
                         onRatingChanged(rating)
                     }
             )
+        }
+    }
+}
+
+@Composable
+fun companyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,clientViewModel: ClientViewModel,companyViewModel: CompanyViewModel,
+                   ratingViewModel : RatingViewModel,company: Company, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
+    Row {
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 2.dp)
+        ) {
+            AddTypeDialog(isOpen = false, company.id!!, true) {
+                clientViewModel.sendClientRequest(company.id!!, it)
+            }
+        }
+        Row(
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = "send a message",
+                Modifier.clickable {
+//                            messageViewModel.senderId = company.user?.id!!
+//                            messageViewModel.getAllMyMessageByConversationId()
+//                            RouteController.navigateTo(Screen.HomeScreen)
+                    messageViewModel.getConversationByCaleeId(company.id!!)
+                    appViewModel.updateShow("message")
+                    appViewModel.updateScreen(IconType.MESSAGE)
+                    messageViewModel.receiverAccountType = AccountType.COMPANY
+                }
+            )
+        }
+        if (isMePointSeller) {
+            Row(
+                modifier = Modifier.weight(1f)
+            ) {
+                SendPointDialog(isOpen = false, User(), company)
+            }
+        }
+        if (appViewModel.userRole == RoleEnum.AYMEN) {
+            Row(
+                modifier = Modifier.weight(1f)
+            ) {
+                if (!company.isPointsSeller!!) {
+                    ButtonSubmit(
+                        labelValue = "make as seller",
+                        color = Color.Green,
+                        enabled = true
+                    ) {
+                        companyViewModel.MakeAsPointSeller(true, company.id!!)
+                    }
+                } else {
+                    ButtonSubmit(
+                        labelValue = "remove as seller",
+                        color = Color.Red,
+                        enabled = true
+                    ) {
+                        companyViewModel.MakeAsPointSeller(false, company.id!!)
+                    }
+                }
+            }
+        }
+        Column (
+            modifier = Modifier
+                .weight(1.8f)
+                .clickable {
+                    ratingViewModel.rating = !ratingViewModel.rating
+                }
+        ) {
+            if (ratingViewModel.rating) {
+                StarRating(
+                    company.rate?.toInt()!!,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                    //    .padding(vertical = 8.dp)
+                    ,
+                    onRatingChanged = { newRating ->
+                        ratingViewModel.rating = true
+                        ratingViewModel.rate = newRating
+                    }
+                )
+            }else{
+                Icon(imageVector = Icons.AutoMirrored.Filled.StarHalf, contentDescription = "rating")
+            }
+            Text(text = company.rate?.toString()!!)
+
+        }
+    }
+}
+
+
+@Composable
+fun ScreenByCompanyCategory(items : List<Category>, onCategorySelected : (Category) -> Unit) {
+    var selectedCateg by remember {
+        mutableStateOf(Category())
+    }
+    LazyRow {
+        items(items){ categ ->
+            Spacer(modifier = Modifier.size(6.dp))
+            Card(onClick = {
+                selectedCateg = categ
+                onCategorySelected(categ)
+            },
+                modifier = Modifier
+                    .height(30.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (selectedCateg == categ) Color.Yellow else Color.Transparent // Set color conditionally
+                )
+            )
+            {
+                Text(text = categ.libelle,
+                    color = Color.Red)
+            }
+            Spacer(modifier = Modifier.size(6.dp))
+        }
+    }
+}
+
+@Composable
+fun ScreenByCompanySubCategory(items : List<SubCategory>, onSubCategorySelected : (SubCategory) -> Unit) {
+    var subcateg by remember {
+        mutableStateOf(SubCategory())
+    }
+    LazyRow {
+        items(items){ categ ->
+            Card(onClick = {
+                subcateg = categ
+                onSubCategorySelected(categ)
+                Log.e("screenbycateg",categ.libelle)
+            },
+                modifier = Modifier
+                    .height(30.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (subcateg == categ) Color.Yellow else Color.Transparent // Set color conditionally
+                )
+            )
+            {
+                Text(text = categ.libelle)
+            }
         }
     }
 }

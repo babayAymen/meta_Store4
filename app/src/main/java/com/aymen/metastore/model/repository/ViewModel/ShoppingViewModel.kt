@@ -279,18 +279,18 @@ fun submitShopping(newBalance : BigDecimal) {
                         if (allMyOrder != null) {
                             if(allMyOrder.isSuccessful){
                                 isLoading = false
-                                allMyOrder.body()?.forEach{
+                                allMyOrder.body()?.forEach{ order ->
                                     realm.write {
-                                        val pur = PurchaseOrder().apply {
-                                            id = it.id
-                                            orderNumber = it.orderNumber
-                                            client = it.client
-                                            person = it.person
-                                            company = it.company
-                                            createdDate = it.createdDate.toString()
-
-                                        }
-                                        copyToRealm(pur, UpdatePolicy.ALL)
+//                                        val pur = PurchaseOrder().apply {
+//                                            id = it.id
+//                                            orderNumber = it.orderNumber
+//                                            client = it.client
+//                                            person = it.person
+//                                            company = it.company
+//                                            createdDate = it.createdDate.toString()
+//                                        }
+                                        Log.e("getallmyorders","size : ${allMyOrder.body()?.toString()}")
+                                        copyToRealm(order, UpdatePolicy.ALL)
                                     }
                                 }
                             }
@@ -299,7 +299,7 @@ fun submitShopping(newBalance : BigDecimal) {
                         Log.e("aymenbabayOrder","all my orders exption: $_ex ")
                     }
                     isLoading = false
-                        allMyOrders = repository.getAllMyOrdersLocally()
+                    allMyOrders = repository.getAllMyOrdersLocally()
                 }
             }
         }

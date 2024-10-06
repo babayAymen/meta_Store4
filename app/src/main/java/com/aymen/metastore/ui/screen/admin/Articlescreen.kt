@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
@@ -52,8 +53,9 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun ArticleScreen() {
-    val appViewModel : AppViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
+    val adminArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         articleViewModel.getAllMyArticlesApi()
     }
@@ -86,7 +88,7 @@ fun ArticleScreen() {
                     .fillMaxWidth()
             ){
                 LazyColumn {
-                    itemsIndexed(articleViewModel.adminArticles){index , articleCompany ->
+                    itemsIndexed(adminArticles){index , articleCompany ->
                         SwipeToDeleteContainer(
                             articleCompany,
                             onDelete = {

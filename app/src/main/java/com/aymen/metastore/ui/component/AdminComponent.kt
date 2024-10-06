@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -59,6 +60,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
@@ -86,6 +89,7 @@ import com.aymen.store.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.PaymentViewModel
 import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -254,12 +258,12 @@ fun DropDownCategory(list: List<Category>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownSubCategory(list : List<SubCategory>, categoryId : Long, onSelected : (SubCategory) -> Unit) {
-    val subCategoryViewModel : SubCategoryViewModel = viewModel()
+    val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     var itemSelected by remember {
         mutableStateOf("select sub category")
     }
+        val subCategoryList by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
     LaunchedEffect(categoryId) {
-        val subCategoryList = subCategoryViewModel.subCategories
          if(subCategoryList.isNotEmpty()){
              itemSelected = subCategoryList[0].libelle
             onSelected(subCategoryList[0])
@@ -796,7 +800,7 @@ fun ParentCard(parent: Parent) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
-
+val context = LocalContext.current
     Column(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -805,13 +809,20 @@ fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: 
             modifier = Modifier
                 .padding(4.dp)
                 .clickable {
+                    Toast
+                        .makeText(context, "clicked", Toast.LENGTH_SHORT)
+                        .show()
                     invoiceViewModel.invoice = invoice
                     invoiceViewModel.discount = invoice.discount
                     invoiceViewModel.invoiceMode = InvoiceMode.UPDATE
-                    if(invoice.type == InvoiceDetailsType.ORDER_LINE.toString() || invoice.status == Status.ACCEPTED.toString() || !asProvider){
-                    invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
+                    if (invoice.type == InvoiceDetailsType.ORDER_LINE.toString() || invoice.status == Status.ACCEPTED.toString() || !asProvider) {
+                        invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
                     }
                     appViewModel.updateShow("add invoice")
+                    Toast
+                        .makeText(context, "clicked ${appViewModel.show}", Toast.LENGTH_SHORT)
+                        .show()
+
 //                    invoiceType = true
                 }
         ) {

@@ -36,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.IconType
@@ -52,19 +53,35 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
+import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
+import com.aymen.store.model.entity.realm.Company
+import com.aymen.store.model.repository.ViewModel.ClientViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Composable
 fun ArticleDetailsScreen() {
-    val articleViewModel : ArticleViewModel = viewModel()
-    val companyViewModel : CompanyViewModel = viewModel()
-    val messageViewModel : MessageViewModel = viewModel()
-    val appViewModel : AppViewModel = viewModel()
+    val articleViewModel : ArticleViewModel = hiltViewModel()
+    val companyViewModel : CompanyViewModel = hiltViewModel()
+    val messageViewModel : MessageViewModel = hiltViewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
+    val clientViewModel : ClientViewModel = hiltViewModel()
+    val ratingViewModel : RatingViewModel = hiltViewModel()
+    var myCompany by remember {
+        mutableStateOf(Company())
+    }
     val company = companyViewModel.myCompany
     val article = articleViewModel.articleCompany
     var showComment by remember {
         mutableStateOf(false)
+    }
+    LaunchedEffect(key1 = Unit) {
+        if (sharedViewModel.accountType == AccountType.COMPANY) {
+            myCompany = sharedViewModel._company.value
+        }
     }
     LaunchedEffect(articleViewModel.articleCompany) {
         articleViewModel.getAllArticleComments()
@@ -89,6 +106,7 @@ fun ArticleDetailsScreen() {
                 modifier = Modifier.weight(1f)
             ) {
                 item {
+                    // from
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -120,40 +138,23 @@ fun ArticleDetailsScreen() {
                         Text(text = company.name)
 
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 2.dp)
-                        ) {
-                            AddTypeDialog(isOpen = false, company.id!!, true) {}
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        ) {
-                            Icon(imageVector = Icons.Outlined.Send,
-                                contentDescription = "send a message",
-                                Modifier.clickable {
-                                    messageViewModel.receiverCompany = company
-                                    messageViewModel.getAllMyMessageByConversationId()
-                                    RouteController.navigateTo(Screen.HomeScreen)
-                                    appViewModel.updateShow("message")
-                                    appViewModel.updateScreen(IconType.MESSAGE)
-                                }
-                            )
-                        }
-                    }
+                 companyDetails(
+                     messageViewModel = messageViewModel,
+                     appViewModel = appViewModel,
+                     clientViewModel = clientViewModel,
+                     companyViewModel = companyViewModel,
+                     ratingViewModel = ratingViewModel,
+                     company = company,
+                     isMePointSeller = myCompany.isPointsSeller!!
+                 ) {
+
+                 }
                     company.address?.let { it1 -> Text(text = it1) }
                     company.phone?.let { it1 -> Text(text = it1) }
                     company.email?.let { Text(text = it) }
                     company.code?.let { it1 -> Text(text = it1) }
                     company.matfisc?.let { it1 -> Text(text = it1) }
+                    //to
                     ArticleCardForAdmin(
                         article = article,
                         image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${

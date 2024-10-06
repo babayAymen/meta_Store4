@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +18,8 @@ import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -25,37 +29,40 @@ import javax.inject.Inject
 class CategoryViewModel @Inject constructor (
     private val repository: GlobalRepository,
     private val realm: Realm,
-    private val companyViewModel : CompanyViewModel
+    private val sharedViewModel : SharedViewModel
 ): ViewModel() {
 
-    var categories by mutableStateOf(emptyList<Category>())
+    private val _categories = MutableStateFlow<List<Category>>(emptyList())
+    var categories : StateFlow<List<Category>> = _categories
+
     var category by mutableStateOf(Category())
 //    @SuppressLint("SuspiciousIndentation")
 @SuppressLint("SuspiciousIndentation")
-fun getAllCategoryByCompany(){
-        Log.e("aymenbabaycategory","get all categories begin")
-                companyViewModel.getMyCompany{company ->
-        viewModelScope.launch {
-            withContext(Dispatchers.IO){
-            try {
-                val categorie = company?.let { it1 -> repository.getAllCategoryByCompany(it1.id!!,it1.id!!).body() }!!
-                    Log.e("aymenbabaycategory","categories size ${categorie.size}")
-                categories = categorie
-                category = categories[0]
-                categorie.forEach{
-                    Log.e("aymenbabaycategory","categories image ${it.image}")
-                    realm.write {
-                        copyToRealm(it, UpdatePolicy.ALL)
+fun getAllCategoryByCompany(companyId : Long?){
+                    viewModelScope.launch (Dispatchers.IO){
+                            try {
+                                val response = repository.getAllCategoryByCompany(sharedViewModel.company.value.id?:0,companyId?:0)
+                                if(response.isSuccessful) {
+                                    Log.e(
+                                        "aymenbabaycategory",
+                                        "categories size ${response.body()?.size}"
+                                    )
+                                    response.body()?.forEach {
+                                        realm.write {
+                                            copyToRealm(it, UpdatePolicy.ALL)
+                                        }
+                                    }
+                                }
+                            } catch (ex: Exception) {
+                                Log.e("aymenbabaycategory", "exception : ${ex.message}")
+                            }
+                            _categories.value = repository.getAllCategoriesLocally(companyId?:0)
+                            Log.e(
+                                "aymenbabaycategory",
+                                "categories size locally ${categories.value.size} and companyId $companyId"
+                            )
+
                     }
-                }
-            }catch (_ex : Exception){
-                Log.e("aymenbabaycategory","exception : $_ex")
-            }
-            categories =  repository.getAllCategoriesLocally()
-                Log.e("aymenbabaycategory","categories size locally ${categories.size}")
-            }
-                }
-        }
     }
 
     fun addCtagory(category: String, file: File) {

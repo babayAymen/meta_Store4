@@ -26,11 +26,15 @@ import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.entity.realm.Worker
 
 interface RealmRepository {
-    fun getAllSubCategoriesLocally(): List<SubCategory>
+    fun getAllSubCategoriesLocally(companyId : Long): List<SubCategory>
 
-    fun getSubCategoriesByCategory(categoryId : Long):List<SubCategory>
+    fun getSubCategoriesByCategoryLocally(categoryId: Long,companyId: Long): List<SubCategory>
 
-    fun getAllCategoriesLocally():List<Category>
+    fun getAllCategoriesLocally(companyId: Long):List<Category>
+
+    fun getRandomArticlesByCategoryLocally(categoryId : Long, companyId : Long): List<ArticleCompany>
+
+    fun getRandomArticlesBySubCategoryLocally(subcategoryId : Long , companyId : Long) : List<ArticleCompany>
 
     fun getInventoryLocally():List<Inventory>
 

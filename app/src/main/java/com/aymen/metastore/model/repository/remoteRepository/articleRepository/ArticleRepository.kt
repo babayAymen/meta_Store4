@@ -12,6 +12,10 @@ interface ArticleRepository {
 
     suspend fun getRandomArticlesByCompanyCategory(categName : String): Response<List<ArticleCompany>>
 
+    suspend fun getRandomArticlesByCategory(categoryId : Long,  companyId : Long ) : Response<List<ArticleCompany>>
+
+    suspend fun getRandomArticlesBySubCategory(subcategoryId : Long , companyId: Long) : Response<List<ArticleCompany>>
+
     suspend fun getAll(companyId : Long, offset : Int, pageSize : Int): Response<List<ArticleCompany>>
 
     suspend fun deleteArticle(id: String): Response<Void>

@@ -17,8 +17,10 @@ import com.aymen.store.model.entity.api.RegisterRequest
 import com.aymen.store.model.entity.api.CommandLineDto
 import com.aymen.store.model.entity.api.ConversationDto
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
+import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Conversation
 import com.aymen.store.model.entity.realm.Invoice
+import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.realmRepository.RealmRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -179,12 +181,28 @@ class GlobalRepositoryImpl  @Inject constructor
     ////////////////////////////////////// locally function /////////////////////////////////////////////////////////////////////////
     override fun getAllArticlesLocaly(companyId : Long)= realmRepository.getAllArticlesLocaly(companyId)
     override fun getInventoryLocally() = realmRepository.getInventoryLocally()
-    override fun getAllSubCategoriesLocally() = realmRepository.getAllSubCategoriesLocally()
-    override fun getSubCategoriesByCategory(categoryId: Long) = realmRepository.getSubCategoriesByCategory(categoryId)
-    override fun getAllCategoriesLocally() = realmRepository.getAllCategoriesLocally()
+    override fun getAllSubCategoriesLocally(companyId: Long) = realmRepository.getAllSubCategoriesLocally(companyId)
+    override fun getSubCategoriesByCategoryLocally(
+        categoryId: Long,
+        companyId: Long
+    ) = realmRepository.getSubCategoriesByCategoryLocally(categoryId, companyId)
+
+    override fun getAllCategoriesLocally(companyId: Long) = realmRepository.getAllCategoriesLocally(companyId)
+    override fun getRandomArticlesByCategoryLocally(categoryId: Long, companyId : Long) = realmRepository.getRandomArticlesByCategoryLocally(categoryId, companyId)
+    override fun getRandomArticlesBySubCategoryLocally(
+        subcategoryId: Long,
+        companyId: Long
+    ) = realmRepository.getRandomArticlesBySubCategoryLocally(subcategoryId, companyId)
+
     override fun getAllMyClientLocally() = realmRepository.getAllMyClientLocally()
     override suspend fun getRandomArticles() = articleRepository.getRandomArticles()
     override suspend fun getRandomArticlesByCompanyCategory(categName : String) = articleRepository.getRandomArticlesByCompanyCategory(categName)
+    override suspend fun getRandomArticlesByCategory(categoryId: Long, companyId : Long) = articleRepository.getRandomArticlesByCategory(categoryId, companyId)
+    override suspend fun getRandomArticlesBySubCategory(
+        subcategoryId: Long,
+        companyId: Long
+    ) = articleRepository.getRandomArticlesBySubCategory(subcategoryId, companyId)
+
     override fun getRandomArticleLocally() =  realmRepository.getRandomArticleLocally()
     override fun getRandomArticleByCompanyCategoryLocally(categName : String) =  realmRepository.getRandomArticleByCompanyCategoryLocally(categName)
     override fun getAllMyPaymentsLocally() = realmRepository.getAllMyPaymentsLocally()

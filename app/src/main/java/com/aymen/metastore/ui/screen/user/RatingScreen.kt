@@ -32,6 +32,7 @@ import com.google.gson.Gson
 import android.net.Uri
 import coil.compose.AsyncImage
 import com.aymen.store.dependencyInjection.BASE_URL
+import com.aymen.store.model.entity.api.UserDto
 import com.aymen.store.ui.component.ShowImage
 
 @Composable
@@ -54,17 +55,17 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
     }
     DisposableEffect(Unit) {
         onDispose {
-        ratingViewModel.allRating = emptyList()
+            ratingViewModel.allRating = emptyList()
             ratingViewModel.rating = false
         }
     }
 
     var comment by remember { mutableStateOf("") }
-    var rating by remember {
+    val rating by remember {
         mutableStateOf(
             RatingDto(
                 rateeCompany = CompanyDto(),
-                rateeUser = com.aymen.store.model.entity.api.UserDto()
+                rateeUser = UserDto()
             )
         )
     }
@@ -73,22 +74,24 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
 
     Surface(
         modifier = Modifier
-            .fillMaxSize()
             .padding(3.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 100.dp)
+                    .padding(bottom = 10.dp)
+                    .fillMaxWidth()
             ) {
                 items(ratingViewModel.allRating) {
-                    Text(
-                        text = it.rateeCompany?.name ?: it.rateeUser?.username ?: "no company name"
-                    )
-                    Text(text = it.raterUser?.username ?: it.raterCompany?.name ?: "no name")
-                    Text(text = it.comment ?: "no comment")
-                    ShowImage(image = "${BASE_URL}werehouse/image/${it.photo}/rating/${it.raterCompany?.user?.id?:it.raterUser?.id}")
+                    it.raterUser?.let { user ->
+                        ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
+                    }
+                    it.raterCompany?.let { company ->
+                        ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
+                    }
+                    Text(text = it.raterUser?.username ?: it.raterCompany?.name ?: "")
+                    Text(text = it.comment ?: "")
+                    //  ShowImage(image = "${BASE_URL}werehouse/image/${it.photo}/rating/${it.raterCompany?.user?.id?:it.raterUser?.id}")
                 }
             }
 
@@ -97,65 +100,66 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
                     .align(Alignment.BottomCenter)
                     .background(Color.White)
                     .fillMaxWidth()
-                    .padding(8.dp)
             ) {
-                imageBitmap?.let {
-                    Row {
-
-                        AsyncImage(
-                            model = imageBitmap,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .padding(bottom = 8.dp)
-                        )
-                        Text(text = "x")
-                    }
-                }
-                if (ratingViewModel.rating) {
-                    InputTextField(
-                        labelValue = comment,
-                        label = "Add a comment",
-                        singleLine = false,
-                        maxLine = 6,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Send
-                        ),
-                        onValueChange = {
-                            comment = it
-                        },
-                        onImage = { bitmap ->
-                            imageHeight = 100.dp
-                            imageBitmap = bitmap
-                        }
-                    ) {
-                        rating.comment = comment
-                        if (mode == AccountType.COMPANY) {
-                            if (appViewModel.userRole == RoleEnum.ADMIN) {
-                                rating.type = RateType.COMPANY_RATE_COMPANY
-                                rating.rateeCompany?.id = company?.id
-                            } else {
-                                rating.type = RateType.USER_RATE_COMPANY
-                                rating.rateeCompany?.id = company?.id
+//                imageBitmap?.let {
+//                    Row {
+//
+//                        AsyncImage(
+//                            model = imageBitmap,
+//                            contentDescription = null,
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(200.dp)
+//                                .padding(bottom = 8.dp)
+//                        )
+//                        Text(text = "x")
+//                    }
+//                }
+                if (ratingViewModel.rating)
+                    Column {
+                        InputTextField(
+                            labelValue = comment,
+                            label = "Add a comment",
+                            singleLine = false,
+                            maxLine = 6,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Send
+                            ),
+                            onValueChange = {
+                                comment = it
+                            },
+                            onImage = { bitmap ->
+                                imageHeight = 100.dp
+                                imageBitmap = bitmap
                             }
-                        } else {
-                            if (appViewModel.userRole == RoleEnum.ADMIN) {
-                                rating.type = RateType.COMPANY_RATE_USER
-                                rating.rateeUser?.id = user?.id
+                        ) {
+                            rating.comment = comment
+                            if (mode == AccountType.COMPANY) {
+                                if (appViewModel.userRole == RoleEnum.ADMIN) {
+                                    rating.type = RateType.COMPANY_RATE_COMPANY
+                                    rating.rateeCompany?.id = company?.id
+                                } else {
+                                    rating.type = RateType.USER_RATE_COMPANY
+                                    rating.rateeCompany?.id = company?.id
+                                }
                             } else {
-                                rating.type = null
+                                if (appViewModel.userRole == RoleEnum.ADMIN) {
+                                    rating.type = RateType.COMPANY_RATE_USER
+                                    rating.rateeUser?.id = user?.id
+                                } else {
+                                    rating.type = null
+                                }
                             }
+                            rating.rateValue = ratingViewModel.rate
+                            val ratingJson = gson.toJson(rating)
+                            ratingViewModel.doRate(ratingJson, it)
+                            comment = ""
+                            imageBitmap = null
                         }
-                        rating.rateValue = ratingViewModel.rate
-                        val ratingJson = gson.toJson(rating)
-                        ratingViewModel.doRate(ratingJson, it)
-                        comment = ""
-                        imageBitmap = null
                     }
-                }
             }
         }
     }
 }
+

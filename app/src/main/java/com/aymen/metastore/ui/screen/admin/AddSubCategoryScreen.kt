@@ -24,8 +24,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
@@ -40,13 +43,14 @@ import com.google.gson.Gson
 fun AddSubCategoryScreen() {
     val gson = Gson()
     val context = LocalContext.current
-    val appViewModel : AppViewModel = viewModel()
-    val categoryViewModel : CategoryViewModel = viewModel()
-    val subCategoryViewModel : SubCategoryViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val categoryViewModel : CategoryViewModel = hiltViewModel()
+    val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     LaunchedEffect(key1 = true) {
-        categoryViewModel.getAllCategoryByCompany()
+        categoryViewModel.getAllCategoryByCompany(sharedViewModel.company.value.id!!)
     }
-    val categories = categoryViewModel.categories
+    val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
     var subCategory = SubCategory()
     var libelle by remember {
         mutableStateOf("")

@@ -1,6 +1,7 @@
 package com.aymen.store.ui.screen.admin
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aymen.metastore.ui.screen.admin.ArticlesScreenForCompanyByCategory
@@ -37,6 +39,7 @@ fun DashBoardScreen() {
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val shoppingViewModel : ShoppingViewModel = hiltViewModel()
     val invoiceType = invoiceViewModel.invoiceMode
+    val context = LocalContext.current
     LaunchedEffect(key1 =  Unit) {
         companyViewModel.getMyCompany()
     }
@@ -117,6 +120,9 @@ fun DashBoardScreen() {
             AddProviderScreen()
         }
         "payment" -> {
+            viewModel.updateScreen(IconType.WALLET)
+
+            Toast.makeText(context, "show: ${viewModel.show.value} /icon: ${viewModel.currentScreen.value} /hist: ${viewModel.historySelected.value}", Toast.LENGTH_SHORT).show()
             PaymentScreen()
         }
         "order" -> {

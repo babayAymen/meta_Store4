@@ -33,9 +33,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.aymen.metastore.model.entity.realm.ArticleCompany
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
 import com.aymen.store.model.entity.realm.Article
@@ -70,6 +72,7 @@ fun AddArticleScreen(){
         val appViewModel : AppViewModel = hiltViewModel()
         val categoryViewModel : CategoryViewModel = hiltViewModel()
         val companyViewModel : CompanyViewModel = hiltViewModel()
+        val sharedViewModel : SharedViewModel = hiltViewModel()
         val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
         val articleViewModel : ArticleViewModel = hiltViewModel()
         val article = articleViewModel.article
@@ -81,20 +84,20 @@ fun AddArticleScreen(){
             onResult = {uri -> image = uri }
         )
         LaunchedEffect(Unit){
-            categoryViewModel.getAllCategoryByCompany()
+            categoryViewModel.getAllCategoryByCompany(0)
             companyViewModel.getAllMyProvider()
         }
-        val categories = categoryViewModel.categories
+        val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
         LaunchedEffect(categoryViewModel.category) {
             // Reload subcategories when categoryId changes
             categoryViewModel.category.id?.let { subCategoryViewModel.insertsubcategory(it) }
             categoryViewModel.category.id?.let {
                 subCategoryViewModel.getAllSubCtaegoriesByCategory(
-                    it
+                    it,sharedViewModel.company.value.id!!
                 )
             }
         }
-        val subcategories = subCategoryViewModel.subCategories
+        val subcategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
         val context = LocalContext.current
         val articleCompany = ArticleCompany()
         val gson = Gson()
@@ -383,7 +386,7 @@ fun AddArticleScreen(){
                             articleCompany.sellingPrice = sellingPrice
                             articleCompany.category?.id = categoryViewModel.category.id
                             articleCompany.subCategory?.id = subCategory.id
-                            articleCompany.provider?.id = companyViewModel.myCompany.id
+                            articleCompany.provider?.id = sharedViewModel.company.value.id
                             articleCompany.unit = unitItem.toString()
                             articleCompany.isVisible = privacy.toString()
                             val photo = resolveUriToFile(image, context)
