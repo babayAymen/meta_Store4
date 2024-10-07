@@ -9,23 +9,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderDtoToPurchaseOrderRealm
 import com.aymen.metastore.model.entity.realm.ArticleCompany
-import com.aymen.metastore.model.entity.realm.PaymentForProviders
-import com.aymen.store.model.entity.api.ArticleDto
-import com.aymen.store.model.entity.api.CompanyDto
-import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Company
-import com.aymen.store.model.entity.api.PurchaseOrderDto
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
-import com.aymen.store.model.entity.api.UserDto
 import com.aymen.store.model.entity.realm.PurchaseOrder
 import com.aymen.store.model.entity.realm.PurchaseOrderLine
-import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.entity.converterRealmToApi.mapApiArticleToRealm
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
-import com.aymen.store.model.entity.converterRealmToApi.mapRealmArticleToApi
 import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,7 +34,8 @@ class ShoppingViewModel @Inject constructor(
     private val repository : GlobalRepository,
     private val realm : Realm,
     private val companyViewModel: CompanyViewModel,
-    private val sharedViewModel: SharedViewModel
+    private val sharedViewModel: SharedViewModel,
+    private val appViewModel: AppViewModel
 ): ViewModel() {
 
     var qte by mutableDoubleStateOf(0.0)
@@ -312,7 +304,7 @@ fun submitShopping(newBalance : BigDecimal) {
                     if(order.isSuccessful){
                       val re = repository.changeStatusLocally(status,id,isAll)
                         _allMyOrdersLine.value = re
-
+                        appViewModel.updateCompanyBalance(order.body()!!)
                     }
                 }catch (_ex : Exception){
                     Log.e("aymenbabayOrder","orderLineResponse exption: $_ex")

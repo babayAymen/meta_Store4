@@ -17,10 +17,7 @@ import com.aymen.store.model.entity.api.RegisterRequest
 import com.aymen.store.model.entity.api.CommandLineDto
 import com.aymen.store.model.entity.api.ConversationDto
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
-import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Conversation
-import com.aymen.store.model.entity.realm.Invoice
-import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.realmRepository.RealmRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -151,7 +148,7 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun sendOrder(orderList: List<PurchaseOrderLineDto>) = orderRepository.sendOrder(orderList)
     override suspend fun test(order: PurchaseOrderLineDto) = shoppingRepository.test(order)
-    override suspend fun orderLineResponse(status: String, id: Long, isAll : Boolean) = shoppingRepository.orderLineResponse(status,id, isAll)
+    override suspend fun orderLineResponse(status: String, id: Long, isAll: Boolean): Response<Double> = shoppingRepository.orderLineResponse(status,id, isAll)
 
     override suspend fun getAllMyOrders(companyId: Long) = orderRepository.getAllMyOrders(companyId)
     override suspend fun getAllOrdersLineByInvoiceId(invoiceId: Long) = orderRepository.getAllOrdersLineByInvoiceId(invoiceId)
@@ -169,6 +166,10 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun getAllMyRating(id: Long, type: AccountType) = ratingRepository.getAllMyRating(id, type)
     override suspend fun doRating(rating : String, image : File?) = ratingRepository.doRating(rating, image)
+    override suspend fun enabledToCommentCompany(companyId : Long) = ratingRepository.enabledToCommentCompany(companyId = companyId)
+    override suspend fun enabledToCommentUser(userId: Long) = ratingRepository.enabledToCommentUser(userId)
+    override suspend fun enabledToCommentArticle(companyId: Long) = ratingRepository.enabledToCommentArticle(companyId)
+
     override suspend fun makeAsPointSeller(status: Boolean, id: Long) = aymenRepository.makeAsPointSeller(status,id)
     override suspend fun getAllCommandLinesByInvoiceId(invoiceId: Long) = commandLineRepository.getAllCommandLinesByInvoiceId(invoiceId)
 

@@ -121,8 +121,6 @@ fun DashBoardScreen() {
         }
         "payment" -> {
             viewModel.updateScreen(IconType.WALLET)
-
-            Toast.makeText(context, "show: ${viewModel.show.value} /icon: ${viewModel.currentScreen.value} /hist: ${viewModel.historySelected.value}", Toast.LENGTH_SHORT).show()
             PaymentScreen()
         }
         "order" -> {

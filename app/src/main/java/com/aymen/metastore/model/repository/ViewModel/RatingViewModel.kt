@@ -13,6 +13,8 @@ import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.Realm
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -25,13 +27,17 @@ class RatingViewModel @Inject constructor(
 ): ViewModel() {
 
     var rate by mutableStateOf(0)
-    var allRating by mutableStateOf(emptyList<Rating>())
+    var _allRating = MutableStateFlow<List<Rating>>(emptyList())
+    val allRating : StateFlow<List<Rating>> = _allRating
+
     var rating by mutableStateOf(false)
+    var enableToRating by mutableStateOf(false)
+    var enableToComment by mutableStateOf(false)
     fun getAllRating(id : Long, type : AccountType){
         viewModelScope.launch(Dispatchers.IO) {
             try {
                val response = repository.getAllMyRating(id,type)
-                allRating = response.body()!!
+                _allRating.value = response.body()!!
             }catch (_ex : Exception){
                 Log.e("aymenbabayRating","getAllRating exption: $_ex")
             }
@@ -39,18 +45,52 @@ class RatingViewModel @Inject constructor(
     }
 
     fun doRate(rating : String, image : File?){
-        viewModelScope.launch {
-            withContext(Dispatchers.IO){
-                Log.e("aymenbabayRating","getAllRating ratee: ${image?.name}")
-
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                val response = repository.doRating(rating,image)
             }catch (_ex : Exception){
                 Log.e("aymenbabayRating","doRating exption: $_ex")
             }
+        }
+    }
+
+    fun enabledToCommentCompany(companyId : Long){
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.e("aymenbabayRating","respons")
+            try {
+                val response = repository.enabledToCommentCompany(companyId)
+                Log.e("aymenbabayRating","response : ${response.body()!!}")
+                enableToRating = response.body()!!
+            }catch (ex : Exception){
+                Log.e("aymenbabayRating","enabledToCommentCompany exption: $ex")
             }
         }
     }
 
+    fun enabledToCommentUser(userId : Long){
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.e("aymenbabayRating","respons")
+            try {
+                val response = repository.enabledToCommentUser(userId)
+                enableToRating = response.body()!!
+                Log.e("aymenbabayRating","response : ${response.body()!!}")
+            }catch (ex : Exception){
+                Log.e("aymenbabayRating","enabledToCommentUser exption: $ex")
+            }
+        }
+    }
+
+    fun enabledToCommentArticle(companyId : Long){
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.e("aymenbabayRating","respons")
+            try {
+                val response = repository.enabledToCommentArticle(companyId)
+                enableToComment = response.body()!!
+                Log.e("aymenbabayRating","response : ${response.body()!!}")
+            }catch (ex : Exception){
+                Log.e("aymenbabayRating","enabledToCommentUser exption: $ex")
+            }
+        }
+    }
 
 }

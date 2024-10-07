@@ -198,7 +198,7 @@ interface ServiceApi {
     @POST("werehouse/order/test")
     suspend fun test(@Body order : PurchaseOrderLineDto): Response<Void>
     @GET("werehouse/order/{id}/{status}/{isall}")
-    suspend fun orderLineResponse(@Path("id") id : Long, @Path("status") status : String, @Path("isall") isAll: Boolean):Response<Void>
+    suspend fun orderLineResponse(@Path("id") id : Long, @Path("status") status : String, @Path("isall") isAll: Boolean):Response<Double>
     @GET("werehouse/order/get_all_my_lines/{companyId}")
     suspend fun getAllMyOrdersLine(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderLineDto>>
     @GET("werehouse/order/get_all_by_invoice/{invoiceId}")
@@ -254,6 +254,12 @@ interface ServiceApi {
     @Multipart
     @POST("werehouse/rate/do_rate")
     suspend fun doRating(@Query("ratingDto") rating : String, @Part image: MultipartBody.Part? = null):Response<Void>
+    @GET("werehouse/rate/enable_to_comment_company/{companyId}")
+    suspend fun enabledToCommentCompany(@Path("companyId") companyId: Long):Response<Boolean>
+    @GET("werehouse/rate/enable_to_comment_user/{userId}")
+    suspend fun enabledToCommentUser(@Path("userId") userid: Long):Response<Boolean>
+    @GET("werehouse/rate/enable_to_comment_article/{companyId}")
+    suspend fun enabledToCommentArticle(@Path("companyId") companyId: Long):Response<Boolean>
 //suspend fun doRating(
 //    @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>,
 //    @Part file: MultipartBody.Part? = null

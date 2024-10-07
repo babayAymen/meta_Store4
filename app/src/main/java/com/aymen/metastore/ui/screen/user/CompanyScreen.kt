@@ -109,6 +109,7 @@ fun CompanyScreen(company: Company) {
         }
     }
     LaunchedEffect(key1 = Unit) {
+        ratingViewModel.enabledToCommentCompany(companyId = company.id!!)
         articleViewModel.getAllMyArticlesApi()
         categoryViewModel.getAllCategoryByCompany(company.id)
         if (sharedViewModel.accountType == AccountType.COMPANY) {
@@ -324,22 +325,27 @@ fun companyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
                     ratingViewModel.rating = !ratingViewModel.rating
                 }
         ) {
-            if (ratingViewModel.rating) {
+            if (ratingViewModel.rating && ratingViewModel.enableToRating) {
                 StarRating(
                     company.rate?.toInt()!!,
                     modifier = Modifier
                         .fillMaxWidth()
-                    //    .padding(vertical = 8.dp)
                     ,
                     onRatingChanged = { newRating ->
-                        ratingViewModel.rating = true
+//                        ratingViewModel.rating = true
                         ratingViewModel.rate = newRating
                     }
                 )
             }else{
-                Icon(imageVector = Icons.AutoMirrored.Filled.StarHalf, contentDescription = "rating")
+                Row {
+                    Text(text = company.rate?.toString()!!)
+                    Icon(
+                        imageVector = if(company.rate == 0.0)Icons.Outlined.StarOutline else if(company.rate == 5.0)Icons.Filled.Star else Icons.AutoMirrored.Filled.StarHalf ,
+                        contentDescription = "rating"
+                    )
+                }
             }
-            Text(text = company.rate?.toString()!!)
+            Text(text = company.raters?.toString()!! +" reviews")
 
         }
     }

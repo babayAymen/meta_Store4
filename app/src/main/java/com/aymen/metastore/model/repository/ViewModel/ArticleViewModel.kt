@@ -132,7 +132,8 @@ class ArticleViewModel @Inject constructor(
                 viewModelScope.launch {
                     withContext(Dispatchers.IO) {
                         try {
-                            val response = repository.getAll(companyId, offset, pageSize)
+                            val response = repository.getAll(sharedViewModel.company.value.id!!, offset, pageSize)
+                            Log.e("aymenbabayarticle",response.body()?.size.toString())
                             if(response.isSuccessful) {
                                 response.body()?.forEach { article ->
                                     realm.write {
@@ -143,7 +144,8 @@ class ArticleViewModel @Inject constructor(
                         } catch (ex: Exception) {
                             Log.e("aymenbabayarticle", "error is : $ex")
                         }
-                        _adminArticles.value = repository.getAllArticlesLocaly(companyId)
+                        _adminArticles.value = repository.getAllArticlesLocaly(sharedViewModel.company.value.id!!)
+                        Log.e("aymenbabayarticle",_adminArticles.value.size.toString())
                     }
                 }
 

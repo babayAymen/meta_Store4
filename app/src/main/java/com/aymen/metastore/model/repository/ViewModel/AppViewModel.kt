@@ -34,6 +34,7 @@ import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.realmListOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -43,6 +44,7 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import java.io.File
+import java.math.BigDecimal
 import javax.inject.Inject
 
 
@@ -62,6 +64,9 @@ class AppViewModel @Inject constructor(
     private lateinit var webSocket: WebSocket
     private val _messages = MutableStateFlow<List<String>>(emptyList())
     val messages = _messages.asStateFlow()
+
+    val _user = MutableStateFlow(User())
+    val user: StateFlow<User> = _user
 
     private val _currentScreen = mutableStateOf(IconType.HOME)
     val currentScreen: State<IconType> get() = _currentScreen
@@ -355,6 +360,18 @@ class AppViewModel @Inject constructor(
         }
     }
 
+    fun updateCompanyBalance(blc : Double){
+        viewModelScope.launch {
+            datastore1.updateData { currentCompany ->
+                currentCompany.apply {
+                    balance = balance?.plus(blc)
+                }.also {
+                sharedViewModel._company.value = currentCompany
+                }
+            }
+        }
+    }
+
 
     fun updateImage(file : File){
         viewModelScope.launch(Dispatchers.IO) {
@@ -373,7 +390,6 @@ class AppViewModel @Inject constructor(
                     }
                         else ->{
                             Log.e("updateImageError", "updateImage in else statement")
-
                         }                        }
                 }
             }catch (ex : Exception){
@@ -381,6 +397,7 @@ class AppViewModel @Inject constructor(
             }
         }
     }
+
 
     fun logout(){
         viewModelScope.launch {

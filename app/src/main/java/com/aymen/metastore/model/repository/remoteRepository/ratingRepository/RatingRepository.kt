@@ -12,4 +12,9 @@ interface RatingRepository {
 
     suspend fun doRating( rating : String, image : File?):Response<Void>?
 
+    suspend fun enabledToCommentCompany(companyId : Long) : Response<Boolean>
+
+    suspend fun enabledToCommentUser(userId : Long) : Response<Boolean>
+
+    suspend fun enabledToCommentArticle(companyId : Long) : Response<Boolean>
 }

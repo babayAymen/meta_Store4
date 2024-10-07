@@ -13,8 +13,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -65,18 +68,17 @@ fun UserScreen() {
     val companyViewModel : CompanyViewModel = viewModel()
     val ratingViewModel : RatingViewModel = hiltViewModel()
     val clientViewModel : ClientViewModel = hiltViewModel()
-    var isPointSeller by remember {
-        mutableStateOf(false)
+    val company by sharedViewModel.company.collectAsStateWithLifecycle()
+    val isPointSeller by remember {
+        mutableStateOf(company.isPointsSeller)
     }
+    val user by appViewModel.user.collectAsStateWithLifecycle()
     var rating by remember {
         mutableStateOf(false)
     }
     LaunchedEffect(key1 = Unit) {
-        companyViewModel.getMyCompany {
-            isPointSeller = it?.isPointsSeller!!
-        }
+        ratingViewModel.enabledToCommentUser(user.id!!)
     }
-    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     Surface(modifier = Modifier
         .fillMaxSize()
@@ -120,7 +122,7 @@ fun UserScreen() {
                         companyViewModel,
                         ratingViewModel,
                         user,
-                        isPointSeller
+                        isPointSeller!!
                     ) {
                     }
                 }
@@ -240,19 +242,30 @@ fun userDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,c
                 SendPointDialog(isOpen = false, user, Company())
             }
         }
-        Row (
+        Column (
             modifier = Modifier.weight(1.8f)
         ){
-            StarRating(
-                user.rate?.toInt()!!,
-                modifier = Modifier
-                    .fillMaxWidth()
-                ,
-                onRatingChanged = { newRating ->
-                    ratingViewModel.rating = true
-                    ratingViewModel.rate = newRating
+            if (ratingViewModel.rating && ratingViewModel.enableToRating) {
+                StarRating(
+                    user.rate?.toInt()!!,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onRatingChanged = { newRating ->
+                        ratingViewModel.rating = true
+                        ratingViewModel.rate = newRating
+                    }
+                )
+            }else{
+                Row {
+                    Text(text = user.rate?.toString()!!)
+                    Icon(
+                        imageVector = if(user.rate == 0.0)Icons.Outlined.StarOutline else if(user.rate == 5.0)Icons.Filled.Star else Icons.AutoMirrored.Filled.StarHalf ,
+                        contentDescription = "rating"
+                    )
                 }
-            )
+            }
+            Text(text = user.rater?.toString()!! +"reviews")
+
         }
     }
 }

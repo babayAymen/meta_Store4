@@ -127,7 +127,10 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     val randomArticles by articleViewModel.randomArticles.collectAsStateWithLifecycle()
     var triggerLocationCheck by remember { mutableStateOf(false) }
 
-    LaunchedEffect(key1 = type, key2 = Unit) { //, key2 = user, key3 = company
+    LaunchedEffect(key1 = type, key2 = user, key3 = company) { //, key2 = user, key3 = company should be exist
+        Toast.makeText(context, "home launch effect", Toast.LENGTH_SHORT).show()
+        Log.e("homelaunche","c bpon")
+        Log.e("homelaunche","type : $type companyId : ${company.id} company latitude : ${company.latitude} user id : ${user.id} user latitude : ${user.latitude}")
     if((type == AccountType.COMPANY && company.id != null && company.id != 0L && company.latitude == 0.0) || (type == AccountType.USER && user.id != null && user.id != 0L && user.latitude == 0.0)){
         triggerLocationCheck = true
     }
@@ -454,7 +457,6 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     val scope = rememberCoroutineScope()
     val doubleBackToExitPressedOnce = remember { mutableStateOf(false) }
     SystemBackButtonHandler {
-        Toast.makeText(context, "show: ${viewModel.show.value} /icon: ${viewModel.currentScreen.value} /hist: $historySelected", Toast.LENGTH_SHORT).show()
         if (historySelected == selectedIcon && viewModel.currentScreen.value == IconType.HOME) { //doubleBackToExitPressedOnce.value
 
             (context as? Activity)?.moveTaskToBack(true)

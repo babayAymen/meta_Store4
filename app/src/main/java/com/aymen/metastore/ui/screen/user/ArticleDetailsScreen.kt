@@ -79,6 +79,7 @@ fun ArticleDetailsScreen() {
         mutableStateOf(false)
     }
     LaunchedEffect(key1 = Unit) {
+        ratingViewModel.enabledToCommentArticle(company.id!!)
         if (sharedViewModel.accountType == AccountType.COMPANY) {
             myCompany = sharedViewModel._company.value
         }
@@ -183,8 +184,7 @@ fun ArticleDetailsScreen() {
                     }
                 }
             }
-            Log.e("isenabledtocomment","is : ${article.isEnabledToComment}")
-            if (article.isEnabledToComment) {
+            if (ratingViewModel.enableToComment) {
                 Row {
 
                     InputTextField(
@@ -201,11 +201,11 @@ fun ArticleDetailsScreen() {
                         }, onImage = {}, true
                     ) {
                         if (comment.isNotEmpty()) {
-                            Log.e("comment", "comment : $comment")
                             showComment = true
                             articleViewModel.myComment = comment
                             article.id?.let { articleViewModel.sendComment(comment, it) }
                             comment = ""
+                            ratingViewModel.enableToComment = false
                         }
                     }
                 }

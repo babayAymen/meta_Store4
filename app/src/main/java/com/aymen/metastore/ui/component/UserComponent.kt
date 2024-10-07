@@ -498,44 +498,39 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
     var type by remember {
         mutableStateOf(Type.OTHER)
     }
+    var selected by remember {
+        mutableStateOf(false)
+    }
     val accountType = sharedViewModel.accountType
-    LaunchedEffect(key1 = subType) {
+    LaunchedEffect(key1 = selected) {
         if(accountType == AccountType.USER) {
             if(isCompany){
             when (subType) {
                 SubType.CLIENT -> {
                     type = Type.USER_SEND_CLIENT_COMPANY
-//                clientViewModel.sendClientRequest(id,type)
                 }
 
                 SubType.WORKER -> {
                     type = Type.USER_SEND_WORKER_COMPANY
-//                clientViewModel.sendClientRequest(id,type)
                 }
                 else -> {
                 }
                 }
             }
         }
-//        if(role == RoleEnum.USER && !isCompany){
-//            openDialog = false
-//        }
         else {
             if (isCompany) {
                 when (subType) {
                     SubType.CLIENT -> {
                         type = Type.COMPANY_SEND_CLIENT_COMPANY
-//                        clientViewModel.sendClientRequest(id, type)
                     }
 
                     SubType.PROVIDER -> {
                         type = Type.COMPANY_SEND_PROVIDER_COMPANY
-//                        clientViewModel.sendClientRequest(id, type)
                     }
 
                     SubType.PARENT -> {
                         type = Type.COMPANY_SEND_PARENT_COMPANY
-//                        clientViewModel.sendClientRequest(id, type)
                     }
 
                     else ->
@@ -546,21 +541,15 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                 when (subType) {
                     SubType.CLIENT -> {
                         type = Type.COMPANY_SEND_PROVIDER_USER
-//                        clientViewModel.sendClientRequest(id, type)
                     }
-
                     SubType.WORKER -> {
                         type = Type.COMPANY_SEND_WORKER_USER
-//                        clientViewModel.sendClientRequest(id, type)
                     }
-
                     else ->
                         Type.OTHER
                 }
-
             }
             if (type != Type.OTHER) {
-//                clientViewModel.sendClientRequest(id, type)
             }
         }
 
@@ -592,6 +581,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                             color = Color.Green,
                             enabled = true
                         ) {
+                            selected = true
                             openDialog = false
                             subType = SubType.PROVIDER
                         }
@@ -600,6 +590,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                             color = Color.Green,
                             enabled = true
                         ) {
+                            selected = true
                             openDialog = false
                             subType = SubType.PARENT
                         }
@@ -609,6 +600,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                             color = Color.Green,
                             enabled = true
                         ) {
+                            selected = true
                             openDialog = false
                             subType = SubType.WORKER
                         }
@@ -618,6 +610,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                         color = Color.Green,
                         enabled = true
                     ) {
+                        selected = true
                         openDialog = false
                         subType = SubType.CLIENT
                     }
@@ -636,10 +629,10 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
         mutableStateOf(isOpen)
     }
     var dinars by remember {
-        mutableFloatStateOf(0F)
+        mutableDoubleStateOf(0.0)
     }
     var points by remember {
-        mutableFloatStateOf(0f)
+        mutableDoubleStateOf(0.0)
     }
     var equalsDinars by remember {
         mutableDoubleStateOf(0.0)
@@ -655,8 +648,10 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
     }
     if(launchDinar){
         LaunchedEffect(key1 = dinars) {
-            points = dinars / 3
-            equalsDinars = (dinars * 1.1)
+            val pt = BigDecimal.valueOf(dinars).divide(BigDecimal(3),2, RoundingMode.HALF_UP)
+            points = pt.toDouble()
+            val eq = BigDecimal.valueOf(dinars).multiply(BigDecimal(1.1))
+            equalsDinars = eq.setScale(2,RoundingMode.HALF_UP).toDouble()
         }
     }
     if(launchPoints) {
@@ -665,19 +660,19 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
             equalsDinars = ( dinars * 1.1)
         }
     }
-        if(launchEquals){
+    if(launchEquals){
             LaunchedEffect(key1 = equalsDinars) {
                 val dinar = BigDecimal.valueOf(equalsDinars)
-                    .multiply(BigDecimal("10"))
+                    .multiply(BigDecimal(10))
                     .divide(BigDecimal("11"), 2, RoundingMode.HALF_UP)
 
                 // Calculate points and round to 2 decimal places
-                val point = dinar.divide(BigDecimal("3"), 2, RoundingMode.HALF_UP)
+                val point = dinar.divide(BigDecimal(3), 2, RoundingMode.HALF_UP)
 
-                dinars = dinar.toFloat()
-                 points = dinars / 3
+                dinars = dinar.toDouble()
+                 points = point.toDouble()
             }
-        }
+    }
     Icon(imageVector = Icons.Default.AddCard,
     contentDescription = "add points",
         Modifier.clickable {
@@ -698,7 +693,7 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
                     modifier = Modifier.padding(2.dp)
                 ) {
                     InputTextField(
-                        labelValue = if(dinars == 0F) "" else dinars.toString(),
+                        labelValue = if(dinars == 0.0) "" else dinars.toString(),
                         label = "how many do you have money?",
                         singleLine = true,
                         maxLine = 1,
@@ -707,7 +702,7 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
                             imeAction = ImeAction.Next
                         ),
                         onValueChange = {
-                            dinars = it.toFloat()
+                            dinars = it.toDouble()
                             launchDinar = true
                             launchPoints = false
                             launchEquals = false
@@ -718,7 +713,7 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 
                     }
                     InputTextField(
-                        labelValue = if(points == 0f) "" else points.toString(),
+                        labelValue = if(points == 0.0) "" else points.toString(),
                         label = "How many points do you want to buy?",
                         singleLine = true,
                         maxLine = 1,
@@ -727,7 +722,7 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
                             imeAction = ImeAction.Next
                         ),
                         onValueChange = {
-                            points = it.toFloat()
+                            points = it.toDouble()
                             launchDinar = false
                             launchPoints = true
                             launchEquals = false

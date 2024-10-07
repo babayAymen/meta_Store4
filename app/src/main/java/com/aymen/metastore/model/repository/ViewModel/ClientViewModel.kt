@@ -157,6 +157,7 @@ class ClientViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = repository.getAllHistory()
+                Log.e("getAllSearchHistory",response.body()?.size.toString())
                 if(response.isSuccessful){
                     response.body()!!.forEach{
                         realm.write {
@@ -164,10 +165,11 @@ class ClientViewModel @Inject constructor(
                         }
                     }
                 }
-            }catch (_ex : Exception){
-
+            }catch (ex : Exception){
+                Log.e("getAllSearchHistory", "exception : ${ex.message}")
             }
             histories = repository.getAllHistoryLocally()
+            Log.e("getAllSearchHistory",histories.size.toString())
         }
     }
 }

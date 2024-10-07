@@ -7,6 +7,6 @@ interface ShoppingRepository {
 
     suspend fun test(order : PurchaseOrderLineDto):Response<Void>
 
-    suspend fun orderLineResponse(status : String, id : Long, isAll: Boolean) : Response<Void>
+    suspend fun orderLineResponse(status : String, id : Long, isAll: Boolean) : Response<Double>
 
 }

@@ -32,5 +32,9 @@ class RatingRepositoryImpl @Inject constructor(
             }
     )
 
+    override suspend fun enabledToCommentCompany(companyId : Long) = api.enabledToCommentCompany(companyId = companyId)
+    override suspend fun enabledToCommentUser(userId: Long) = api.enabledToCommentUser(userId)
+    override suspend fun enabledToCommentArticle(companyId: Long) = api.enabledToCommentArticle(companyId)
+
 
 }

@@ -159,8 +159,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                 SearchCategory.USER -> {
                                     clientViewModel.clientsUser.forEach{
                                     UserCard(it,appViewModel){
-                                        Log.e("aymenbabaysearch", "is clicked")
-                                        sharedViewModel._user.value = it
+                                        appViewModel._user.value = it
                                         RouteController.navigateTo(Screen.UserScreen)
                                         clientViewModel.saveHitory(searchCategory,it.id!!)
                                     }
@@ -169,7 +168,6 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                 SearchCategory.ARTICLE -> {
                                             articleViewModel.searchArticles.forEach{
                                                 ArticleCardForSearch(article = it){
-
                                                     companyViewModel.myCompany = it.company!!
                                                     articleViewModel.articleCompany = it
                                                     RouteController.navigateTo(Screen.ArticleDetailScreen)
@@ -194,15 +192,13 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                     }
                                     SearchCategory.USER.toString() ->{
                                         UserCard(it.user!!,appViewModel){
-                                            Log.e("aymenbabaysearch", "is clicked")
-                                            sharedViewModel._user.value = it.user!!
+                                            appViewModel._user.value = it.user!!
                                             RouteController.navigateTo(Screen.UserScreen)
                                             clientViewModel.saveHitory(searchCategory,it.user?.id!!)
                                         }
                                     }
                                     SearchCategory.ARTICLE.toString() ->{
                                         ArticleCardForSearch(article = it.article!!){
-
                                             companyViewModel.myCompany = it.company!!
                                             articleViewModel.articleCompany = it.article!!
                                             RouteController.navigateTo(Screen.ArticleDetailScreen)
@@ -227,7 +223,6 @@ fun SearchBar(clickAction: (Boolean,String,Boolean) -> Unit) {
         var searchText by remember {
             mutableStateOf("")
         }
-        Log.e("aymenbabaysearch", "searchText in search bar compo: $searchText")
     SearchField(label = "search",
         labelValue = searchText,
         value = {
@@ -236,7 +231,6 @@ fun SearchBar(clickAction: (Boolean,String,Boolean) -> Unit) {
         }
     ){
         if(searchText.isNotEmpty()){
-            Log.e("aymenbabaysearch", "if codition in search bar compo: $searchText")
         clickAction(true,searchText,true)
         }
 
@@ -269,8 +263,6 @@ fun SearchTypeItem(appViewModel : AppViewModel,item : SearchType, searchCategory
     LazyRow(Modifier.fillMaxWidth()) {
         items(SearchType.entries){
             if(searchCategory == SearchCategory.COMPANY && (it == SearchType.CLIENT || it == SearchType.PROVIDER || it == SearchType.OTHER)){
-
-                Log.e("aymenbabaysearch", "it: $it and role ${appViewModel.userRole}")
                 Text(text = it.toString(),
                     Modifier
                         .padding(end = 20.dp)

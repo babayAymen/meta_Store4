@@ -30,6 +30,7 @@ import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.ui.component.InputTextField
 import com.google.gson.Gson
 import android.net.Uri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.entity.api.UserDto
@@ -55,11 +56,11 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
     }
     DisposableEffect(Unit) {
         onDispose {
-            ratingViewModel.allRating = emptyList()
+            ratingViewModel._allRating.value = emptyList()
             ratingViewModel.rating = false
         }
     }
-
+    val allRating by ratingViewModel.allRating.collectAsStateWithLifecycle()
     var comment by remember { mutableStateOf("") }
     val rating by remember {
         mutableStateOf(
@@ -82,7 +83,7 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
                     .padding(bottom = 10.dp)
                     .fillMaxWidth()
             ) {
-                items(ratingViewModel.allRating) {
+                items(allRating) {
                     it.raterUser?.let { user ->
                         ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
                     }
@@ -115,7 +116,7 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
 //                        Text(text = "x")
 //                    }
 //                }
-                if (ratingViewModel.rating)
+                if (ratingViewModel.rating && ratingViewModel.enableToRating)
                     Column {
                         InputTextField(
                             labelValue = comment,
