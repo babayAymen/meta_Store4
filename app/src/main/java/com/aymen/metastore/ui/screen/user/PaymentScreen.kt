@@ -130,7 +130,7 @@ fun PaymentScreen() {
                                     enabled = buyInabled
                                 ) {
                                     appViewModel.updateShow("buyhistory")
-                                    paymentViewModel.getAllMyPaymentFromInvoice()
+                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.INCOMPLETE)
                                 }
                             }
                             Row( // get profits
