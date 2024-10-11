@@ -60,6 +60,8 @@ interface RealmRepository {
 
     fun getAllMyInvoicesAsProviderAndStatusLocally(companyId : Long , status : PaymentStatus): List<Invoice>
 
+    fun getAllMyPaymentNotAcceptedLocally(companyId: Long) : List<Invoice>
+
     fun getAllMyInvoicesAsClientLocally(myCompanyId : Long) : List<Invoice>
 
     fun getAllMyConversationsLocally() : List<Conversation>

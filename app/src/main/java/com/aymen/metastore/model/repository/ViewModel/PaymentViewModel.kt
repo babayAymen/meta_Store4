@@ -34,7 +34,9 @@ class PaymentViewModel @Inject constructor(
 ):ViewModel() {
 
     var payments by mutableStateOf(emptyList<Payment>())
-
+    val company by mutableStateOf(sharedViewModel.company.value)
+    val user by mutableStateOf(sharedViewModel.user.value)
+    val type by mutableStateOf(sharedViewModel.accountType)
     private val _paymentsEspece = MutableStateFlow<List<PaymentForProviders>>(emptyList())
     val paymentsEspece: StateFlow<List<PaymentForProviders>> = _paymentsEspece
 
@@ -132,6 +134,31 @@ class PaymentViewModel @Inject constructor(
                 Log.e("getAllMyPaymentFromInvoice","exception is : ${ex.message}")
             }
             _myAllInvoice.value = repository.getAllMyInvoicesAsProviderAndStatusLocally(companyId = sharedViewModel.company.value.id!!, status)
+        }
+    }
+
+    fun getAllMyPaymentNotAccepted(){
+        isLoding = true
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = repository.getAllMyPaymentNotAccepted(company.id!!)
+                if(response.isSuccessful){
+                    Log.e("companyID","size : ${response.body()?.size}")
+                    response.body()?.forEach {
+                        realm.write {
+                            copyToRealm(it, UpdatePolicy.ALL)
+                        }
+                    }
+                }
+            }catch(ex : Exception) {
+                Log.e("getAllMyPaymentNotAccepted","exception : ${ex.message}")
+            }
+            if(type == AccountType.COMPANY){
+            _myAllInvoice.value = repository.getAllMyPaymentNotAcceptedLocally(company.id!!)
+            }
+            if(type == AccountType.USER){
+                _myAllInvoice.value = repository.getAllMyPaymentNotAcceptedLocally(user.id!!)
+            }
         }
     }
 

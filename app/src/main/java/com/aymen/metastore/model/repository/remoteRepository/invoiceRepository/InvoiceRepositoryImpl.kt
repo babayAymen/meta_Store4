@@ -25,5 +25,6 @@ class InvoiceRepositoryImpl @Inject constructor(
     override suspend fun getAllMyInvoicesNotAccepted() = api.getAllMyInvoicesNotAccepted()
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = api.acceptInvoice(invoiceId , status)
     override suspend fun getAllMyInvoicesAsProviderAndStatus(companyId: Long, status: PaymentStatus) = api.getAllMyInvoicesAsProviderAndStatus(companyId, status)
+    override suspend fun getAllMyPaymentNotAccepted(companyId: Long) = api.getAllMyPaymentNotAccepted(companyId)
 
 }

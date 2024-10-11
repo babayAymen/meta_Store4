@@ -14,6 +14,7 @@ import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.api.CommandLineDto
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
@@ -87,6 +88,27 @@ class InvoiceViewModel @Inject constructor(
 
         }
     }
+
+    fun getAllMyInvoicesAsProviderAndStatus( status : PaymentStatus){
+        viewModelScope.launch {
+            try {
+                val response = repository.getAllMyInvoicesAsProviderAndStatus(company.id!!, status)
+                if(response.isSuccessful){
+                    response.body()?.forEach {
+                        realm.write {
+                            copyToRealm(it, UpdatePolicy.ALL)
+                        }
+                    }
+                }
+            }catch (ex : Exception){
+                Log.e("getAllMyInvoicesAsProviderAndStatus","exception : ${ex.message}")
+            }
+            _myInvoicesAsProvider.value = repository.getAllMyInvoicesAsProviderAndStatusLocally(company.id!! , status)
+            Log.e("azereza","size : ${_myInvoicesAsProvider.value.size} ${company.id!!} $status")
+        }
+    }
+
+
     fun getAllMyInvoicesAsClient(){
         viewModelScope.launch(Dispatchers.IO) {
             try {

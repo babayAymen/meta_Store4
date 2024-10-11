@@ -130,7 +130,7 @@ fun PaymentScreen() {
                                     enabled = buyInabled
                                 ) {
                                     appViewModel.updateShow("buyhistory")
-                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.INCOMPLETE)
+                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.PAID)
                                 }
                             }
                             Row( // get profits
@@ -167,6 +167,7 @@ fun PaymentScreen() {
                                     enabled = true
                                 ) {
                                     appViewModel.updateView("payed")
+                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.PAID)
                                 }
                             }
                             Row(
@@ -178,6 +179,7 @@ fun PaymentScreen() {
                                     enabled = true
                                 ) {
                                     appViewModel.updateView("incomplete")
+                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.INCOMPLETE)
                                 }
                             }
                             Row(
@@ -189,6 +191,19 @@ fun PaymentScreen() {
                                     enabled = true
                                 ) {
                                     appViewModel.updateView("notpayed")
+                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.NOT_PAID)
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "not accepted yet",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    appViewModel.updateView("notaccepted")
+                                    paymentViewModel.getAllMyPaymentNotAccepted()
                                 }
                             }
                         }
@@ -235,16 +250,6 @@ fun paymentView(isLoading : Boolean,allMyPointsPayment : List<PointsPayment>, ap
 fun BuyView(invoice : Invoice, appViewModel: AppViewModel) {
     val view by appViewModel.view
     when(view) {
-        "notpayed" -> {
-            Row {
-                Text(text = "hi")
-            }
-        }
-        "incomplete" -> {
-            Row {
-                Text(text = "hello")
-            }
-        }
 
         "payed" -> {
             Row {
@@ -255,6 +260,21 @@ fun BuyView(invoice : Invoice, appViewModel: AppViewModel) {
                 Text(text = invoice.paid)
                 Spacer(modifier = Modifier.padding(6.dp))
                 Text(text = if (invoice.paid == PaymentStatus.INCOMPLETE.toString()) invoice.rest.toString() else "")
+            }
+        }
+        "incomplete" -> {
+            Row {
+                Text(text = invoice.code.toString())
+            }
+        }
+        "notpayed" -> {
+            Row {
+                Text(text = invoice.code.toString())
+            }
+        }
+        "notaccepted" -> {
+            Row {
+                Text(text = invoice.code.toString())
             }
         }
     }

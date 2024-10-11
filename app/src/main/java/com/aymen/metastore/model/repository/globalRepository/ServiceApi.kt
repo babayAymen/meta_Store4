@@ -182,6 +182,8 @@ interface ServiceApi {
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
     @GET("werehouse/invoice/get_by_status/{companyId}/{status}")
     suspend fun getAllMyInvoicesAsProviderAndStatus(@Path("companyId") companyId : Long, @Path("status") status: PaymentStatus) : Response<List<Invoice>>
+    @GET("werehouse/invoice/get_all_my_invoices_notaccepted/{companyId}")
+    suspend fun getAllMyPaymentNotAccepted(@Path("companyId") companyId : Long): Response<List<Invoice>>
     @GET("werehouse/commandline/getcommandline/{invoiceId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("invoiceId") invoiceId : Long):Response<List<CommandLine>>
     @GET("werehouse/client/get_all_my_containing/{clientName}/{companyId}")

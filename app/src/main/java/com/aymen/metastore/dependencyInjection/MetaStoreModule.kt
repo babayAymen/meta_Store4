@@ -118,7 +118,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import kotlin.math.exp
 
-const val BASE_URL = "http://192.168.1.3:8080/"
+const val BASE_URL = "http://192.168.1.86:8080/"
 private const val DATABASE_NAME = "database"
 
 @Module

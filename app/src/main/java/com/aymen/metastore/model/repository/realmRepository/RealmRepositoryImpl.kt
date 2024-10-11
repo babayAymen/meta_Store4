@@ -161,7 +161,13 @@ class RealmRepositoryImpl @Inject constructor(
         status: PaymentStatus
     ): List<Invoice> {
         return realm.query<Invoice>(
-            query = "provider.id == $0 and status == $1",companyId,status.toString()
+            query = "provider.id == $0 and paid == $1",companyId,status.toString()
+        ).find()
+    }
+
+    override fun getAllMyPaymentNotAcceptedLocally(companyId : Long): List<Invoice> {
+        return realm.query<Invoice>(
+            query = "status == $0 and provider.id == $1",Status.INWAITING.toString() , companyId
         ).find()
     }
 

@@ -26,4 +26,7 @@ interface InvoiceRepository {
 
     suspend fun getAllMyInvoicesAsProviderAndStatus(companyId : Long, status : PaymentStatus) : Response<List<Invoice>>
 
+    suspend fun getAllMyPaymentNotAccepted(companyId : Long) : Response<List<Invoice>>
+
+
 }

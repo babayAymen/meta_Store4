@@ -8,6 +8,7 @@ import com.aymen.metastore.model.repository.remoteRepository.CommandLineReposito
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepository
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepository
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Status
@@ -141,6 +142,12 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun getAllMyInvoicesNotAccepted() = invoiceRepository.getAllMyInvoicesNotAccepted()
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = invoiceRepository.accepteInvoice(invoiceId, status)
+    override suspend fun getAllMyInvoicesAsProviderAndStatus(
+        companyId: Long,
+        status: PaymentStatus
+    ) = invoiceRepository.getAllMyInvoicesAsProviderAndStatus(companyId, status)
+
+    override suspend fun getAllMyPaymentNotAccepted(companyId: Long) = invoiceRepository.getAllMyPaymentNotAccepted(companyId)
 
     override suspend fun getAllMyConversations() = messageRepository.getAllMyConversations()
     override suspend fun getAllMyMessageByConversationId(conversationId: Long) = messageRepository.getAllMyMessageByConversationId(conversationId)
@@ -218,6 +225,9 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllMyInvoicesAsProviderLocally(myCompanyId: Long) = realmRepository.getAllMyInvoicesAsProviderLocally(
         myCompanyId = myCompanyId,
     )
+
+    override fun getAllMyInvoicesAsProviderAndStatusLocally(companyId: Long, status: PaymentStatus) = realmRepository.getAllMyInvoicesAsProviderAndStatusLocally(companyId,status)
+    override fun getAllMyPaymentNotAcceptedLocally(companyId: Long) = realmRepository.getAllMyPaymentNotAcceptedLocally(companyId)
     override fun getAllMyInvoicesAsClientLocally(myCompanyId: Long) = realmRepository.getAllMyInvoicesAsClientLocally(myCompanyId = myCompanyId)
     override fun getAllMyConversationsLocally() = realmRepository.getAllMyConversationsLocally()
     override fun getAllMyMessageByConversationIdLocally(conversationId : Long) = realmRepository.getAllMyMessageByConversationIdLocally(conversationId)

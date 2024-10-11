@@ -22,9 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
@@ -35,8 +37,8 @@ import com.aymen.store.ui.component.InvoiceCard
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceScreenAsProvider() {
-    val appViewModel : AppViewModel = viewModel()
-    val invoiceViewModel : InvoiceViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     var asProvider by remember {
         mutableStateOf(true)
     }
@@ -116,7 +118,48 @@ fun InvoiceScreenAsProvider() {
                         )
                     }
                 } else {
+                    item {
+                        Row {
+
+                    if(asProvider){
+                        Row (
+                            modifier = Modifier.weight(1f)
+                        ){
+                        ButtonSubmit(
+                            labelValue = "paid",
+                            color = Color.Green,
+                            enabled = true
+                        ) {
+                            invoiceViewModel.getAllMyInvoicesAsProviderAndStatus( PaymentStatus.PAID)
+                        }
+                        }
+                        Row (
+                            modifier = Modifier.weight(1f)
+                        ){
+                            ButtonSubmit(
+                                labelValue = "in complete",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                invoiceViewModel.getAllMyInvoicesAsProviderAndStatus( PaymentStatus.INCOMPLETE)
+                            }
+                        }
+                        Row (
+                            modifier = Modifier.weight(1f)
+                        ){
+                            ButtonSubmit(
+                                labelValue = "not paid",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                invoiceViewModel.getAllMyInvoicesAsProviderAndStatus( PaymentStatus.NOT_PAID)
+                            }
+                        }
+                        }
+                    }
+                    }
                     items(invoicesAsProvider) {
+
                         InvoiceCard(it, appViewModel, invoiceViewModel,asProvider)
 
                     }
