@@ -18,6 +18,7 @@ import com.aymen.store.model.entity.api.CommandLineDto
 import com.aymen.store.model.entity.api.ConversationDto
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
 import com.aymen.store.model.entity.realm.Conversation
+import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.realmRepository.RealmRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -139,6 +140,7 @@ class GlobalRepositoryImpl  @Inject constructor
                                     invoiceMode: InvoiceMode) = invoiceRepository.addInvoice(commandLineDtos, clientId, invoiceCode,discount, clientType, invoiceMode)
 
     override suspend fun getAllMyInvoicesNotAccepted() = invoiceRepository.getAllMyInvoicesNotAccepted()
+    override suspend fun accepteInvoice(invoiceId: Long, status: Status) = invoiceRepository.accepteInvoice(invoiceId, status)
 
     override suspend fun getAllMyConversations() = messageRepository.getAllMyConversations()
     override suspend fun getAllMyMessageByConversationId(conversationId: Long) = messageRepository.getAllMyMessageByConversationId(conversationId)
@@ -213,7 +215,9 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllMyOrdersLinesByOrderIdLocally(orderId: Long) = realmRepository.getAllMyOrdersLinesByOrderIdLocally(orderId)
 
     //    override fun getMyCompanyLocally() = realmRepository.getMyCompanyLocally()
-    override fun getAllMyInvoicesAsProviderLocally(myCompanyId: Long) = realmRepository.getAllMyInvoicesAsProviderLocally(myCompanyId = myCompanyId)
+    override fun getAllMyInvoicesAsProviderLocally(myCompanyId: Long) = realmRepository.getAllMyInvoicesAsProviderLocally(
+        myCompanyId = myCompanyId,
+    )
     override fun getAllMyInvoicesAsClientLocally(myCompanyId: Long) = realmRepository.getAllMyInvoicesAsClientLocally(myCompanyId = myCompanyId)
     override fun getAllMyConversationsLocally() = realmRepository.getAllMyConversationsLocally()
     override fun getAllMyMessageByConversationIdLocally(conversationId : Long) = realmRepository.getAllMyMessageByConversationIdLocally(conversationId)
@@ -230,6 +234,7 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllMyProfitsLocally() = realmRepository.getAllMyProfitsLocally()
     override fun getAllArticlesByCategoryLocaly(myCompanyId: Long, myCompanyCategory: String) = realmRepository.getAllArticlesByCategoryLocaly(myCompanyId = myCompanyId, myCompanyCategory = myCompanyCategory)
     override fun getAllMyInvoicesNotAcceptedLocally(id: Long) = realmRepository.getAllMyInvoicesNotAcceptedLocally(id = id)
+    override fun updateInvoiceStatusLocally(invoiceId: Long, status: String) = realmRepository.updateInvoiceStatusLocally(invoiceId, status)
 
     override fun getAllMyProviderLocally() = realmRepository.getAllMyProviderLocally()
 

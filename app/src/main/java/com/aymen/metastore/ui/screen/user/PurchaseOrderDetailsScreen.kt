@@ -147,7 +147,6 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
                         Text(text = line.status)
                         when (line.status) {
                             Status.INWAITING.toString() -> {
-                                Toast.makeText(context, "${line.purchaseorder?.company?.id} azzz ${myCompany.id}", Toast.LENGTH_SHORT).show()
                                 if (line.purchaseorder?.company?.id == myCompany.id) {
                                     Row {
                                         Row(

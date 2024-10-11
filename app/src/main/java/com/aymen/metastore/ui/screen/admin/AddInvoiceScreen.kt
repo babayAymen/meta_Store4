@@ -810,7 +810,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                             )
                             if(invoice.status == Status.INWAITING.toString()){
                             ButtonSubmit(labelValue = "Accept", color = Color.Green, enabled = true) {
-                                Toast.makeText(context, "salem", Toast.LENGTH_SHORT).show()
+                                invoiceViewModel.accepteInvoice(invoice.id!! , Status.ACCEPTED)
                             }
                             }
                         }

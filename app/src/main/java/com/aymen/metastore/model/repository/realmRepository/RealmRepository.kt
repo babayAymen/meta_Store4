@@ -3,13 +3,11 @@ package com.aymen.store.model.repository.realmRepository
 import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.realm.PaymentForProviders
-import com.aymen.store.model.Enum.CompanyCategory
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
-import com.aymen.store.model.entity.realm.Client
 import com.aymen.store.model.entity.realm.ClientProviderRelation
 import com.aymen.store.model.entity.realm.Comment
-import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.entity.realm.Conversation
 import com.aymen.store.model.entity.realm.Inventory
 import com.aymen.store.model.entity.realm.Invetation
@@ -60,6 +58,8 @@ interface RealmRepository {
 
     fun getAllMyInvoicesAsProviderLocally(myCompanyId : Long) : List<Invoice>
 
+    fun getAllMyInvoicesAsProviderAndStatusLocally(companyId : Long , status : PaymentStatus): List<Invoice>
+
     fun getAllMyInvoicesAsClientLocally(myCompanyId : Long) : List<Invoice>
 
     fun getAllMyConversationsLocally() : List<Conversation>
@@ -91,4 +91,8 @@ interface RealmRepository {
      fun getAllArticlesByCategoryLocaly(myCompanyId: Long, myCompanyCategory: String) : List<Article>
 
      fun getAllMyInvoicesNotAcceptedLocally(id : Long):List<Invoice>
+
+     fun updateInvoiceStatusLocally(invoiceId : Long , status: String)
+
+
 }

@@ -2,8 +2,10 @@ package com.aymen.store.ui.screen.user
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,6 +32,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.PaymentStatus
+import com.aymen.store.model.entity.realm.Invoice
+import com.aymen.store.model.entity.realm.PointsPayment
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.PaymentViewModel
 import com.aymen.store.model.repository.ViewModel.PointsPaymentViewModel
@@ -47,23 +52,19 @@ fun PaymentScreen() {
     val paymentViewModel : PaymentViewModel = hiltViewModel()
     val pointPaymentViewModel : PointsPaymentViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
+    val isLoading = pointPaymentViewModel.isLoding
+    val isLoding = paymentViewModel.isLoding
     LaunchedEffect(key1 = Unit) {
         pointPaymentViewModel.getAllMyPointsPayment()
     }
     val type = sharedViewModel.accountType
-    val paymentsEspece by paymentViewModel.paymentsEspece.collectAsStateWithLifecycle()
     val allMyPointsPayment by pointPaymentViewModel.allMyPointsPayment.collectAsStateWithLifecycle()
-    val allMyProfits by pointPaymentViewModel.allMyProfits.collectAsStateWithLifecycle()
 
     val show by appViewModel.show
     val context = LocalContext.current
-    val myProfit by pointPaymentViewModel.myProfits.collectAsStateWithLifecycle()
-    var beginDate by remember {
-        mutableStateOf("")
-    }
-    var finalDate by remember {
-        mutableStateOf("")
-    }
+    val myAllInvoices by paymentViewModel.myAllInvoice.collectAsStateWithLifecycle()
+    
+
     var rechargeInabled by remember {
         mutableStateOf(false)
     }
@@ -83,7 +84,7 @@ fun PaymentScreen() {
                 profitInabled = true
                 buyInabled = true
             }
-            "pointespece" -> {
+            "buyhistory" -> {
                 buyInabled = false
                 rechargeInabled = true
                 profitInabled = true
@@ -103,85 +104,198 @@ fun PaymentScreen() {
         LazyColumn(
             modifier = Modifier.fillMaxWidth()
         ) {
-                                    if (type == AccountType.COMPANY) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column {
-                                Row {
+            if (type == AccountType.COMPANY) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row {
+                            Row( // recharge history
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "recharge history",
+                                    color = Color.Green,
+                                    enabled = rechargeInabled
+                                ) {
+                                    appViewModel.updateShow("payment")
+                                }
+                            }
+                            Row( // buy history
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "buy history",
+                                    color = Color.Green,
+                                    enabled = buyInabled
+                                ) {
+                                    appViewModel.updateShow("buyhistory")
+                                    paymentViewModel.getAllMyPaymentFromInvoice()
+                                }
+                            }
+                            Row( // get profits
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "get profits",
+                                    color = Color.Green,
+                                    enabled = profitInabled
+                                ) {
+                                    appViewModel.updateShow("profit")
+                                    paymentViewModel.getAllMyPaymentsEspece(0)
 
-                                    Row(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-
-                                        ButtonSubmit(
-                                            labelValue = "recharge history",
-                                            color = Color.Green,
-                                            enabled = rechargeInabled
-                                        ) {
-                                            appViewModel.updateShow("payment")
-
-                                        }
-                                    }
-                                    Row(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-
-                                        ButtonSubmit(
-                                            labelValue = "buy history",
-                                            color = Color.Green,
-                                            enabled = buyInabled
-                                        ) {
-                                            appViewModel.updateShow("pointespece")
-                                            paymentViewModel.getAllMyPaymentsEspece(0)
-
-                                        }
-                                    }
-                                        Row(
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            ButtonSubmit(
-                                                labelValue = "get profits",
-                                                color = Color.Green,
-                                                enabled = profitInabled
-                                            ) {
-                                                appViewModel.updateShow("profit")
-                                                pointPaymentViewModel.getAllMyProfits()
-
-                                            }
-                                        }
-                                    }
                                 }
                             }
                         }
                     }
-
+                }
+            }
             when(show){
-                "pointespece"->{
+                "payment" ->
                     item {
-
-                        ButtonSubmit(
-                            labelValue = "history by date",
-                            color = Color.Green,
-                            enabled = true
-                        ) {
-                            paymentViewModel.getAllMyPaymentsEspeceByDate(
-                                beginDate,
-                                finalDate
-                            )
-                        }
-                        DateFilterUI(paymentViewModel = paymentViewModel) { begindate, finaldate ->
-                            beginDate = begindate
-                            finalDate = finaldate
+                        paymentView(isLoading, allMyPointsPayment, appViewModel)
+                    }
+                "buyhistory"->{
+                    item {
+                        Row {
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "payed",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    appViewModel.updateView("payed")
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "in compelete",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    appViewModel.updateView("incomplete")
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "not payed",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    appViewModel.updateView("notpayed")
+                                }
+                            }
                         }
                     }
+                    items(myAllInvoices){
+                        BuyView(it, appViewModel)
+                    }
+                }
+                "profit" ->
+                    item {
+                      ProfitView(isLoding, pointPaymentViewModel, paymentViewModel, appViewModel)
+                    }
+
+            }
+
+
+
+        }
+    }
+}
+
+@Composable
+fun paymentView(isLoading : Boolean,allMyPointsPayment : List<PointsPayment>, appViewModel: AppViewModel ) {
+
+        if (isLoading){
+                LodingShape()
+        }else {
+            allMyPointsPayment.forEach {
+                SwipeToDeleteContainer(
+                    it,
+                    onDelete = {
+                        Log.e("aymenbabatdelete", "delete")
+                    },
+                    appViewModel = appViewModel
+                ) { pointPay ->
+                    Text(text = pointPay.provider?.name.toString() + " has sent " + pointPay.amount + " points for " + if (pointPay.clientUser?.username != null) pointPay.clientUser?.username else pointPay.clientCompany?.name)
+                }
+
+            }
+        }
+}
+
+@Composable
+fun BuyView(invoice : Invoice, appViewModel: AppViewModel) {
+    val view by appViewModel.view
+    when(view) {
+        "notpayed" -> {
+            Row {
+                Text(text = "hi")
+            }
+        }
+        "incomplete" -> {
+            Row {
+                Text(text = "hello")
+            }
+        }
+
+        "payed" -> {
+            Row {
+                Text(text = invoice.code.toString())
+                Spacer(modifier = Modifier.padding(6.dp))
+                Text(text = invoice.prix_invoice_tot.toString())
+                Spacer(modifier = Modifier.padding(6.dp))
+                Text(text = invoice.paid)
+                Spacer(modifier = Modifier.padding(6.dp))
+                Text(text = if (invoice.paid == PaymentStatus.INCOMPLETE.toString()) invoice.rest.toString() else "")
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfitView(isLoding: Boolean, pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel: PaymentViewModel, appViewModel: AppViewModel) {
+
+    val allMyProfits by pointPaymentViewModel.allMyProfits.collectAsStateWithLifecycle()
+    val paymentsEspece by paymentViewModel.paymentsEspece.collectAsStateWithLifecycle()
+    val myProfit by pointPaymentViewModel.myProfits.collectAsStateWithLifecycle()
+    var beginDate by remember {
+        mutableStateOf("")
+    }
+    var finalDate by remember {
+        mutableStateOf("")
+    }
+            Row {
+                Column (
+                    modifier = Modifier.weight(1f)
+                ){
+
+                    ButtonSubmit(
+                        labelValue = "history by date",
+                        color = Color.Green,
+                        enabled = true
+                    ) {
+                        paymentViewModel.getAllMyPaymentsEspeceByDate(
+                            beginDate,
+                            finalDate
+                        )
+                    }
+                    DateFilterUI(paymentViewModel = paymentViewModel) { begindate, finaldate ->
+                        beginDate = begindate
+                        finalDate = finaldate
+                    }
+
                     if(paymentViewModel.isLoding) {
-                        item {
-                            LodingShape()
-                        }
+                        LodingShape()
                     }else{
-                        items(paymentsEspece) {
+                        paymentsEspece.forEach {
                             SwipeToDeleteContainer(
                                 it,
                                 onDelete = {
@@ -192,93 +306,73 @@ fun PaymentScreen() {
                                 BuyHistoryCard(buy)
                             }
                         }
-                        }
+                    }
                 }
-                "payment" ->{
-                    if (pointPaymentViewModel.isLoding){
-                        item {
-                            LodingShape()
-                        }
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    ButtonSubmit(
+                        labelValue = "profit per day",
+                        color = Color.Green,
+                        enabled = true
+                    ) {
+                        pointPaymentViewModel.getAllMyProfits()
+                    }
+
+                }
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    ButtonSubmit(
+                        labelValue = "profit by date",
+                        color = Color.Green,
+                        enabled = true
+                    ) {
+                        pointPaymentViewModel.getMyHistoryProfitByDate(
+                            beginDate,
+                            finalDate
+                        )
+                    }
+                    DateFilterUI(paymentViewModel = paymentViewModel) { begindate, finaldate ->
+                        beginDate = begindate
+                        finalDate = finaldate
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    ButtonSubmit(
+                        labelValue = "sum of profit by date",
+                        color = Color.Green,
+                        enabled = true
+                    ) {
+                        pointPaymentViewModel.getMyProfitByDate(
+                            beginDate,
+                            finalDate
+                        )
+                    }
+                    DateFilterUI(paymentViewModel = paymentViewModel) { begindate, finaldate ->
+                        beginDate = begindate
+                        finalDate = finaldate
+                    }
+                    if(pointPaymentViewModel.isLoding){
+                        LodingShape()
                     }else {
-                        items(allMyPointsPayment) {
-                            SwipeToDeleteContainer(
-                                it,
-                                onDelete = {
-                                    Log.e("aymenbabatdelete", "delete")
-                                },
-                                appViewModel = appViewModel
-                            ) { pointPay ->
-                                Text(text = pointPay.provider?.name.toString() + " has sent " + pointPay.amount + " points for " + if (pointPay.clientUser?.username != null) pointPay.clientUser?.username else pointPay.clientCompany?.name)
-                            }
-
-                        }
-                    }
-                }
-                "profit" -> {
-                    item {
-                        Row {
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(
-                                    labelValue = "profit by date",
-                                    color = Color.Green,
-                                    enabled = true
-                                ) {
-                                    pointPaymentViewModel.getMyHistoryProfitByDate(
-                                        beginDate,
-                                        finalDate
-                                    )
-                                }
-                                DateFilterUI(paymentViewModel = paymentViewModel) { begindate, finaldate ->
-                                    beginDate = begindate
-                                    finalDate = finaldate
-                                }
-                            }
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(
-                                    labelValue = "sum of profit by date",
-                                    color = Color.Green,
-                                    enabled = true
-                                ) {
-                                    pointPaymentViewModel.getMyProfitByDate(
-                                        beginDate,
-                                        finalDate
-                                    )
-                                }
-                                DateFilterUI(paymentViewModel = paymentViewModel) { begindate, finaldate ->
-                                    beginDate = begindate
-                                    finalDate = finaldate
-                                }
-                                if(pointPaymentViewModel.isLoding){
-                                    LodingShape()
-                                }else {
-                                    Text(text = myProfit)
-                                }
-                            }
-
-                        }
-                    }
-                    if (paymentViewModel.isLoding) {
-                        item {
-                           LodingShape()
-                        }
-                    } else {
-                        items(allMyProfits) {
-                            Column {
-                                Text(text = it.amount.toString())
-                                Text(text = it.payed.toString())
-                            }
-                        }
+                        Text(text = myProfit)
                     }
                 }
 
             }
 
-
-
+        if (isLoding) {
+                LodingShape()
+        } else {
+            allMyProfits.forEach {
+                Column {
+                    Text(text = it.amount.toString())
+                    Text(text = it.payed.toString())
+                }
+            }
         }
-    }
+
 }

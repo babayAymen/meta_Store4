@@ -10,7 +10,9 @@ import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.entity.realm.PaymentForProviders
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.entity.realm.Article
+import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.entity.realm.Payment
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +37,10 @@ class PaymentViewModel @Inject constructor(
 
     private val _paymentsEspece = MutableStateFlow<List<PaymentForProviders>>(emptyList())
     val paymentsEspece: StateFlow<List<PaymentForProviders>> = _paymentsEspece
+
+    private val _myAllInvoice = MutableStateFlow<List<Invoice>>(emptyList())
+    val myAllInvoice: StateFlow<List<Invoice>> = _myAllInvoice
+
 
     var isLoding by mutableStateOf(false)
     fun getAllMyPaymentsEspeceByDate(date : String, finDate : String){
@@ -81,8 +87,7 @@ class PaymentViewModel @Inject constructor(
 
     fun getAllMyPaymentsEspece(id : Long?){
         isLoding = true
-        viewModelScope.launch {
-
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                val response = repository.getAllMyPaymentsEspece(id?:0L)
                 if (response.isSuccessful) {
@@ -109,4 +114,25 @@ class PaymentViewModel @Inject constructor(
 
         }
     }
+
+
+    fun getAllMyPaymentFromInvoice(status : PaymentStatus){
+        isLoding = true
+        viewModelScope.launch(Dispatchers.IO){
+            try {
+                val response = repository.getAllMyInvoicesAsProviderAndStatus(companyId = sharedViewModel.company.value.id!!, status)
+                if(response.isSuccessful){
+                    response.body()?.forEach {
+                        realm.write {
+                            copyToRealm(it, UpdatePolicy.ALL)
+                        }
+                    }
+                }
+            }catch(ex : Exception){
+                Log.e("getAllMyPaymentFromInvoice","exception is : ${ex.message}")
+            }
+            _myAllInvoice.value = repository.getAllMyInvoicesAsProviderAndStatusLocally(companyId = sharedViewModel.company.value.id!!, status)
+        }
+    }
+
 }

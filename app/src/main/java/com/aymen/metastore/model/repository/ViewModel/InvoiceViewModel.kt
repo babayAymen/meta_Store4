@@ -11,13 +11,12 @@ import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.converterRealmToApi.mapCommandLineToCommandLineDto
 import com.aymen.metastore.model.entity.realm.ArticleCompany
-import com.aymen.metastore.model.entity.realm.PaymentForProviders
 import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.api.CommandLineDto
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
-import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
@@ -70,7 +69,7 @@ class InvoiceViewModel @Inject constructor(
     fun getAllMyInvoicesAsProvider(){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val invoices = repository.getAllMyInvoicesAsProvider(company.id!!)
+                val invoices = repository.getAllMyInvoicesAsProvider(sharedViewModel.company.value.id!!)
                 if(invoices.isSuccessful){
                     invoices.body()?.forEach{
                         realm.write {
@@ -157,7 +156,6 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
-
     fun getAllOrdersLineByInvoiceId(){
         Log.e("getAllCommandLineByInvoiceId","exception:nhh")
             isLoading = true
@@ -177,7 +175,18 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
-
+    fun accepteInvoice(invoiceId : Long , status : Status){
+        viewModelScope.launch (Dispatchers.IO){
+            try {
+                val response = repository.accepteInvoice(invoiceId , status)
+                if(response.isSuccessful){
+                    repository.updateInvoiceStatusLocally(invoiceId , status.toString())
+                }
+            }catch (ex : Exception){
+                Log.e("accepteInvoice","exception : ${ex.message}")
+            }
+        }
+    }
 
 
 

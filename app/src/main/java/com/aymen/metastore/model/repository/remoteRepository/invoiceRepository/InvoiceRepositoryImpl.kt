@@ -2,6 +2,8 @@ package com.aymen.store.model.repository.remoteRepository.invoiceRepository
 
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.PaymentStatus
+import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.api.CommandLineDto
 import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.globalRepository.ServiceApi
@@ -21,5 +23,7 @@ class InvoiceRepositoryImpl @Inject constructor(
                                         ) = api.addInvoice(commandLineDtos,clientId,invoiceCode,discount, clientTYpe, invoiceMode)
 
     override suspend fun getAllMyInvoicesNotAccepted() = api.getAllMyInvoicesNotAccepted()
+    override suspend fun accepteInvoice(invoiceId: Long, status: Status) = api.acceptInvoice(invoiceId , status)
+    override suspend fun getAllMyInvoicesAsProviderAndStatus(companyId: Long, status: PaymentStatus) = api.getAllMyInvoicesAsProviderAndStatus(companyId, status)
 
 }

@@ -152,6 +152,31 @@ class ArticleViewModel @Inject constructor(
             } catch (_: Exception) { }
     }
 
+    fun getAllArticlesApi(companyId : Long) {
+        try {
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    try {
+                        val response = repository.getAll(companyId, offset, pageSize)
+                        Log.e("aymenbabayarticle",response.body()?.size.toString())
+                        if(response.isSuccessful) {
+                            response.body()?.forEach { article ->
+                                realm.write {
+                                    copyToRealm(article, UpdatePolicy.ALL)
+                                }
+                            }
+                        }
+                    } catch (ex: Exception) {
+                        Log.e("aymenbabayarticle", "error is : $ex")
+                    }
+                    _adminArticles.value = repository.getAllArticlesLocaly(companyId)
+                    Log.e("aymenbabayarticle",_adminArticles.value.size.toString())
+                }
+            }
+
+        } catch (_: Exception) { }
+    }
+
     fun getRandomArticles(){
         viewModelScope.launch(Dispatchers.IO) {
                 try {

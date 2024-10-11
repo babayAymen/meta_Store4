@@ -153,6 +153,7 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
                                 }
                             }
                             rating.rateValue = ratingViewModel.rate
+                            ratingViewModel.enableToRating = false
                             val ratingJson = gson.toJson(rating)
                             ratingViewModel.doRate(ratingJson, it)
                             comment = ""

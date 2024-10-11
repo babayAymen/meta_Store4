@@ -49,6 +49,7 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
+import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
@@ -65,7 +66,7 @@ fun UserScreen() {
     val appViewModel: AppViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val messageViewModel : MessageViewModel = hiltViewModel()
-    val companyViewModel : CompanyViewModel = viewModel()
+    val companyViewModel : CompanyViewModel = hiltViewModel()
     val ratingViewModel : RatingViewModel = hiltViewModel()
     val clientViewModel : ClientViewModel = hiltViewModel()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
@@ -126,65 +127,6 @@ fun UserScreen() {
                     ) {
                     }
                 }
-//                Row(
-//                    modifier = Modifier.padding(2.dp)
-//                ) {
-//                    Row(
-//                        modifier = Modifier
-//                            .weight(1f)
-//                            .padding(end = 2.dp)
-//                    ) {
-//                            AddTypeDialog(isOpen = false, user.id!!,false){
-//                                clientViewModel.sendClientRequest(user.id!!,it)
-//                            }
-//                    }
-//                    Row(
-//                        modifier = Modifier.weight(1f)
-//                    ) {
-//                        Icon(imageVector = Icons.Default.Send,
-//                            contentDescription = "send a message",
-//                            Modifier.clickable {
-//                                messageViewModel.receiverUser = user
-//                                messageViewModel.getAllMyMessageByConversationId()
-////                                RouteController.navigateTo(Screen.HomeScreen)
-//                                appViewModel.updateShow("message")
-//                                appViewModel.updateScreen(IconType.MESSAGE)
-//                                messageViewModel.receiverAccountType = AccountType.USER
-//                            }
-//                        )
-//                    }
-//                    if(isPointSeller) {
-//
-//                        Row(
-//                            modifier = Modifier.weight(1f)
-//                        ) {
-//                            SendPointDialog(isOpen = false, user, Company())
-//                        }
-//                    }
-//                    Row(
-//                        modifier = Modifier.weight(1.8f)
-//                    ) {
-//                        Column(
-//                            modifier = Modifier.clickable {
-//                                rating = !rating
-//                                ratingViewModel.rating = rating
-//                            }
-//                        ) {
-//                            StarRating(
-//                                rate = user.rate?.toInt()!!,
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .padding(vertical = 8.dp),
-//                                onRatingChanged = { newRating ->
-//                                    ratingViewModel.rating = true
-//                                    ratingViewModel.rate = newRating
-//                                }
-//                            )
-//                                Text(text = user.rate.toString())
-//
-//                        }
-//                    }
-//                }
                 user.address?.let { it1 -> Text(text = it1) }
 
                 user.phone?.let { it1 -> Text(text = it1) }
@@ -228,10 +170,12 @@ fun userDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,c
 //                            messageViewModel.senderId = company.user?.id!!
 //                            messageViewModel.getAllMyMessageByConversationId()
 //                            RouteController.navigateTo(Screen.HomeScreen)
-                    messageViewModel.getConversationByCaleeId(user.id!!)
+//                    messageViewModel.messageType = MessageType.COMPANY_SEND_USER
+                    messageViewModel.receiverAccountType = AccountType.USER
+                    messageViewModel.receiverUser = user
+                    messageViewModel.getAllMessageByCaleeId(user.id!!)// from user screen
                     appViewModel.updateShow("message")
                     appViewModel.updateScreen(IconType.MESSAGE)
-                    messageViewModel.receiverAccountType = AccountType.COMPANY
                 }
             )
         }

@@ -1,5 +1,6 @@
 package com.aymen.store.model.repository.remoteRepository.orderRepository
 
+import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.api.PurchaseOrderLineDto
 import com.aymen.store.model.entity.api.PurchaseOrderDto
 import com.aymen.store.model.entity.realm.PurchaseOrder
@@ -16,4 +17,5 @@ interface OrderRepository {
     suspend fun getAllMyOrders(companyId : Long):Response<List<PurchaseOrderLineDto>>
 
     suspend fun getAllOrdersLineByInvoiceId(invoiceId : Long): Response<List<PurchaseOrderLineDto>>
+
 }

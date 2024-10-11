@@ -257,36 +257,26 @@ fun submitShopping(newBalance : BigDecimal) {
             if (sharedViewModel.accountType == AccountType.USER){
                 _allMyInvoiceNotAccepted.value = repository.getAllMyInvoicesNotAcceptedLocally(sharedViewModel.user.value.id!!)
             }
+
         }
     }
 
 
     fun getAllMyOrders(){
         isLoading = true
-        companyViewModel.getMyCompany { myCompany ->
             viewModelScope.launch {
                 withContext(Dispatchers.IO){
                     try {
-                    val allMyOrder = myCompany?.let { repository.getAllMyOrdersLines(myCompany.id?:0) }
-                        if (allMyOrder != null) {
-                            if(allMyOrder.isSuccessful){
+                    val allMyOrder =  repository.getAllMyOrdersLines(sharedViewModel.company.value.id?:0)
+                        if (allMyOrder.isSuccessful) {
                                 isLoading = false
                                 allMyOrder.body()?.forEach{ order ->
                                     realm.write {
-//                                        val pur = PurchaseOrder().apply {
-//                                            id = it.id
-//                                            orderNumber = it.orderNumber
-//                                            client = it.client
-//                                            person = it.person
-//                                            company = it.company
-//                                            createdDate = it.createdDate.toString()
-//                                        }
                                         Log.e("getallmyorders","size : ${allMyOrder.body()?.toString()}")
                                         copyToRealm(order, UpdatePolicy.ALL)
                                     }
                                 }
                             }
-                        }
                     }catch (_ex : Exception){
                         Log.e("aymenbabayOrder","all my orders exption: $_ex ")
                     }
@@ -294,7 +284,6 @@ fun submitShopping(newBalance : BigDecimal) {
                     allMyOrders = repository.getAllMyOrdersLocally()
                 }
             }
-        }
     }
 
     fun orderLineResponse(status: String, id : Long, isAll : Boolean){

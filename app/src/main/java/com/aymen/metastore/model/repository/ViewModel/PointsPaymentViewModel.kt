@@ -13,8 +13,10 @@ import com.aymen.metastore.model.entity.realm.PaymentForProviders
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.entity.realm.PointsPayment
 import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.entity.api.CompanyDto
 import com.aymen.store.model.entity.api.UserDto
+import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.Realm
@@ -29,7 +31,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PointsPaymentViewModel @Inject constructor(
     private val repository : GlobalRepository,
-    private val companyViewModel : CompanyViewModel,
+    private val sharedViewModel: SharedViewModel,
     private val realm : Realm
 ) :ViewModel(){
 
@@ -58,6 +60,7 @@ class PointsPaymentViewModel @Inject constructor(
     private val _allMyPointsPayment = MutableStateFlow<List<PointsPayment>>(emptyList())
     val allMyPointsPayment: StateFlow<List<PointsPayment>> = _allMyPointsPayment
 
+
     private val _allMyProfits = MutableStateFlow<List<PaymentForProviderPerDay>>(emptyList())
     val allMyProfits : StateFlow<List<PaymentForProviderPerDay>> = _allMyProfits
 
@@ -66,11 +69,10 @@ class PointsPaymentViewModel @Inject constructor(
 
 
     fun getAllMyPointsPayment() {
-        isLoding = true
-        companyViewModel.getMyCompany { company ->
             viewModelScope.launch(Dispatchers.IO) {
+                    isLoding = true
                     try {
-                        val response = repository.getAllMyPointsPayment(company?.id ?: 0)
+                        val response = repository.getAllMyPointsPayment(sharedViewModel.company.value.id?: 0)
                         if (response.isSuccessful) {
                             isLoding = false
                             response.body()?.forEach { pointsPayment ->
@@ -85,7 +87,7 @@ class PointsPaymentViewModel @Inject constructor(
                     _allMyPointsPayment.value = repository.getAllMyPointsPaymentLocally()
 
             }
-        }
+
     }
 
     fun getMyProfitByDate(beginDate : String, finalDate : String){
@@ -139,8 +141,6 @@ class PointsPaymentViewModel @Inject constructor(
             }
         }
     }
-
-
 
 
 

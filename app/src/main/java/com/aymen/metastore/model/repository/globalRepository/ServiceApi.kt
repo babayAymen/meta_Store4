@@ -36,6 +36,7 @@ import com.aymen.store.model.entity.realm.PurchaseOrder
 import com.aymen.store.model.entity.realm.SearchHistory
 import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.metastore.model.entity.realm.User
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.entity.api.PurchaseOrderDto
 import com.aymen.store.model.entity.realm.CommandLine
 import com.aymen.store.model.entity.realm.Worker
@@ -177,6 +178,10 @@ interface ServiceApi {
                            ):Response<Void>
     @GET("werehouse/invoice/get_all_my_invoices_not_accepted")
     suspend fun getAllMyInvoicesNotAccepted():Response<List<Invoice>>
+    @GET("werehouse/invoice/response/{invoiceId}/{status}")
+    suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
+    @GET("werehouse/invoice/get_by_status/{companyId}/{status}")
+    suspend fun getAllMyInvoicesAsProviderAndStatus(@Path("companyId") companyId : Long, @Path("status") status: PaymentStatus) : Response<List<Invoice>>
     @GET("werehouse/commandline/getcommandline/{invoiceId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("invoiceId") invoiceId : Long):Response<List<CommandLine>>
     @GET("werehouse/client/get_all_my_containing/{clientName}/{companyId}")

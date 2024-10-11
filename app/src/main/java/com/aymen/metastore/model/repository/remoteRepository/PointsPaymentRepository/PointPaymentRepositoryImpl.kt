@@ -2,6 +2,7 @@ package com.aymen.store.model.repository.remoteRepository.PointsPaymentRepositor
 
 import com.aymen.metastore.model.entity.api.PointsPaymentDto
 import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
+import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.entity.realm.PointsPayment
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import retrofit2.Response

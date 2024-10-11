@@ -1,17 +1,14 @@
 package com.aymen.store.model.repository.realmRepository
 
-import android.util.Log
 import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.realm.PaymentForProviders
-import com.aymen.store.model.Enum.CompanyCategory
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
-import com.aymen.store.model.entity.realm.Client
 import com.aymen.store.model.entity.realm.ClientProviderRelation
 import com.aymen.store.model.entity.realm.Comment
-import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.entity.realm.Conversation
 import com.aymen.store.model.entity.realm.Inventory
 import com.aymen.store.model.entity.realm.Invetation
@@ -28,11 +25,9 @@ import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.entity.realm.Worker
 import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
+import io.realm.kotlin.delete
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import javax.inject.Inject
 
 class RealmRepositoryImpl @Inject constructor(
@@ -153,18 +148,21 @@ class RealmRepositoryImpl @Inject constructor(
         return rt
     }
 
-//    override fun getMyCompanyLocally(): Company {
-//        return realm
-//            .query<Company>()
-//            .find()
-//    }
-
-    override fun getAllMyInvoicesAsProviderLocally(myCompanyId : Long): List<Invoice> {
+    override fun getAllMyInvoicesAsProviderLocally(myCompanyId: Long): List<Invoice> {
         return realm
             .query<Invoice>(
                 query = "provider.id == $0",myCompanyId
             )
             .find()
+    }
+
+    override fun getAllMyInvoicesAsProviderAndStatusLocally(
+        companyId: Long,
+        status: PaymentStatus
+    ): List<Invoice> {
+        return realm.query<Invoice>(
+            query = "provider.id == $0 and status == $1",companyId,status.toString()
+        ).find()
     }
 
     override fun getAllMyInvoicesAsClientLocally(myCompanyId : Long): List<Invoice> {
@@ -269,7 +267,8 @@ override suspend fun changeStatusLocally(status: String, id: Long, isAll: Boolea
             ).first().find()
 
             purchaseOrderLine?.let {
-                it.status = status
+                //it.status = status
+                it.purchaseorder?.let { it1 -> delete(it1) }
             }
 
         } else {
@@ -326,6 +325,16 @@ override suspend fun changeStatusLocally(status: String, id: Long, isAll: Boolea
           query = "status == $0 and (client.id == $1 or person.id == $1 or provider.id == $1)",Status.INWAITING.toString() , id
       ).find()
     }
+
+    override fun updateInvoiceStatusLocally(invoiceId: Long, status: String) {
+      val invoice = realm.query<Invoice>(
+           query = "id == $0",invoiceId
+       ).first().find()
+            invoice?.status = status
+
+    }
+
+
 
 
 }

@@ -1,6 +1,5 @@
 package com.aymen.store.model.entity.realm
 
-import com.aymen.metastore.model.entity.realm.User
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 
@@ -17,4 +16,8 @@ class Message : RealmObject {
     var content: String? = ""
 
     var conversation : Conversation? = null
+
+    override fun toString(): String {
+        return "Company(id=$id, name=$createdDate, address=$lastModifiedDate, phone=$createdBy, email=$content)"
+    }
 }

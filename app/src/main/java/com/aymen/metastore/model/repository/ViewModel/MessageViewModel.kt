@@ -23,7 +23,10 @@ import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
+import io.realm.kotlin.ext.query
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -39,7 +42,9 @@ class MessageViewModel @Inject constructor(
 ): ViewModel(){
 
     var myAllConversations by mutableStateOf(emptyList<Conversation>())
-    var myAllMessages by mutableStateOf(emptyList<Message>())
+    var _myAllMessages = MutableStateFlow<List<Message>>(emptyList())
+    val myAllMessages : StateFlow<List<Message>> = _myAllMessages
+
     var receiverUser by mutableStateOf(User())
     var receiverCompany by mutableStateOf(Company())
     var sendMessage by mutableStateOf(Message())
@@ -48,21 +53,9 @@ class MessageViewModel @Inject constructor(
     var messageType : MessageType = MessageType.USER_SEND_COMPANY
     val user by mutableStateOf(sharedViewModel.user.value)
     val company by mutableStateOf(sharedViewModel.company.value)
-    fun getMyName() {
-//        appViewModel.getToken {token ->
-//            if (token != null) {
-//                TokenUtils.UserName(token){username ->
-//                    receiverUser = username
-//                }
-//            }
-//        }
-        sharedViewModel.getMyCompany { company ->
-//            receiverId = company?.id!!
-        }
-    }
+    var fromConve by mutableStateOf(false)
 
     fun mapConversationToConversationDto(conversation: Conversation): ConversationDto {
-        Log.e("mapConversationToConversationDto", "id company 2 : ${conversation.company2?.id}")
         return ConversationDto(
             id = conversation.id,
             user1 = conversation.user1?.let { mapUserToUserDto(it) },
@@ -97,7 +90,6 @@ class MessageViewModel @Inject constructor(
 
     fun getAllMyConversation() {
         viewModelScope.launch(Dispatchers.IO) {
-            getMyName()
             realmMutex.withLock {
                 try {
                     val conversationsResponse = repository.getAllMyConversations()
@@ -205,6 +197,7 @@ Log.e("aymenbabayviewModel","user5 : ${user5.image}")
     }
 
     fun getConversationByCaleeId(id : Long){
+        accountTypeBlock()
         viewModelScope.launch(Dispatchers.IO) {
             try {
                accountTypeBlock()
@@ -241,41 +234,55 @@ Log.e("aymenbabayviewModel","user5 : ${user5.image}")
                 Log.e("getAllMessageByCaleeId","getAllMessageByCaleeId exception : ${ex.message}")
             }
             if(conversation.id != null){
-            myAllMessages = repository.getAllMyMessageByConversationIdLocally(conversation.id!!)
+            _myAllMessages.value = repository.getAllMyMessageByConversationIdLocally(conversation.id!!)
+                Log.e("disposemessage","my all message size locally from by calee id ${myAllMessages.value.size}")
             }
         }
     }
 
-    fun getAllMyMessageByConversationId(){
+    fun getAllMyMessageByConversationId() {
 
-        viewModelScope.launch {
-            withContext(Dispatchers.IO){
-            try {
-                val messages = repository.getAllMyMessageByConversationId(conversation.id!!)
-                if (messages.isSuccessful){
-                    messages.body()?.forEach{
-                        Log.e("getAllMessageByConversation", it.createdDate)
-                        realm.write {
-                            copyToRealm(it,UpdatePolicy.ALL)
+        viewModelScope.launch (Dispatchers.IO){
+                try {
+
+                    conversation.id?.let { id ->
+                        Log.e("conversation", id.toString())
+                        val response = repository.getAllMyMessageByConversationId(id)
+                        if (response.isSuccessful) {
+                            response.body()?.forEach { messageDto ->
+                                realm.write {
+                                    copyToRealm(messageDto, UpdatePolicy.ALL)
+                                }
+                            }
                         }
                     }
+                } catch (_ex: Exception) {
+                    Log.e("aymenabbaymessage", "Error message by con: $_ex")
                 }
-            }catch (_ex : Exception){
-                Log.e("aymenabbaymessage","error message by con: $_ex")
-            }
-            myAllMessages = repository.getAllMyMessageByConversationIdLocally(conversation.id!!)
-            }
+
+                // Now check the locally saved messages
+                _myAllMessages.value = repository.getAllMyMessageByConversationIdLocally(conversation.id!!)
+            Log.e("disposemessage","my all message size locally from by conv id ${myAllMessages.value.size}")
         }
     }
+
+
 
     @SuppressLint("SuspiciousIndentation")
     fun sendMessage(message : String){
                 Log.e("aymenbabaymessage","error message by con")
         sendMessage.conversation = conversation
-        sendMessage.createdBy = user.id
-        myAllMessages +=  sendMessage
+        sendMessage.createdBy = sharedViewModel.user.value.id
+        sendMessage.id = (sendMessage.id?.plus(1L))?:0L
+        _myAllMessages.value +=  sendMessage
+        sendMessage = Message()
                 viewModelScope.launch (Dispatchers.IO){
             try {
+                realm.write {
+                    Message().apply {
+                        copyToRealm(sendMessage,UpdatePolicy.ALL)
+                    }
+                }
                 var conversationForSend by mutableStateOf(ConversationDto())
                 conversationForSend = mapConversationToConversationDto(conversation)
                 conversationForSend.message = message
@@ -284,9 +291,12 @@ Log.e("aymenbabayviewModel","user5 : ${user5.image}")
                 conversationForSend.company2 = mapCompanyToCompanyDto(receiverCompany)
                         Log.e("aymenbabaymessage","receiverCompany is :${receiverCompany}")
 
-                repository.sendMessage(conversationForSend)
-            }catch (_ex : Exception){
-                Log.e("aymenbabaymessage","error message by con: $_ex")
+               val response = repository.sendMessage(conversationForSend)
+                if(response.isSuccessful){
+
+                }
+            }catch (ex : Exception){
+                Log.e("aymenbabaymessage","error message by con: ${ex.message}")
             }
         }
     }

@@ -110,11 +110,11 @@ fun CompanyScreen(company: Company) {
     }
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentCompany(companyId = company.id!!)
-        articleViewModel.getAllMyArticlesApi()
+        articleViewModel.getAllArticlesApi(company.id!!)
         categoryViewModel.getAllCategoryByCompany(company.id)
-        if (sharedViewModel.accountType == AccountType.COMPANY) {
-            myCompany = sharedViewModel._company.value
-        }
+//        if (sharedViewModel.accountType == AccountType.COMPANY) {
+//            myCompany = sharedViewModel._company.value
+//        }
     }
     LaunchedEffect(key1 = categories) {
         if(categories.isNotEmpty()) {
@@ -281,10 +281,11 @@ fun companyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
 //                            messageViewModel.senderId = company.user?.id!!
 //                            messageViewModel.getAllMyMessageByConversationId()
 //                            RouteController.navigateTo(Screen.HomeScreen)
-                    messageViewModel.getConversationByCaleeId(company.id!!)
+                    messageViewModel.receiverAccountType = AccountType.COMPANY
+                    messageViewModel.receiverCompany = company
+                    messageViewModel.getAllMessageByCaleeId(company.id!!)// from company screen
                     appViewModel.updateShow("message")
                     appViewModel.updateScreen(IconType.MESSAGE)
-                    messageViewModel.receiverAccountType = AccountType.COMPANY
                 }
             )
         }

@@ -22,8 +22,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +40,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.AddBusiness
 import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.filled.Check
@@ -75,6 +79,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -212,74 +217,80 @@ fun SearchField(label : String, labelValue : String, value : (String) -> Unit, c
 @Composable
 fun InputTextField(labelValue: String, label:String, singleLine: Boolean, maxLine : Int, keyboardOptions: KeyboardOptions, onValueChange: (String) -> Unit,
                    onImage: (Uri?)-> Unit,
-                  enabled  : Boolean? = true, onImeAction: (File?) -> Unit ){
+                  enabled  : Boolean? = true, onImeAction: (File?) -> Unit ) {
     var image by remember {
         mutableStateOf<Uri?>(null)
     }
     val focusRequester = remember { FocusRequester() }
     val context = LocalContext.current
-    val photo =  resolveUriToFile(image, context)
+    val photo = resolveUriToFile(image, context)
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = {uri -> image = uri }
+        onResult = { uri -> image = uri }
     )
     LaunchedEffect(key1 = image) {
         onImage(image)
     }
     Column {
-    OutlinedTextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                if (label == "Type a message" || label == "Type a comment") {
-                    Modifier.focusRequester(focusRequester)
-                } else {
-                    Modifier
-                }
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (label == "Type a message" || label == "Type a comment") {
+                        Modifier.focusRequester(focusRequester)
+                    } else {
+                        Modifier
+                    }
+                ),
+            enabled = enabled ?: true,
+            shape = RoundedCornerShape(20.dp),
+            value = labelValue,
+            label = { Text(label) },
+            keyboardOptions = keyboardOptions,
+            keyboardActions = KeyboardActions(
+                onSend = {
+                    onImeAction(photo)
+                }),
+            colors = TextFieldDefaults.colors(
+                focusedLabelColor = Color.Black,
+                cursorColor = Color.Magenta
             ),
-        enabled = enabled?:true,
-        shape = RoundedCornerShape(20.dp),
-        value = labelValue,
-        label = { Text( label) },
-        keyboardOptions = keyboardOptions,
-        keyboardActions = KeyboardActions(
-            onSend = { onImeAction(photo)
-            }),
-        colors =  TextFieldDefaults.colors(
-            focusedLabelColor = Color.Black,
-            cursorColor = Color.Magenta
-        ),
-        onValueChange = onValueChange,
-        singleLine = singleLine,
-        maxLines = maxLine,
-        leadingIcon = if(label == "Type a message" || label == "Type a comment"){
-            {
-            IconButton(onClick = {
-                singlePhotoPickerLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-            }) {
-            Icon(imageVector = Icons.Outlined.Image, contentDescription = "")
-            }
+            onValueChange = onValueChange,
+            singleLine = singleLine,
+            maxLines = maxLine,
+            leadingIcon = if (label == "Type a message" || label == "Type a comment") {
+                {
+                    IconButton(onClick = {
+                        singlePhotoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }) {
+                        Icon(imageVector = Icons.Outlined.Image, contentDescription = "")
+                    }
                 }
-        }else{
-            null
-        },
-        trailingIcon = if(label == "Type a message" || label == "Type a comment"){
-            {
-            IconButton(onClick = {
-                onImeAction(photo)
-            }) {
-                Icon(imageVector = Icons.Outlined.Send, contentDescription = "description")
+            } else {
+                null
+            },
+            trailingIcon = if (label == "Type a message" || label == "Type a comment") {
+                {
+                    IconButton(onClick = {
+                        onImeAction(photo)
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Send,
+                            contentDescription = "description"
+                        )
+                    }
+                }
+            } else {
+                null
             }
-}
-        }else{
-            null
-        }
-    )
+        )
     }
 
 }
+
+
 @Composable
 fun DiscountTextField(labelValue: String, label:String, singleLine: Boolean, maxLine : Int, keyboardOptions: KeyboardOptions, enabled: Boolean, onValueChange: (String) -> Unit ){
     OutlinedTextField(
@@ -435,9 +446,8 @@ fun ArticleCardForUser(article : List<ArticleCompany>, isEnabled : Boolean) {
                                 enabled = isEnabled
                             ) {
                                 messageViewModel.receiverAccountType = AccountType.COMPANY
-                                messageViewModel.getAllMessageByCaleeId(it.company?.id!!)
                                 messageViewModel.receiverCompany = it.company!!
-//                                messageViewModel.getConversationByCaleeId(it.company?.id!!)
+                                messageViewModel.getAllMessageByCaleeId(it.company?.id!!)// from home screen
                                 appViewModel.updateShow("message")
                                 appViewModel.updateScreen(IconType.MESSAGE)
                             }
@@ -1003,8 +1013,8 @@ fun updateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
 @Composable
 fun ConversationCard(conversation : List<Conversation>) {
 
-    val messageViewModel : MessageViewModel = viewModel()
-    val appViewModel : AppViewModel = viewModel()
+    val messageViewModel : MessageViewModel = hiltViewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
     Row {
         LazyColumn {
             items(conversation) {
@@ -1015,13 +1025,13 @@ fun ConversationCard(conversation : List<Conversation>) {
 
 //                        messageViewModel.sender = it.company1?.name ?: ""
                         appViewModel.updateShow("message")
+                        messageViewModel.fromConve = true
                         messageViewModel.conversation = it
-                        messageViewModel.receiverCompany = it.company2?:Company()
-                        messageViewModel.receiverUser = it.user2?:User()
-                        Log.e("usercomponentttype",it.type!!)
+                        messageViewModel.receiverCompany = it.company2?:it.company1!!
+                        messageViewModel.receiverUser = it.user2?:it.user1!!
                         messageViewModel.messageType = MessageType.valueOf(it.type!!)
-                        messageViewModel.getAllMyMessageByConversationId()
                         messageViewModel.receiverAccountType = AccountType.COMPANY
+                        messageViewModel.getAllMyMessageByConversationId()
                     }
                 ) {
                     Row(
@@ -1122,23 +1132,28 @@ fun ConversationCard(conversation : List<Conversation>) {
 }
 
 @Composable
-fun MessageCard(message: List<Message>) {
+fun MessageCardd(message: List<Message>) {
     val messageViewModel : MessageViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
-//    val conversation = messageViewModel.conversation
     val me by sharedViewModel.user.collectAsStateWithLifecycle()
-//    val myCompany = sharedViewModel.company
-//    val type = sharedViewModel.accountType
     val lazyListState = rememberLazyListState()
 LaunchedEffect(key1 = messageViewModel.myAllMessages) {
-    lazyListState.scrollToItem(index = messageViewModel.myAllMessages.size)
+    lazyListState.scrollToItem(index = messageViewModel.myAllMessages.value.size)
 }
     Row {
         LazyColumn(
             state = lazyListState
+            ,
+//            modifier = Modifier.graphicsLayer {
+//                rotationY = 180f
+//            }
         ) {
            items(message) {
-               Column {
+               Column (
+//                   modifier = Modifier.graphicsLayer {
+//                   rotationY = 180f
+//               }
+               ){
 
                it.content?.let { it1 ->
                    if (me.id != null) {
@@ -1160,6 +1175,47 @@ LaunchedEffect(key1 = messageViewModel.myAllMessages) {
            }
         }
     }
+}
+@Composable
+fun MessageCard(message: List<Message>) {
+    val sharedViewModel: SharedViewModel = hiltViewModel()
+    val me by sharedViewModel.user.collectAsStateWithLifecycle()
+
+    val lazyListState = rememberLazyListState()
+
+    LaunchedEffect(key1 = message) {
+        lazyListState.scrollToItem(index = message.size)
+    }
+
+
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier.fillMaxSize()
+                .graphicsLayer {
+                    rotationY = 180f
+                }
+                .background(Color.Green)
+        ) {
+            items(message) { msg ->
+                Column(
+                    modifier = Modifier.graphicsLayer {
+                        rotationY = 180f
+                    }
+                ) {
+                    msg.content?.let { content ->
+                        if (me.id != null) {
+                            MessageText(
+                                value = content,
+                                aligne = if (msg.createdBy == me.id) TextAlign.End else TextAlign.Start,
+                                color = if (msg.createdBy == me.id) Color.Blue else Color.Black
+                            )
+                        }
+                    }
+                    Text(text = msg.createdDate)
+                }
+            }
+        }
+
 }
 
 @Composable

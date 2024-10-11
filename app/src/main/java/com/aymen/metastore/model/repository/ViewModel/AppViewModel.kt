@@ -163,8 +163,14 @@ class AppViewModel @Inject constructor(
     private val _show = mutableStateOf("dash")
     val show : State<String> get() = _show
 
+    private val _view = mutableStateOf("payed")
+    val view : State<String> get() = _view
+
     fun updateShow(newValue: String){
         _show.value = newValue
+    }
+    fun updateView(newValue: String){
+        _view.value = newValue
     }
 
 
@@ -364,7 +370,7 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             datastore1.updateData { currentCompany ->
                 currentCompany.apply {
-                    balance = balance?.plus(blc)
+                    balance = blc
                 }.also {
                 sharedViewModel._company.value = currentCompany
                 }

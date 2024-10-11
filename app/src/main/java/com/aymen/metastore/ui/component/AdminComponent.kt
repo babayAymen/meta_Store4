@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -819,11 +821,6 @@ val context = LocalContext.current
                         invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
                     }
                     appViewModel.updateShow("add invoice")
-                    Toast
-                        .makeText(context, "clicked ${appViewModel.show}", Toast.LENGTH_SHORT)
-                        .show()
-
-//                    invoiceType = true
                 }
         ) {
             Row {
@@ -967,6 +964,7 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
         ){
             Surface(
                 modifier = Modifier
+//                    .height(350.dp)
                     .padding(10.dp)
                     .clip(RoundedCornerShape(10.dp)),
             ) {
@@ -993,7 +991,7 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
 
                         }
                     }
-                    Row {
+                    Row{
                         InputTextField(
                             labelValue = if (discount == 0.0) "" else discount.toString(),
                             label = "Discount",
