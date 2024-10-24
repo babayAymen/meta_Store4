@@ -305,7 +305,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
     ) {
 
         Text(
-            text = "Article",
+            text = "com.aymen.metastore.model.entity.room.Article",
             modifier = Modifier.padding(start = 3.dp, bottom = 2.dp),
             // fontSize = 16.dp,
             color = Color.Black,
@@ -413,7 +413,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
 //                            items(
 //                                articles
 //                            ){
-//                                ArticleItem(article = Article()) { title ->
+//                                ArticleItem(article = com.aymen.metastore.model.entity.room.Article()) { title ->
 //
 //                                }
 //                            }
@@ -479,7 +479,7 @@ fun ArticleItem(
 //            )
 //    ) {
 //        Text(
-//            text = "Company Category",
+//            text = "com.aymen.metastore.model.entity.room.Company com.aymen.metastore.model.entity.room.Category",
 //            modifier = Modifier.padding(start = 3.dp, bottom = 2.dp),
 //            // fontSize = 16.dp,
 //            color = Color.Black,

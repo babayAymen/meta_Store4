@@ -4,11 +4,17 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.aymen.metastore.datastore
 import com.aymen.metastore.datastore1
 import com.aymen.metastore.dependencyInjection.AccountTypeInterceptor
 import com.aymen.metastore.model.Location.DefaultLocationClient
 import com.aymen.metastore.model.Location.LocationClient
+import com.aymen.metastore.model.entity.Dao.CompanyDao
+import com.aymen.metastore.model.entity.Dao.PurchaseOrderDao
+import com.aymen.metastore.model.entity.Dao.PurchaseOrderLineDao
+import com.aymen.metastore.model.entity.Dao.UserDao
 import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.realm.PaymentForProviders
@@ -18,7 +24,7 @@ import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.Aym
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepository
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepositoryImpl
 import com.aymen.metastore.userdatastore
-import com.aymen.store.model.entity.api.AuthenticationResponse
+import com.aymen.store.model.entity.dto.AuthenticationResponse
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
 import com.aymen.store.model.entity.realm.Client
@@ -45,6 +51,7 @@ import com.aymen.store.model.entity.realm.SearchHistory
 import com.aymen.store.model.entity.realm.SubArticle
 import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepository
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepositoryImpl
@@ -118,22 +125,45 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import kotlin.math.exp
 
-const val BASE_URL = "http://192.168.1.86:8080/"
-private const val DATABASE_NAME = "database"
+//const val BASE_URL = "http://192.168.1.186:8080/"
+const val BASE_URL = "http://192.168.211.222:8080/"
+private const val DATABASE_NAME = "meta_store_data_base"
 
 @Module
 @InstallIn(SingletonComponent::class)
 class MetaStoreModule {
 
-//    @Provides
-//    @Singleton
-//    fun provideDataBase(@ApplicationContext context: Context): RoomDataBase {
-//        return Room.databaseBuilder(
-//            context,
-//            RoomDataBase::class.java,
-//            DATABASE_NAME
-//        ).fallbackToDestructiveMigration().build()
-//    }
+    @Provides
+    @Singleton
+    fun provideDataBase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            DATABASE_NAME
+        ).fallbackToDestructiveMigration().build()
+    }
+
+    @Provides
+    @Singleton
+    fun priverPurchaseDao(appDatabase: AppDatabase): PurchaseOrderDao{
+        return appDatabase.purchaseOrderDao()
+    }
+    @Provides
+    @Singleton
+    fun priverPurchaseLineDao(appDatabase: AppDatabase): PurchaseOrderLineDao{
+        return appDatabase.purchaseOrderLineDao()
+    }
+    @Provides
+    @Singleton
+    fun priverCompanyDao(appDatabase: AppDatabase): CompanyDao{
+        return appDatabase.companyDao()
+    }
+    @Provides
+    @Singleton
+    fun priverUserDao(appDatabase: AppDatabase): UserDao{
+        return appDatabase.userDao()
+    }
+
     @Provides
     @Singleton
     fun provideRealmDataBase(): Realm {
@@ -174,7 +204,7 @@ class MetaStoreModule {
                     ArticleCompany::class
                 )
             )
-                .schemaVersion(15)
+                .schemaVersion(17)
                 .build()
         )
     }
@@ -187,53 +217,54 @@ class MetaStoreModule {
                             dataStore1: DataStore<Company>,
                             userdataStore: DataStore<User>,
                             realm : Realm,
+                            room : AppDatabase,
                             sharedViewModel: SharedViewModel,
                             context: Context,
                             articleViewModel: ArticleViewModel
                             )
     :AppViewModel{
-        return AppViewModel(repository,dataStore,dataStore1, userdataStore, realm, sharedViewModel, context, articleViewModel)
+        return AppViewModel(repository,dataStore,dataStore1, userdataStore, realm,room, sharedViewModel, context, articleViewModel)
     }
 
     @Provides
     @Singleton
-    fun providerCategoryViewModel(repository: GlobalRepository, realm: Realm,sharedViewModel: SharedViewModel):CategoryViewModel{
-        return CategoryViewModel(repository,realm, sharedViewModel)
+    fun providerCategoryViewModel(repository: GlobalRepository, realm: Realm,room : AppDatabase,sharedViewModel: SharedViewModel):CategoryViewModel{
+        return CategoryViewModel(repository,realm,room, sharedViewModel)
     }
 
     @Provides
     @Singleton
-    fun providArticleViewModel(repository: GlobalRepository, realm: Realm, sharedViewModel: SharedViewModel):ArticleViewModel{
-        return ArticleViewModel(repository,realm,sharedViewModel)
+    fun providArticleViewModel(repository: GlobalRepository, realm: Realm, sharedViewModel: SharedViewModel, room : AppDatabase):ArticleViewModel{
+        return ArticleViewModel(repository,realm,sharedViewModel, room)
     }
 
     @Provides
     @Singleton
-    fun provideShoppingViewModel(repository: GlobalRepository, realm: Realm,companyViewModel: CompanyViewModel, sharedViewModel: SharedViewModel, appViewModel: AppViewModel):ShoppingViewModel{
-        return ShoppingViewModel(repository,realm,companyViewModel, sharedViewModel, appViewModel)
+    fun provideShoppingViewModel(repository: GlobalRepository, realm: Realm,room: AppDatabase, sharedViewModel: SharedViewModel, appViewModel: AppViewModel):ShoppingViewModel{
+        return ShoppingViewModel(repository,realm,room, sharedViewModel, appViewModel)
     }
 
     @Provides
     @Singleton
-    fun provideCompanyViewModel(globalRepository: GlobalRepository, realm: Realm, dataStore: DataStore<Company>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel):CompanyViewModel{
-        return CompanyViewModel(globalRepository,realm, dataStore, appViewModel, sharedViewModel)
+    fun provideCompanyViewModel(globalRepository: GlobalRepository, realm: Realm,room : AppDatabase, dataStore: DataStore<Company>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel):CompanyViewModel{
+        return CompanyViewModel(globalRepository,realm,room, dataStore, appViewModel, sharedViewModel)
     }
 
     @Provides
     @Singleton
-    fun providerClientViewModel(repository: GlobalRepository, realm: Realm):ClientViewModel{
-        return ClientViewModel(repository,realm)
+    fun providerClientViewModel(repository: GlobalRepository, realm: Realm, room : AppDatabase):ClientViewModel{
+        return ClientViewModel(repository,realm, room)
     }
     @Provides
     @Singleton
-    fun provideInventoryViewModel(repository: GlobalRepository,realm: Realm):InventoryViewModel{
-        return InventoryViewModel(repository,realm)
+    fun provideInventoryViewModel(repository: GlobalRepository,realm: Realm, room : AppDatabase):InventoryViewModel{
+        return InventoryViewModel(repository,realm, room)
     }
 
     @Provides
     @Singleton
-    fun providerInvoiceViewModel(repository: GlobalRepository, realm: Realm, sharedViewModel: SharedViewModel):InvoiceViewModel{
-        return InvoiceViewModel(repository, realm, sharedViewModel)
+    fun providerInvoiceViewModel(repository: GlobalRepository, realm: Realm, room : AppDatabase, sharedViewModel: SharedViewModel):InvoiceViewModel{
+        return InvoiceViewModel(repository, realm, room, sharedViewModel)
     }
     @Provides
     @Singleton
@@ -248,9 +279,10 @@ class MetaStoreModule {
         companyDataStore: DataStore<Company>,
         userDataStore: DataStore<User>,
         realm: Realm,
+        room: AppDatabase,
         context: Context
                                ):SharedViewModel{
-        return SharedViewModel(authDataStore,companyDataStore, userDataStore,realm, context)
+        return SharedViewModel(authDataStore,companyDataStore, userDataStore,realm, room, context)
     }
 
     @Provides

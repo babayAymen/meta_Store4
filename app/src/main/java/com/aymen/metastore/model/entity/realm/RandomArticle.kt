@@ -19,9 +19,9 @@ class RandomArticle : RealmObject{
     var margin: Double = 0.0
     var barcode: String = ""
     var tva: Double = 0.0
-//    var category: Category? = null
-//    var subCategory: SubCategory? = null
+//    var category: com.aymen.metastore.model.entity.room.Category? = null
+//    var subCategory: com.aymen.metastore.model.entity.room.SubCategory? = null
 //    var provider : Provider? = null
-//    var company: Company? = null
+//    var company: com.aymen.metastore.model.entity.room.Company? = null
     var image: String = ""
 }

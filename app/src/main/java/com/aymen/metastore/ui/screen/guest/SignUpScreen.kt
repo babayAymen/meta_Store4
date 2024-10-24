@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.entity.api.RegisterRequest
+import com.aymen.store.model.entity.dto.RegisterRequest
 import com.aymen.store.model.repository.ViewModel.SignInViewModel
 import com.aymen.store.ui.component.ButtonComponent
 import com.aymen.store.ui.component.ButtonSubmit
@@ -100,7 +100,7 @@ fun SignUpScreen() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     ButtonSubmit(
-                        labelValue = if (asCompany) "Company" else "user",
+                        labelValue = if (asCompany) "com.aymen.metastore.model.entity.room.Company" else "user",
                         color = Color.Green,
                         enabled = true
                     ) {
@@ -108,7 +108,7 @@ fun SignUpScreen() {
                     }
                 }
                 textField(
-                    label = if (asCompany) "Company name" else "user name",
+                    label = if (asCompany) "com.aymen.metastore.model.entity.room.Company name" else "user name",
                     labelValue = userName,
                     Icons.Outlined.Person
                 ) {

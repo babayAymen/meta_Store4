@@ -1,8 +1,8 @@
 package com.aymen.store.model.repository.remoteRepository.signInRepository
 
-import com.aymen.store.model.entity.api.AuthenticationRequest
-import com.aymen.store.model.entity.api.AuthenticationResponse
-import com.aymen.store.model.entity.api.RegisterRequest
+import com.aymen.store.model.entity.dto.AuthenticationRequest
+import com.aymen.store.model.entity.dto.AuthenticationResponse
+import com.aymen.store.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.realm.User
 import retrofit2.Response
 

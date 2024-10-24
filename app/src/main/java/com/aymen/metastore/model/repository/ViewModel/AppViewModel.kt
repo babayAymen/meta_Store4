@@ -23,9 +23,10 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
-import com.aymen.store.model.entity.api.AuthenticationResponse
+import com.aymen.store.model.entity.dto.AuthenticationResponse
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.webSocket.myWebSocketListener
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
@@ -55,6 +56,7 @@ class AppViewModel @Inject constructor(
     private val datastore1: DataStore<Company>,
     private val userdatastore: DataStore<User>,
     private val realm: Realm,
+    private val room : AppDatabase,
     private val sharedViewModel: SharedViewModel,
     private val context: Context,
     private  val articleViewModel: ArticleViewModel
@@ -179,12 +181,11 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.Main) {
                 try {
-                    val userr = repository.getMyUserDetails()
-                    if (userr.isSuccessful) {
-                        Log.e("aymenababyappviewmodel", userr.body()!!.id.toString())
-                        storeUser(userr.body()!!)
+                    val response = repository.getMyUserDetails()
+                    if (response.isSuccessful) {
+                        storeUser(response.body()!!)
                         getToken {
-                           sharedViewModel._user.value = userr.body()!!
+                           sharedViewModel._user.value = response.body()!!
                         }
                     }
                 } catch (ex: Exception) {
@@ -326,6 +327,7 @@ class AppViewModel @Inject constructor(
                         balance = company.balance
                         latitude = company.latitude
                         longitude = company.longitude
+                        metaSeller = company.metaSeller
                     }
                 }
             } catch (e: Exception) {
@@ -442,6 +444,7 @@ class AppViewModel @Inject constructor(
                 }
                 sharedViewModel.accountType = AccountType.USER
                realmBlock()
+               roomBlock()
             }
         }
     }
@@ -450,6 +453,10 @@ class AppViewModel @Inject constructor(
         realm.writeBlocking {
             deleteAll()
         }
+    }
+
+    fun roomBlock(){
+        room.clearAllTables()
     }
 
 }

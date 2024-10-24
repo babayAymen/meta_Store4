@@ -8,7 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
+import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.store.model.entity.dto.CategoryDto
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
@@ -29,6 +33,7 @@ import javax.inject.Inject
 class CategoryViewModel @Inject constructor (
     private val repository: GlobalRepository,
     private val realm: Realm,
+    private val room : AppDatabase,
     private val sharedViewModel : SharedViewModel
 ): ViewModel() {
 
@@ -36,34 +41,34 @@ class CategoryViewModel @Inject constructor (
     var categories : StateFlow<List<Category>> = _categories
 
     var category by mutableStateOf(Category())
-//    @SuppressLint("SuspiciousIndentation")
 @SuppressLint("SuspiciousIndentation")
 fun getAllCategoryByCompany(companyId : Long?){
                     viewModelScope.launch (Dispatchers.IO){
                             try {
-                                val response = repository.getAllCategoryByCompany(sharedViewModel.company.value.id?:0,companyId?:0)
-                                if(response.isSuccessful) {
-                                    Log.e(
-                                        "aymenbabaycategory",
-                                        "categories size ${response.body()?.size}"
-                                    )
-                                    response.body()?.forEach {
+                                val respons = repository.getAllCategoryByCompanyy(sharedViewModel.company.value.id?:0,companyId?:0)
+                                if(respons.isSuccessful) {
+                                    respons.body()?.forEach {
                                         realm.write {
                                             copyToRealm(it, UpdatePolicy.ALL)
                                         }
+                                    }
+                                }
+                                val response = repository.getAllCategoryByCompany(sharedViewModel.company.value.id?:0,companyId?:0)
+                                if(response.isSuccessful) {
+                                    response.body()?.forEach {
+                                        room.categoryDao().insertCategory(mapCategoryToRoomCategory(it))
                                     }
                                 }
                             } catch (ex: Exception) {
                                 Log.e("aymenbabaycategory", "exception : ${ex.message}")
                             }
                             _categories.value = repository.getAllCategoriesLocally(companyId?:0)
-                            Log.e(
-                                "aymenbabaycategory",
-                                "categories size locally ${categories.value.size} and companyId $companyId"
-                            )
+
 
                     }
     }
+
+
 
     fun addCtagory(category: String, file: File) {
         viewModelScope.launch {

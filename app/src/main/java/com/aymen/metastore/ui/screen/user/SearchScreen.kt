@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.RoleEnum
@@ -39,11 +40,11 @@ import com.aymen.store.ui.navigation.Screen
 
 @Composable
 fun SearchScreen(modifier: Modifier = Modifier) {
-    val companyViewModel : CompanyViewModel = viewModel()
-    val clientViewModel : ClientViewModel = viewModel()
-    val articleViewModel  : ArticleViewModel = viewModel()
-    val appViewModel : AppViewModel = viewModel()
-    val sharedViewModel : SharedViewModel = viewModel()
+    val companyViewModel : CompanyViewModel = hiltViewModel()
+    val clientViewModel : ClientViewModel = hiltViewModel()
+    val articleViewModel  : ArticleViewModel = hiltViewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     var show by remember {
         mutableStateOf(false)
     }

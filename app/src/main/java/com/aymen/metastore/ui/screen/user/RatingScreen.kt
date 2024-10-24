@@ -19,11 +19,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.Enum.RateType
-import com.aymen.metastore.model.entity.api.RatingDto
+import com.aymen.metastore.model.entity.Dto.RatingDto
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.RoleEnum
-import com.aymen.store.model.entity.api.CompanyDto
+import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.metastore.model.entity.realm.User
 import com.aymen.store.model.repository.ViewModel.AppViewModel
@@ -31,9 +31,8 @@ import com.aymen.store.ui.component.InputTextField
 import com.google.gson.Gson
 import android.net.Uri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.aymen.store.dependencyInjection.BASE_URL
-import com.aymen.store.model.entity.api.UserDto
+import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.ui.component.ShowImage
 
 @Composable

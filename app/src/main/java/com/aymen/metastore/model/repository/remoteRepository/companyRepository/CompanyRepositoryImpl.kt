@@ -1,7 +1,6 @@
 package com.aymen.store.model.repository.remoteRepository.companyRepository
 
-import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.entity.realm.Company
+import com.aymen.metastore.model.entity.Dto.ClientProviderRelationDto
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -29,12 +28,15 @@ class CompanyRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAllMyProvider(companyId : Long) = api.getAllMyProvider(companyId = companyId)
+    override suspend fun getAllMyProvider(companyId: Long): Response<List<ClientProviderRelationDto>> = api.getAllMyProvider(companyId = companyId)
+    override suspend fun getAllMyProviderr(companyId : Long) = api.getAllMyProviderr(companyId = companyId)
     override suspend fun getMyParent(companyId : Long) = api.getMyParent(companyId = companyId)
+    override suspend fun getMyParentt(companyId : Long) = api.getMyParentt(companyId = companyId)
     override suspend fun getMyCompany(companyId: Long) = api.getMyCompany(companyId = companyId)
     override suspend fun getMe() = api.getMe()
 
     override suspend fun getAllCompaniesContaining(search: String) = api.getAllCompaniesContaining(search)
+    override suspend fun getAllCompaniesContainingg(search: String) = api.getAllCompaniesContainingg(search)
     override suspend fun updateCompany(company: String, file: File) {
         withContext(Dispatchers.IO){
             api.updateCompany(

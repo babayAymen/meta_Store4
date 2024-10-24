@@ -1,7 +1,7 @@
 package com.aymen.store.dependencyInjection
 
 import androidx.datastore.core.Serializer
-import com.aymen.store.model.entity.api.AuthenticationResponse
+import com.aymen.store.model.entity.dto.AuthenticationResponse
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

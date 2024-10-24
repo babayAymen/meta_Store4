@@ -76,7 +76,7 @@ import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.UnitArticle
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
-import com.aymen.store.model.entity.api.CommandLineDto
+import com.aymen.store.model.entity.dto.CommandLineDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToDto
 import com.aymen.store.model.entity.realm.ClientProviderRelation
 import com.aymen.store.model.entity.realm.Inventory
@@ -484,7 +484,7 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                     .clip(RoundedCornerShape(10.dp)),
             ) {
                 Column {
-                    NormalText(value = "Add Article Quantiry", aligne = TextAlign.Center)
+                    NormalText(value = "Add com.aymen.metastore.model.entity.room.Article Quantiry", aligne = TextAlign.Center)
                     Spacer(modifier = Modifier.padding(10.dp))
                     Row {
                         Row(
@@ -811,9 +811,6 @@ val context = LocalContext.current
             modifier = Modifier
                 .padding(4.dp)
                 .clickable {
-                    Toast
-                        .makeText(context, "clicked", Toast.LENGTH_SHORT)
-                        .show()
                     invoiceViewModel.invoice = invoice
                     invoiceViewModel.discount = invoice.discount
                     invoiceViewModel.invoiceMode = InvoiceMode.UPDATE

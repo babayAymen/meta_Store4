@@ -1,12 +1,11 @@
 package com.aymen.store.model.entity.converterRealmToApi
 
-import com.aymen.metastore.model.entity.api.ArticleCompanyDto
+import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToCompanyDto
 import com.aymen.metastore.model.entity.converterRealmToApi.mapcompanyDtoToCompanyRealm
 import com.aymen.metastore.model.entity.realm.ArticleCompany
-import com.aymen.store.model.entity.api.ArticleDto
+import com.aymen.store.model.entity.dto.ArticleDto
 import com.aymen.store.model.entity.realm.Article
-import com.aymen.store.model.entity.realm.Company
 
 fun mapRealmArticleToApi(articleRealm: Article): ArticleDto {
     return ArticleDto(
@@ -62,3 +61,53 @@ fun mapArticleCompanyToRealm(art : ArticleCompanyDto): ArticleCompany{
         isEnabledToComment = art.isEnabledToComment
     }
 }
+
+// room espace
+
+fun mapArticelDtoToRoomArticle(art : ArticleDto):com.aymen.metastore.model.entity.room.Article{
+    return com.aymen.metastore.model.entity.room.Article(
+        libelle = art.libelle,
+        code = art.code,
+        discription = art.discription,
+        barcode = art.barcode,
+        tva = art.tva,
+        image = art.image,
+        id = art.id,
+    )
+}
+
+fun mapRoomArticleToArticleDto(art : com.aymen.metastore.model.entity.room.Article): ArticleDto{
+    return ArticleDto(
+        libelle = art.libelle,
+        code = art.code,
+        discription = art.discription,
+        barcode = art.barcode,
+        tva = art.tva,
+        image = art.image,
+        id = art.id,
+    )
+}
+
+fun mapArticleCompanyToRoomArticleCompany(art : ArticleCompanyDto?): com.aymen.metastore.model.entity.room.ArticleCompany{
+    return com.aymen.metastore.model.entity.room.ArticleCompany(
+        id = art?.id,
+        cost = art?.cost,
+        quantity = art?.quantity,
+        minQuantity = art?.minQuantity,
+        sharedPoint = art?.sharedPoint,
+        sellingPrice = art?.sellingPrice,
+        companyId = art?.company?.id,
+        categoryId = art?.category?.id,
+        subCategoryId = art?.subCategory?.id,
+        providerId = art?.provider?.id,
+        articleId = art?.article?.id,
+        isEnabledToComment = art?.isEnabledToComment
+    )
+}
+
+
+
+
+
+
+

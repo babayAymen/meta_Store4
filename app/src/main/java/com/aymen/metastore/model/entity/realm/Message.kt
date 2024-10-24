@@ -18,6 +18,6 @@ class Message : RealmObject {
     var conversation : Conversation? = null
 
     override fun toString(): String {
-        return "Company(id=$id, name=$createdDate, address=$lastModifiedDate, phone=$createdBy, email=$content)"
+        return "com.aymen.metastore.model.entity.room.Company(id=$id, name=$createdDate, address=$lastModifiedDate, phone=$createdBy, email=$content)"
     }
 }

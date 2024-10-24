@@ -8,6 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Transaction
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
+import com.aymen.metastore.model.entity.converterRealmToApi.mapSubCategoryToRoomSubCategory
+import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.store.model.entity.dto.SubCategoryDto
 import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +30,7 @@ import javax.inject.Inject
 class SubCategoryViewModel @Inject constructor(
     private val repository : GlobalRepository,
     private val realm : Realm,
+    private val room : AppDatabase,
     private val companyViewModel: CompanyViewModel
 ) : ViewModel() {
 
@@ -44,7 +50,7 @@ class SubCategoryViewModel @Inject constructor(
                     try {
                         val subCategoriesResponse =
                             it?.let { it1 ->
-                                repository.getSubCategoryByCategory(
+                                repository.getSubCategoryByCategoryy(
                                     categoryId,
                                     it1.id!!
                                 )
@@ -73,7 +79,7 @@ class SubCategoryViewModel @Inject constructor(
                 viewModelScope.launch {
                     withContext(Dispatchers.IO) {
                         try {
-                            val subCategoriesResponse = repository.getAllSubCategories(it?.id!!)
+                            val subCategoriesResponse = repository.getAllSubCategoriess(it?.id!!)
                             if (subCategoriesResponse.isSuccessful) {
                                 subCategoriesResponse.body()!!.forEach { subCategory ->
                                     realm.write {
@@ -93,12 +99,18 @@ class SubCategoryViewModel @Inject constructor(
     fun getAllSubCategories(companyId : Long){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = repository.getAllSubCategories(companyId = companyId)
-                if(response.isSuccessful){
-                    response.body()!!.forEach { subCategory ->
+                val respons = repository.getAllSubCategoriess(companyId = companyId)
+                if(respons.isSuccessful){
+                    respons.body()!!.forEach { subCategory ->
                         realm.write {
                             copyToRealm(subCategory, UpdatePolicy.ALL)
                         }
+                    }
+                }
+                val response = repository.getAllSubCategories(companyId = companyId)
+                if(response.isSuccessful){
+                    response.body()!!.forEach { subCategory ->
+                        insertSubCategory(subCategory)
                     }
                 }
             }catch (ex : Exception){
@@ -108,16 +120,27 @@ class SubCategoryViewModel @Inject constructor(
         }
     }
 
+    @Transaction
+    suspend fun insertSubCategory(subCategory: SubCategoryDto){
+
+        room.categoryDao().insertCategory(mapCategoryToRoomCategory(subCategory.category))
+        room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(subCategory))
+    }
     fun getAllSubCtaegoriesByCategory(categoryId : Long,companyId : Long){
         viewModelScope.launch(Dispatchers.IO) {
-            Log.e("getAllSubCtaegoriesByCategory","categ id : $categoryId and company id : $companyId")
             try{
-                val response = repository.getSubCategoryByCategory(categoryId,companyId)
-                if(response.isSuccessful){
-                    response.body()!!.forEach {
+                val respons = repository.getSubCategoryByCategoryy(categoryId,companyId)
+                if(respons.isSuccessful){
+                    respons.body()!!.forEach {
                         realm.write {
                             copyToRealm(it,UpdatePolicy.ALL)
                         }
+                    }
+                }
+                val response = repository.getSubCategoryByCategory(categoryId,companyId)
+                if(response.isSuccessful){
+                    response.body()!!.forEach {
+                        insertSubCategory(it)
                     }
                 }
             }catch (ex : Exception){

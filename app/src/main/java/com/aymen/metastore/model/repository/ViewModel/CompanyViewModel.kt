@@ -1,7 +1,6 @@
 package com.aymen.store.model.repository.ViewModel
 
 import android.util.Log
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,11 +8,14 @@ import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Transaction
+import com.aymen.metastore.model.entity.Dto.ClientProviderRelationDto
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRelationToRoomRelation
+import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
+import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.Enum.SearchCategory
-import com.aymen.store.model.Enum.SearchType
-import com.aymen.store.model.entity.realm.Client
-import com.aymen.store.model.entity.realm.ClientProviderRelation
+import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.entity.realm.Parent
 import com.aymen.store.model.entity.realm.Provider
@@ -32,6 +34,7 @@ import javax.inject.Inject
 class CompanyViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val realm : Realm,
+    private val room : AppDatabase,
     private val dataStore: DataStore<Company>,
     private val appViewModel: AppViewModel,
     private  val sharedViewModel: SharedViewModel
@@ -74,15 +77,16 @@ class CompanyViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
-
-                    val company = repository.getAllMyProvider(company?.id!!).body()!!
-                    company.forEach {
+                    val respons = repository.getAllMyProviderr(company?.id!!).body()!!
+                    respons.forEach {
                         realm.write {
                             copyToRealm(it, UpdatePolicy.ALL)
                         }
-
                     }
-
+                    val response = repository.getAllMyProvider(company.id!!).body()!!
+                    response.forEach {provider ->
+                        insertRelation(provider)
+                    }
                 } catch (_ex: Exception) {
                     Log.e("aymenbabay", "error is : $_ex")
                 }
@@ -95,6 +99,26 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
+    @Transaction
+    suspend fun insertRelation(relation : ClientProviderRelationDto){
+
+        relation.person?.let {
+            room.userDao().insertUser(mapUserToRoomUser(it))
+        }
+        relation.client?.let {
+            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
+        }
+        room.companyDao().insertCompany(mapCompanyToRoomCompany(relation.provider))
+        room.clientProviderRelationDao().insertClientProviderRelation(mapRelationToRoomRelation(relation))
+    }
+
+
+    @Transaction
+    suspend fun insertCompany(company : CompanyDto){
+        room.userDao().insertUser(mapUserToRoomUser(company.user))
+        room.companyDao().insertCompany(mapCompanyToRoomCompany(company))
+    }
+
     fun getMyParent(){
         getMyCompany { company ->
 
@@ -102,11 +126,15 @@ class CompanyViewModel @Inject constructor(
             withContext(Dispatchers.IO){
 
             try {
-                val parents = repository.getMyParent(company?.id!!)
+                val parents = repository.getMyParentt(company?.id!!)
                 if(parents.isSuccessful){
                     realm.write {
                         copyToRealm(parents.body()!!,UpdatePolicy.ALL)
                     }
+                }
+                val response = repository.getMyParent(company.id!!)
+                if(response.isSuccessful && response.body() != null){
+                   insertCompany(response.body()!!)
                 }
             }catch (ex : Exception){
                 Log.e("aymenbabayparent","c bon error ${ex.message}")
@@ -136,35 +164,22 @@ class CompanyViewModel @Inject constructor(
         allCompanies = emptyList()
         viewModelScope.launch {
             try {
-                val companies = repository.getAllCompaniesContaining(search)
+                val companies = repository.getAllCompaniesContainingg(search)
                 if(companies.isSuccessful){
-                    Log.e("aymenbabaycompanies","array size : ${companies.body()?.size}")
                     allCompanies = companies.body()!!
                 }
-            }catch (_ex : Exception){
-                Log.e("aymenbabaycompanies","error is : $_ex")
+                val response = repository.getAllCompaniesContaining(search)
+                if(response.isSuccessful){
+                    response.body()?.forEach {company ->
+                        insertCompany(company)
+                    }
+                    allCompanies = companies.body()!!
+                }
+            }catch (ex : Exception){
+                Log.e("aymenbabaycompanies","error is : ${ex.message}")
             }
         }
     }
-
-/*    fun getAllClientsContaining(search : String, searchType : SearchType, searchCategory: SearchCategory){
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val response = repository.getAllClientContaining(search,searchType,searchCategory)
-                if(response.isSuccessful){
-                    response.body()?.forEach {
-                        realm.write {
-                            copyToRealm(it,UpdatePolicy.ALL)
-                        }
-                    }
-                }
-                myAllCompanies = response.body()!!
-                Log.e("aymenbabayclients","my all companies size : ${myAllCompanies.size}")
-            }catch (_ex : Exception){
-                Log.e("aymenbabayclients","error is : $_ex")
-            }
-        }
-    }*/
 
      fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
         viewModelScope.launch {
@@ -190,8 +205,8 @@ class CompanyViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 repository.makeAsPointSeller(status,id)
-            }catch (_ex : Exception){
-                Log.e("getTokenError", "Error getting token: ${_ex.message}")
+            }catch (ex : Exception){
+                Log.e("getTokenError", "Error getting token: ${ex.message}")
             }
         }
     }

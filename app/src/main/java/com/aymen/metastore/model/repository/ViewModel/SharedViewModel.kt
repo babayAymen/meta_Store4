@@ -14,10 +14,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.Location.LocationService
 import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.store.dependencyInjection.TokenUtils
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.RoleEnum
-import com.aymen.store.model.entity.api.AuthenticationResponse
+import com.aymen.store.model.entity.dto.AuthenticationResponse
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.entity.realm.PurchaseOrderLine
@@ -42,12 +43,14 @@ class SharedViewModel @Inject constructor(
     private val companyDataStore: DataStore<Company>,
     private val userDatastore : DataStore<User>,
     private val realm: Realm,
+    private val room : AppDatabase,
     private  val context: Context
 ): ViewModel() {
 
 
     var accountType by mutableStateOf(AccountType.USER)
 
+    var isLoading by mutableStateOf(false)
     val _user = MutableStateFlow(User())
     val user: StateFlow<User> = _user
 
@@ -109,13 +112,14 @@ class SharedViewModel @Inject constructor(
 
     fun changeAccountType(type : AccountType){
         accountType = type
-         viewModelScope.launch {
+         viewModelScope.launch(Dispatchers.IO) {
         realm.write {
             deleteAll()
         }
+             room.clearAllTables()
          }
     }
-//    fun getUser(onUserRetrieved: (User?) -> Unit) {
+//    fun getUser(onUserRetrieved: (com.aymen.metastore.model.entity.room.User?) -> Unit) {
 //        viewModelScope.launch(Dispatchers.Main) {
 //
 //            try {

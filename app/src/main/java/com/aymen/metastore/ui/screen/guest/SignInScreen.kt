@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aymen.store.model.entity.api.AuthenticationRequest
+import com.aymen.store.model.entity.dto.AuthenticationRequest
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.SignInViewModel
 import com.aymen.store.ui.component.ButtonComponent

@@ -50,9 +50,8 @@ import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.entity.api.InvoiceDto
+import com.aymen.store.model.entity.dto.InvoiceDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
-import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.ui.component.ArticleDialog
@@ -86,7 +85,6 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
         if (invoiceMode == InvoiceMode.CREATE) {
         invoiceViewModel.getLastInvoiceCode()
         }
-        Toast.makeText(context, "in add invoice screen", Toast.LENGTH_SHORT).show()
     }
     var totgen by remember {
         mutableStateOf(BigDecimal.ZERO)
@@ -149,7 +147,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
         mutableIntStateOf(-1)
     }
     var paid by remember {
-        mutableStateOf(PaymentStatus.NOT_PAID)//test push git :kn
+        mutableStateOf(PaymentStatus.NOT_PAID)
     }
 
     when(invoiceMode){
@@ -991,14 +989,14 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                     .width(800.dp)
                                             ) {
                                                 Text(
-                                                    text = order.article.article.libelle,
+                                                    text = order.article?.article?.libelle!!,
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
                                                 Text(
-                                                    text = order.article.article.code,
+                                                    text = order.article?.article!!.code,
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)
@@ -1012,21 +1010,21 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
                                                 Text(
-                                                    text = order.article.unit.toString(),
+                                                    text = order.article?.unit.toString(),
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
                                                 Text(
-                                                    text = order.article.article.tva.toString(),
+                                                    text = order.article?.article!!.tva.toString(),
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
                                                 Text(
-                                                    text = order.article.sellingPrice.toString(),
+                                                    text = order.article?.sellingPrice!!.toString(),
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)

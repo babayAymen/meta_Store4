@@ -45,7 +45,7 @@ fun SubCategoryScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             item {
-                ButtonSubmit(labelValue = "Add Sub Category", color = Color.Green, enabled = true) {
+                ButtonSubmit(labelValue = "Add Sub com.aymen.metastore.model.entity.room.Category", color = Color.Green, enabled = true) {
                     appViewModel.updateShow("add subCategory")
                 }
             }

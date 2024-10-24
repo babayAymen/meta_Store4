@@ -6,7 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
+import com.aymen.metastore.model.entity.converterRealmToApi.mapInvitationToRoomInvitation
+import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
+import com.aymen.metastore.model.entity.converterRealmToApi.mapWorkerToRoomWorker
+import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.store.model.Enum.Status
+import com.aymen.store.model.entity.dto.InvitationDto
 import com.aymen.store.model.entity.realm.Invetation
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,20 +25,16 @@ import javax.inject.Inject
 @HiltViewModel
 class InvetationViewModel @Inject constructor(
     private val repository: GlobalRepository,
-    private val realm : Realm
+    private val realm : Realm,
+    private val room : AppDatabase
 ): ViewModel() {
 
     var myAllInvetation by mutableStateOf(emptyList<Invetation>())
     fun getAllMyInvetations(){
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val invetations = repository.getAllMyInvetations()
+                    val invetations = repository.getAllMyInvetationss()
                     if (invetations.isSuccessful) {
-                        Log.e(
-                            "aymenbabayinvetationn",
-                            "invetation size from api ip : ${invetations.body()?.get(0)?.client?.id}"
-                        )
                         invetations.body()?.forEach {
                             realm.write {
                                 val invitation = Invetation().apply {
@@ -53,14 +55,36 @@ class InvetationViewModel @Inject constructor(
                             }
                         }
                     }
+                    val response = repository.getAllMyInvetations()
+                    if (response.isSuccessful) {
+                        response.body()?.forEach {invitation ->
+                            insertInvetation(invitation)
+                        }
+                    }
                 } catch (_ex: Exception) {
                     Log.e("aymenababyinvetation", "error: $_ex")
                 }
                 myAllInvetation = repository.getAllMyInvetationsLocally()
-                Log.e("aymenbabayinvetation", "invetation size: ${myAllInvetation.size}")
 
-            }
         }
+    }
+
+    suspend fun insertInvetation(invitation : InvitationDto){
+        invitation.companyReceiver?.let {
+            room.userDao().insertUser(mapUserToRoomUser(invitation.companyReceiver?.user))
+            room.companyDao().insertCompany(mapCompanyToRoomCompany(invitation.companyReceiver))
+        }
+        invitation.companySender?.let {
+            room.userDao().insertUser(mapUserToRoomUser(invitation.companySender?.user))
+            room.companyDao().insertCompany(mapCompanyToRoomCompany(invitation.companySender))
+        }
+        invitation.worker?.let {
+            room.userDao().insertUser(mapUserToRoomUser(invitation.worker))
+        }
+        invitation.client?.let {
+            room.userDao().insertUser(mapUserToRoomUser(invitation.client))
+        }
+        room.invetationDao().insertInvitation(mapInvitationToRoomInvitation(invitation))
     }
 
     fun RequestResponse(status : Status, id : Long){

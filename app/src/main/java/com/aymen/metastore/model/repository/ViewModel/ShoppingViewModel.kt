@@ -7,16 +7,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Transaction
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
+import com.aymen.metastore.model.entity.converterRealmToApi.mapInvoiceToRoomInvoice
 import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderDtoToPurchaseOrderRealm
+import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderLineToRoomPurchaseOrderLine
+import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderToRoomPurchaseOrder
+import com.aymen.metastore.model.entity.converterRealmToApi.mapSubCategoryToRoomSubCategory
+import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
 import com.aymen.metastore.model.entity.realm.ArticleCompany
+import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.store.model.entity.realm.Company
-import com.aymen.store.model.entity.api.PurchaseOrderLineDto
+import com.aymen.store.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.store.model.entity.realm.PurchaseOrder
 import com.aymen.store.model.entity.realm.PurchaseOrderLine
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.entity.converterRealmToApi.mapArticelDtoToRoomArticle
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
+import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRoomArticleCompany
+import com.aymen.store.model.entity.dto.InvoiceDto
+import com.aymen.store.model.entity.dto.PurchaseOrderDto
 import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +46,7 @@ import javax.inject.Inject
 class ShoppingViewModel @Inject constructor(
     private val repository : GlobalRepository,
     private val realm : Realm,
-    private val companyViewModel: CompanyViewModel,
+    private val room: AppDatabase,
     private val sharedViewModel: SharedViewModel,
     private val appViewModel: AppViewModel
 ): ViewModel() {
@@ -63,18 +76,18 @@ class ShoppingViewModel @Inject constructor(
     fun removeOrderById(index: Int) {
         orderArray = orderArray.toMutableList().also {
             val quantity = it[index].quantity
-            val sellingPrice = it[index].article.sellingPrice
-            val price = BigDecimal(quantity).multiply(BigDecimal(sellingPrice))
+            val sellingPrice = it[index].article?.sellingPrice
+            val price = BigDecimal(quantity!!).multiply(BigDecimal(sellingPrice!!))
             sharedViewModel.returnThePrevioseBalance(price)
             it.removeAt(index)
         }
     }
 
 fun submitShopping(newBalance : BigDecimal) {
-    val existingOrder = orderArray.find { it.article.id == randomArtilce.id }
+    val existingOrder = orderArray.find { it.article?.id == randomArtilce.id }
     if (existingOrder != null) {
         val updatedOrderArray = orderArray.map {
-            if (it.article.id == randomArtilce.id) {
+            if (it.article?.id == randomArtilce.id) {
                 it.apply {
                     quantity = qte
                     comment = this@ShoppingViewModel.comment
@@ -124,7 +137,7 @@ fun submitShopping(newBalance : BigDecimal) {
     fun calculateCost(){
         cost = BigDecimal.ZERO
         orderArray.forEach {
-            cost = cost.add(BigDecimal(it.article.sellingPrice).multiply(BigDecimal(it.quantity)))
+            cost = cost.add(BigDecimal(it.article?.sellingPrice!!).multiply(BigDecimal(it.quantity!!)))
         Log.e("cost","cost for each itiration : $cost")
         }
     }
@@ -174,81 +187,73 @@ fun submitShopping(newBalance : BigDecimal) {
                 try {
                     val orders = repository.getAllMyOrdersLinesByOrderId(Order.id!!)
                     if (orders.isSuccessful) {
-
                         // Separate the write block to ensure it is not nested
                         realm.writeBlocking {
                             orders.body()?.forEach { purchaseLineDto ->
                                 val line = PurchaseOrderLine().apply {
                                     id = purchaseLineDto.id
-                                    article = mapArticleCompanyToRealm(purchaseLineDto.article)
+                                    article = mapArticleCompanyToRealm(purchaseLineDto.article!!)
                                     comment = purchaseLineDto.comment ?: ""
-                                    quantity = purchaseLineDto.quantity
+                                    quantity = purchaseLineDto.quantity!!
                                     status = purchaseLineDto.status.toString()
-                                    purchaseorder = mapPurchaseOrderDtoToPurchaseOrderRealm(purchaseLineDto.purchaseorder)
+                                    purchaseorder = mapPurchaseOrderDtoToPurchaseOrderRealm(purchaseLineDto.purchaseorder!!)
                                 }
                                 copyToRealm(line, UpdatePolicy.ALL)
                             }
-                            isLoading = false
+                        }
+
+                        orders.body()?.forEach { purchaseLineDto ->
+                           insertShopping(purchaseLineDto)
                         }
                     }
                 } catch (_ex: Exception) {
                     Log.e("aymenbabayOrder", "all my orders exception: $_ex")
+                }finally {
+                            isLoading = false
                 }
                 _allMyOrdersLine.value = repository.getAllMyOrdersLinesByOrderIdLocally(Order.id!!)
             }
         }
     }
 
-//    fun getAllMyOrdersLine(){
-//         viewModelScope.launch {
-//            withContext(Dispatchers.IO) {
-//                try {
-//                    val orders = repository.getAllMyOrdersLinesByOrderId(orderId)
-//                    Log.e("aymenbabayOrder", "orderId: $orderId")
-//                    if (orders.isSuccessful) {
-//                    Log.e("aymenbabayOrder", "orders size: ${orders.body()?.size}")
-////                    allMyOrdersLine = orders.body()!!
-//                        orders.body()!!.forEach { purchaseLineDto ->
-//                                Log.e("aymenbabayOrder", "qte lineDto: ${purchaseLineDto.quantity}")
-//
-//                            realm.write {
-//                                val line = PurchaseOrderLine().apply {
-//                                    id = purchaseLineDto.id
-//                                    article = convertArticleToReal(purchaseLineDto.article)
-//                                    comment = purchaseLineDto.comment ?: ""
-//                                    quantity = purchaseLineDto.quantity
-//                                    purchaseorder =  convertPurchaseOrder(purchaseLineDto.purchaseorder)
-//                                }
-//                                Log.e("shouppingviewmodel", " company id from purchase order view model ${purchaseLineDto.purchaseorder.company.id}")
-//
-//                                copyToRealm(line, UpdatePolicy.ALL)
-//                            }
-//                        }
-//                    }
-//                    } catch (_ex : Exception){
-//                        Log.e("aymenbabayOrder", "all my orders exption: $_ex")
-//                    }
-//
-//                    allMyOrdersLine = repository.getAllMyOrdersLinesByOrderIdLocally(orderId)
-//                    Log.e("aymenbabayOrder", "all my orders line size: ${allMyOrdersLine.size}")
-//                }
-//
-//        }
-//    }
+    @Transaction
+    suspend fun insertShopping(shopping : PurchaseOrderLineDto){
+        room.categoryDao().insertCategory(mapCategoryToRoomCategory(shopping.article!!.category))
+        room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(shopping.article!!.subCategory))
+        room.userDao().insertUser(mapUserToRoomUser(shopping.article!!.company.user))
+        shopping.article!!.provider.user?.let {
+            room.userDao().insertUser(mapUserToRoomUser(it))
+        }
+        room.companyDao().insertCompany(mapCompanyToRoomCompany(shopping.article!!.provider))
+        room.companyDao().insertCompany(mapCompanyToRoomCompany(shopping.article!!.company))
+        room.articleDao().insertArticle(mapArticelDtoToRoomArticle(shopping.article?.article!!))
+        room.articleCompanyDao().insertArticle(mapArticleCompanyToRoomArticleCompany(shopping.article))
+        shopping.invoice?.let {
+            room.invoiceDao().insertInvoice(mapInvoiceToRoomInvoice(it))
+        }
+        room.purchaseOrderDao().insertOrder(mapPurchaseOrderToRoomPurchaseOrder(shopping.purchaseorder!!))
+        room.purchaseOrderLineDao().insertOrderLine(
+            mapPurchaseOrderLineToRoomPurchaseOrderLine(shopping)
+        )
+    }
+
 
     fun getAllMyInvoicesNotAccepted(){
         viewModelScope.launch(Dispatchers.IO) {
-            Log.e("getAllMyInvoicesNotAccepted","launched")
             try{
-                val response = repository.getAllMyInvoicesNotAccepted()
-                Log.e("getAllMyInvoicesNotAccepted","response size : ${response.body()!!.size}")
-                if(response.isSuccessful){
-                    response.body()?.forEach { invoice ->
-                    Log.e("getAllMyInvoicesNotAccepted",invoice.paid)
+                val respons = repository.getAllMyInvoicesNotAcceptedd()
+                if(respons.isSuccessful){
+                    respons.body()?.forEach { invoice ->
                     realm.write {
                         Invoice().apply {
                             copyToRealm(invoice, updatePolicy = UpdatePolicy.ALL)
                         }                    }
+                    }
+                }
+                val response = repository.getAllMyInvoicesNotAccepted()
+                if(response.isSuccessful){
+                    response.body()?.forEach { invoice ->
+                        insertInvoice(invoice)
                     }
                 }
             }catch (ex : Exception){
@@ -261,31 +266,68 @@ fun submitShopping(newBalance : BigDecimal) {
         }
     }
 
+    @Transaction
+    suspend fun insertInvoice(invoice : InvoiceDto){
+        Log.e("insertinvoice","before client")
+        invoice.client?.let {
+            room.userDao().insertUser(mapUserToRoomUser(it.user))
+            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
+        }
+        Log.e("insertinvoice","after client")
+        invoice.person?.let {
+            room.userDao().insertUser(mapUserToRoomUser(it))
+        }
+        Log.e("insertinvoice","before provider")
+        room.companyDao().insertCompany(mapCompanyToRoomCompany(invoice.provider))
+        Log.e("insertinvoice","before invoice")
+        room.invoiceDao().insertInvoice(mapInvoiceToRoomInvoice(invoice))
+        Log.e("insertinvoice","fun fun")
+    }
+
 
     fun getAllMyOrders(){
-        isLoading = true
-            viewModelScope.launch {
-                withContext(Dispatchers.IO){
+            viewModelScope.launch(Dispatchers.IO) {
+                     isLoading = true
                     try {
-                    val allMyOrder =  repository.getAllMyOrdersLines(sharedViewModel.company.value.id?:0)
+                    val allMyOrder =  repository.getAllMyOrdersLiness(sharedViewModel.company.value.id?:0)
                         if (allMyOrder.isSuccessful) {
-                                isLoading = false
                                 allMyOrder.body()?.forEach{ order ->
                                     realm.write {
-                                        Log.e("getallmyorders","size : ${allMyOrder.body()?.toString()}")
                                         copyToRealm(order, UpdatePolicy.ALL)
                                     }
                                 }
                             }
+                    val response =  repository.getAllMyOrdersLines(sharedViewModel.company.value.id?:0)
+                        if (response.isSuccessful) {
+                                response.body()?.forEach{ order ->
+                                   inserPurchaseorder(order)
+                                }
+                            }
                     }catch (_ex : Exception){
-                        Log.e("aymenbabayOrder","all my orders exption: $_ex ")
-                    }
+                        Log.e("purchaseorderfromroom","all my orders exption: $_ex ")
+                    }finally {
                     isLoading = false
+                    }
                     allMyOrders = repository.getAllMyOrdersLocally()
-                }
+
             }
     }
 
+    @Transaction
+    suspend fun inserPurchaseorder(order : PurchaseOrderDto){
+        order.person?.let {
+            room.userDao().insertUser(mapUserToRoomUser(it))
+        }
+        order.client?.let {
+            room.userDao().insertUser(mapUserToRoomUser(it.user))
+            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
+        }
+        room.userDao().insertUser(mapUserToRoomUser(order.company?.user))
+        room.companyDao().insertCompany(mapCompanyToRoomCompany(order.company))
+        room.purchaseOrderDao().insertOrder(
+            mapPurchaseOrderToRoomPurchaseOrder(order)
+        )
+    }
     fun orderLineResponse(status: String, id : Long, isAll : Boolean){
         viewModelScope.launch(Dispatchers.IO) {
                 try {

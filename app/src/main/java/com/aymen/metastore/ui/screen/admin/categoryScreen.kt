@@ -42,7 +42,7 @@ fun CategoryScreen() {
             modifier = Modifier.fillMaxWidth()
         ){
             item {
-                ButtonSubmit(labelValue = "Add Category", color = Color.Green, enabled = true) {
+                ButtonSubmit(labelValue = "Add com.aymen.metastore.model.entity.room.Category", color = Color.Green, enabled = true) {
                     appViewModel.updateShow("add category")
                 }
                 Row(

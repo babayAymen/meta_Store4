@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.entity.api.CompanyDto
+import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ProviderViewModel
 import com.aymen.store.ui.component.ButtonSubmit

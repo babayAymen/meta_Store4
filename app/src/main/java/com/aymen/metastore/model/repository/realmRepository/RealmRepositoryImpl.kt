@@ -1,5 +1,6 @@
 package com.aymen.store.model.repository.realmRepository
 
+import android.util.Log
 import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.realm.PaymentForProviders
@@ -124,7 +125,18 @@ class RealmRepositoryImpl @Inject constructor(
     }
 
     override fun getAllMyOrdersLocally(): List<PurchaseOrder> {
-     return realm.query<PurchaseOrder>().find()
+        val allOrders = realm.query<PurchaseOrder>().find()
+        Log.d("DEBUG", "Found ${allOrders.size} purchase orders")
+        allOrders.forEach { order ->
+            Log.d("DEBUG", "Order ID: ${order.id}, Lines Count: ${order.purchaseorderlines.size}")
+            order.purchaseorderlines.forEach { line ->
+                Log.d("DEBUG", "Line Status: ${line.status}")
+            }
+        }
+
+        return realm.query<PurchaseOrder>(
+         query = "ANY purchaseorderlines.status == $0",Status.ACCEPTED.toString()
+     ).find()
     }
 
     override fun getAllMyWorkerLocally(): List<Worker> {

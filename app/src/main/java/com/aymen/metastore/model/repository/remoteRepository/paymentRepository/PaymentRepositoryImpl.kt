@@ -11,4 +11,5 @@ class PaymentRepositoryImpl @Inject constructor(
 
 
     override suspend fun getAllMyPaymentsEspeceByDate(date: String,findate : String) = api.getAllMyPaymentsEspeceByDate(date,findate)
+    override suspend fun getAllMyPaymentsEspeceByDatee(date: String,findate : String) = api.getAllMyPaymentsEspeceByDatee(date,findate)
 }

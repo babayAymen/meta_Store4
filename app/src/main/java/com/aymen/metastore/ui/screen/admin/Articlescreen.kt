@@ -79,7 +79,7 @@ fun ArticleScreen() {
                 modifier = Modifier
                     .fillMaxWidth()
             ){
-                ButtonSubmit(labelValue = "Add New Article", color = Color.Green, enabled = true) {
+                ButtonSubmit(labelValue = "Add New", color = Color.Green, enabled = true) {
                     appViewModel.updateShow("add article")
                 }
             }

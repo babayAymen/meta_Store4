@@ -18,6 +18,6 @@ class PurchaseOrder : RealmObject {
     var orderNumber: Long? = null
     var purchaseorderlines: RealmList<PurchaseOrderLine> = realmListOf()
     override fun toString(): String {
-        return "Company(id=$id, company=$company, client=$client, person=$person, orderNumber=$orderNumber)"
+        return "com.aymen.metastore.model.entity.room.Company(id=$id, company=$company, client=$client, person=$person, orderNumber=$orderNumber)"
     }
 }

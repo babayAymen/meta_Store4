@@ -78,11 +78,11 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.coil.compose)
-    //Room with plagin form ksp
-//    implementation(libs.androidx.room.runtime)
-//    ksp(libs.androidx.room.room.compiler)
+//    Room with plagin form ksp
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
     // optional - Kotlin Extensions and Coroutines support for Room
-//    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.ktx)
     //realm data base
     implementation(libs.library.base)
     //serialization

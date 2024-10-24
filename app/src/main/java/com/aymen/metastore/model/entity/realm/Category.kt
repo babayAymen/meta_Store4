@@ -15,5 +15,5 @@ class Category  : RealmObject {
     var createdDate : String = ""
 
     var lastModifiedDate : String = ""
-//    var subCategories : RealmList<SubCategory> = realmListOf()
+//    var subCategories : RealmList<com.aymen.metastore.model.entity.room.SubCategory> = realmListOf()
 }

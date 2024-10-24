@@ -1,6 +1,6 @@
 package com.aymen.store.model.repository.remoteRepository.shoppingRepository
 
-import com.aymen.store.model.entity.api.PurchaseOrderLineDto
+import com.aymen.store.model.entity.dto.PurchaseOrderLineDto
 import retrofit2.Response
 
 interface ShoppingRepository {

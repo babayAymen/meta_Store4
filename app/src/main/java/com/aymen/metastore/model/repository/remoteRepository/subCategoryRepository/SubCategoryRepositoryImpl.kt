@@ -11,7 +11,9 @@ class SubCategoryRepositoryImpl  @Inject constructor(
 )
     :SubCategoryRepository{
     override suspend fun getSubCategoryByCategory(id : Long, companyId : Long) =  api.getAllSubCategoryByCategory(id, companyId = companyId)
+    override suspend fun getSubCategoryByCategoryy(id : Long, companyId : Long) =  api.getAllSubCategoryByCategoryy(id, companyId = companyId)
     override suspend fun getAllSubCategories(companyId : Long) = api.getAllSubCategories(companyId = companyId)
+    override suspend fun getAllSubCategoriess(companyId : Long) = api.getAllSubCategoriess(companyId = companyId)
     override suspend fun addSubCtagoryWithImage(sousCategory: String, file: File) {
         api.addSubCategoryWithImage(sousCategory,
             file = MultipartBody.Part

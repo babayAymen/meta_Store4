@@ -52,16 +52,16 @@ fun PaymentScreen() {
     val paymentViewModel : PaymentViewModel = hiltViewModel()
     val pointPaymentViewModel : PointsPaymentViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
-    val isLoading = pointPaymentViewModel.isLoding
-    val isLoding = paymentViewModel.isLoding
+    val isLoading = sharedViewModel.isLoading
+    val context = LocalContext.current
     LaunchedEffect(key1 = Unit) {
-        pointPaymentViewModel.getAllMyPointsPayment()
+        pointPaymentViewModel.getAllMyPointsPayment(context = context)
     }
     val type = sharedViewModel.accountType
+    val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val allMyPointsPayment by pointPaymentViewModel.allMyPointsPayment.collectAsStateWithLifecycle()
 
     val show by appViewModel.show
-    val context = LocalContext.current
     val myAllInvoices by paymentViewModel.myAllInvoice.collectAsStateWithLifecycle()
     
 
@@ -133,17 +133,20 @@ fun PaymentScreen() {
                                     paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.PAID)
                                 }
                             }
-                            Row( // get profits
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(
-                                    labelValue = "get profits",
-                                    color = Color.Green,
-                                    enabled = profitInabled
-                                ) {
-                                    appViewModel.updateShow("profit")
-                                    paymentViewModel.getAllMyPaymentsEspece(0)
 
+                            if (company.metaSeller == true) {
+                                Row( // get profits
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    ButtonSubmit(
+                                        labelValue = "get profits",
+                                        color = Color.Green,
+                                        enabled = profitInabled
+                                    ) {
+                                        appViewModel.updateShow("profit")
+                                        paymentViewModel.getAllMyPaymentsEspece(0)
+
+                                    }
                                 }
                             }
                         }
@@ -153,70 +156,84 @@ fun PaymentScreen() {
             when(show){
                 "payment" ->
                     item {
-                        paymentView(isLoading, allMyPointsPayment, appViewModel)
+                        if (isLoading) {
+                            LodingShape()
+                        } else {
+                            PaymentView( allMyPointsPayment, appViewModel)
+                        }
                     }
                 "buyhistory"->{
                     item {
-                        Row {
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(
-                                    labelValue = "payed",
-                                    color = Color.Green,
-                                    enabled = true
+                            Row {
+                                Row(
+                                    modifier = Modifier.weight(1f)
                                 ) {
-                                    appViewModel.updateView("payed")
-                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.PAID)
+                                    ButtonSubmit(
+                                        labelValue = "payed",
+                                        color = Color.Green,
+                                        enabled = true
+                                    ) {
+                                        appViewModel.updateView("payed")
+                                        paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.PAID)
+                                    }
                                 }
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(
-                                    labelValue = "in compelete",
-                                    color = Color.Green,
-                                    enabled = true
+                                Row(
+                                    modifier = Modifier.weight(1f)
                                 ) {
-                                    appViewModel.updateView("incomplete")
-                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.INCOMPLETE)
+                                    ButtonSubmit(
+                                        labelValue = "in compelete",
+                                        color = Color.Green,
+                                        enabled = true
+                                    ) {
+                                        appViewModel.updateView("incomplete")
+                                        paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.INCOMPLETE)
+                                    }
                                 }
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(
-                                    labelValue = "not payed",
-                                    color = Color.Green,
-                                    enabled = true
+                                Row(
+                                    modifier = Modifier.weight(1f)
                                 ) {
-                                    appViewModel.updateView("notpayed")
-                                    paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.NOT_PAID)
+                                    ButtonSubmit(
+                                        labelValue = "not payed",
+                                        color = Color.Green,
+                                        enabled = true
+                                    ) {
+                                        appViewModel.updateView("notpayed")
+                                        paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.NOT_PAID)
+                                    }
                                 }
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(
-                                    labelValue = "not accepted yet",
-                                    color = Color.Green,
-                                    enabled = true
+                                Row(
+                                    modifier = Modifier.weight(1f)
                                 ) {
-                                    appViewModel.updateView("notaccepted")
-                                    paymentViewModel.getAllMyPaymentNotAccepted()
+                                    ButtonSubmit(
+                                        labelValue = "not accepted yet",
+                                        color = Color.Green,
+                                        enabled = true
+                                    ) {
+                                        appViewModel.updateView("notaccepted")
+                                        paymentViewModel.getAllMyPaymentNotAccepted()
+                                    }
                                 }
                             }
                         }
-                    }
-                    items(myAllInvoices){
-                        BuyView(it, appViewModel)
+
+                    if (isLoading) {
+                        item {
+                        LodingShape()
+                        }
+                    } else {
+                        items(myAllInvoices) {
+                            BuyView(it, appViewModel, isLoading)
+                        }
                     }
                 }
-                "profit" ->
+
+                    "profit" ->
+                     if(type == AccountType.COMPANY && company.metaSeller == true){
                     item {
-                      ProfitView(isLoding, pointPaymentViewModel, paymentViewModel, appViewModel)
+                        ProfitView(isLoading, pointPaymentViewModel, paymentViewModel, appViewModel)
                     }
 
+                }
             }
 
 
@@ -226,11 +243,9 @@ fun PaymentScreen() {
 }
 
 @Composable
-fun paymentView(isLoading : Boolean,allMyPointsPayment : List<PointsPayment>, appViewModel: AppViewModel ) {
+fun PaymentView(allMyPointsPayment : List<PointsPayment>, appViewModel: AppViewModel ) {
 
-        if (isLoading){
-                LodingShape()
-        }else {
+
             allMyPointsPayment.forEach {
                 SwipeToDeleteContainer(
                     it,
@@ -243,45 +258,72 @@ fun paymentView(isLoading : Boolean,allMyPointsPayment : List<PointsPayment>, ap
                 }
 
             }
-        }
+
 }
 
 @Composable
-fun BuyView(invoice : Invoice, appViewModel: AppViewModel) {
+fun BuyView(invoice : Invoice, appViewModel: AppViewModel,isLoading : Boolean) {
     val view by appViewModel.view
-    when(view) {
+    if (isLoading){
+        LodingShape()
+    }else {
+        when (view) {
 
-        "payed" -> {
-            Row {
-                Text(text = invoice.code.toString())
-                Spacer(modifier = Modifier.padding(6.dp))
-                Text(text = invoice.prix_invoice_tot.toString())
-                Spacer(modifier = Modifier.padding(6.dp))
-                Text(text = invoice.paid)
-                Spacer(modifier = Modifier.padding(6.dp))
-                Text(text = if (invoice.paid == PaymentStatus.INCOMPLETE.toString()) invoice.rest.toString() else "")
+            "payed" -> {
+                Row {
+                    Text(text = invoice.code.toString())
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(text = invoice.prix_invoice_tot.toString())
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(text = invoice.paid)
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(text = if (invoice.paid == PaymentStatus.INCOMPLETE.toString()) invoice.rest.toString() else "")
+                }
             }
-        }
-        "incomplete" -> {
-            Row {
-                Text(text = invoice.code.toString())
+
+            "incomplete" -> {
+                Row {
+                    Text(text = "invoice code : " + invoice.code.toString())
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(
+                        text = "client name : " + (invoice.person?.username
+                            ?: invoice.client?.name!!)
+                    )
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(text = "rest is : " + invoice.rest.toString())
+                }
             }
-        }
-        "notpayed" -> {
-            Row {
-                Text(text = invoice.code.toString())
+
+            "notpayed" -> {
+                Row {
+                    Text(text = invoice.code.toString())
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(
+                        text = "client name :" + (invoice.client?.name ?: invoice.person?.username)
+                    )
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(text = "invoice date :" + invoice.lastModifiedDate)
+                }
             }
-        }
-        "notaccepted" -> {
-            Row {
-                Text(text = invoice.code.toString())
+
+            "notaccepted" -> {
+                Row {
+                    Text(text = invoice.code.toString())
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(
+                        text = "client name :" + (invoice.client?.name ?: invoice.person?.username)
+                    )
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(text = "invoice date :" + invoice.lastModifiedDate)
+
+                }
             }
         }
     }
 }
 
 @Composable
-fun ProfitView(isLoding: Boolean, pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel: PaymentViewModel, appViewModel: AppViewModel) {
+fun ProfitView(isLoading: Boolean, pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel: PaymentViewModel, appViewModel: AppViewModel) {
 
     val allMyProfits by pointPaymentViewModel.allMyProfits.collectAsStateWithLifecycle()
     val paymentsEspece by paymentViewModel.paymentsEspece.collectAsStateWithLifecycle()
@@ -312,7 +354,7 @@ fun ProfitView(isLoding: Boolean, pointPaymentViewModel : PointsPaymentViewModel
                         finalDate = finaldate
                     }
 
-                    if(paymentViewModel.isLoding) {
+                    if(isLoading) {
                         LodingShape()
                     }else{
                         paymentsEspece.forEach {
@@ -375,7 +417,7 @@ fun ProfitView(isLoding: Boolean, pointPaymentViewModel : PointsPaymentViewModel
                         beginDate = begindate
                         finalDate = finaldate
                     }
-                    if(pointPaymentViewModel.isLoding){
+                    if(isLoading){
                         LodingShape()
                     }else {
                         Text(text = myProfit)
@@ -384,7 +426,7 @@ fun ProfitView(isLoding: Boolean, pointPaymentViewModel : PointsPaymentViewModel
 
             }
 
-        if (isLoding) {
+        if (isLoading) {
                 LodingShape()
         } else {
             allMyProfits.forEach {

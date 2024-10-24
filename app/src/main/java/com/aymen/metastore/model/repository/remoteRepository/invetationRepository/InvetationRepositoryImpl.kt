@@ -10,6 +10,7 @@ class InvetationRepositoryImpl @Inject constructor(
 )
     : InvetationRepository {
     override suspend fun getAllMyInvetations() = api.getAllMyInvetations()
+    override suspend fun getAllMyInvetationss() = api.getAllMyInvetationss()
     override suspend fun RequestResponse(status : Status ,id: Long) = api.RequestResponse(status,id)
     override suspend fun cancelInvitation(id: Long) = api.cancelInvitation(id)
 }
