@@ -110,6 +110,7 @@ import com.aymen.metastore.model.Location.GpsStatusReceiver
 import com.aymen.metastore.model.Location.LocationService
 import com.aymen.metastore.model.Location.hasLocationPermission
 import com.aymen.metastore.model.Location.isGpsEnabled
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToCompanyDto
 import com.aymen.metastore.model.entity.realm.ArticleCompany
 import com.aymen.metastore.model.entity.realm.PaymentForProviders
 import com.aymen.store.dependencyInjection.BASE_URL
@@ -125,6 +126,8 @@ import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
+import com.aymen.store.model.entity.dto.CompanyDto
+import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.ClientViewModel
@@ -158,6 +161,9 @@ fun ShowImage(image: String, size: Dp? = null){
     AsyncImage(
         model = image,
         contentDescription = "article image",
+        onLoading = {Log.e("showimage","loading")},
+        onSuccess = {Log.e("showimage","success")},
+        onError = {Log.e("showimage","error")},
         modifier = Modifier
             .padding(5.dp)
             .size(imageSize)
@@ -166,6 +172,7 @@ fun ShowImage(image: String, size: Dp? = null){
         contentScale = ContentScale.Crop,
 
     )
+    Log.e("showimage","inside show image $image")
 }
 
 
@@ -371,7 +378,7 @@ fun ArticleCardForUser(article : List<ArticleCompany>, isEnabled : Boolean) {
                         modifier = Modifier
                             .weight(0.9f)
                             .clickable {
-                                companyViewModel.myCompany = it.company!!
+                                companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
                                 articleViewModel.companyId = it.company?.id!!
                                 RouteController.navigateTo(Screen.CompanyScreen)
                             }
@@ -411,7 +418,7 @@ fun ArticleCardForUser(article : List<ArticleCompany>, isEnabled : Boolean) {
                 }
                 Column(
                     modifier = Modifier.clickable {
-                        companyViewModel.myCompany = it.company!!
+                        companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
                         articleViewModel.articleCompany = it
                         RouteController.navigateTo(Screen.ArticleDetailScreen)
                     }
@@ -934,6 +941,9 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
 @Composable
 fun updateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
     val appViewModel : AppViewModel = hiltViewModel()
+    val sViewModel : SharedViewModel = hiltViewModel()
+    val company by sViewModel.company.collectAsStateWithLifecycle()
+    val user by sViewModel.user.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var image by remember {
         mutableStateOf<Uri?>(null)
@@ -942,8 +952,6 @@ fun updateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = {uri -> image = uri }
     )
-
-
     if(isOpen){
         Dialog(
             onDismissRequest = onClose
@@ -955,6 +963,7 @@ fun updateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
             ) {
                 Column {
                     if(image == null){
+                        ShowImage(image = "$BASE_URL/${company.logo}/company/${user.id}",35.dp)
                 Text(text = "update your photo?", modifier = Modifier.clickable {
                     singlePhotoPickerLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -1190,7 +1199,8 @@ fun MessageCard(message: List<Message>) {
 
         LazyColumn(
             state = lazyListState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .graphicsLayer {
                     rotationY = 180f
                 }
@@ -2482,7 +2492,7 @@ fun LocationServiceDialog(
 }
 
 @Composable
-fun checkLocation(type : AccountType, user : User? , company : Company, context: Context) {
+fun checkLocation(type : AccountType, user : UserDto? , company : CompanyDto, context: Context) {
     var isLocationGranted by remember {
         mutableStateOf(false)
     }

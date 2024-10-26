@@ -11,6 +11,7 @@ fun mapCategoryToRoomCategory(cat : CategoryDto): Category{
          code =  cat.code,
          libelle = cat.libelle,
          image = cat.image,
+        companyId = cat.company?.id
     )
 }
 
@@ -29,7 +30,8 @@ fun mapSubCategoryToRoomSubCategory(sub : SubCategoryDto): SubCategory{
         code = sub.code,
          libelle = sub.libelle,
          image = sub.image,
-         categoryId = sub.category.id,
+         categoryId = sub.category?.id,
+        companyId = sub.company?.id
     )
 }
 
@@ -41,3 +43,17 @@ fun mapRoomSubCategoryToSubCategory(sub : SubCategory):SubCategoryDto{
         image = sub.image,
     )
 }
+
+fun mapRealmCategoryToCategoryDto(cat : com.aymen.store.model.entity.realm.Category):CategoryDto{
+    return CategoryDto(
+        id = cat.id,
+        code =  cat.code,
+        libelle = cat.libelle,
+        image = cat.image,
+    )
+}
+
+
+
+
+

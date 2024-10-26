@@ -21,6 +21,7 @@ interface CompanyRepository {
 
     suspend fun getMyCompany(companyId: Long): Response<Company>
 
+    suspend fun getMeAsCompany(): Response<CompanyDto>
     suspend fun getMe(): Response<Company>
 
     suspend fun getAllCompaniesContaining(search : String): Response<List<CompanyDto>>

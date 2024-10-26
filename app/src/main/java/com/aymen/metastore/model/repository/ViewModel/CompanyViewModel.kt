@@ -35,7 +35,8 @@ class CompanyViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val realm : Realm,
     private val room : AppDatabase,
-    private val dataStore: DataStore<Company>,
+//    private val dataStore: DataStore<Company>,
+    private val companyDataStore: DataStore<CompanyDto>,
     private val appViewModel: AppViewModel,
     private  val sharedViewModel: SharedViewModel
 ) : ViewModel() {
@@ -50,7 +51,7 @@ class CompanyViewModel @Inject constructor(
     init {
         getMyCompany()
         getMyCompany {
-            sharedViewModel._company.value = it ?: Company()
+            sharedViewModel._company.value = it ?: CompanyDto()
         }
     }
 
@@ -151,7 +152,11 @@ class CompanyViewModel @Inject constructor(
                 try {
                     val company = repository.getMyCompany(0)
                     if (company.isSuccessful) {
-                        appViewModel.storeCompany(company.body()!!)
+//                        appViewModel.storeCompany(company.body()!!)
+                    }
+                    val response = repository.getMeAsCompany()
+                    if (response.isSuccessful) {
+                        appViewModel.storeCompany(response.body()!!)
                     }
                 } catch (ex: Exception) {
                     Log.e("aymenbabaycompany", "c bon error ${ex.message}")
@@ -181,11 +186,11 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
-     fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
+     fun getMyCompany(onCompanyRetrieved: (CompanyDto?) -> Unit) {
         viewModelScope.launch {
             withContext(Dispatchers.Main){
             try {
-                dataStore.data
+                companyDataStore.data
                     .catch { exception ->
                         Log.e("getTokenError", "Error getting token: ${exception.message}")
                         onCompanyRetrieved(null)

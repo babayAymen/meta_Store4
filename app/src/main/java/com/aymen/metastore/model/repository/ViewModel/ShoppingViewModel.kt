@@ -28,6 +28,7 @@ import com.aymen.store.model.entity.converterRealmToApi.mapArticelDtoToRoomArtic
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRoomArticleCompany
+import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.dto.InvoiceDto
 import com.aymen.store.model.entity.dto.PurchaseOrderDto
 import com.aymen.store.model.entity.realm.Invoice
@@ -154,7 +155,7 @@ fun submitShopping(newBalance : BigDecimal) {
                 }
                 orderArray = emptyList()
                 sharedViewModel.getMyCompany {
-                    sharedViewModel._company.value = it ?: Company()
+                    sharedViewModel._company.value = it ?: CompanyDto()
                 }
             }
         }else{
@@ -167,7 +168,7 @@ fun submitShopping(newBalance : BigDecimal) {
                     if (response.isSuccessful) {
                         removeOrderById(index)
                         sharedViewModel.getMyCompany {
-                            sharedViewModel._company.value = it ?: Company()
+                            sharedViewModel._company.value = it ?: CompanyDto()
                         }
                     }
                 } catch (_ex: Exception) {

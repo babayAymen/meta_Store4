@@ -107,24 +107,6 @@ private fun storeToken(token: AuthenticationResponse) {
     }
 }
 
-    fun getToken(onTokenRetrieved: (String?) -> Unit) {
-        viewModelScope.launch {
-            try {
-                dataStore.data
-                    .catch { exception ->
-                        Log.e("getTokenError", "Error getting token: ${exception.message}")
-                        onTokenRetrieved(null)
-                    }
-                    .collect { authenticationResponse ->
-                        Log.e("getToken", "Token: ${authenticationResponse.token}")
-                        onTokenRetrieved(authenticationResponse.token)
-                    }
-            } catch (e: Exception) {
-                Log.e("getTokenError", "Error getting token: ${e.message}")
-                onTokenRetrieved(null)
-            }
-        }
-    }
 
 
 

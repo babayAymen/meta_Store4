@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToCompanyDto
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.Enum.SearchCategory
@@ -138,7 +139,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                         SearchType.OTHER -> {
                                             companyViewModel.allCompanies.forEach {
                                                 CompanyCard(it, companyViewModel, articleViewModel){
-                                                    companyViewModel.myCompany = it
+                                                    companyViewModel.myCompany = mapCompanyToCompanyDto(it)
                                                     articleViewModel.companyId = it.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
                                                     clientViewModel.saveHitory(searchCategory,it.id!!)
@@ -148,7 +149,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                         else ->{
                                             clientViewModel.clientsCompany.forEach {
                                                 CompanyCard(it, companyViewModel, articleViewModel){
-                                                    companyViewModel.myCompany = it
+                                                    companyViewModel.myCompany = mapCompanyToCompanyDto(it)
                                                     articleViewModel.companyId = it.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
                                                     clientViewModel.saveHitory(searchCategory,it.id!!)
@@ -169,7 +170,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                 SearchCategory.ARTICLE -> {
                                             articleViewModel.searchArticles.forEach{
                                                 ArticleCardForSearch(article = it){
-                                                    companyViewModel.myCompany = it.company!!
+                                                    companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
                                                     articleViewModel.articleCompany = it
                                                     RouteController.navigateTo(Screen.ArticleDetailScreen)
                                                     clientViewModel.saveHitory(searchCategory,it.id!!)
@@ -185,7 +186,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                 when(it.searchCategory){
                                     SearchCategory.COMPANY.toString() -> {
                                         CompanyCard(it.company!!, companyViewModel, articleViewModel){
-                                            companyViewModel.myCompany = it.company!!
+                                            companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
                                             articleViewModel.companyId = it.company?.id!!
                                             RouteController.navigateTo(Screen.CompanyScreen)
                                             clientViewModel.saveHitory(searchCategory,it.id!!)
@@ -200,7 +201,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                     }
                                     SearchCategory.ARTICLE.toString() ->{
                                         ArticleCardForSearch(article = it.article!!){
-                                            companyViewModel.myCompany = it.company!!
+                                            companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
                                             articleViewModel.articleCompany = it.article!!
                                             RouteController.navigateTo(Screen.ArticleDetailScreen)
                                             clientViewModel.saveHitory(searchCategory,it.id!!)

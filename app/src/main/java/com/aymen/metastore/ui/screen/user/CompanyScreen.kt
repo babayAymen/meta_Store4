@@ -54,6 +54,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.R
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToCompanyDto
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.ui.screen.user.RatingScreen
 import com.aymen.store.dependencyInjection.BASE_URL
@@ -97,7 +98,7 @@ fun CompanyScreen(company: Company) {
     val subCategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
     val randomArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
     var category by remember {
-        mutableStateOf(Category())
+        mutableStateOf(com.aymen.metastore.model.entity.room.Category())
     }
     val context = LocalContext.current
     var myCompany by remember {
@@ -111,7 +112,7 @@ fun CompanyScreen(company: Company) {
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentCompany(companyId = company.id!!)
         articleViewModel.getAllArticlesApi(company.id!!)
-        categoryViewModel.getAllCategoryByCompany(company.id)
+        categoryViewModel.getAllCategoryByCompany(company.id!!)
 //        if (sharedViewModel.accountType == AccountType.COMPANY) {
 //            myCompany = sharedViewModel._company.value
 //        }
@@ -192,20 +193,20 @@ fun CompanyScreen(company: Company) {
                                 category = categ
                                 articleViewModel.getRandomArticlesByCategory(
                                     categ.id!!,
-                                    categ.company?.id!!
+                                    categ.companyId!!
                                 )
                             }
                             ScreenByCompanySubCategory(items = subCategories) { categ ->
                                 articleViewModel.getRandomArticlesBySubCategory(
                                     categ.id!!,
-                                    categ.category?.company?.id!!
+                                    categ.companyId!!
                                 )
                             }
                         }
                 }
                 items(randomArticles) {
                     ArticleCardForSearch(article = it) {
-                        companyViewModel.myCompany = it.company!!
+                        companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
                         articleViewModel.articleCompany = it
                         RouteController.navigateTo(Screen.ArticleDetailScreen)
 
@@ -354,9 +355,9 @@ fun companyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
 
 
 @Composable
-fun ScreenByCompanyCategory(items : List<Category>, onCategorySelected : (Category) -> Unit) {
+fun ScreenByCompanyCategory(items : List<com.aymen.metastore.model.entity.room.Category>, onCategorySelected : (com.aymen.metastore.model.entity.room.Category) -> Unit) {
     var selectedCateg by remember {
-        mutableStateOf(Category())
+        mutableStateOf(com.aymen.metastore.model.entity.room.Category())
     }
     LazyRow {
         items(items){ categ ->
@@ -372,7 +373,7 @@ fun ScreenByCompanyCategory(items : List<Category>, onCategorySelected : (Catego
                 )
             )
             {
-                Text(text = categ.libelle,
+                Text(text = categ.libelle!!,
                     color = Color.Red)
             }
             Spacer(modifier = Modifier.size(6.dp))
@@ -381,16 +382,16 @@ fun ScreenByCompanyCategory(items : List<Category>, onCategorySelected : (Catego
 }
 
 @Composable
-fun ScreenByCompanySubCategory(items : List<SubCategory>, onSubCategorySelected : (SubCategory) -> Unit) {
+fun ScreenByCompanySubCategory(items : List<com.aymen.metastore.model.entity.room.SubCategory>, onSubCategorySelected : (com.aymen.metastore.model.entity.room.SubCategory) -> Unit) {
     var subcateg by remember {
-        mutableStateOf(SubCategory())
+        mutableStateOf(com.aymen.metastore.model.entity.room.SubCategory())
     }
     LazyRow {
         items(items){ categ ->
             Card(onClick = {
                 subcateg = categ
                 onSubCategorySelected(categ)
-                Log.e("screenbycateg",categ.libelle)
+                Log.e("screenbycateg",categ.libelle!!)
             },
                 modifier = Modifier
                     .height(30.dp),
@@ -399,7 +400,7 @@ fun ScreenByCompanySubCategory(items : List<SubCategory>, onSubCategorySelected 
                 )
             )
             {
-                Text(text = categ.libelle)
+                Text(text = categ.libelle!!)
             }
         }
     }

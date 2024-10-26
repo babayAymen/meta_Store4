@@ -29,7 +29,7 @@ import com.aymen.metastore.model.entity.Dao.WorkerDao
     Comment::class, Conversation::class, Category::class, SubCategory::class, Invoice::class, ClientProviderRelation::class,
                      SearchHistory::class, Inventory::class, Invitation::class, Message::class, PaymentForProviders::class, PointsPayment::class,
     PaymentForProviderPerDay::class, Rating::class, Worker::class
-                     ], version = 10, exportSchema = false)
+                     ], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

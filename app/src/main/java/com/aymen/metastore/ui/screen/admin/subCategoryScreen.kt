@@ -1,13 +1,10 @@
 package com.aymen.store.ui.screen.admin
 
-import android.util.Log
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,14 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.util.Logger
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.store.ui.component.ButtonSubmit
 import com.aymen.store.ui.component.SubCategoryCardForAdmin
-import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 
 @Composable
@@ -36,6 +30,7 @@ fun SubCategoryScreen() {
         subCategoryViewModel.getAllSubCategories(sharedViewModel.company.value.id!!)
     }
     val subcategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
+    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -45,26 +40,29 @@ fun SubCategoryScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             item {
-                ButtonSubmit(labelValue = "Add Sub com.aymen.metastore.model.entity.room.Category", color = Color.Green, enabled = true) {
+                ButtonSubmit(labelValue = "Add Sub Category", color = Color.Green, enabled = true) {
                     appViewModel.updateShow("add subCategory")
                 }
             }
-            items(subcategories) {
+            itemsIndexed(subcategories) {index , sub ->
                 SwipeToDeleteContainer(
-                    it,
+                    sub,
                     onDelete = {
 
                     },
                     appViewModel = appViewModel
-                ) { subCateghory ->
-                    SubCategoryCardForAdmin(
-                        subCategory = subCateghory,
-                        image = "${BASE_URL}werehouse/image/" + if (subCateghory.image != null) {
-                            subCateghory.image
-                        } else {
-                            ""
-                        } + "/subcategory/${subCateghory.category?.company?.user?.username}"
-                    )
+                ) { subCategory ->
+
+                    subCategoryViewModel.getCategoryById(subCategory.categoryId!!)
+                    val relation by subCategoryViewModel.getCategoryFlow(subCategory.categoryId).collectAsStateWithLifecycle()
+                    relation?.let {
+                        SubCategoryCardForAdmin(
+                            subCategory = subCategory,
+                            image = "${BASE_URL}werehouse/image/" + (subCategory.image
+                                ?: "") + "/subcategory/${user.id}",
+                             it.category
+                        )
+                    }
                 }
             }
         }

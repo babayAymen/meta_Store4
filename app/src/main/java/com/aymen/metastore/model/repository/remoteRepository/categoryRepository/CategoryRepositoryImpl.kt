@@ -10,8 +10,8 @@ class CategoryRepositoryImpl  @Inject constructor(
     private val api : ServiceApi
 )
     :CategoryRepository{
-    override suspend fun getAllCategoryByCompany(myCompanyId : Long,companyId : Long) = api.getAllCategoryByCompany(myCompanyId = myCompanyId,companyId = companyId)
-    override suspend fun getAllCategoryByCompanyy(myCompanyId : Long,companyId : Long) = api.getAllCategoryByCompanyy(myCompanyId = myCompanyId,companyId = companyId)
+    override suspend fun getAllCategoryByCompany(companyId: Long) = api.getAllCategoryByCompany(companyId = companyId)
+    override suspend fun getAllCategoryByCompanyy(myCompanyId : Long,companyId : Long) = api.getAllCategoryByCompanyy(companyId = companyId)
     override suspend fun addCategoryApiWithImage(category: String, file: File) {
         api.addCategoryApiWithImage(category,
             file = MultipartBody.Part

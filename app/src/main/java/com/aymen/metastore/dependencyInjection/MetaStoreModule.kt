@@ -6,9 +6,12 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.aymen.metastore.companydtodatastore
 import com.aymen.metastore.datastore
-import com.aymen.metastore.datastore1
+//import com.aymen.metastore.datastore1
 import com.aymen.metastore.dependencyInjection.AccountTypeInterceptor
+import com.aymen.metastore.dependencyInjection.CompanyDtoSerializer
+import com.aymen.metastore.dependencyInjection.UserDtoSerializer
 import com.aymen.metastore.model.Location.DefaultLocationClient
 import com.aymen.metastore.model.Location.LocationClient
 import com.aymen.metastore.model.entity.Dao.CompanyDao
@@ -23,7 +26,7 @@ import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.Aym
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepositoryImpl
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepository
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepositoryImpl
-import com.aymen.metastore.userdatastore
+//import com.aymen.metastore.userdatastore
 import com.aymen.store.model.entity.dto.AuthenticationResponse
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Category
@@ -55,7 +58,10 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepository
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepositoryImpl
+import com.aymen.metastore.userdtodatastore
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.entity.dto.CompanyDto
+import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.entity.realm.Vacation
 import com.aymen.store.model.entity.realm.Worker
 import com.aymen.store.model.repository.ViewModel.AppViewModel
@@ -125,8 +131,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import kotlin.math.exp
 
-//const val BASE_URL = "http://192.168.1.186:8080/"
-const val BASE_URL = "http://192.168.211.222:8080/"
+const val BASE_URL = "http://192.168.1.3:8080/"
+//const val BASE_URL = "http://192.168.134.21:8080/"
 private const val DATABASE_NAME = "meta_store_data_base"
 
 @Module
@@ -204,7 +210,7 @@ class MetaStoreModule {
                     ArticleCompany::class
                 )
             )
-                .schemaVersion(17)
+                .schemaVersion(1)
                 .build()
         )
     }
@@ -214,8 +220,10 @@ class MetaStoreModule {
     @Singleton
     fun provideAppViewModel(repository: GlobalRepository,
                             dataStore: DataStore<AuthenticationResponse>,
-                            dataStore1: DataStore<Company>,
-                            userdataStore: DataStore<User>,
+//                            dataStore1: DataStore<Company>,
+                            companyDataStore : DataStore<CompanyDto>,
+                            userDataStore: DataStore<UserDto>,
+//                            userdataStore: DataStore<User>,
                             realm : Realm,
                             room : AppDatabase,
                             sharedViewModel: SharedViewModel,
@@ -223,7 +231,7 @@ class MetaStoreModule {
                             articleViewModel: ArticleViewModel
                             )
     :AppViewModel{
-        return AppViewModel(repository,dataStore,dataStore1, userdataStore, realm,room, sharedViewModel, context, articleViewModel)
+        return AppViewModel(repository,dataStore, companyDataStore, userDataStore, realm,room, sharedViewModel, context, articleViewModel)
     }
 
     @Provides
@@ -246,8 +254,10 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun provideCompanyViewModel(globalRepository: GlobalRepository, realm: Realm,room : AppDatabase, dataStore: DataStore<Company>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel):CompanyViewModel{
-        return CompanyViewModel(globalRepository,realm,room, dataStore, appViewModel, sharedViewModel)
+    fun provideCompanyViewModel(globalRepository: GlobalRepository, realm: Realm,room : AppDatabase,
+//                                dataStore: DataStore<Company>,
+                                companyDataStore: DataStore<CompanyDto>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel):CompanyViewModel{
+        return CompanyViewModel(globalRepository,realm,room,companyDataStore, appViewModel, sharedViewModel)
     }
 
     @Provides
@@ -276,13 +286,15 @@ class MetaStoreModule {
     @Singleton
     fun provideSharedViewModel(
         authDataStore : DataStore<AuthenticationResponse>,
-        companyDataStore: DataStore<Company>,
-        userDataStore: DataStore<User>,
+//        companyDataStore: DataStore<Company>,
+        companyDtoDataStore: DataStore<CompanyDto>,
+//        userDataStore: DataStore<User>,
+        userDtoDataStore: DataStore<UserDto>,
         realm: Realm,
         room: AppDatabase,
         context: Context
                                ):SharedViewModel{
-        return SharedViewModel(authDataStore,companyDataStore, userDataStore,realm, room, context)
+        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore,realm, room, context)
     }
 
     @Provides
@@ -522,26 +534,48 @@ class MetaStoreModule {
     fun provideTokenSerializer(): TokenSerializer {
         return TokenSerializer
     }
+//    @Provides
+//    @Singleton
+//    fun provideCompanySerializer(): CompanySerializer {
+//        return CompanySerializer
+//    }
     @Provides
     @Singleton
-    fun provideCompanySerializer(): CompanySerializer {
-        return CompanySerializer
+    fun providerCompanyDtoSerializer(): CompanyDtoSerializer{
+        return CompanyDtoSerializer
+    }
+    @Provides
+    @Singleton
+    fun provideUserDtoSerializer(): UserDtoSerializer{
+        return UserDtoSerializer
     }
     @Provides
     @Singleton
     fun provideDataStore(@ApplicationContext context: Context): DataStore<AuthenticationResponse> {
         return context.datastore
     }
+//    @Provides
+//    @Singleton
+//    fun provideDatastore1(@ApplicationContext context: Context): DataStore<Company> {
+//        return context.datastore1
+//    }
+//
+//    @Provides
+//    @Singleton
+//    fun provideUserDataStore(@ApplicationContext context: Context): DataStore<User>{
+//        return context.userdatastore
+//    }
+
     @Provides
     @Singleton
-    fun provideDatastore1(@ApplicationContext context: Context): DataStore<Company> {
-        return context.datastore1
+    fun provideCompanyDtoDataStore(@ApplicationContext context: Context): DataStore<CompanyDto>{
+        return context.companydtodatastore
     }
 
     @Provides
     @Singleton
-    fun provideUserDataStore(@ApplicationContext context: Context): DataStore<User>{
-        return context.userdatastore
+    fun provideUserDtoDataStore(@ApplicationContext context: Context): DataStore<UserDto>{
+        return context.userdtodatastore
     }
 
     @Provides

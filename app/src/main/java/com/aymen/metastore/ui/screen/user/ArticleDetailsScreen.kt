@@ -53,10 +53,12 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
+import com.aymen.metastore.model.entity.converterRealmToApi.mapcompanyDtoToCompanyRealm
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
+import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.repository.ViewModel.ClientViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -71,7 +73,7 @@ fun ArticleDetailsScreen() {
     val clientViewModel : ClientViewModel = hiltViewModel()
     val ratingViewModel : RatingViewModel = hiltViewModel()
     var myCompany by remember {
-        mutableStateOf(Company())
+        mutableStateOf(CompanyDto())
     }
     val company = companyViewModel.myCompany
     val article = articleViewModel.articleCompany
@@ -145,7 +147,7 @@ fun ArticleDetailsScreen() {
                      clientViewModel = clientViewModel,
                      companyViewModel = companyViewModel,
                      ratingViewModel = ratingViewModel,
-                     company = company,
+                     company = mapcompanyDtoToCompanyRealm(company),
                      isMePointSeller = myCompany.isPointsSeller!!
                  ) {
 

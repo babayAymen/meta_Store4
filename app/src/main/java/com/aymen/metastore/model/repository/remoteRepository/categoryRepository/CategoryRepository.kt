@@ -8,7 +8,7 @@ import java.io.File
 interface CategoryRepository {
 
 
-    suspend fun getAllCategoryByCompany(myCompanyId : Long,companyId : Long): Response<List<CategoryDto>>
+    suspend fun getAllCategoryByCompany(companyId : Long): Response<List<CategoryDto>>
     suspend fun getAllCategoryByCompanyy(myCompanyId : Long,companyId : Long): Response<List<Category>>
 
     suspend fun addCategoryApiWithImage(category : String, file : File)

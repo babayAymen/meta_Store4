@@ -138,7 +138,7 @@ fun AddArticleScreen(){
             mutableStateOf(false)
         }
         var subCategory by remember {
-            mutableStateOf(SubCategory())
+            mutableStateOf(com.aymen.metastore.model.entity.room.SubCategory())
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize()

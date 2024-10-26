@@ -1,15 +1,15 @@
 package com.aymen.store.model.entity.dto
 
 data class SubCategoryDto(
-    var id : Long? = null,
+    val id : Long? = null,
 
-    var libelle : String = "",
+    val libelle : String? = null,
 
-    var code : String = "",
+    val code : String? = null,
 
-    val image : String? = "",
+    val image : String? = null,
 
-    var category : CategoryDto = CategoryDto(),
+    val category : CategoryDto? = null,
 
-    var company : CompanyDto = CompanyDto()
+    val company : CompanyDto? = null
 )

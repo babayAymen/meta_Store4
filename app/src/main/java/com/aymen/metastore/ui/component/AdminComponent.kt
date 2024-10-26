@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -15,17 +14,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -68,14 +63,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCategoryToCategory
 import com.aymen.metastore.model.entity.realm.ArticleCompany
+import com.aymen.metastore.model.entity.room.Category
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.UnitArticle
 import com.aymen.store.model.entity.realm.Article
-import com.aymen.store.model.entity.realm.Category
 import com.aymen.store.model.entity.dto.CommandLineDto
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToDto
 import com.aymen.store.model.entity.realm.ClientProviderRelation
@@ -84,14 +80,12 @@ import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.entity.realm.Parent
 import com.aymen.store.model.entity.realm.Payment
 import com.aymen.store.model.entity.realm.Provider
-import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.PaymentViewModel
 import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
-import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -213,7 +207,7 @@ fun DropDownCategory(list: List<Category>) {
         var itemSelected by remember {
             mutableStateOf(list[0])
         }
-        categoryViewModel.category = itemSelected
+        categoryViewModel.category = mapRoomCategoryToCategory(itemSelected)
         var isExpanded by remember {
             mutableStateOf(false)
         }
@@ -230,7 +224,7 @@ fun DropDownCategory(list: List<Category>) {
                 ) {
                     TextField(
                         modifier = Modifier.menuAnchor(),
-                        value = itemSelected.libelle,
+                        value = itemSelected.libelle!!,
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -241,11 +235,11 @@ fun DropDownCategory(list: List<Category>) {
                         onDismissRequest = { isExpanded = false }) {
                         list.forEachIndexed { index, text ->
                             DropdownMenuItem(
-                                text = { Text(text.libelle) },
+                                text = { Text(text.libelle!!) },
                                 onClick = {
                                     itemSelected = list[index]
                                     isExpanded = false
-                                    categoryViewModel.category = itemSelected
+                                    categoryViewModel.category = mapRoomCategoryToCategory(itemSelected)
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                             )
@@ -259,7 +253,7 @@ fun DropDownCategory(list: List<Category>) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownSubCategory(list : List<SubCategory>, categoryId : Long, onSelected : (SubCategory) -> Unit) {
+fun DropDownSubCategory(list : List<com.aymen.metastore.model.entity.room.SubCategory>, categoryId : Long, onSelected : (com.aymen.metastore.model.entity.room.SubCategory) -> Unit) {
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     var itemSelected by remember {
         mutableStateOf("select sub category")
@@ -267,7 +261,7 @@ fun DropDownSubCategory(list : List<SubCategory>, categoryId : Long, onSelected 
         val subCategoryList by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
     LaunchedEffect(categoryId) {
          if(subCategoryList.isNotEmpty()){
-             itemSelected = subCategoryList[0].libelle
+             itemSelected = subCategoryList[0].libelle!!
             onSelected(subCategoryList[0])
         }else{
             "select sub category"
@@ -300,9 +294,9 @@ fun DropDownSubCategory(list : List<SubCategory>, categoryId : Long, onSelected 
                     onDismissRequest = { isExpanded = false }) {
                     list.forEach { subCategory ->
                         DropdownMenuItem(
-                            text = { Text(subCategory.libelle) },
+                            text = { Text(subCategory.libelle!!) },
                             onClick = {
-                                itemSelected = subCategory.libelle
+                                itemSelected = subCategory.libelle!!
                                 isExpanded = false
                                 subCategoryViewModel.subCategoryId = subCategory.id!!
                                 onSelected(subCategory)
@@ -401,7 +395,7 @@ fun DropDownCompanyCategory(onSelected: (CompanyCategory) -> Unit) {
                     ExposedDropdownMenu(
                         expanded = isExpanded,
                         onDismissRequest = { isExpanded = false }) {
-                        CompanyCategory.entries.forEachIndexed { index, text ->
+                        CompanyCategory.entries.forEach { text ->
                             DropdownMenuItem(
                                 text = { Text(text.toString()) },
                                 onClick = {
@@ -544,7 +538,6 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
 }
 @Composable
 fun CategoryCardForAdmin(category: Category, image : String) {
-    Log.e("aymenbabayimage","image : $image")
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -557,8 +550,8 @@ fun CategoryCardForAdmin(category: Category, image : String) {
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    NormalText(value = category.libelle, aligne = TextAlign.Start)
-                    NormalText(value = category.code, aligne = TextAlign.Start)
+                    NormalText(value = category.libelle!!, aligne = TextAlign.Start)
+                    NormalText(value = category.code?:"without code", aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -580,7 +573,11 @@ fun CategoryCardForAdmin(category: Category, image : String) {
 }
 
 @Composable
-fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String) {
+fun SubCategoryCardForAdmin(subCategory: com.aymen.metastore.model.entity.room.SubCategory, image : String,
+                            category: Category) {
+   val cat by remember {
+       mutableStateOf(category)
+   }
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -593,9 +590,9 @@ fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String) {
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    NormalText(value = subCategory.libelle, aligne = TextAlign.Start)
-                    NormalText(value = subCategory.code, aligne = TextAlign.Start)
-                    subCategory.category?.let { NormalText(value = it.libelle, aligne = TextAlign.Start) }
+                    NormalText(value = subCategory.libelle!!, aligne = TextAlign.Start)
+                    NormalText(value = subCategory.code?:"without code", aligne = TextAlign.Start)
+                     NormalText(value = cat.libelle?:"", aligne = TextAlign.Start)
 
                 }
                 Column(

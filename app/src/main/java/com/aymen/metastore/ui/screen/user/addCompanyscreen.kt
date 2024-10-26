@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.aymen.metastore.model.entity.converterRealmToApi.mapcompanyDtoToCompanyRealm
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.entity.realm.Company
@@ -66,7 +67,7 @@ fun AddCompanyScreen(update : Boolean) {
         LaunchedEffect(Unit) {
             viewModel.getMyCompany {
                 if (it != null) {
-                    company = it
+                    company = mapcompanyDtoToCompanyRealm(it)
                     companyId = it.id!!
                     Log.e("aymenbabayjsoncompany","company name : ${company.name}")
                 }

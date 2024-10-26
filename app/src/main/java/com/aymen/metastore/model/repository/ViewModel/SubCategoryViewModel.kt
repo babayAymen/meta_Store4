@@ -3,21 +3,22 @@ package com.aymen.store.model.repository.ViewModel
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
 import com.aymen.metastore.model.entity.converterRealmToApi.mapSubCategoryToRoomSubCategory
+import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.SubCategory
+import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.entity.dto.SubCategoryDto
-import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,84 +30,60 @@ import javax.inject.Inject
 @HiltViewModel
 class SubCategoryViewModel @Inject constructor(
     private val repository : GlobalRepository,
-    private val realm : Realm,
     private val room : AppDatabase,
-    private val companyViewModel: CompanyViewModel
+     sharedViewModel: SharedViewModel
 ) : ViewModel() {
 
     var subCategoryId by mutableStateOf(0L)
-//    val companyId by mutableLongStateOf(1)
-
-
+    var myCompany by mutableStateOf(sharedViewModel.company.value)
     private val _subCategories = MutableStateFlow<List<SubCategory>>(emptyList())
     var subCategories: StateFlow<List<SubCategory>> = _subCategories
+    private val _categoryWithRelations = MutableStateFlow<CategoryWithCompanyAndUser?>(null)
+    var categoryWithRelations : StateFlow<CategoryWithCompanyAndUser?> = _categoryWithRelations
+
+    private val _categoryRelationsMap = mutableMapOf<Long, MutableStateFlow<CategoryWithCompanyAndUser?>>()
+
 
     @SuppressLint("SuspiciousIndentation")
     fun insertsubcategory(categoryId : Long) {// a verifier
         if (categoryId != 0L) {
-            companyViewModel.getMyCompany{
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    try {
-                        val subCategoriesResponse =
-                            it?.let { it1 ->
-                                repository.getSubCategoryByCategoryy(
-                                    categoryId,
-                                    it1.id!!
-                                )
-                            }
-                        if (subCategoriesResponse != null) {
-                            if (subCategoriesResponse.isSuccessful) {
-                                subCategoriesResponse.body()!!.forEach { subCategory ->
-                                    realm.write {
-                                        copyToRealm(subCategory, UpdatePolicy.ALL)
-                                    }
-                                }
-                            } else {
-                            }
-                        }
-
-                    } catch (_ex: Exception) {
-                        Log.e("aymenbabaysubcategoty", "error $_ex")
-                    }
-                }
-            }
-
-            }
-        }
-        else{
-            companyViewModel.getMyCompany {
                 viewModelScope.launch {
                     withContext(Dispatchers.IO) {
                         try {
-                            val subCategoriesResponse = repository.getAllSubCategoriess(it?.id!!)
-                            if (subCategoriesResponse.isSuccessful) {
-                                subCategoriesResponse.body()!!.forEach { subCategory ->
-                                    realm.write {
-                                        copyToRealm(subCategory, UpdatePolicy.ALL)
-                                    }
+                            val response = repository.getSubCategoryByCategory(categoryId, myCompany.id!!)
+                            if (response.isSuccessful) {
+                                response.body()?.forEach { subCategory ->
+                                    insertSubCategory(subCategory)
                                 }
                             }
-//                            getAllSubCategories()
                         } catch (_ex: Exception) {
+                            Log.e("aymenbabaysubcategoty", "error $_ex")
                         }
                     }
                 }
-            }
+        }
+        else{
+                viewModelScope.launch {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val response = repository.getAllSubCategories(myCompany.id!!)
+                            if (response.isSuccessful) {
+                                response.body()?.forEach { subCategory ->
+                                   insertSubCategory(subCategory)
+                                }
+                            }
+//                            getAllSubCategories()
+                        } catch (ex: Exception) {
+                            Log.e("insertsubcategory","exception : ${ex.message}")
+                        }
+                    }
+                }
         }
     }
 
     fun getAllSubCategories(companyId : Long){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val respons = repository.getAllSubCategoriess(companyId = companyId)
-                if(respons.isSuccessful){
-                    respons.body()!!.forEach { subCategory ->
-                        realm.write {
-                            copyToRealm(subCategory, UpdatePolicy.ALL)
-                        }
-                    }
-                }
                 val response = repository.getAllSubCategories(companyId = companyId)
                 if(response.isSuccessful){
                     response.body()!!.forEach { subCategory ->
@@ -116,27 +93,21 @@ class SubCategoryViewModel @Inject constructor(
             }catch (ex : Exception){
                 Log.e("getAllSubCategories","exception : ${ex.message}")
             }
-        _subCategories.value = repository.getAllSubCategoriesLocally(companyId = companyId)
+        _subCategories.value = room.subCategoryDao().getAllSubCategoriesByCompanyId(companyId)
         }
     }
 
     @Transaction
     suspend fun insertSubCategory(subCategory: SubCategoryDto){
 
-        room.categoryDao().insertCategory(mapCategoryToRoomCategory(subCategory.category))
+        room.userDao().insertUser(mapUserToRoomUser(subCategory.company?.user))
+        room.companyDao().insertCompany(mapCompanyToRoomCompany(subCategory.company))
+        room.categoryDao().insertCategory(mapCategoryToRoomCategory(subCategory.category!!))
         room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(subCategory))
     }
     fun getAllSubCtaegoriesByCategory(categoryId : Long,companyId : Long){
         viewModelScope.launch(Dispatchers.IO) {
             try{
-                val respons = repository.getSubCategoryByCategoryy(categoryId,companyId)
-                if(respons.isSuccessful){
-                    respons.body()!!.forEach {
-                        realm.write {
-                            copyToRealm(it,UpdatePolicy.ALL)
-                        }
-                    }
-                }
                 val response = repository.getSubCategoryByCategory(categoryId,companyId)
                 if(response.isSuccessful){
                     response.body()!!.forEach {
@@ -146,7 +117,7 @@ class SubCategoryViewModel @Inject constructor(
             }catch (ex : Exception){
             Log.e("getAllSubCtaegoriesByCategory","exception : ${ex.message}")
             }
-            _subCategories.value = repository.getSubCategoriesByCategoryLocally(categoryId, companyId)
+            _subCategories.value = room.subCategoryDao().getAllSubCategoriesByCategoryId(categoryId)
         }
     }
 
@@ -165,4 +136,32 @@ class SubCategoryViewModel @Inject constructor(
             }
         }
     }
+
+     fun getCategoryById(categoryId: Long){
+
+         val stateFlow = _categoryRelationsMap.getOrPut(categoryId) {
+             MutableStateFlow(null)
+         }
+
+         viewModelScope.launch {
+             val result = room.categoryDao().getCategoryWithCompanyAndUser(categoryId) // Fetch the data
+             stateFlow.value = result // Set the result into the StateFlow for this ID
+         }
+
+
+    }
+
+    fun getCategoryFlow(subCategoryId: Long): StateFlow<CategoryWithCompanyAndUser?> {
+        return _categoryRelationsMap.getOrPut(subCategoryId) { MutableStateFlow(null) }
+    }
+
+
+
 }
+
+
+
+
+
+
+

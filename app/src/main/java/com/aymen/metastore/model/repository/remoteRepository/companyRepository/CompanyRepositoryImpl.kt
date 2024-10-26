@@ -33,6 +33,7 @@ class CompanyRepositoryImpl @Inject constructor(
     override suspend fun getMyParent(companyId : Long) = api.getMyParent(companyId = companyId)
     override suspend fun getMyParentt(companyId : Long) = api.getMyParentt(companyId = companyId)
     override suspend fun getMyCompany(companyId: Long) = api.getMyCompany(companyId = companyId)
+    override suspend fun getMeAsCompany() = api.getMeAsCompany()
     override suspend fun getMe() = api.getMe()
 
     override suspend fun getAllCompaniesContaining(search: String) = api.getAllCompaniesContaining(search)

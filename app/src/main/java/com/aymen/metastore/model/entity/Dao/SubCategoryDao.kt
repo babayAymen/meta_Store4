@@ -13,4 +13,10 @@ interface SubCategoryDao {
 
     @Query("select * from subcategory_werehouse")
     suspend fun getAllSubCategories() : List<SubCategory>
+
+    @Query("SELECT * FROM subcategory_werehouse WHERE companyId = :companyId")
+    suspend fun getAllSubCategoriesByCompanyId(companyId : Long) : List<SubCategory>
+
+    @Query("SELECT * FROM subcategory_werehouse WHERE categoryId = :categoryId")
+    suspend fun getAllSubCategoriesByCategoryId(categoryId : Long) : List<SubCategory>
 }

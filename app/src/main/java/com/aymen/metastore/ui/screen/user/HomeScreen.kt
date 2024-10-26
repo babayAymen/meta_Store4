@@ -99,7 +99,7 @@ import java.math.RoundingMode
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
-    val sharedViewModel : SharedViewModel = viewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -271,7 +271,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
 
                             if (company.logo != null) {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}",
+                                    image = "${BASE_URL}werehouse/image/${company.logo}/company/${user.id}",
                                     35.dp
                                 )
                             } else {
@@ -289,7 +289,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             } else {
                                 EmptyImage()
                             }
-                                Text(text = user.username)
+                                Text(text = user.username?:"")
                             }
                         }
                     }

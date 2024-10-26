@@ -11,7 +11,6 @@ import com.aymen.store.model.Enum.PrivacySetting
     foreignKeys = [
         ForeignKey(entity = User::class, parentColumns = ["id"], childColumns = ["userId"]),
         ForeignKey(entity = Company::class, parentColumns = ["id"], childColumns = ["parentCompanyId"]),
-//        ForeignKey(entity = com.aymen.metastore.model.entity.room.User::class, parentColumns = ["id"], childColumns = ["userId"])
     ]
 )
 data class Company(

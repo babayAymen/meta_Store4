@@ -19,6 +19,8 @@ import com.aymen.store.dependencyInjection.TokenUtils
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.entity.dto.AuthenticationResponse
+import com.aymen.store.model.entity.dto.CompanyDto
+import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.entity.realm.PurchaseOrderLine
@@ -40,8 +42,10 @@ import kotlin.coroutines.CoroutineContext
 @HiltViewModel
 class SharedViewModel @Inject constructor(
     private val authDataStore: DataStore<AuthenticationResponse>,
-    private val companyDataStore: DataStore<Company>,
-    private val userDatastore : DataStore<User>,
+//    private val companyDataStore: DataStore<Company>,
+    private val companyDtoDataStore: DataStore<CompanyDto>,
+//    private val userDatastore : DataStore<User>,
+    private val userDtoDatastore : DataStore<UserDto>,
     private val realm: Realm,
     private val room : AppDatabase,
     private  val context: Context
@@ -51,17 +55,25 @@ class SharedViewModel @Inject constructor(
     var accountType by mutableStateOf(AccountType.USER)
 
     var isLoading by mutableStateOf(false)
-    val _user = MutableStateFlow(User())
-    val user: StateFlow<User> = _user
+    val _user = MutableStateFlow(UserDto())
+    val user: StateFlow<UserDto> = _user
 
-    val _company = MutableStateFlow(Company())
-    val company: StateFlow<Company> = _company
+    val _company = MutableStateFlow(CompanyDto())
+    val company: StateFlow<CompanyDto> = _company
 
-    fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
+    fun getMyCompany(onCompanyRetrieved: (CompanyDto?) -> Unit) {
         viewModelScope.launch {
             withContext(Dispatchers.Main){
                 try {
-                    companyDataStore.data
+//                    companyDataStore.data
+//                        .catch { exception ->
+//                            Log.e("getTokenError", "Error getting token: ${exception.message}")
+//                            onCompanyRetrieved(null)
+//                        }
+//                        .collect { company ->
+////                            onCompanyRetrieved(company)
+//                        }
+                    companyDtoDataStore.data
                         .catch { exception ->
                             Log.e("getTokenError", "Error getting token: ${exception.message}")
                             onCompanyRetrieved(null)
@@ -69,6 +81,7 @@ class SharedViewModel @Inject constructor(
                         .collect { company ->
                             onCompanyRetrieved(company)
                         }
+
                 } catch (e: Exception) {
                     Log.e("getTokenError", "Error getting token: ${e.message}")
                     onCompanyRetrieved(null)
@@ -80,10 +93,17 @@ class SharedViewModel @Inject constructor(
     fun updateUserBalance(newBalance : Double){
         viewModelScope.launch {
             try {
-                userDatastore.updateData { currentUser ->
-                    currentUser.apply {
+//                userDatastore.updateData { currentUser ->
+//                    currentUser.apply {
+//                        balance = newBalance
+//                    }.also{
+////                        _user.value = currentUser
+//                    }
+//                }
+                userDtoDatastore.updateData { currentUser ->
+                    currentUser.copy(
                         balance = newBalance
-                    }.also{
+                    ).also{
                         _user.value = currentUser
                     }
                 }
@@ -96,10 +116,17 @@ class SharedViewModel @Inject constructor(
     fun updateCompanyBalance(newBalance : Double){
         viewModelScope.launch {
             try {
-                companyDataStore.updateData { currentCompany ->
-                    currentCompany.apply {
+//                companyDataStore.updateData { currentCompany ->
+//                    currentCompany.apply {
+//                        balance = newBalance
+//                    }.also{
+////                        _company.value = currentCompany
+//                    }
+//                }
+                companyDtoDataStore.updateData { currentCompany ->
+                    currentCompany.copy (
                         balance = newBalance
-                    }.also{
+                        ).also{
                         _company.value = currentCompany
                     }
                 }
@@ -118,112 +145,6 @@ class SharedViewModel @Inject constructor(
         }
              room.clearAllTables()
          }
-    }
-//    fun getUser(onUserRetrieved: (com.aymen.metastore.model.entity.room.User?) -> Unit) {
-//        viewModelScope.launch(Dispatchers.Main) {
-//
-//            try {
-//                userDataStore.data
-//                    .catch { exception ->
-//                        Log.e("getTokenError", "Error getting token get user fun in app view model1: ${exception.message}")
-//                        onUserRetrieved(null)
-//                    }
-//                    .collect { response ->
-//                        Log.e("getToken", "response user id get user fun in app view model: ${response.id}")
-//                        onUserRetrieved(response)
-//                        userRole()
-//                    }
-//            } catch (e: Exception) {
-//                Log.e("getTokenError", "Error getting token get user fun in app view model2: ${e.message}")
-//                onUserRetrieved(null)
-//
-//            }
-//        }
-//    }
-
-
-//    fun userRole(){
-//        viewModelScope.launch {
-//            withContext(Dispatchers.Main){
-//                var authsize by mutableStateOf(1)
-//                getToken {
-//                    if (it != null) {
-//                        TokenUtils.isUser(it,
-//                            authSize = {
-//                                    authSize ->
-//                                authsize = authSize
-//                            })
-//                        {isUser ->
-//                            when(isUser){
-//                                RoleEnum.ADMIN->{
-//                                    if (authsize == 1){
-//                                        accountType =   AccountType.COMPANY
-//                                        storeAccountType(AccountType.COMPANY)
-//                                    }else{
-//                                        accountType =  AccountType.USER
-//                                        storeAccountType(AccountType.USER)
-//                                    }
-//                                    userRole = isUser
-////                                    appViewModel.getMyCompany()
-//                                }
-//                                else ->{
-//                                    userRole = isUser
-//
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    @SuppressLint("SuspiciousIndentation")
-//    private fun getMyCompany(){
-//        viewModelScope.launch {
-//            try {
-//                val company = repository.getMe()
-//                Log.e("aymenbabay", "company id in app view model : $company")
-//                if(company.isSuccessful){
-//                    Log.e("aymenbabay", "company id in app view model : ${company.body()!!.id}")
-//                    storeCompany(company.body()!!)
-//                }
-//            }catch (ex : Exception){
-//                Log.e("exeptions","error is : $ex")
-//            }
-//        }
-//    }
-
-    fun storeCompany(company: Company) {
-        viewModelScope.launch {
-            try {
-//                user = company.user!!
-                companyDataStore.updateData{
-                    Company().apply {
-                        id = company.id
-                        name = company.name
-                        code = company.code
-                        matfisc = company.matfisc
-                        address = company.address
-                        phone = company.phone
-                        bankaccountnumber = company.bankaccountnumber
-                        email = company.email
-                        capital = company.capital
-                        logo = company.logo
-                        workForce = company.workForce
-                        user = company.user
-                        rate = company.rate
-                        raters = company.raters
-//                        parentCompany = company.parentCompany
-                        category = company.category
-                        isPointsSeller = company.isPointsSeller
-                        balance = company.balance
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("storeTokenError", "Error storing token in store company fun app view model: ${e.message}")
-            }
-        }
     }
 
     fun updateBalance(balancee : BigDecimal){

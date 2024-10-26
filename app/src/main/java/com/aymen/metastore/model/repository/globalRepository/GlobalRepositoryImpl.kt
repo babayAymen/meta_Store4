@@ -91,7 +91,9 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun deleteArticle(id: String): Response<Void> {
         TODO("Not yet implemented")
     }
-    override suspend fun getAllCategoryByCompany(myCompanyId : Long,companyId : Long) =  categoryRepository.getAllCategoryByCompany(myCompanyId = myCompanyId,companyId = companyId)
+    override suspend fun getAllCategoryByCompany(companyId: Long) =  categoryRepository.getAllCategoryByCompany(
+        companyId = companyId
+    )
     override suspend fun getAllCategoryByCompanyy(myCompanyId: Long, companyId: Long) = categoryRepository.getAllCategoryByCompanyy(myCompanyId, companyId)
 
     override suspend fun addCategoryApiWithImage(category: String, file: File) = categoryRepository.addCategoryApiWithImage(category, file)
@@ -111,6 +113,8 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getMyParentt(companyId: Long) = companyRepository.getMyParentt(companyId)
 
     override suspend fun getMyCompany(companyId : Long) = companyRepository.getMyCompany(companyId = companyId)
+    override suspend fun getMeAsCompany() = companyRepository.getMeAsCompany()
+
     override suspend fun getMe() = companyRepository.getMe()
 
     override suspend fun getAllCompaniesContaining(search: String) = companyRepository.getAllCompaniesContaining(search)
@@ -266,6 +270,8 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun SignUp(registerRequest: RegisterRequest) = signInRepository.SignUp(registerRequest)
     override suspend fun refreshToken(token: String) = signInRepository.refreshToken(token)
     override suspend fun getMyUserDetails() = signInRepository.getMyUserDetails()
+    override suspend fun getMyUserDetailss() = signInRepository.getMyUserDetailss()
+
     override suspend fun updateLocations(latitude: Double, logitude: Double) = signInRepository.updateLocations(latitude, logitude)
 
     ////////////////////////////////////// locally function /////////////////////////////////////////////////////////////////////////

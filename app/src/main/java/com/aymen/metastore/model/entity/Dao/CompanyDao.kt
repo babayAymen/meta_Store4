@@ -13,4 +13,7 @@ interface CompanyDao {
 
     @Query("SELECT * FROM company")
     suspend fun getAllCompanies(): List<Company>
+
+    @Query("SELECT userId FROM company WHERE id = :companyId")
+    suspend fun getUserIdByCompanyId(companyId : Long) : Long
 }

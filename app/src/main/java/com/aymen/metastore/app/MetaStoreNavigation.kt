@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.model.entity.converterRealmToApi.mapcompanyDtoToCompanyRealm
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
@@ -113,7 +114,7 @@ fun MetaStore (){
 
                 is Screen.CompanyScreen -> {
                     val company = companyViewModel.myCompany
-                    CompanyScreen(company = company)
+                    CompanyScreen(company = mapcompanyDtoToCompanyRealm(company))
                 }
 
                 is Screen.ArticleDetailScreen -> {

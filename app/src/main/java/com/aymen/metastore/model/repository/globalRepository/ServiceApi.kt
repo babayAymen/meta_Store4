@@ -123,10 +123,10 @@ interface ServiceApi {
     @POST("api/auth/register")
     suspend fun SignUp(@Body registerRequest: RegisterRequest) : Response<AuthenticationResponse>
 
-    @GET("werehouse/category/getbycompany/{myCompanyId}/{companyId}")
-    suspend fun getAllCategoryByCompany(@Path("myCompanyId") myCompanyId : Long, @Path("companyId")companyId : Long): Response<List<CategoryDto>>
-    @GET("werehouse/category/getbycompany/{myCompanyId}/{companyId}")
-    suspend fun getAllCategoryByCompanyy(@Path("myCompanyId") myCompanyId : Long, @Path("companyId")companyId : Long): Response<List<Category>>
+    @GET("werehouse/category/getbycompany/{companyId}")
+    suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long): Response<List<CategoryDto>>
+    @GET("werehouse/category/getbycompany/{companyId}")
+    suspend fun getAllCategoryByCompanyy(@Path("companyId")companyId : Long): Response<List<Category>>
 
     @GET("werehouse/subcategory/{categoryId}/{companyId}")
     suspend fun getAllSubCategoryByCategory(@Path("categoryId") categoryId : Long, @Path("companyId") companyId : Long) : Response<List<SubCategoryDto>>
@@ -319,6 +319,8 @@ interface ServiceApi {
     @GET("werehouse/search/get_search_history")
     suspend fun getAllHistoryy():Response<List<SearchHistory>>
     @GET("werehouse/company/me")
+    suspend fun getMeAsCompany(): Response<CompanyDto>
+    @GET("werehouse/company/me")
     suspend fun getMe(): Response<Company>
     @POST("werehouse/article/sendComment/{articleId}")
     suspend fun sendComment(@Body comment : String,@Path("articleId") articleId : Long):Response<Void>
@@ -336,10 +338,12 @@ interface ServiceApi {
     suspend fun getAllMyPointsPayment(@Path("companyId") companyId : Long):Response<List<PointsPaymentDto>>
     @GET("werehouse/point/get_all_my/{companyId}")
     suspend fun getAllMyPointsPaymentt(@Path("companyId") companyId : Long):Response<List<PointsPayment>>
-    @POST("dto/auth/refresh")
+    @POST("api/auth/refresh")
     suspend fun refreshToken(@Body token: String): Response<AuthenticationResponse>
-    @GET("dto/auth/myuser")
-    suspend fun getMyUserDetails():Response<User>
+    @GET("api/auth/myuser")
+    suspend fun getMyUserDetails():Response<UserDto>
+    @GET("api/auth/myuser")
+    suspend fun getMyUserDetailss():Response<User>
     @GET("werehouse/company/update_location/{latitude}/{logitude}")
     suspend fun updateLocations(@Path("latitude") latitude : Double ,@Path("logitude") logitude : Double):Response<Void>
     @GET("werehouse/rate/get_rate/{id}/{type}")

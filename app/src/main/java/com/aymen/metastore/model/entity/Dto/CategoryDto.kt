@@ -4,10 +4,12 @@ data class CategoryDto(
 
     val id : Long? = null,
 
-    val libelle : String = "",
+    val libelle : String? = null,
 
-    val code : String = "",
+    val code : String ?= null,
 
     val image : String? = null,
+
+    val company : CompanyDto? = null
 
     )

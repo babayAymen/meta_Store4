@@ -109,7 +109,7 @@ class ArticleViewModel @Inject constructor(
                 Log.e("getAllArticlesByCategory","exception: $ex")
             }
             _articles.value = repository.getAllArticlesByCategoryLocaly(sharedViewModel.company.value.id!!,
-                sharedViewModel.company.value.category!!)
+                sharedViewModel.company.value.category.toString())
             val art = room.articleDao().getAllArticles()
             Log.e("getAllArticlesByCategory","size llist articleroom: ${art.size}")
         }

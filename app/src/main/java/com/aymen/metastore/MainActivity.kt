@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import com.aymen.metastore.dependencyInjection.CompanyDtoSerializer
+import com.aymen.metastore.dependencyInjection.UserDtoSerializer
 import com.aymen.store.app.MetaStore
 import com.aymen.store.dependencyInjection.CompanySerializer
 import com.aymen.store.dependencyInjection.TokenSerializer
@@ -21,12 +23,16 @@ import com.aymen.store.dependencyInjection.UserSerializer
 import com.aymen.store.model.entity.dto.AuthenticationResponse
 import com.aymen.store.model.entity.realm.Company
 import com.aymen.metastore.model.entity.realm.User
+import com.aymen.store.model.entity.dto.CompanyDto
+import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.ui.theme.MetaStoreTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 val Context.datastore: DataStore<AuthenticationResponse> by dataStore("setting.json", TokenSerializer)
-val Context.datastore1: DataStore<Company> by dataStore("company.json", CompanySerializer)
-val Context.userdatastore: DataStore<User> by dataStore("user.json", UserSerializer)
+//val Context.datastore1: DataStore<Company> by dataStore("company.json", CompanySerializer)
+val Context.companydtodatastore: DataStore<CompanyDto> by dataStore("companydto.json", CompanyDtoSerializer)
+val Context.userdtodatastore: DataStore<UserDto> by dataStore("userdto.json", UserDtoSerializer)
+//val Context.userdatastore: DataStore<User> by dataStore("user.json", UserSerializer)
 //val Context.accounttypedatastore: DataStore<AccountType> by dataStore("accounttype.json", AccountTypeSerializer)
 
 @AndroidEntryPoint

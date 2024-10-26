@@ -12,6 +12,6 @@ interface UserDao {
     @Upsert
     suspend fun insertUser(user: User)
 
-    @Query("SELECT * FROM user")
-    suspend fun getAllUsers(): List<User>
+    @Query("SELECT username FROM user WHERE id = :userId")
+    suspend fun getUserNameById(userId : Long): String
 }

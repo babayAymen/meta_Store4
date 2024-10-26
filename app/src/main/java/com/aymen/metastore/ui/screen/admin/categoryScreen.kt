@@ -15,13 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.ui.component.ButtonSubmit
 import com.aymen.store.ui.component.CategoryCardForAdmin
-import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 
 @Composable
@@ -29,10 +27,11 @@ fun CategoryScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(Unit) {
         categoryViewModel.getAllCategoryByCompany(sharedViewModel.company.value.id!!)
     }
     val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
+    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -42,7 +41,7 @@ fun CategoryScreen() {
             modifier = Modifier.fillMaxWidth()
         ){
             item {
-                ButtonSubmit(labelValue = "Add com.aymen.metastore.model.entity.room.Category", color = Color.Green, enabled = true) {
+                ButtonSubmit(labelValue = "Add Category", color = Color.Green, enabled = true) {
                     appViewModel.updateShow("add category")
                 }
                 Row(
@@ -60,7 +59,7 @@ fun CategoryScreen() {
                             ) {category ->
                                 CategoryCardForAdmin(
                                     category = category,
-                                    image = "${BASE_URL}werehouse/image/"+if(category.image == ""){category.image}else{""}+"/category/${category.company?.user?.username}"
+                                    image = "${BASE_URL}werehouse/image/"+if(category.image == ""){category.image}else{""}+"/category/${user.id}"
                                 )
                             }
 

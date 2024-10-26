@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.Location.LocationService
+import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToUserDto
 import com.aymen.store.dependencyInjection.TokenUtils
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
@@ -29,6 +30,8 @@ import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.webSocket.myWebSocketListener
+import com.aymen.store.model.entity.dto.CompanyDto
+import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.Realm
@@ -53,8 +56,10 @@ import javax.inject.Inject
 class AppViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val dataStore: DataStore<AuthenticationResponse>,
-    private val datastore1: DataStore<Company>,
-    private val userdatastore: DataStore<User>,
+//    private val datastore1: DataStore<Company>,
+    private val companyDataStore: DataStore<CompanyDto>,
+//    private val userdatastore: DataStore<User>,
+    private val userDatastore: DataStore<UserDto>,
     private val realm: Realm,
     private val room : AppDatabase,
     private val sharedViewModel: SharedViewModel,
@@ -157,7 +162,25 @@ class AppViewModel @Inject constructor(
       block()
     }
 
-    fun block(){
+     fun block(){
+         viewModelScope.launch {
+    launch {
+
+        userDatastore.data.collect { preferences ->
+            val i = preferences // Here you can access the data from the datastore
+            Log.e("initappviewmodel", "c bon userdto $i")
+    }
+         }
+
+    launch {
+
+             companyDataStore.data.collect{preferences ->
+                 val i = preferences // Here you can access the data from the datastore
+                 Log.e("initappviewmodel", "c bon companydto $i")
+             }
+    }
+
+        }
         getMyUserDetails()
         userRole()
     }
@@ -178,20 +201,21 @@ class AppViewModel @Inject constructor(
 
 
     fun getMyUserDetails() {
-        viewModelScope.launch {
-            withContext(Dispatchers.Main) {
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.e("getmyuserdetails","user name : inside scoupe")
                 try {
                     val response = repository.getMyUserDetails()
                     if (response.isSuccessful) {
+                        Log.e("getmyuserdetails","user name1 : ")
+                        Log.e("getmyuserdetails","user name : ${response.body()?.username}")
+                        Log.e("getmyuserdetails","user name2 : ")
                         storeUser(response.body()!!)
-                        getToken {
-                           sharedViewModel._user.value = response.body()!!
-                        }
+                        sharedViewModel._user.value = response.body()!!
                     }
                 } catch (ex: Exception) {
-                    Log.e("exeptions", "error is : $ex")
+                    Log.e("getmyuserdetails", "error is : $ex")
                 }
-            }
+
         }
     }
 
@@ -213,10 +237,12 @@ class AppViewModel @Inject constructor(
                                      sharedViewModel.accountType = AccountType.USER
                                 }
                             userRole = isUser
+                                getMyUserDetails()
                             getMyCompany()
                             }
                            else ->{
                             userRole = isUser
+                               getMyUserDetails()
 
 
                         }
@@ -246,7 +272,6 @@ class AppViewModel @Inject constructor(
                             onTokenRetrieved(null)
                         }
                         .collect { authenticationResponse ->
-                            Log.e("getToken", "Token: ${authenticationResponse.token}")
                             if(authenticationResponse.token != ""){
                             onTokenRetrieved(authenticationResponse.token)
                             }else{
@@ -261,22 +286,22 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    private fun storeUser(user: User) {
-        viewModelScope.launch {
+    private fun storeUser(user: UserDto) {
+        viewModelScope.launch(Dispatchers.IO) {
             Log.e("storeUser", "storeUser image: ${user.image}")
             try {
-                userdatastore.updateData{
-                    User().apply {
-                        id = user.id
-                        username = user.username
-                        address = user.address
-                        phone = user.phone
-                        email = user.email
-                        image = user.image
-                        rate = user.rate
-                        rater = user.rater
-                        balance = user.balance
-                    }
+                userDatastore.updateData{
+                    UserDto().copy(
+                        id = user.id,
+                        username = user.username,
+                        address = user.address,
+                        phone = user.phone,
+                        email = user.email,
+                        image = user.image,
+                        rate = user.rate,
+                        rater = user.rater,
+                        balance = user.balance,
+                    )
                 }
             } catch (e: Exception) {
                 Log.e("storeUserError", "Error storing token store user fun in app view model: ${e.message}")
@@ -286,14 +311,13 @@ class AppViewModel @Inject constructor(
 
     @SuppressLint("SuspiciousIndentation")
      fun getMyCompany(){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val company = repository.getMe()
-                    Log.e("aymenbabay", "company id in app view model : $company")
-                if(company.isSuccessful){
-                    Log.e("aymenbabay", "company id in app view model : ${company.body()!!.id}")
-                    storeCompany(company.body()!!)
-                    sharedViewModel._company.value = company.body()!!
+                val response = repository.getMeAsCompany()
+                if(response.isSuccessful){
+                    storeCompany(response.body()!!)
+                    Log.e("getmyuserdetails", "Error storing token store user fun in app view model:")
+                    sharedViewModel._company.value = response.body()!!
                 }
             }catch (ex : Exception){
                 Log.e("exeptions","error is : $ex")
@@ -301,34 +325,32 @@ class AppViewModel @Inject constructor(
         }
     }
 
-     fun storeCompany(company: Company) {
+     fun storeCompany(company: CompanyDto) {
         viewModelScope.launch {
             try {
-//                user = company.user!!
-                datastore1.updateData{
-                    Company().apply {
-                        id = company.id
-                        name = company.name
-                        code = company.code
-                        matfisc = company.matfisc
-                        address = company.address
-                        phone = company.phone
-                        bankaccountnumber = company.bankaccountnumber
-                        email = company.email
-                        capital = company.capital
-                        logo = company.logo
-                        workForce = company.workForce
-                        user = company.user
-                        rate = company.rate
-                        raters = company.raters
-//                        parentCompany = company.parentCompany
-                        category = company.category
-                        isPointsSeller = company.isPointsSeller
-                        balance = company.balance
-                        latitude = company.latitude
-                        longitude = company.longitude
-                        metaSeller = company.metaSeller
-                    }
+                companyDataStore.updateData{
+                    CompanyDto().copy(
+                        id = company.id,
+                        name = company.name,
+                        code = company.code,
+                        matfisc = company.matfisc,
+                        address = company.address,
+                        phone = company.phone,
+                        bankaccountnumber = company.bankaccountnumber,
+                        email = company.email,
+                        capital = company.capital,
+                        logo = company.logo,
+                        workForce = company.workForce,
+                        user = company.user!!,
+                        rate = company.rate,
+                        raters = company.raters,
+                        category = company.category!!,
+                        isPointsSeller = company.isPointsSeller,
+                        balance = company.balance,
+                        latitude = company.latitude,
+                        longitude = company.longitude,
+                        metaSeller = company.metaSeller,
+                    )
                 }
             } catch (e: Exception) {
                 Log.e("storeTokenError", "Error storing token in store company fun app view model: ${e.message}")
@@ -336,13 +358,20 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    fun updateCompanyName(newName: String, onUpdated: (Company) -> Unit) {
+    fun updateCompanyName(newName: String, onUpdated: (CompanyDto) -> Unit) {
         viewModelScope.launch {
             try {
-                datastore1.updateData { currentCompany ->
-                    currentCompany.apply {
+//                datastore1.updateData { currentCompany ->
+//                    currentCompany.apply {
+//                        logo = newName
+//                    }.also {
+////                        onUpdated(currentCompany)
+//                    }
+//                }
+                companyDataStore.updateData { currentCompany ->
+                    currentCompany.copy (
                         logo = newName
-                    }.also {
+                    ).also {
                         onUpdated(currentCompany)
                     }
                 }
@@ -355,10 +384,17 @@ class AppViewModel @Inject constructor(
     fun updateUserName(newName: String) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
-                userdatastore.updateData { currentUser ->
-                    currentUser.apply {
+//                userdatastore.updateData { currentUser ->
+//                    currentUser.apply {
+//                        image = newName
+//                    }.also {
+////                        sharedViewModel._user.value = currentUser
+//                    }
+//                }
+                userDatastore.updateData { currentUser ->
+                    currentUser.copy (
                         image = newName
-                    }.also {
+                    ).also {
                         sharedViewModel._user.value = currentUser
                     }
                 }
@@ -370,10 +406,17 @@ class AppViewModel @Inject constructor(
 
     fun updateCompanyBalance(blc : Double){
         viewModelScope.launch {
-            datastore1.updateData { currentCompany ->
-                currentCompany.apply {
+//            datastore1.updateData { currentCompany ->
+//                currentCompany.apply {
+//                    balance = blc
+//                }.also {
+////                sharedViewModel._company.value = currentCompany
+//                }
+//            }
+            companyDataStore.updateData { currentCompany ->
+                currentCompany.copy (
                     balance = blc
-                }.also {
+                ).also {
                 sharedViewModel._company.value = currentCompany
                 }
             }
@@ -413,34 +456,63 @@ class AppViewModel @Inject constructor(
                 dataStore.updateData {
                     it.copy(token = "")
                 }
-                datastore1.updateData {
-                    Company().apply {
-                        id = 0
-                        name = ""
-                        code = ""
-                        matfisc = ""
-                        address = ""
-                        phone = ""
-                        bankaccountnumber = ""
-                        email = ""
-                        capital = ""
-                        logo = ""
-                        workForce = 0
-                        rate = 0.0
-                        raters = 0
-                        category = CompanyCategory.DAIRY.toString()
-                        user = User()
-                    }
+//                datastore1.updateData {
+//                    Company().apply {
+//                        id = 0
+//                        name = ""
+//                        code = ""
+//                        matfisc = ""
+//                        address = ""
+//                        phone = ""
+//                        bankaccountnumber = ""
+//                        email = ""
+//                        capital = ""
+//                        logo = ""
+//                        workForce = 0
+//                        rate = 0.0
+//                        raters = 0
+//                        category = CompanyCategory.DAIRY.toString()
+//                        user = User()
+//                    }
+//                }
+                companyDataStore.updateData {
+                    CompanyDto().copy(
+                        id = 0,
+                        name = "",
+                        code = "",
+                        matfisc = "",
+                        address = "",
+                        phone = "",
+                        bankaccountnumber = "",
+                        email = "",
+                        capital = "",
+                        logo = "",
+                        workForce = 0,
+                        rate = 0.0,
+                        raters = 0,
+                        category = CompanyCategory.DAIRY,
+                        user = UserDto()
+                    )
                 }
-                userdatastore.updateData {
-                    User().apply {
-                        id = 0
-                        username = ""
-                        address = ""
-                        phone = ""
-                        balance = 0.0
-                        image = ""
-                    }
+//                userdatastore.updateData {
+//                    User().apply {
+//                        id = 0
+//                        username = ""
+//                        address = ""
+//                        phone = ""
+//                        balance = 0.0
+//                        image = ""
+//                    }
+//                }
+                userDatastore.updateData {
+                    UserDto().copy(
+                        id = 0,
+                        username = "",
+                        address = "",
+                        phone = "",
+                        balance = 0.0,
+                        image = "",
+                    )
                 }
                 sharedViewModel.accountType = AccountType.USER
                realmBlock()
