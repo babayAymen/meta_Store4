@@ -12,7 +12,7 @@ data class MessageDto(
 //    var receiverCompany: CompanyDto? = null,
     var id : Long? = null,
     var createdBy : Long? = null,
-
+    var createdDate : String? = null,
     var conversation : ConversationDto? = null,
 
     var content : String? = ""

@@ -11,6 +11,8 @@ fun mapMessageToRoomMessage(message : MessageDto) : Message{
 
      conversationId = message.conversation?.id,
 
-     content = message.content
+     content = message.content,
+
+        createdDate = message.createdDate
     )
 }

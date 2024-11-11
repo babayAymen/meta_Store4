@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -41,11 +40,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.model.entity.room.Article
 import com.aymen.store.dependencyInjection.BASE_URL
-import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
+import com.aymen.store.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.ui.component.ArticleCardForAdmin
 import com.aymen.store.ui.component.ButtonSubmit
 import com.aymen.store.ui.component.addQuantityDailog
@@ -55,7 +54,10 @@ import kotlinx.coroutines.delay
 fun ArticleScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
+    val companyViewModel : CompanyViewModel = hiltViewModel()
     val adminArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
+    val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
+    val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         articleViewModel.getAllMyArticlesApi()
     }
@@ -89,6 +91,10 @@ fun ArticleScreen() {
             ){
                 LazyColumn {
                     itemsIndexed(adminArticles){index , articleCompany ->
+//                        companyViewModel.fetchCompanyByArticleId(articleCompany.id!!, articleCompany.companyId!!)
+                        articleViewModel.fetchArticlesByArticleId(articleCompany.id!!, articleCompany.articleId!!)
+                        val com = companies[articleCompany.id]
+                        val art = articles[articleCompany.id]
                         SwipeToDeleteContainer(
                             articleCompany,
                             onDelete = {
@@ -96,17 +102,18 @@ fun ArticleScreen() {
                             },
                             appViewModel = appViewModel,
                         ){article ->
-                            ArticleCardForAdmin(article = article,
-                                image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${CompanyCategory.valueOf(article.company?.category!!).ordinal}"){
+                            ArticleCardForAdmin(article,
+                                 art?:Article(),
+                                image = "${BASE_URL}werehouse/image/${art?.image}/article/${com?.category!!.ordinal}") {
                                 articleIndex = index
                                 isSelected = true
                             }
-                            if(isSelected && index == articleIndex){
-                            addQuantityDailog(article,true){
-                                articleViewModel.addQuantityArticle(it,article.id!!)
-                                isSelected = false
-                                articleIndex = -1
-                            }
+                            if(isSelected && index == articleIndex) {
+                                addQuantityDailog(article, art?:Article(), com, true) {
+                                    articleViewModel.addQuantityArticle(it, article.id!!)
+                                    isSelected = false
+                                    articleIndex = -1
+                                }
                             }
                         }
 

@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.StarHalf
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.StarOutline
@@ -27,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -36,10 +34,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.IconType
-import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.MessageViewModel
 import com.aymen.store.ui.component.AddTypeDialog
@@ -49,16 +45,14 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
-import com.aymen.metastore.model.Enum.MessageType
-import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.room.User
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.screen.user.RatingScreen
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.repository.ViewModel.ClientViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.ui.component.ButtonSubmit
 
 @Composable
 fun UserScreen() {
@@ -109,7 +103,7 @@ fun UserScreen() {
                         tint = Color.Green
                     )
                     if (user.id != null) {
-                        Text(text = user.username)
+                        Text(text = user.username!!)
                     }
 
                 }
@@ -158,7 +152,7 @@ fun userDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,c
                 .padding(end = 2.dp)
         ) {
             AddTypeDialog(isOpen = false, user.id!!, false) {
-                clientViewModel.sendClientRequest(user.id!!, it)
+                clientViewModel.sendClientRequest(user.id, it)
             }
         }
         Row(

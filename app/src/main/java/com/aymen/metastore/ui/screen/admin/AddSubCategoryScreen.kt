@@ -26,10 +26,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.aymen.metastore.model.entity.room.SubCategory
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.entity.realm.SubCategory
+import com.aymen.store.model.entity.dto.SubCategoryDto
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
@@ -51,7 +51,7 @@ fun AddSubCategoryScreen() {
         categoryViewModel.getAllCategoryByCompany(sharedViewModel.company.value.id!!)
     }
     val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
-    var subCategory = SubCategory()
+    val subCategory = SubCategoryDto()
     var libelle by remember {
         mutableStateOf("")
     }

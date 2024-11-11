@@ -36,8 +36,6 @@ class Company : RealmObject {
     var createdDate : String? = ""
     var lastModifiedDate : String? = ""
     var invoiceType : String? = InvoiceType.NOT_SAVED.toString()
-//    var parentCompany: com.aymen.metastore.model.entity.room.Company? = null
-    // var branshes: Set<com.aymen.metastore.model.entity.room.Company> = emptySet()
 override fun toString(): String {
     return "com.aymen.metastore.model.entity.room.Company(id=$id, name=$name, address=$address, phone=$phone, email=$email)"
 }

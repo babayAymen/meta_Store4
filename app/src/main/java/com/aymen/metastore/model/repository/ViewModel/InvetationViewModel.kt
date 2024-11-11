@@ -9,52 +9,30 @@ import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
 import com.aymen.metastore.model.entity.converterRealmToApi.mapInvitationToRoomInvitation
 import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
-import com.aymen.metastore.model.entity.converterRealmToApi.mapWorkerToRoomWorker
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorkerOrCompany
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.dto.InvitationDto
-import com.aymen.store.model.entity.realm.Invetation
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 @HiltViewModel
 class InvetationViewModel @Inject constructor(
     private val repository: GlobalRepository,
-    private val realm : Realm,
     private val room : AppDatabase
 ): ViewModel() {
 
-    var myAllInvetation by mutableStateOf(emptyList<Invetation>())
+    private var _myAllInvetation = MutableStateFlow(emptyList<InvitationWithClientOrWorkerOrCompany>())
+    val myAllInvetation: StateFlow<List<InvitationWithClientOrWorkerOrCompany>> = _myAllInvetation
+
     fun getAllMyInvetations(){
         viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val invetations = repository.getAllMyInvetationss()
-                    if (invetations.isSuccessful) {
-                        invetations.body()?.forEach {
-                            realm.write {
-                                val invitation = Invetation().apply {
-                                    id = it.id
-                                    client = it.client
-                                    companySender = it.companySender
-                                    companyReciver = it.companyReciver
-                                    salary = it.salary
-                                    jobtitle = it.jobtitle
-                                    department = it.department
-                                    totdayvacation = it.totdayvacation
-                                    statusvacation = it.statusvacation
-                                    status = it.status
-                                    type = it.type
-
-                                }
-                                copyToRealm(invitation, UpdatePolicy.ALL)
-                            }
-                        }
-                    }
                     val response = repository.getAllMyInvetations()
                     if (response.isSuccessful) {
                         response.body()?.forEach {invitation ->
@@ -64,7 +42,7 @@ class InvetationViewModel @Inject constructor(
                 } catch (_ex: Exception) {
                     Log.e("aymenababyinvetation", "error: $_ex")
                 }
-                myAllInvetation = repository.getAllMyInvetationsLocally()
+                _myAllInvetation.value = room.invetationDao().getAllInvitations()
 
         }
     }
@@ -92,32 +70,17 @@ class InvetationViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 try {
                     val response = repository.RequestResponse(status,id)
-//                    if (response.isSuccessful) {
-//
-//                    }
+                    if(response.isSuccessful) {
+                        room.invetationDao().requestResponse(status, id)
+                    }else{
+
+                    }
             }catch (_ex: Exception) {
                 Log.e("aymenababyinvetation", "error: $_ex")
             }
                 }
-            repository.deleteInvitation(id)
-            myAllInvetation = repository.getAllMyInvetationsLocally()
+            _myAllInvetation.value = room.invetationDao().getAllInvitations()
         }
     }
 
-    fun cancelInvitation(id : Long){
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                    val response = repository.cancelInvitation(id)
-//                    if (response.isSuccessful) {
-//
-//                    }
-                }catch (_ex: Exception) {
-                    Log.e("aymenababyinvetation", "error: $_ex")
-                }
-            }
-            repository.deleteInvitation(id)
-            myAllInvetation = repository.getAllMyInvetationsLocally()
-        }
-    }
 }

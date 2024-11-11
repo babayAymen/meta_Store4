@@ -10,13 +10,13 @@ import android.location.LocationManager
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,8 +25,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,7 +48,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -68,7 +65,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,7 +88,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -104,29 +99,29 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.aymen.metastore.R
-import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.metastore.model.Enum.SubType
 import com.aymen.metastore.model.Location.GpsStatusReceiver
 import com.aymen.metastore.model.Location.LocationService
 import com.aymen.metastore.model.Location.hasLocationPermission
 import com.aymen.metastore.model.Location.isGpsEnabled
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToCompanyDto
-import com.aymen.metastore.model.entity.realm.ArticleCompany
-import com.aymen.metastore.model.entity.realm.PaymentForProviders
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
+import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
-import com.aymen.store.model.entity.realm.Company
-import com.aymen.store.model.entity.realm.Conversation
-import com.aymen.store.model.entity.realm.Invetation
-import com.aymen.store.model.entity.realm.Message
-import com.aymen.store.model.entity.realm.PurchaseOrderLine
-import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.entity.room.Article
+import com.aymen.metastore.model.entity.room.ArticleCompany
+import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorkerOrCompany
+import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
+import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.entity.dto.CompanyDto
+import com.aymen.store.model.entity.dto.ConversationDto
 import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
@@ -360,31 +355,41 @@ fun resolveUriToFile(uri: Uri?, context: Context): File? {
 }
 
 @Composable
-fun ArticleCardForUser(article : List<ArticleCompany>, isEnabled : Boolean) {
+fun ArticleCardForUser(article : List<ArticleWithArticleCompany>, isEnabled : Boolean) {
     val appViewModel : AppViewModel = hiltViewModel()
     val shoppingViewModel : ShoppingViewModel = hiltViewModel()
    val articleViewModel : ArticleViewModel = hiltViewModel()
     val messageViewModel : MessageViewModel = hiltViewModel()
     val companyViewModel : CompanyViewModel = hiltViewModel()
+    val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
+    val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
     Row {
         LazyColumn {
             items(article) {
-            Card(
+                LaunchedEffect(it.articleCompany.id) {
+                if (companies[it.articleCompany.id] == null) {
+                    companyViewModel.fetchCompanyByArticleId(it.articleCompany.id!!, it.articleCompany.companyId!!)
+                    articleViewModel.fetchArticlesByArticleId(it.articleCompany.id!!, it.article.id!!)
+                }
+            }
+                val company = companies[it.articleCompany.id]
+                val art = articles[it.articleCompany.id]
+                Card(
                 elevation = CardDefaults.cardElevation(6.dp),
                 modifier = Modifier.padding(8.dp)
             ) {
                 Row {
                     Row(
                         modifier = Modifier
-                            .weight(0.9f)
+                            .weight(0.8f)
                             .clickable {
-                                companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
-                                articleViewModel.companyId = it.company?.id!!
+                                companyViewModel.myCompany = mapRoomCompanyToCompanyDto(company!!)
+                                articleViewModel.companyId = it.articleCompany.companyId!!
                                 RouteController.navigateTo(Screen.CompanyScreen)
                             }
                     ) {
-                        if (it.company?.logo != null) {
-                            ShowImage(image = "${BASE_URL}werehouse/image/${it.company?.logo}/company/${it.company?.user?.id}",30.dp)
+                        if (company?.logo != null) {
+                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.userId}",30.dp)
                         } else {
                             val painter: Painter = painterResource(id = R.drawable.emptyprofile)
                             Image(
@@ -402,42 +407,44 @@ fun ArticleCardForUser(article : List<ArticleCompany>, isEnabled : Boolean) {
                             contentDescription = "verification account",
                             tint = Color.Green
                         )
-                        it.company?.let { it1 -> Text(text = it1.name) }
+                        company?.let { it1 -> Text(text = it1.name) }
                     }
                     Row(
-                        modifier = Modifier.weight(0.1f)
+                        modifier = Modifier.weight(0.2f)
                     ) {
-                        Text(text = "${it.likeNumber}")
-                        Icon(imageVector = if (it.isFav) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                        Text(text = "${it.articleCompany.likeNumber?:0}k")
+                        Icon(imageVector = if (it.articleCompany.isFav!!) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = "favorite",
                             Modifier.clickable {
-                                articleViewModel.makeItAsFav(it)
+                                articleViewModel.makeItAsFav(it.articleCompany)
                             }
                         )
                     }
                 }
                 Column(
                     modifier = Modifier.clickable {
-                        companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
-                        articleViewModel.articleCompany = it
+                        companyViewModel.myCompany = mapRoomCompanyToCompanyDto(company!!)
+                        articleViewModel.articleCompany = it.articleCompany
                         RouteController.navigateTo(Screen.ArticleDetailScreen)
                     }
                 ) {
-                if (it.article!!.image.isEmpty()) {
+                if (articles.isEmpty() || art?.image?.isEmpty()!!) {
                     Icon(imageVector = Icons.AutoMirrored.Filled.Article, contentDescription = "article photo")
                 } else {
-                    ShowImage(image = "${BASE_URL}werehouse/image/${it.article!!.image}/article/${CompanyCategory.valueOf(it.company?.category!!).ordinal}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${art.image}/article/${company?.category!!.ordinal}")
                 }
-                NormalText(value = it.article!!.libelle, aligne = TextAlign.Start)
+                    if (art != null) {
+                        NormalText(value = art.libelle, aligne = TextAlign.Start)
+                    }
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ShowPrice(
-                        cost = it.cost,
-                        margin = it.sellingPrice,
-                        tva = it.article!!.tva
+                        cost = it.articleCompany.cost?:0.0,
+                        margin = it.articleCompany.sellingPrice!!,
+                        tva = art?.tva ?: 0.0
                     )
-                    ArticleDetails(value = it.quantity.toString(), aligne = TextAlign.Start)
+                    ArticleDetails(value = it.articleCompany.quantity.toString(), aligne = TextAlign.Start)
                 }
             }
                 Row {
@@ -453,8 +460,8 @@ fun ArticleCardForUser(article : List<ArticleCompany>, isEnabled : Boolean) {
                                 enabled = isEnabled
                             ) {
                                 messageViewModel.receiverAccountType = AccountType.COMPANY
-                                messageViewModel.receiverCompany = it.company!!
-                                messageViewModel.getAllMessageByCaleeId(it.company?.id!!)// from home screen
+                                messageViewModel.receiverCompany = company!!
+                                messageViewModel.getAllMessageByCaleeId(it.articleCompany.companyId!!)// from home screen
                                 appViewModel.updateShow("message")
                                 appViewModel.updateScreen(IconType.MESSAGE)
                             }
@@ -475,9 +482,10 @@ fun ArticleCardForUser(article : List<ArticleCompany>, isEnabled : Boolean) {
 }
 
 @Composable
-fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
-    val companyViewModel : CompanyViewModel = viewModel()
-    val articleViewModel : ArticleViewModel = viewModel()
+fun ArticleCardForSearch(articleCompany: ArticleCompany,article : Article,com : Company, onClicked: () -> Unit) {
+    val company = com
+    val articlecompany = articleCompany
+    val art = article
     Card(
         elevation = CardDefaults.cardElevation(6.dp),
         modifier = Modifier
@@ -486,17 +494,18 @@ fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
                 onClicked()
             }
     ) {
-        ShowImage(image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${CompanyCategory.valueOf(article.company?.category!!).ordinal}")
-        NormalText(value = article.article!!.libelle, aligne = TextAlign.Start)
+        ShowImage(image = "${BASE_URL}werehouse/image/${art.image}/article/${company.category?.ordinal}")
+        NormalText(value = art.libelle, aligne = TextAlign.Start)
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ShowPrice(
-                cost = article.cost,
-                margin = article.sellingPrice,
-                tva = article.article!!.tva
-            )
-            ArticleDetails(value = article.quantity.toString(), aligne = TextAlign.Start)
+                ShowPrice(
+                    cost = articlecompany.cost?:0.0,
+                    margin = articlecompany.sellingPrice!!,
+                    tva = art.tva?:0.0
+                )
+
+            ArticleDetails(value = articlecompany.quantity.toString(), aligne = TextAlign.Start)
         }
     }
 }
@@ -640,7 +649,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
 
 
 @Composable
-fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
+fun SendPointDialog(isOpen : Boolean, user: com.aymen.metastore.model.entity.room.User, client : com.aymen.metastore.model.entity.room.Company) {
     val pointsPaymentViewModel : PointsPaymentViewModel = viewModel()
     var openDialog by remember {
         mutableStateOf(isOpen)
@@ -791,13 +800,19 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 }
 
 @Composable
-fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
+fun ShoppingDialog(article : ArticleWithArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
+    val companyViewModel : CompanyViewModel = hiltViewModel()
+    val articleViewModel : ArticleViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val accountType = sharedViewModel.accountType
-    val company by sharedViewModel.company.collectAsStateWithLifecycle()
-    val user by sharedViewModel.user.collectAsStateWithLifecycle()
+    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
     val context = LocalContext.current
-//     checkLocation(type = accountType, user = user, company = company, context = context)
+    val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
+    val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
+
+    val company = companies[article.articleCompany.id]
+    val art = articles[article.articleCompany.id]
     var isCompany by remember {
         mutableStateOf(false)
     }
@@ -806,18 +821,22 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
     }
     var restBalance by remember {
         if (isCompany){
-        mutableStateOf(company.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP))
+        mutableStateOf(myCompany.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP))
         }else{
-        mutableStateOf(user.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP))
+        mutableStateOf(myUser.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP))
         }
     }
     val gson = Gson()
+
+    var showFeesDialog by remember { mutableStateOf(false) }
+    var balance by remember { mutableStateOf(0.0) }
+
     LaunchedEffect(key1 = shoppingViewModel.qte, key2 = accountType) {
         isCompany = accountType == AccountType.COMPANY
         restBalance = if(isCompany){
-            company.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.sellingPrice.toBigDecimal()
+            myCompany.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.articleCompany.sellingPrice!!.toBigDecimal()
         }else {
-            user.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.sellingPrice.toBigDecimal()
+            myUser.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.articleCompany.sellingPrice!!.toBigDecimal()
         }
     }
     if(label != ""){
@@ -842,7 +861,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                     Row (
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${CompanyCategory.valueOf(article.company?.category!!).ordinal}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${art!!.image}/article/${company?.category!!.ordinal}")
                         Text(text = if( restBalance<BigDecimal.ZERO || (shoppingViewModel.qte == 0.0 && restBalance <= 1.toBigDecimal())) "sold insufficient $restBalance pts" else "$restBalance pts")
                     }
                     Row {
@@ -895,7 +914,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                                     enabled = true
                                 ) {
                                     openDialog = false
-                                    shoppingViewModel.randomArtilce = article
+                                    shoppingViewModel.randomArticle = article
                                     shoppingViewModel.submitShopping(restBalance)
                                     val s = gson.toJson(shoppingViewModel.orderArray)
                                 }
@@ -909,10 +928,18 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                                     color = Color.Green,
                                     enabled = true
                                 ) {
-                                    openDialog = false
-                                    shoppingViewModel.randomArtilce = article
+                                    shoppingViewModel.randomArticle = article
                                     shoppingViewModel.submitShopping(restBalance)
-                                    shoppingViewModel.sendOrder(-1)
+                                    shoppingViewModel.beforSendOrder {isAccepted , balanc ->
+                                        if (isAccepted) {
+                                            openDialog = false
+                                            shoppingViewModel.sendOrder(-1, balanc)
+                                        } else {
+                                            balance = balanc
+                                           showFeesDialog = true
+                                        }
+                                    }
+
                                 }
                             }
                         }
@@ -928,10 +955,23 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
 
                         }
                         Row {
-                            CheckBoxComp(value = "Delivery",shoppingViewModel.delivery) {isChecked ->
+                            CheckBoxComp(
+                                value = "Delivery",
+                                shoppingViewModel.delivery
+                            ) { isChecked ->
                                 shoppingViewModel.delivery = isChecked
                             }
+                        }
+                    if(showFeesDialog){
+                        ShowFeesDialog(isOpen = true){ submitfees ->
+                            if(submitfees){
+                                openDialog = false
+                                shoppingViewModel.sendOrder(-1, balance)
+                            }else{
+                                showFeesDialog = false
                             }
+                        }
+                    }
                     }
                 }
             }
@@ -939,7 +979,45 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
     }
 
 @Composable
-fun updateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
+fun ShowFeesDialog(isOpen: Boolean, onClose: (Boolean) -> Unit) {
+    if(isOpen){
+        Dialog(
+            onDismissRequest = { onClose(false) }
+        ){
+            Column (  modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally){
+                Row (modifier = Modifier.fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Center){
+                 Text(text = "3dt for delivery"
+                     , modifier = Modifier.background(Color.White),
+                     style = TextStyle(Color.Red, fontSize = 30.sp)
+                 )
+                }
+                Row {
+                  Row(modifier = Modifier.weight(1f)) {
+
+                ButtonSubmit(labelValue = "Ok" , color = Color.Green, enabled = true) {
+                    onClose(true)
+                  }
+                }
+                    Row(modifier = Modifier.weight(1f)) {
+
+                ButtonSubmit(labelValue = "CANCEL" , color = Color.Red , enabled = true) {
+                    onClose(false)
+                    }
+                }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun UpdateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
     val appViewModel : AppViewModel = hiltViewModel()
     val sViewModel : SharedViewModel = hiltViewModel()
     val company by sViewModel.company.collectAsStateWithLifecycle()
@@ -1020,7 +1098,7 @@ fun updateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
 
 
 @Composable
-fun ConversationCard(conversation : List<Conversation>) {
+fun ConversationCard(conversation : List<ConversationDto>) {
 
     val messageViewModel : MessageViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
@@ -1031,14 +1109,12 @@ fun ConversationCard(conversation : List<Conversation>) {
                     elevation = CardDefaults.cardElevation(6.dp),
                     modifier = Modifier.padding(8.dp),
                     onClick = {
-
-//                        messageViewModel.sender = it.company1?.name ?: ""
                         appViewModel.updateShow("message")
                         messageViewModel.fromConve = true
                         messageViewModel.conversation = it
-                        messageViewModel.receiverCompany = it.company2?:it.company1!!
-                        messageViewModel.receiverUser = it.user2?:it.user1!!
-                        messageViewModel.messageType = MessageType.valueOf(it.type!!)
+                        messageViewModel.receiverCompany = mapCompanyToRoomCompany(it.company2?:it.company1!!)
+                        messageViewModel.receiverUser = mapUserToRoomUser(it.user2?:it.user1)
+                        messageViewModel.messageType = it.type!!
                         messageViewModel.receiverAccountType = AccountType.COMPANY
                         messageViewModel.getAllMyMessageByConversationId()
                     }
@@ -1058,7 +1134,6 @@ fun ConversationCard(conversation : List<Conversation>) {
                                     if (it.company2?.logo != null) {
                                         ShowImage(image = "${BASE_URL}werehouse/image/${it.company2?.logo}/company/${it.company2?.user?.id}")
                                     } else {
-                                    Log.e("aymenbabaycardscreen","conversation id from company 2 not null : ${it.id}")
                                         val painter: Painter =
                                             painterResource(id = R.drawable.emptyprofile)
                                         Image(
@@ -1076,7 +1151,6 @@ fun ConversationCard(conversation : List<Conversation>) {
                                     if (it.user2?.image != null) {
                                         ShowImage(image = "${BASE_URL}werehouse/image/${it.user2?.image}/user/${it.user2?.id}")
                                     } else {
-                                        Log.e("aymenbabaycardscreen","conversation id from user 2 not null : ${it.id} user 2 id  : ${it.user2?.id}")
 
                                         val painter: Painter =
                                             painterResource(id = R.drawable.emptyprofile)
@@ -1100,13 +1174,13 @@ fun ConversationCard(conversation : List<Conversation>) {
                         ) {
                             it.user2?.let {
                                 NormalText(
-                                    value = it.username,
+                                    value = it.username!!,
                                     aligne = TextAlign.Start
                                 )
                             }
                             it.user1?.let {
                                 NormalText(
-                                    value = it.username,
+                                    value = it.username!!,
                                     aligne = TextAlign.End
                                 )
                             }
@@ -1141,52 +1215,7 @@ fun ConversationCard(conversation : List<Conversation>) {
 }
 
 @Composable
-fun MessageCardd(message: List<Message>) {
-    val messageViewModel : MessageViewModel = hiltViewModel()
-    val sharedViewModel : SharedViewModel = hiltViewModel()
-    val me by sharedViewModel.user.collectAsStateWithLifecycle()
-    val lazyListState = rememberLazyListState()
-LaunchedEffect(key1 = messageViewModel.myAllMessages) {
-    lazyListState.scrollToItem(index = messageViewModel.myAllMessages.value.size)
-}
-    Row {
-        LazyColumn(
-            state = lazyListState
-            ,
-//            modifier = Modifier.graphicsLayer {
-//                rotationY = 180f
-//            }
-        ) {
-           items(message) {
-               Column (
-//                   modifier = Modifier.graphicsLayer {
-//                   rotationY = 180f
-//               }
-               ){
-
-               it.content?.let { it1 ->
-                   if (me.id != null) {
-                       MessageText(
-                           value = it1,
-                           aligne = if (
-                               it.createdBy == me.id
-                           )
-                               TextAlign.End else TextAlign.Start,
-                           color = if(
-                               it.createdBy == me.id
-                           )
-                               Color.Blue else Color.Black
-                       )
-                   }
-               }
-              Text(text =  it.createdDate)
-               }
-           }
-        }
-    }
-}
-@Composable
-fun MessageCard(message: List<Message>) {
+fun MessageCard(message: List<com.aymen.metastore.model.entity.room.Message>) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val me by sharedViewModel.user.collectAsStateWithLifecycle()
 
@@ -1221,7 +1250,7 @@ fun MessageCard(message: List<Message>) {
                             )
                         }
                     }
-                    Text(text = msg.createdDate)
+                    msg.createdDate?.let { Text(text = it) }
                 }
             }
         }
@@ -1229,8 +1258,8 @@ fun MessageCard(message: List<Message>) {
 }
 
 @Composable
-fun OrderShow(order: PurchaseOrderLine) {
-    val shoppingViewModel: ShoppingViewModel = viewModel()
+fun OrderShow(order: PurchaseOrderLineWithPurchaseOrderOrInvoice) {
+    val shoppingViewModel: ShoppingViewModel = hiltViewModel()
     var showDialog by remember { mutableStateOf(false) }
     Row {
         Column(
@@ -1240,14 +1269,14 @@ fun OrderShow(order: PurchaseOrderLine) {
                 }
                 .weight(0.9f)
         ) {
-            order.article?.let { Text(text = it.article!!.libelle) }
-            Text(text = order.quantity.toString())
-            Text(text = order.comment)
+            order.article?.article?.let { Text(text = it.libelle) }
+            Text(text = order.purchaseOrderLine.quantity.toString())
+            order.purchaseOrderLine.comment?.let { Text(text = it) }
             if (showDialog) {
-                shoppingViewModel.randomArtilce = order.article!!
-                shoppingViewModel.qte = order.quantity
-                shoppingViewModel.comment = order.comment
-                shoppingViewModel.delivery = order.delivery
+                shoppingViewModel.randomArticle.articleCompany = order.article?.articleCompany!!
+                shoppingViewModel.qte = order.purchaseOrderLine.quantity!!
+                shoppingViewModel.comment = order.purchaseOrderLine.comment?:""
+                shoppingViewModel.delivery = order.purchaseOrderLine.delivery!!
                 ShoppingDialog(
                     article = order.article!!,
                     label = "",
@@ -1260,14 +1289,13 @@ fun OrderShow(order: PurchaseOrderLine) {
 }
 
 @Composable
-fun InvetationCard(invetation : Invetation,onClicked: (Status) -> Unit) {
-    val companyViewModel : CompanyViewModel = viewModel()
-    val appViewModel : AppViewModel = viewModel()
-    val sharedViewModel : SharedViewModel = viewModel()
+fun InvetationCard(invetation : InvitationWithClientOrWorkerOrCompany,onClicked: (Status) -> Unit) {
+    val companyViewModel : CompanyViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     var companyId by remember {
         mutableLongStateOf(0)
     }
-    var role = sharedViewModel.accountType
+    val role = sharedViewModel.accountType
 
     LaunchedEffect(Unit) {
         companyViewModel.getMyCompany {
@@ -1280,74 +1308,79 @@ fun InvetationCard(invetation : Invetation,onClicked: (Status) -> Unit) {
         modifier = Modifier.fillMaxWidth()
     )
     {
-        when (invetation.type) {
-            Type.USER_SEND_CLIENT_COMPANY.toString() ->
+        when (invetation.invitation.type) {
+            Type.USER_SEND_CLIENT_COMPANY ->
                 InvitationTypeClient(invetation, companyId){
                     onClicked(it)
                 }
-            Type.COMPANY_SEND_CLIENT_COMPANY.toString() ->
+            Type.COMPANY_SEND_CLIENT_COMPANY ->
                 InvitationTypeClient(invetation, companyId){
                     onClicked(it)
                 }
-            Type.COMPANY_SEND_PROVIDER_USER.toString() ->
+            Type.COMPANY_SEND_PROVIDER_USER ->
             InvitationTypeProvider(invetation, companyId,role){
                 onClicked(it)
             }
-            Type.COMPANY_SEND_PROVIDER_COMPANY.toString() ->
+            Type.COMPANY_SEND_PROVIDER_COMPANY ->
                 InvitationTypeProvider(invetation, companyId,role){
                     onClicked(it)
                 }
-            Type.COMPANY_SEND_PARENT_COMPANY.toString() ->
+            Type.COMPANY_SEND_PARENT_COMPANY ->
            InvitationTypeParent(invetation = invetation, companyId){
                onClicked(it)
            }
-            Type.COMPANY_SEND_WORKER_USER.toString() ->
+            Type.COMPANY_SEND_WORKER_USER ->
             InvitationTypeWorker(invetation = invetation,role){
                 onClicked(it)
             }
-            Type.USER_SEND_WORKER_COMPANY.toString() ->
+            Type.USER_SEND_WORKER_COMPANY ->
                 InvitationTypeWorker(invetation = invetation,role){
                     onClicked(it)
                 }
+
+            Type.OTHER -> TODO()
+            null -> TODO()
         }
     }
 
 }
 
 @Composable
-fun InvitationTypeWorker(invetation: Invetation, role : AccountType,onClicked: (Status) -> Unit) {
-        when (invetation.status){
-            Status.INWAITING.toString() ->
+fun InvitationTypeWorker(invetation: InvitationWithClientOrWorkerOrCompany, role : AccountType,onClicked: (Status) -> Unit) {
+        when (invetation.invitation.status){
+            Status.INWAITING ->
             InWaitingTypeWorker(invetation = invetation, role = role){
                 onClicked(it)
             }
-            Status.ACCEPTED.toString() ->
+            Status.ACCEPTED ->
             AcceptTypeWorker(invetation = invetation, role = role)
-            Status.REFUSED.toString() ->
+            Status.REFUSED ->
             RefuseTypeWorker(invetation = invetation, role = role)
-            Status.CANCELLED.toString() ->
+            Status.CANCELLED ->
             CancelTypeWorker(invetation = invetation, role = role)
+
+            null -> TODO()
         }
     }
 @Composable
-fun CancelTypeWorker(invetation: Invetation, role : AccountType) {
+fun CancelTypeWorker(invetation: InvitationWithClientOrWorkerOrCompany, role : AccountType) {
     when (role) {
         AccountType.COMPANY -> {
-            Row{
-                Row (
+            Row {
+                Row(
                     modifier = Modifier.weight(1f)
-                ){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                ) {
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.workerWithUser?.user?.image}/user/${invetation.workerWithUser?.user?.id}")
                 }
-            Row(
-                modifier = Modifier.weight(3f)
-            ) {
-                if(invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()){
-                Text(text = "${invetation.client?.username} has canceled a worker invitation")
-                }else{
-                Text(text = "you have canceled a worker invitation to ${invetation.client?.username}")
+                Row(
+                    modifier = Modifier.weight(3f)
+                ) {
+                    if (invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY) {
+                        Text(text = "${invetation.workerWithUser?.user?.username} has canceled a worker invitation")
+                    } else {
+                        Text(text = "you have canceled a worker invitation to ${invetation.workerWithUser?.user?.username}")
+                    }
                 }
-            }
             }
         }
         AccountType.USER ->{
@@ -1355,18 +1388,18 @@ fun CancelTypeWorker(invetation: Invetation, role : AccountType) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    if(invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY){
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }else{
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                     }
                 }
                 Row(
                     modifier = Modifier.weight(3f)
                 ) {
-if(invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()){
-                    Text(text = "you have canceled a worker invitation to ${invetation.companyReciver?.name}")
-}
+                if(invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY){
+                                    Text(text = "you have canceled a worker invitation to ${invetation.companyReceiver?.name}")
+                }
                     else{
                     Text(text = "${invetation.companySender?.name} has cnceled a worker invitation")
                     }
@@ -1380,22 +1413,22 @@ if(invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()){
 
     }
 @Composable
-fun RefuseTypeWorker(invetation: Invetation, role : AccountType) {
+fun RefuseTypeWorker(invetation: InvitationWithClientOrWorkerOrCompany, role : AccountType) {
     when (role){
         AccountType.COMPANY -> {
             Row {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.workerWithUser?.user?.image}/user/${invetation.workerWithUser?.user?.id}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()){
-                    Text(text = "you have refused a worker invitation from ${invetation.client?.username}")
+                    if(invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY){
+                    Text(text = "you have refused a worker invitation from ${invetation.workerWithUser?.user?.username}")
                     }else{
-                    Text(text = "${invetation.client?.username} has refused your worker invitation")
+                    Text(text = "${invetation.workerWithUser?.user?.username} has refused your worker invitation")
                     }
                 }
             }
@@ -1405,18 +1438,18 @@ fun RefuseTypeWorker(invetation: Invetation, role : AccountType) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    if(invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY){
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }else{
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
 
                     }
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()){
-                    Text(text = "${invetation.companyReciver?.name} has refused your worker invitation")
+                    if(invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY){
+                    Text(text = "${invetation.companyReceiver?.name} has refused your worker invitation")
                     }
                     else{
                     Text(text = "you have refused a worker invitation from ${invetation.companySender?.name}")
@@ -1431,21 +1464,21 @@ fun RefuseTypeWorker(invetation: Invetation, role : AccountType) {
     }
     }
 @Composable
-fun InWaitingTypeWorker(invetation: Invetation, role: AccountType,onClicked: (Status) -> Unit) {
+fun InWaitingTypeWorker(invetation: InvitationWithClientOrWorkerOrCompany, role: AccountType,onClicked: (Status) -> Unit) {
     when (role) {
         AccountType.COMPANY -> {
             Row {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.workerWithUser?.user?.image}/user/${invetation.workerWithUser?.user?.id}")
                 }
                 Row(
                     modifier = Modifier.weight(3f)
                 ) {
                     Column {
-                        if (invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()) {
-                            Text(text = "${invetation.client?.username} has sent a worker invitation")
+                        if (invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY) {
+                            Text(text = "${invetation.workerWithUser?.user?.username} has sent a worker invitation")
                             Row {
                                 Row(
                                     modifier = Modifier.weight(1f)
@@ -1473,7 +1506,7 @@ fun InWaitingTypeWorker(invetation: Invetation, role: AccountType,onClicked: (St
                         } else {
                             Column {
 
-                                Text(text = "you have sent a worker invitation to ${invetation.client?.username}")
+                                Text(text = "you have sent a worker invitation to ${invetation.workerWithUser?.user?.username}")
                                 ButtonSubmit(
                                     labelValue = "cancel",
                                     color = Color.Red,
@@ -1493,18 +1526,18 @@ fun InWaitingTypeWorker(invetation: Invetation, role: AccountType,onClicked: (St
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    if (invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY) {
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     } else
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row(
                     modifier = Modifier.weight(3f)
                 ) {
                     Column {
-                        if (invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()) {
+                        if (invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY) {
 
-                            Text(text = " you have sent a worker invitation to ${invetation.companyReciver?.name}")
+                            Text(text = " you have sent a worker invitation to ${invetation.companyReceiver?.name}")
                             ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                                 onClicked(Status.CANCELLED)
                             }
@@ -1548,22 +1581,22 @@ fun InWaitingTypeWorker(invetation: Invetation, role: AccountType,onClicked: (St
     }
 }
 @Composable
-fun AcceptTypeWorker(invetation: Invetation, role: AccountType) {
+fun AcceptTypeWorker(invetation: InvitationWithClientOrWorkerOrCompany, role: AccountType) {
     when (role) {
         AccountType.COMPANY -> {
             Row {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.workerWithUser?.user?.image}/user/${invetation.workerWithUser?.user?.id}")
                 }
                 Row(
                     modifier = Modifier.weight(3f)
                 ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()) {
-                        Text(text = "you have accepted a worker invitation from ${invetation.client?.username}")
+                    if (invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY) {
+                        Text(text = "you have accepted a worker invitation from ${invetation.workerWithUser?.user?.username}")
                     } else {
-                        Text(text = "${invetation.client?.username} has accepted your worker invitation")
+                        Text(text = "${invetation.workerWithUser?.user?.username} has accepted your worker invitation")
                     }
                 }
             }
@@ -1574,17 +1607,17 @@ fun AcceptTypeWorker(invetation: Invetation, role: AccountType) {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    if (invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY) {
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     } else {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                     }
                 }
                 Row(
                     modifier = Modifier.weight(3f)
                 ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY.toString()) {
-                        Text(text = "${invetation.companyReciver?.name} has accepted your worker invitation")
+                    if (invetation.invitation.type == Type.USER_SEND_WORKER_COMPANY) {
+                        Text(text = "${invetation.companyReceiver?.name} has accepted your worker invitation")
                     } else {
                         Text(text = "you have accepted a worker invitation from ${invetation.companySender?.name}")
                     }
@@ -1598,29 +1631,30 @@ fun AcceptTypeWorker(invetation: Invetation, role: AccountType) {
     }
 }
 @Composable
-fun InvitationTypeParent(invetation : Invetation, companyId : Long, onClicked: (Status) -> Unit) {
-        when (invetation.status){
-            Status.INWAITING.toString() ->
+fun InvitationTypeParent(invetation : InvitationWithClientOrWorkerOrCompany, companyId : Long, onClicked: (Status) -> Unit) {
+        when (invetation.invitation.status){
+            Status.INWAITING ->
             InWaitingTypeParent(invetation = invetation, companyId = companyId){
                 onClicked(it)
             }
-            Status.ACCEPTED.toString() ->
+            Status.ACCEPTED ->
             AcceptTypeParent(invetation = invetation, companyId = companyId)
-            Status.REFUSED.toString() ->
+            Status.REFUSED ->
             RefuseTypeParent(invetation = invetation, companyId = companyId)
-            Status.CANCELLED.toString() ->
+            Status.CANCELLED ->
             CancelTypeParent(invetation = invetation, companyId = companyId)
+            null -> TODO()
         }
     }
 @Composable
-fun CancelTypeParent(invetation: Invetation, companyId: Long) {
-    if (invetation.companyReciver?.id == companyId) {
+fun CancelTypeParent(invetation: InvitationWithClientOrWorkerOrCompany, companyId: Long) {
+    if (invetation.companyReceiver?.id == companyId) {
 
         Row {
             Row(
                 modifier = Modifier.weight(1f)
             ) {
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
             }
             Row(
                 modifier = Modifier.weight(3f)
@@ -1634,25 +1668,25 @@ fun CancelTypeParent(invetation: Invetation, companyId: Long) {
             Row(
                 modifier = Modifier.weight(1f)
             ) {
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
             }
             Row(
                 modifier = Modifier.weight(3f)
             ) {
-                Text(text = " you have canceled a parent invitation to ${invetation.companyReciver?.name}")
+                Text(text = " you have canceled a parent invitation to ${invetation.companyReceiver?.name}")
             }
         }
         }
 }
 @Composable
-fun RefuseTypeParent(invetation: Invetation, companyId: Long) {
-    if(invetation.companyReciver?.id == companyId){
+fun RefuseTypeParent(invetation: InvitationWithClientOrWorkerOrCompany, companyId: Long) {
+    if(invetation.companyReceiver?.id == companyId){
         Row {
 
         Row (
             modifier = Modifier.weight(1f)
         ){
-            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
         }
         Row (
             modifier = Modifier.weight(3f)
@@ -1667,25 +1701,25 @@ fun RefuseTypeParent(invetation: Invetation, companyId: Long) {
         Row (
             modifier = Modifier.weight(1f)
         ){
-            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
         }
         Row (
             modifier = Modifier.weight(3f)
         ){
-            Text(text = "${invetation.companyReciver?.name} has refused your parent invitation")
+            Text(text = "${invetation.companyReceiver?.name} has refused your parent invitation")
         }
         }
     }
 }
 @Composable
-fun InWaitingTypeParent(invetation: Invetation , companyId: Long, onClicked: (Status) -> Unit) {
-    if(invetation.companyReciver?.id == companyId){
+fun InWaitingTypeParent(invetation: InvitationWithClientOrWorkerOrCompany , companyId: Long, onClicked: (Status) -> Unit) {
+    if(invetation.companyReceiver?.id == companyId){
         Row {
 
         Row (
             modifier = Modifier.weight(1f)
         ){
-            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
         }
         Row (
             modifier = Modifier.weight(3f)
@@ -1722,7 +1756,7 @@ fun InWaitingTypeParent(invetation: Invetation , companyId: Long, onClicked: (St
         Row (
             modifier = Modifier.weight(1f)
         ){
-            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
         }
         Row (
             modifier = Modifier.weight(3f)
@@ -1730,7 +1764,7 @@ fun InWaitingTypeParent(invetation: Invetation , companyId: Long, onClicked: (St
 
             Column {
 
-            Text(text = " you have sent a parent invitation to ${invetation.companyReciver?.name}")
+            Text(text = " you have sent a parent invitation to ${invetation.companyReceiver?.name}")
             ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                 onClicked(Status.CANCELLED)
             }
@@ -1740,14 +1774,14 @@ fun InWaitingTypeParent(invetation: Invetation , companyId: Long, onClicked: (St
         }
 }
 @Composable
-fun AcceptTypeParent(invetation: Invetation,companyId: Long) {
-    if(invetation.companyReciver?.id == companyId){
+fun AcceptTypeParent(invetation: InvitationWithClientOrWorkerOrCompany,companyId: Long) {
+    if(invetation.companyReceiver?.id == companyId){
         Row {
 
         Row (
             modifier = Modifier.weight(1f)
         ){
-            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
         }
         Row (
             modifier = Modifier.weight(3f)
@@ -1762,41 +1796,42 @@ fun AcceptTypeParent(invetation: Invetation,companyId: Long) {
         Row (
             modifier = Modifier.weight(1f)
         ){
-            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+            ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
         }
         Row (
             modifier = Modifier.weight(3f)
         ){
-            Text(text = "${invetation.companyReciver?.name} has accepted your parent invitation")
+            Text(text = "${invetation.companyReceiver?.name} has accepted your parent invitation")
         }
         }
     }
 }
 @Composable
-fun InvitationTypeProvider(invetation : Invetation, companyId : Long, role : AccountType,onClicked: (Status) -> Unit){
-    Log.e("aymenbbayrole","company id is : ${companyId}")
-        when (invetation.status){
-            Status.INWAITING.toString() ->
+fun InvitationTypeProvider(invetation : InvitationWithClientOrWorkerOrCompany, companyId : Long, role : AccountType,onClicked: (Status) -> Unit){
+        when (invetation.invitation.status){
+            Status.INWAITING ->
             InWaitingTypeProvider(invetation = invetation, companyId = companyId){
                 onClicked(it)
             }
-            Status.ACCEPTED.toString() ->
+            Status.ACCEPTED ->
             AcceptTypeProvider(invetation = invetation, companyId = companyId)
-            Status.REFUSED.toString() ->
+            Status.REFUSED ->
             RefuseTypeProvider(invetation = invetation, companyId = companyId, role = role)
-            Status.CANCELLED.toString() ->
+            Status.CANCELLED ->
             CancelTypeProvider(invetation = invetation, companyId = companyId, role = role)
+
+            null -> TODO()
         }
     }
 @Composable
-fun CancelTypeProvider(invetation: Invetation, companyId: Long, role: AccountType) {
-        if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY.toString()){
-            if(invetation.companyReciver?.id == companyId){
+fun CancelTypeProvider(invetation: InvitationWithClientOrWorkerOrCompany, companyId: Long, role: AccountType) {
+        if(invetation.invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY){
+            if(invetation.companyReceiver?.id == companyId){
                 Row {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -1810,12 +1845,12 @@ fun CancelTypeProvider(invetation: Invetation, companyId: Long, role: AccountTyp
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
-                    Text(text = " you have canceled a provider invitation to " + invetation.companyReciver?.name!!)
+                    Text(text = " you have canceled a provider invitation to " + invetation.companyReceiver?.name!!)
                 }
                 }
             }
@@ -1840,27 +1875,27 @@ fun CancelTypeProvider(invetation: Invetation, companyId: Long, role: AccountTyp
             Row (
                 modifier = Modifier.weight(1f)
             ){
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
             }
             Row (
                 modifier = Modifier.weight(3f)
             ){
-                Text(text = " you have canceled a provider invitation to " + invetation.companyReciver?.name!!)
+                Text(text = " you have canceled a provider invitation to " + invetation.companyReceiver?.name!!)
             }
             }
         }
     }
 }
 @Composable
-fun RefuseTypeProvider(invetation: Invetation, companyId: Long, role : AccountType) {
-        if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY.toString()){
-            if(invetation.companyReciver?.id == companyId){
+fun RefuseTypeProvider(invetation: InvitationWithClientOrWorkerOrCompany, companyId: Long, role : AccountType) {
+        if(invetation.invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY){
+            if(invetation.companyReceiver?.id == companyId){
                 Row {
 
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -1874,12 +1909,12 @@ fun RefuseTypeProvider(invetation: Invetation, companyId: Long, role : AccountTy
                     Row(
                         modifier = Modifier.weight(1f)
                     ) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }
                     Row(
                         modifier = Modifier.weight(3f)
                     ) {
-                        Text(text = " you have refused a provider invitation from " + invetation.companyReciver?.name!!)
+                        Text(text = " you have refused a provider invitation from " + invetation.companyReceiver?.name!!)
                     }
                 }
             }
@@ -1904,7 +1939,7 @@ fun RefuseTypeProvider(invetation: Invetation, companyId: Long, role : AccountTy
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -1917,16 +1952,16 @@ fun RefuseTypeProvider(invetation: Invetation, companyId: Long, role : AccountTy
 
 }
 @Composable
-fun InWaitingTypeProvider(invetation: Invetation , companyId: Long, onClicked: (Status) -> Unit) {
+fun InWaitingTypeProvider(invetation: InvitationWithClientOrWorkerOrCompany , companyId: Long, onClicked: (Status) -> Unit) {
 
-        if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY.toString() ){
-            if(invetation.companyReciver?.id == companyId){
+        if(invetation.invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY ){
+            if(invetation.companyReceiver?.id == companyId){
                 Row {
 
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -1961,14 +1996,14 @@ fun InWaitingTypeProvider(invetation: Invetation , companyId: Long, onClicked: (
                     Row(
                         modifier = Modifier.weight(1f)
                     ) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }
                     Row(
                         modifier = Modifier.weight(3f)
                     ) {
                         Column {
 
-                            Text(text = "you have sent a provider invitation to ${invetation.companyReciver?.name}")
+                            Text(text = "you have sent a provider invitation to ${invetation.companyReceiver?.name}")
                                     ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                                         onClicked(Status.CANCELLED)
                                     }
@@ -2005,7 +2040,7 @@ Column {
             Row (
                 modifier = Modifier.weight(1f)
             ){
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
             }
             Row (
                 modifier = Modifier.weight(3f)
@@ -2036,26 +2071,26 @@ Column {
     }
 }
 @Composable
-fun AcceptTypeProvider(invetation: Invetation,companyId: Long) {
-        if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY.toString()){
+fun AcceptTypeProvider(invetation: InvitationWithClientOrWorkerOrCompany,companyId: Long) {
+        if(invetation.invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY){
             Row {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
 
-                    if(invetation.companyReciver?.id == companyId) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    if(invetation.companyReceiver?.id == companyId) {
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                     }else{
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
-            if(invetation.companyReciver?.id == companyId){
+            if(invetation.companyReceiver?.id == companyId){
                 Text(text = " you have accepted a provider invitation from " + invetation.companySender?.name!!)
             }else{
-                Text(text = invetation.companyReciver?.name!! + " has accepted your provider invitation")
+                Text(text = invetation.companyReceiver?.name!! + " has accepted your provider invitation")
             }
                 }
             }
@@ -2066,7 +2101,7 @@ fun AcceptTypeProvider(invetation: Invetation,companyId: Long) {
                 ) {
 
                         if(invetation.companySender?.id != companyId){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                     }
                     else {
                         ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
@@ -2086,30 +2121,31 @@ fun AcceptTypeProvider(invetation: Invetation,companyId: Long) {
         }
 }
 @Composable
-fun InvitationTypeClient(invetation : Invetation, companyId : Long, onClicked: (Status) -> Unit){
-    when (invetation.status){
-        Status.INWAITING.toString() ->
+fun InvitationTypeClient(invetation : InvitationWithClientOrWorkerOrCompany, companyId : Long, onClicked: (Status) -> Unit){
+    when (invetation.invitation.status){
+        Status.INWAITING ->
         InWaitingTypeClient(invetation = invetation, companyId = companyId){
             onClicked(it)
         }
-        Status.ACCEPTED.toString() ->
+        Status.ACCEPTED ->
         AcceptTypeClient(invetation = invetation, companyId = companyId)
-        Status.REFUSED.toString() ->
+        Status.REFUSED ->
         RefuseTypeClient(invetation = invetation, companyId = companyId)
-        Status.CANCELLED.toString() ->
+        Status.CANCELLED ->
         CancelTypeClient(invetation = invetation, companyId = companyId)
+        null -> TODO()
     }
 }
 @Composable
-fun CancelTypeClient(invetation: Invetation, companyId: Long) {
-        if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY.toString()){
-            if(invetation.companyReciver?.id == companyId){
+fun CancelTypeClient(invetation: InvitationWithClientOrWorkerOrCompany, companyId: Long) {
+        if(invetation.invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
+            if(invetation.companyReceiver?.id == companyId){
                 Row {
 
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -2123,17 +2159,17 @@ fun CancelTypeClient(invetation: Invetation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
-                    Text(text = " you have canceled a client invitation to  ${invetation.companyReciver?.name!!}")
+                    Text(text = " you have canceled a client invitation to  ${invetation.companyReceiver?.name!!}")
                 }
                 }
             }
         }else{
-            if(invetation.companyReciver?.id == companyId){
+            if(invetation.companyReceiver?.id == companyId){
 
             Row {
 
@@ -2155,12 +2191,12 @@ fun CancelTypeClient(invetation: Invetation, companyId: Long) {
                     Row (
                         modifier = Modifier.weight(1f)
                     ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }
                     Row (
                         modifier = Modifier.weight(3f)
                     ){
-                        Text(text = " you have canceled a client invitation to ${invetation.companyReciver?.name!!}")
+                        Text(text = " you have canceled a client invitation to ${invetation.companyReceiver?.name!!}")
                     }
                 }
             }
@@ -2169,16 +2205,16 @@ fun CancelTypeClient(invetation: Invetation, companyId: Long) {
 
 }
 @Composable
-fun RefuseTypeClient(invetation: Invetation, companyId: Long) {
+fun RefuseTypeClient(invetation: InvitationWithClientOrWorkerOrCompany, companyId: Long) {
 
-        if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY.toString()){
-            if(invetation.companyReciver?.id == companyId){
+        if(invetation.invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
+            if(invetation.companyReceiver?.id == companyId){
                 Row {
 
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -2192,17 +2228,17 @@ fun RefuseTypeClient(invetation: Invetation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
-                    Text(text = invetation.companyReciver?.name!! + " has refused your client invitation")
+                    Text(text = invetation.companyReceiver?.name!! + " has refused your client invitation")
                 }
             }
                 }
         }else{
-            if(invetation.companyReciver?.id == companyId) {
+            if(invetation.companyReceiver?.id == companyId) {
                 Row {
 
                     Row(
@@ -2223,12 +2259,12 @@ fun RefuseTypeClient(invetation: Invetation, companyId: Long) {
                     Row(
                         modifier = Modifier.weight(1f)
                     ) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }
                     Row(
                         modifier = Modifier.weight(3f)
                     ) {
-                        Text(text = invetation.companyReciver?.name!! + " has refused your client invitation")
+                        Text(text = invetation.companyReceiver?.name!! + " has refused your client invitation")
                     }
                 }
             }
@@ -2237,15 +2273,15 @@ fun RefuseTypeClient(invetation: Invetation, companyId: Long) {
 
 }
 @Composable
-fun InWaitingTypeClient(invetation: Invetation , companyId: Long, onClicked: (Status) -> Unit) {
-        if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY.toString()){
-            if(invetation.companyReciver?.id == companyId){
+fun InWaitingTypeClient(invetation: InvitationWithClientOrWorkerOrCompany , companyId: Long, onClicked: (Status) -> Unit) {
+        if(invetation.invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
+            if(invetation.companyReceiver?.id == companyId){
                 Row {
 
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -2281,14 +2317,14 @@ fun InWaitingTypeClient(invetation: Invetation , companyId: Long, onClicked: (St
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
                     Column {
 
-                    Text(text = " you have sent a client invitation to ${invetation.companyReciver?.name!!}")
+                    Text(text = " you have sent a client invitation to ${invetation.companyReceiver?.name!!}")
                     ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                         onClicked(Status.CANCELLED)
                     }
@@ -2297,7 +2333,7 @@ fun InWaitingTypeClient(invetation: Invetation , companyId: Long, onClicked: (St
                 }
             }
         }else{
-            if(invetation.companyReciver?.id == companyId) {
+            if(invetation.companyReceiver?.id == companyId) {
                 Row {
 
                     Row(
@@ -2338,14 +2374,14 @@ fun InWaitingTypeClient(invetation: Invetation , companyId: Long, onClicked: (St
                     Row(
                         modifier = Modifier.weight(1f)
                     ) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }
                     Row(
                         modifier = Modifier.weight(3f)
                     ) {
                         Column {
 
-                        Text(text = " you have sent a client invitation to " + invetation.companyReciver?.name!!)
+                        Text(text = " you have sent a client invitation to " + invetation.companyReceiver?.name!!)
                         ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                             onClicked(Status.CANCELLED)
                         }
@@ -2357,16 +2393,15 @@ fun InWaitingTypeClient(invetation: Invetation , companyId: Long, onClicked: (St
     }
 }
 @Composable
-fun AcceptTypeClient(invetation: Invetation,companyId: Long) {
-        if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY.toString()){
-            if(invetation.companyReciver?.id == companyId){
+fun AcceptTypeClient(invetation: InvitationWithClientOrWorkerOrCompany,companyId: Long) {
+        if(invetation.invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
+            if(invetation.companyReceiver?.id == companyId){
                 Row {
 
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user
-                            ?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -2380,17 +2415,17 @@ fun AcceptTypeClient(invetation: Invetation,companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                 }
                 Row (
                     modifier = Modifier.weight(3f)
                 ){
-                    Text(text = invetation.companyReciver?.name!! + " has accepted your client invitation")
+                    Text(text = invetation.companyReceiver?.name!! + " has accepted your client invitation")
                 }
             }
                 }
         }else {
-            if (invetation.companyReciver?.id == companyId) {
+            if (invetation.companyReceiver?.id == companyId) {
                 Row {
 
                     Row(
@@ -2411,12 +2446,12 @@ fun AcceptTypeClient(invetation: Invetation,companyId: Long) {
                     Row(
                         modifier = Modifier.weight(1f)
                     ) {
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReciver?.logo}/company/${invetation.companyReciver?.user?.id}")
+                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.userId}")
                     }
                     Row(
                         modifier = Modifier.weight(3f)
                     ) {
-                        Text(text = invetation.companyReciver?.name!! + " has accepted your client invitation ")
+                        Text(text = invetation.companyReceiver?.name!! + " has accepted your client invitation ")
                     }
                 }
         }
@@ -2424,8 +2459,8 @@ fun AcceptTypeClient(invetation: Invetation,companyId: Long) {
 }
 
 @Composable
-fun CompanyCard(company : Company, companyViewModel: CompanyViewModel,articleViewModel: ArticleViewModel, onClicked: () -> Unit) {
-    Text(text = company.name,
+fun CompanyCard(company : Company?, companyViewModel: CompanyViewModel,articleViewModel: ArticleViewModel, onClicked: () -> Unit) {
+    Text(text = company?.name?:"",
         modifier = Modifier
             .padding(5.dp)
             .clickable {
@@ -2434,9 +2469,9 @@ fun CompanyCard(company : Company, companyViewModel: CompanyViewModel,articleVie
     )
 }
 @Composable
-fun UserCard(user : User, appViewModel : AppViewModel, onClicked : () -> Unit) {
+fun UserCard(user : com.aymen.metastore.model.entity.room.User, appViewModel : AppViewModel, onClicked : () -> Unit) {
 
-    Text(text = user.username,
+    Text(text = user.username?:"",
         modifier = Modifier.clickable {
             onClicked()
         }
@@ -2458,9 +2493,9 @@ fun EmptyImage(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BuyHistoryCard(paymentForProviders: PaymentForProviders){
+fun BuyHistoryCard(paymentForProviders: PaymentForProvidersWithCommandLine){
     Box{
-        Text(text = paymentForProviders.giveenespece.toString())
+        Text(text = paymentForProviders.paymentForProviders.giveenespece.toString())
     }
 }
 
@@ -2492,7 +2527,7 @@ fun LocationServiceDialog(
 }
 
 @Composable
-fun checkLocation(type : AccountType, user : UserDto? , company : CompanyDto, context: Context) {
+fun CheckLocation(type : AccountType, user : UserDto? , company : CompanyDto, context: Context) {
     var isLocationGranted by remember {
         mutableStateOf(false)
     }

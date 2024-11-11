@@ -24,10 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.store.model.Enum.PaymentStatus
-import com.aymen.store.model.entity.realm.Invoice
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.ui.component.ButtonSubmit
@@ -130,7 +128,7 @@ fun InvoiceScreenAsProvider() {
                             color = Color.Green,
                             enabled = true
                         ) {
-                            invoiceViewModel.getAllMyInvoicesAsProviderAndStatus( PaymentStatus.PAID)
+                            invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus( PaymentStatus.PAID)
                         }
                         }
                         Row (
@@ -141,7 +139,7 @@ fun InvoiceScreenAsProvider() {
                                 color = Color.Green,
                                 enabled = true
                             ) {
-                                invoiceViewModel.getAllMyInvoicesAsProviderAndStatus( PaymentStatus.INCOMPLETE)
+                                invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus( PaymentStatus.INCOMPLETE)
                             }
                         }
                         Row (
@@ -152,7 +150,7 @@ fun InvoiceScreenAsProvider() {
                                 color = Color.Green,
                                 enabled = true
                             ) {
-                                invoiceViewModel.getAllMyInvoicesAsProviderAndStatus( PaymentStatus.NOT_PAID)
+                                invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus( PaymentStatus.NOT_PAID)
                             }
                         }
                         }

@@ -13,7 +13,6 @@ class RatingRepositoryImpl @Inject constructor(
 )
     : RatingRepository {
         override suspend fun getAllMyRating(id : Long , type : AccountType) = api.getRate(id , type)
-        override suspend fun getAllMyRatingg(id : Long , type : AccountType) = api.getRatee(id , type)
     override suspend fun doRating( rating: String, image : File?)
     = api.doRating(
         rating,  image = image?.asRequestBody()

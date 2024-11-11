@@ -72,7 +72,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
@@ -86,13 +85,12 @@ import com.aymen.store.model.repository.ViewModel.MessageViewModel
 import com.aymen.store.ui.component.ArticleCardForUser
 import com.aymen.store.ui.component.EmptyImage
 import com.aymen.store.ui.component.ShowImage
-import com.aymen.store.ui.component.checkLocation
-import com.aymen.store.ui.component.updateImageDialog
+import com.aymen.store.ui.component.CheckLocation
+import com.aymen.store.ui.component.UpdateImageDialog
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.store.ui.screen.admin.DashBoardScreen
-import java.math.BigDecimal
 import java.math.RoundingMode
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -128,7 +126,6 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     var triggerLocationCheck by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = type, key2 = user, key3 = company) { //, key2 = user, key3 = company should be exist
-        Toast.makeText(context, "home launch effect", Toast.LENGTH_SHORT).show()
         Log.e("homelaunche","c bpon")
         Log.e("homelaunche","type : $type companyId : ${company.id} company latitude : ${company.latitude} user id : ${user.id} user latitude : ${user.latitude}")
     if((type == AccountType.COMPANY && company.id != null && company.id != 0L && company.latitude == 0.0) || (type == AccountType.USER && user.id != null && user.id != 0L && user.latitude == 0.0)){
@@ -136,7 +133,7 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     }
     }
     if(triggerLocationCheck) {
-        checkLocation(type, user, company, context)
+        CheckLocation(type, user, company, context)
     }
     LaunchedEffect(key1 = Unit, type) {
         articleViewModel.getRandomArticles()
@@ -184,8 +181,8 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
                 IconType.WALLET -> {
                     PaymentScreen()
                 }
-                IconType.MENU ->
-                        MenuScreen()
+                IconType.MENU ->{}
+                        //MenuScreen()
                 IconType.USER ->
                         InvetationScreen()
                 IconType.SEARCH ->
@@ -261,7 +258,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             }
                     ) {
                         if (opDialog) {
-                            updateImageDialog(isOpen = opDialog) {
+                            UpdateImageDialog(isOpen = opDialog) {
                                 opDialog = false
 
                             }
@@ -568,8 +565,7 @@ fun ScreenByCategory(articleViewModel: ArticleViewModel) {
     LazyRow {
         items(CompanyCategory.entries){ categ ->
             Card(onClick = {
-                Log.e("screenbycateg",categ.name)
-                articleViewModel.getRandomArticlesByCompanyCategory(categ.name)
+                articleViewModel.getRandomArticlesByCompanyCategory(categ)
                            },
                 modifier = Modifier.height(50.dp))
             {

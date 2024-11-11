@@ -22,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToCompanyDto
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
+import com.aymen.metastore.model.entity.room.Article
+import com.aymen.metastore.model.entity.room.Company
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.Enum.SearchCategory
@@ -68,12 +70,13 @@ fun SearchScreen(modifier: Modifier = Modifier) {
             clientViewModel.histories = emptyList()
         }
     }
-//    data class SearchKey(
-//        val category: SearchCategory,
-//        val type: SearchType,
-//        val show: Boolean,
-//
-//    )
+    val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
+    val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
+    val companySearch by articleViewModel.companyComment.collectAsStateWithLifecycle()
+    val userSearch by articleViewModel.userComment.collectAsStateWithLifecycle()
+    val client by clientViewModel.myClients.collectAsStateWithLifecycle()
+    val art = articleViewModel.article
+    val articleCompany = articleViewModel.articleCompany
     LaunchedEffect(key1 = Unit) {
         clientViewModel.getAllSearchHistory()
     }
@@ -82,8 +85,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
     }
     LaunchedEffect( key1 = searchCategory, key2 = searchOption, key3 = searchType) {
         companyViewModel.allCompanies = emptyList()
-        clientViewModel.clientsUser = emptyList()
-        clientViewModel.clientsCompany = emptyList()
+        clientViewModel.emptyClient()
         articleViewModel.searchArticles = emptyList()
         when(searchCategory){
             SearchCategory.COMPANY -> {
@@ -92,6 +94,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                         companyViewModel.getAllCompaniesContaining(searchText)
                     }
                     SearchType.MY ->{
+                        // والله لا تعرف كيفاه تمشي
                     }
                     else ->{
                         clientViewModel.getAllClientsCompanyContaining(searchText,searchType,searchCategory)
@@ -139,41 +142,45 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                         SearchType.OTHER -> {
                                             companyViewModel.allCompanies.forEach {
                                                 CompanyCard(it, companyViewModel, articleViewModel){
-                                                    companyViewModel.myCompany = mapCompanyToCompanyDto(it)
+                                                    companyViewModel.myCompany = mapRoomCompanyToCompanyDto(it)
                                                     articleViewModel.companyId = it.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
-                                                    clientViewModel.saveHitory(searchCategory,it.id!!)
+                                                    clientViewModel.saveHitory(searchCategory,it.id)
                                                 }
                                             }
                                         }
                                         else ->{
-                                            clientViewModel.clientsCompany.forEach {
-                                                CompanyCard(it, companyViewModel, articleViewModel){
-                                                    companyViewModel.myCompany = mapCompanyToCompanyDto(it)
-                                                    articleViewModel.companyId = it.id!!
+                                            client.forEach {
+                                                CompanyCard(it.clientCompany!!, companyViewModel, articleViewModel){
+                                                    companyViewModel.myCompany = mapRoomCompanyToCompanyDto(it.clientCompany)
+                                                    articleViewModel.companyId = it.clientCompany.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
-                                                    clientViewModel.saveHitory(searchCategory,it.id!!)
+                                                    clientViewModel.saveHitory(searchCategory,it.clientCompany.id)
                                                 }
                                             }
                                         }
                                     }
                                 }
                                 SearchCategory.USER -> {
-                                    clientViewModel.clientsUser.forEach{
-                                    UserCard(it,appViewModel){
-                                        appViewModel._user.value = it
+                                    client.forEach{
+                                    UserCard(it.clientUser!!,appViewModel){
+                                        appViewModel._user.value = it.clientUser
                                         RouteController.navigateTo(Screen.UserScreen)
-                                        clientViewModel.saveHitory(searchCategory,it.id!!)
+                                        clientViewModel.saveHitory(searchCategory,it.clientUser.id!!)
                                     }
                                         }
                                 }
                                 SearchCategory.ARTICLE -> {
                                             articleViewModel.searchArticles.forEach{
-                                                ArticleCardForSearch(article = it){
-                                                    companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
+                                    companyViewModel.fetchCompanyByArticleId(it.id!!, it.companyId!!)
+                                                articleViewModel.fetchArticlesByArticleId(it.id, it.articleId!!)
+                                                val art = articles[it.articleId]
+                                                val com = companies[it.companyId]
+                                                ArticleCardForSearch( it, art?:Article(), com?:Company()){
+                                                    companyViewModel.myCompany = mapRoomCompanyToCompanyDto(com!!)
                                                     articleViewModel.articleCompany = it
                                                     RouteController.navigateTo(Screen.ArticleDetailScreen)
-                                                    clientViewModel.saveHitory(searchCategory,it.id!!)
+                                                    clientViewModel.saveHitory(searchCategory,it.id)
                                                 }
                                             }
                                 }
@@ -184,28 +191,49 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                         } else {
                             clientViewModel.histories.forEach{
                                 when(it.searchCategory){
-                                    SearchCategory.COMPANY.toString() -> {
-                                        CompanyCard(it.company!!, companyViewModel, articleViewModel){
-                                            companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
-                                            articleViewModel.companyId = it.company?.id!!
+                                    SearchCategory.COMPANY -> {
+                                        articleViewModel.getCompanyAndUserByIds(it.companyId!!,null)
+                                        CompanyCard(companySearch, companyViewModel, articleViewModel){
+                                            companyViewModel.myCompany = mapRoomCompanyToCompanyDto(companySearch)
+                                            articleViewModel.companyId = it.companyId
                                             RouteController.navigateTo(Screen.CompanyScreen)
                                             clientViewModel.saveHitory(searchCategory,it.id!!)
                                         }
                                     }
-                                    SearchCategory.USER.toString() ->{
-                                        UserCard(it.user!!,appViewModel){
-                                            appViewModel._user.value = it.user!!
-                                            RouteController.navigateTo(Screen.UserScreen)
-                                            clientViewModel.saveHitory(searchCategory,it.user?.id!!)
+                                    SearchCategory.USER ->{
+                                            articleViewModel.getCompanyAndUserByIds(null,it.userId!!)
+                                            UserCard(userSearch, appViewModel) {
+                                                appViewModel._user.value = userSearch
+                                                RouteController.navigateTo(Screen.UserScreen)
+                                                clientViewModel.saveHitory(
+                                                    searchCategory,
+                                                    it.userId
+                                                )
                                         }
                                     }
-                                    SearchCategory.ARTICLE.toString() ->{
-                                        ArticleCardForSearch(article = it.article!!){
-                                            companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
-                                            articleViewModel.articleCompany = it.article!!
-                                            RouteController.navigateTo(Screen.ArticleDetailScreen)
-                                            clientViewModel.saveHitory(searchCategory,it.id!!)
+                                    SearchCategory.ARTICLE ->{
+                                        articleViewModel.getArticleCompany(it.articleId!!)
+                                        if(articleCompany.id != null) {
+                                            articleViewModel.getCompanyAndUserByIds(
+                                                articleCompany.companyId!!,
+                                                null
+                                            )
+                                            articleViewModel.getArticleById(articleCompany.articleId)
                                         }
+                                            ArticleCardForSearch(
+                                                articleCompany,
+                                                art,
+                                                companySearch
+                                            ) {
+                                                companyViewModel.myCompany =
+                                                    mapRoomCompanyToCompanyDto(companySearch)
+                                                articleViewModel.articleCompany = articleCompany
+                                                RouteController.navigateTo(Screen.ArticleDetailScreen)
+                                                clientViewModel.saveHitory(searchCategory, it.id!!)
+                                            }
+                                    }
+                                    else ->{
+                                        Log.e("searchhistory", "search history other")
                                     }
                                 }
                             }

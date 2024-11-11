@@ -3,7 +3,6 @@ package com.aymen.store.model.repository.ViewModel
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -11,77 +10,57 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
-import com.aymen.metastore.model.entity.converterRealmToApi.mapConversationToConversationDto
 import com.aymen.metastore.model.entity.converterRealmToApi.mapConversationToRoomConversation
 import com.aymen.metastore.model.entity.converterRealmToApi.mapMessageToRoomMessage
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomConversationToConversationDto
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomUserToUserDto
 import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
-import com.aymen.store.model.entity.realm.Conversation
-import com.aymen.store.model.entity.realm.Message
-import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.room.Conversation
+import com.aymen.metastore.model.entity.room.Message
+import com.aymen.metastore.model.entity.room.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.dto.ConversationDto
 import com.aymen.store.model.entity.dto.MessageDto
-import com.aymen.store.model.entity.dto.UserDto
-import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
-import io.realm.kotlin.ext.query
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class MessageViewModel @Inject constructor(
     private val repository: GlobalRepository,
-    private val realm: Realm,
     private val room : AppDatabase,
-    private val appViewModel: AppViewModel,
     private val sharedViewModel: SharedViewModel
 ): ViewModel(){
 
-    var myAllConversations by mutableStateOf(emptyList<Conversation>())
+    private var _myAllConversations = MutableStateFlow<List<Conversation>>(emptyList())
+    val myAllConversations : StateFlow<List<Conversation>> = _myAllConversations
+    private var _myAllConversationsDto = MutableStateFlow<List<ConversationDto>>(emptyList())
+    var myAllConversationsDto : StateFlow<List<ConversationDto>> = _myAllConversationsDto
+
     var _myAllMessages = MutableStateFlow<List<Message>>(emptyList())
     val myAllMessages : StateFlow<List<Message>> = _myAllMessages
 
     var receiverUser by mutableStateOf(User())
     var receiverCompany by mutableStateOf(Company())
-    var sendMessage by mutableStateOf(Message())
+    var sendMessage by mutableStateOf(MessageDto())
     var receiverAccountType by mutableStateOf(AccountType.COMPANY)
-    var conversation by mutableStateOf(Conversation())
+    var conversation by mutableStateOf(ConversationDto())
     var messageType : MessageType = MessageType.USER_SEND_COMPANY
     val user by mutableStateOf(sharedViewModel.user.value)
     val company by mutableStateOf(sharedViewModel.company.value)
     var fromConve by mutableStateOf(false)
 
 
-    fun mapUserToUserDto(user: User): UserDto {
-        // Mapping logic from com.aymen.metastore.model.entity.room.User to UserDto
-        return UserDto(
-            id = user.id,
-            username = user.username,
-            image = user.image
-        )
-    }
-
-    fun mapCompanyToCompanyDto(company: Company): CompanyDto {
-        // Mapping logic from com.aymen.metastore.model.entity.room.Company to CompanyDto
-        return CompanyDto(
-            id = company.id,
-            name = company.name,
-            logo = company.logo,
-            user = company.user?.let { mapUserToUserDto(it) }
-        )
-    }
 
     val realmMutex = Mutex()
 
@@ -96,64 +75,6 @@ class MessageViewModel @Inject constructor(
                             conversations.forEach {
                               insertConversation(it)
                             }
-                             realm.write {
-                            conversations.forEach {
-                                 var user5 = User()
-                                var company5 = Company()
-                                    if (it.user1 != null &&
-                                        (sharedViewModel.accountType ==  AccountType.COMPANY ||
-                                                (sharedViewModel.accountType == AccountType.USER && it.user1?.id != user.id))) {
-                                        val user = User().apply {
-                                            id = it.user1?.id
-                                            username = it.user1?.username!!
-                                            image = it.user1?.image
-                                        }
-                                        user5 = user
-                                        copyToRealm(user, UpdatePolicy.ALL)
-
-                                    }
-                                    if (it.user2 != null && (sharedViewModel.accountType ==  AccountType.COMPANY ||
-                                                (sharedViewModel.accountType == AccountType.USER && it.user2?.id != user.id))) {
-                                        val user3 = User().apply {
-                                            id = it.user2?.id
-                                            username = it.user2?.username!!
-                                            image = it.user2?.image }
-                                        user5 = user3
-                                        copyToRealm(user3, UpdatePolicy.ALL) }
-                                    if (it.company1 != null &&
-                                        (sharedViewModel.accountType == AccountType.USER ||
-                                                (sharedViewModel.accountType == AccountType.COMPANY && it.company1?.id != company.id))) {
-                                        val user0 = User().apply {
-                                            id = it.company1?.user?.id }
-                                        copyToRealm(user0, UpdatePolicy.ALL)
-                                        val company3 = Company().apply {
-                                            id = it.company1?.id
-                                            name = it.company1?.name!!
-                                            logo = it.company1?.logo
-                                            user = user0 }
-                                        company5 = company3
-                                        copyToRealm(company3, UpdatePolicy.ALL) }
-                                    if (it.company2 != null && (sharedViewModel.accountType == AccountType.USER ||
-                                                (sharedViewModel.accountType == AccountType.COMPANY && it.company2?.id != company.id))) {
-                                        val user0 = User().apply {
-                                            id = it.company2?.user?.id }
-                                        copyToRealm(user0, UpdatePolicy.ALL)
-                                        val company4 = Company().apply {
-                                            id = it.company2?.id
-                                            name = it.company2?.name!!
-                                            logo = it.company2?.logo
-                                            user = user0 }
-                                        company5 = company4
-                                        copyToRealm(company4, UpdatePolicy.ALL) }
-                                val conversation = Conversation().apply {
-                                    id = it.id
-                                    user2 = user5
-                                    company2 = company5
-                                    lastMessage = it.message!!
-                                    type = it.type.toString()
-                                    lastModifiedDate = it.lastModifiedDate }
-                                copyToRealm(conversation, UpdatePolicy.ALL) }
-                        }
                         } else {
 
                         }
@@ -164,38 +85,20 @@ class MessageViewModel @Inject constructor(
                     Log.e("aymenbabaymessage", "Exception: $ex")
                 }
             }
-            myAllConversations = repository.getAllMyConversationsLocally()
+            _myAllConversations.value = room.conversationDao().getAllConversations()
+            fullMappingConversation(_myAllConversations.value)
         }
     }
 
     fun accountTypeBlock(){
-        Log.e("accounttypeblock","receiver type : $receiverAccountType and my type ${sharedViewModel.accountType}")
         if(receiverAccountType == AccountType.COMPANY && sharedViewModel.accountType == AccountType.COMPANY){
             messageType = MessageType.COMPANY_SEND_COMPANY
-            Log.e("accounttypeblock","receiver type : $receiverAccountType and my type ${sharedViewModel.accountType} and messagetype = $messageType")
         }
         if(receiverAccountType == AccountType.USER && sharedViewModel.accountType == AccountType.USER){
-            Log.e("accounttypeblock","receiver type : $receiverAccountType and my type ${sharedViewModel.accountType}")
             messageType = MessageType.USER_SEND_USER
         }
         if(receiverAccountType == AccountType.USER && sharedViewModel.accountType == AccountType.COMPANY){
-            Log.e("accounttypeblock","receiver type : $receiverAccountType and my type ${sharedViewModel.accountType}")
             messageType = MessageType.COMPANY_SEND_USER
-        }
-    }
-
-    fun getConversationByCaleeId(id : Long){
-        accountTypeBlock()
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-               accountTypeBlock()
-                val response = repository.getConversationByCaleeId(id, messageType)
-                if(response.isSuccessful){
-                    conversation = response.body()?:Conversation()
-                }
-            }catch (ex : Exception){
-                Log.e("getconversationbycalee","fun exception :${ex.message}")
-            }
         }
     }
 
@@ -203,18 +106,6 @@ class MessageViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 accountTypeBlock()
-                val respons = repository.getAllMessageByCaleeIdd(id,receiverAccountType)
-                if(respons.isSuccessful) {
-                    val messages = respons.body()
-                    if (!messages.isNullOrEmpty()) {
-                        conversation = respons.body()?.get(0)?.conversation!!
-                        respons.body()?.forEach {
-                            realm.write {
-                                copyToRealm(it, UpdatePolicy.ALL)
-                            }
-                        }
-                    }
-                }
                 val response = repository.getAllMessageByCaleeId(id,receiverAccountType)
                 if(response.isSuccessful) {
                     val messages = response.body()
@@ -228,14 +119,13 @@ class MessageViewModel @Inject constructor(
                 Log.e("getAllMessageByCaleeId","getAllMessageByCaleeId exception : ${ex.message}")
             }
             if(conversation.id != null){
-            _myAllMessages.value = repository.getAllMyMessageByConversationIdLocally(conversation.id!!)
+            _myAllMessages.value = room.messageDao().getAllMessagesByConversationId(conversation.id!!)
             }
         }
     }
 
     @Transaction
     suspend fun insertConversation(conversation : ConversationDto){
-
         if (conversation.user1 != null &&
             (sharedViewModel.accountType == AccountType.COMPANY ||
                     (sharedViewModel.accountType == AccountType.USER && conversation.user1?.id != user.id))
@@ -273,14 +163,6 @@ class MessageViewModel @Inject constructor(
         viewModelScope.launch (Dispatchers.IO){
                 try {
                     conversation.id?.let { id ->
-                        val respons = repository.getAllMyMessageByConversationIdd(id)
-                        if (respons.isSuccessful) {
-                            respons.body()?.forEach { messageDto ->
-                                realm.write {
-                                    copyToRealm(messageDto, UpdatePolicy.ALL)
-                                }
-                            }
-                        }
                         val response = repository.getAllMyMessageByConversationId(id)
                         if (response.isSuccessful) {
                             response.body()?.forEach { messageDto ->
@@ -292,8 +174,7 @@ class MessageViewModel @Inject constructor(
                     Log.e("aymenabbaymessage", "Error message by con: $_ex")
                 }
 
-                // Now check the locally saved messages
-                _myAllMessages.value = repository.getAllMyMessageByConversationIdLocally(conversation.id!!)
+                _myAllMessages.value = room.messageDao().getAllMessagesByConversationId(conversation.id?:0)
         }
     }
 
@@ -301,44 +182,48 @@ class MessageViewModel @Inject constructor(
 
     @SuppressLint("SuspiciousIndentation")
     fun sendMessage(message : String){
-                Log.e("aymenbabaymessage","error message by con")
         sendMessage.conversation = conversation
         sendMessage.createdBy = sharedViewModel.user.value.id
         sendMessage.id = (sendMessage.id?.plus(1L))?:0L
-        _myAllMessages.value +=  sendMessage
-        sendMessage = Message()
+            val roomMessage = mapMessageToRoomMessage(sendMessage)
+        _myAllMessages.value += roomMessage
                 viewModelScope.launch (Dispatchers.IO){
             try {
-                realm.write {
-                    Message().apply {
-                        copyToRealm(sendMessage,UpdatePolicy.ALL)
-                    }
-                }
+               room.messageDao().insertMessage(roomMessage)
                 var conversationForSend by mutableStateOf(ConversationDto())
-                conversationForSend = mapConversationToConversationDto(conversation)
+                conversationForSend = sendMessage.conversation?:ConversationDto()
                 conversationForSend.message = message
                 conversationForSend.type = messageType
-                conversationForSend.user2 =  mapUserToUserDto(receiverUser)
-                conversationForSend.company2 = mapCompanyToCompanyDto(receiverCompany)
-                        Log.e("aymenbabaymessage","receiverCompany is :${receiverCompany}")
+                conversationForSend.user2 =  mapRoomUserToUserDto(receiverUser)
+                conversationForSend.company2 = mapRoomCompanyToCompanyDto(receiverCompany)
 
                val response = repository.sendMessage(conversationForSend)
                 if(response.isSuccessful){
 
                 }
+        sendMessage = MessageDto()
             }catch (ex : Exception){
                 Log.e("aymenbabaymessage","error message by con: ${ex.message}")
             }
         }
     }
 
-   fun updateLastMessage(conversation: Conversation){
-       viewModelScope.launch {
-//           withContext(Dispatchers.IO){
-               repository.updateLastMessage(conversation)
-           room.conversationDao().updateLastMessage(conversation.id!! , conversation.lastMessage)
-               myAllConversations = repository.getAllMyConversationsLocally()
-           }
-//       }
-   }
+    private fun fullMappingConversation(conversations: List<Conversation>){
+        viewModelScope.launch {
+            _myAllConversationsDto.value = emptyList()
+            conversations.forEach {
+                val conversationDto = mapRoomConversationToConversationDto(it)
+                val user1 = it.user1Id?.let { it1 -> room.userDao().getUserById(it1) }
+                val user2 = it.user2Id?.let { it1 -> room.userDao().getUserById(it1) }
+                val company1 = it.company1Id?.let { it1 -> room.companyDao().getCompanyById(it1) }
+                val company2 = it.company2Id?.let { it1 -> room.companyDao().getCompanyById(it1) }
+                conversationDto.user1 = user1?.let { it1 -> mapRoomUserToUserDto(it1) }
+                conversationDto.user2 = user2?.let { it1 -> mapRoomUserToUserDto(it1) }
+                conversationDto.company1 = company1?.let { it1 -> mapRoomCompanyToCompanyDto(it1) }
+                conversationDto.company2 = company2?.let { it1 -> mapRoomCompanyToCompanyDto(it1) }
+                _myAllConversationsDto.value += conversationDto
+            }
+        }
+    }
+
 }

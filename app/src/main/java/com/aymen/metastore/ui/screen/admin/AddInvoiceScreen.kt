@@ -51,7 +51,6 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.dto.InvoiceDto
-import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.ui.component.ArticleDialog
@@ -253,7 +252,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                             showClientDialog = false
                         }
                     }
-                    Text(text = if (clientType == AccountType.COMPANY) clientCompany.name else clientUser.username)
+                    Text(text = if (clientType == AccountType.COMPANY) clientCompany.name else clientUser.username!!)
                     Text(
                         text = if (clientType == AccountType.COMPANY) clientCompany.phone
                             ?: "" else clientUser.phone ?: ""
@@ -342,7 +341,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                         }
                                                 ) {
                                                     if (showArticleDialog && index == articleIndex) {
-                                                        invoiceViewModel.article = mapArticleCompanyToRealm(commandLine.article!!)
+                                                        invoiceViewModel.article = commandLine.article!!
                                                         invoiceViewModel.commandLineDto = commandLine
                                                         ArticleDialog(update = true , openDialo = true) {
                                                             showArticleDialog = false
@@ -461,9 +460,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = invoice.provider?.name!!)
-                                invoice.provider!!.phone?.let { Text(text = it) }
-                                invoice.provider!!.address?.let { Text(text = it) }
+                                Text(text = invoice.provider.name)
+                                invoice.provider.phone?.let { Text(text = it) }
+                                invoice.provider.address?.let { Text(text = it) }
                             }
                         }
                         Row(
@@ -473,10 +472,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${invoice.provider!!.logo}/company/${invoice.provider!!.user?.id}"
+                                    image = "${BASE_URL}werehouse/image/${invoice.provider.logo}/company/${invoice.provider.userId}"
                                 )
-                                Text(text = invoice.provider!!.email ?: "")
-                                invoice.provider!!.matfisc?.let { Text(text = it) }
+                                Text(text = invoice.provider.email ?: "")
+                                invoice.provider.matfisc?.let { Text(text = it) }
                             }
                         }
                     }
@@ -486,11 +485,11 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                             .wrapContentWidth(Alignment.CenterHorizontally)
                     ) {
                         Column {
-                            Text(text = invoice.code.toString(),
+                            Text(text = invoice.invoice.code.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally))
-                            Text(text = "invoice date: ${invoice.createdDate}",
+                            Text(text = "invoice date: ${invoice.invoice.createdDate}",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally))
@@ -550,7 +549,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                    invoiceViewModel.clientType = AccountType.COMPANY
                                }
                                invoice.person?.let {
-                                   Text(text = it.username)
+                                   Text(text = it.username!!)
                                    invoiceViewModel.clientUser = it
                                    invoiceViewModel.clientType = AccountType.USER
                                }
@@ -645,7 +644,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                     }
                                             ) {
                                                 if (showArticleDialog && index == articleIndex) {
-                                                    invoiceViewModel.article = mapArticleCompanyToRealm(commandLine.article!!)
+                                                    invoiceViewModel.article = commandLine.article!!
                                                     invoiceViewModel.commandLineDto = commandLine
                                                     ArticleDialog(update = true , openDialo = true) {
                                                         showArticleDialog = false
@@ -756,7 +755,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
         }
         InvoiceMode.VERIFY ->{
             LaunchedEffect(key1 = Unit) {
-                if(invoiceViewModel.invoice.type == InvoiceDetailsType.COMMAND_LINE.toString()){
+                if(invoiceViewModel.invoice.invoice.type == InvoiceDetailsType.COMMAND_LINE){
                     invoiceViewModel.getAllCommandLineByInvoiceId()
                 }else{
                     invoiceViewModel.getAllOrdersLineByInvoiceId()
@@ -769,9 +768,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = invoice.provider?.name!!)
-                                invoice.provider!!.phone?.let { Text(text = it) }
-                                invoice.provider!!.address?.let { Text(text = it) }
+                                Text(text = invoice.provider.name)
+                                invoice.provider.phone?.let { Text(text = it) }
+                                invoice.provider.address?.let { Text(text = it) }
                             }
                         }
                         Row(
@@ -781,10 +780,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${invoice.provider!!.logo}/company/${invoice.provider!!.user?.id}"
+                                    image = "${BASE_URL}werehouse/image/${invoice.provider.logo}/company/${invoice.provider.userId}"
                                 )
-                                Text(text = invoice.provider!!.email ?: "")
-                                invoice.provider!!.matfisc?.let { Text(text = it) }
+                                Text(text = invoice.provider.email ?: "")
+                                invoice.provider.matfisc?.let { Text(text = it) }
                             }
                         }
                     }
@@ -795,21 +794,25 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     ) {
                         Column {
                             Text(
-                                text = invoice.code.toString(),
+                                text = invoice.invoice.code.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
                             Text(
-                                text = "invoice date: ${invoice.createdDate}",
+                                text = "invoice date: ${invoice.invoice.createdDate}",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
-                            if(invoice.status == Status.INWAITING.toString()){
+                            if(invoice.invoice.status == Status.INWAITING){
+                                if(invoice.invoice.providerId != myCompany.id){
                             ButtonSubmit(labelValue = "Accept", color = Color.Green, enabled = true) {
-                                invoiceViewModel.accepteInvoice(invoice.id!! , Status.ACCEPTED)
+                                invoiceViewModel.accepteInvoice(invoice.invoice.id!! , Status.ACCEPTED)
                             }
+                                }else{
+                                    Text("waiting for accept")
+                                }
                             }
                         }
                     }
@@ -822,7 +825,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     invoiceViewModel.clientType = AccountType.COMPANY
                                 }
                                 invoice.person?.let {
-                                    Text(text = it.username)
+                                    Text(text = it.username!!)
                                     invoiceViewModel.clientUser = it
                                     invoiceViewModel.clientType = AccountType.USER
                                 }

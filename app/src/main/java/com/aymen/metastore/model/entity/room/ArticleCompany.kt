@@ -16,6 +16,8 @@ import com.aymen.store.model.Enum.UnitArticle
             onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(entity = SubCategory::class, parentColumns = ["id"], childColumns = ["subCategoryId"]),
+        ForeignKey(entity = Company::class, parentColumns = ["id"], childColumns = ["providerId"]),
+        ForeignKey(entity = Company::class, parentColumns = ["id"], childColumns = ["companyId"]),
     ]
 )
 data class ArticleCompany(
@@ -36,6 +38,6 @@ data class ArticleCompany(
     val likeNumber : Long? = null,
     val commentNumber : Long? = null,
     val isVisible : PrivacySetting? = PrivacySetting.ONLY_ME,
-    val articleId : Long? = null,
+    var articleId : Long? = null,
     val isEnabledToComment : Boolean? = false,
 )

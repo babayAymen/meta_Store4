@@ -1,7 +1,5 @@
 package com.aymen.store.ui.screen.user
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -17,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,14 +34,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.store.dependencyInjection.BASE_URL
-import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.model.repository.ViewModel.MessageViewModel
-import com.aymen.store.ui.component.AddTypeDialog
 import com.aymen.store.ui.component.ArticleCardForAdmin
 import com.aymen.store.ui.component.DividerTextComponent
 import com.aymen.store.ui.component.InputTextField
@@ -53,15 +48,12 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
-import com.aymen.metastore.model.entity.converterRealmToApi.mapcompanyDtoToCompanyRealm
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.repository.ViewModel.ClientViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Composable
 fun ArticleDetailsScreen() {
@@ -77,6 +69,9 @@ fun ArticleDetailsScreen() {
     }
     val company = companyViewModel.myCompany
     val article = articleViewModel.articleCompany
+    val art = articleViewModel.article
+    val userComment by articleViewModel.userComment.collectAsStateWithLifecycle()
+    val companyComment by articleViewModel.companyComment.collectAsStateWithLifecycle()
     var showComment by remember {
         mutableStateOf(false)
     }
@@ -85,6 +80,7 @@ fun ArticleDetailsScreen() {
         if (sharedViewModel.accountType == AccountType.COMPANY) {
             myCompany = sharedViewModel._company.value
         }
+        articleViewModel.getArticleById(null)
     }
     LaunchedEffect(articleViewModel.articleCompany) {
         articleViewModel.getAllArticleComments()
@@ -141,13 +137,13 @@ fun ArticleDetailsScreen() {
                         Text(text = company.name)
 
                     }
-                 companyDetails(
+                 CompanyDetails(
                      messageViewModel = messageViewModel,
                      appViewModel = appViewModel,
                      clientViewModel = clientViewModel,
                      companyViewModel = companyViewModel,
                      ratingViewModel = ratingViewModel,
-                     company = mapcompanyDtoToCompanyRealm(company),
+                     company = mapCompanyToRoomCompany(company),
                      isMePointSeller = myCompany.isPointsSeller!!
                  ) {
 
@@ -159,17 +155,15 @@ fun ArticleDetailsScreen() {
                     company.matfisc?.let { it1 -> Text(text = it1) }
                     //to
                     ArticleCardForAdmin(
-                        article = article,
-                        image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${
-                            CompanyCategory.valueOf(
-                                article.company?.category!!
-                            ).ordinal
-                        }"
+                        article,
+                        art,
+                        image = "${BASE_URL}werehouse/image/${art.image}/article/${company.category?.ordinal}"
                     ) {}
                 }
                 if (articleViewModel.allComments.isNotEmpty()) {
                     items(articleViewModel.allComments) {
-                        Text(text = if (it.user == null) it.company?.name!! else it.user?.username!!)
+                        articleViewModel.getCompanyAndUserByIds(it.companyId?:0, it.userId?:0)
+                        Text(text = if (userComment.id == null) companyComment.name else userComment.username!!)
                         Text(text = it.content)
                         DividerTextComponent()
                     }

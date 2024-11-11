@@ -12,5 +12,5 @@ interface MessageDao {
     suspend fun insertMessage(message : Message)
 
     @Query("SELECT * FROM message WHERE conversationId = :id")
-    suspend fun getAllMessagesById(id : Long) : List<Message>
+    suspend fun getAllMessagesByConversationId(id : Long) : List<Message>
 }

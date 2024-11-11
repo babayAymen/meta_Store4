@@ -18,24 +18,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.Location.LocationService
-import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToUserDto
 import com.aymen.store.dependencyInjection.TokenUtils
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.entity.dto.AuthenticationResponse
-import com.aymen.store.model.entity.realm.Company
-import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.metastore.model.webSocket.myWebSocketListener
 import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.realmListOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,15 +51,11 @@ import javax.inject.Inject
 class AppViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val dataStore: DataStore<AuthenticationResponse>,
-//    private val datastore1: DataStore<Company>,
     private val companyDataStore: DataStore<CompanyDto>,
-//    private val userdatastore: DataStore<User>,
     private val userDatastore: DataStore<UserDto>,
-    private val realm: Realm,
     private val room : AppDatabase,
     private val sharedViewModel: SharedViewModel,
-    private val context: Context,
-    private  val articleViewModel: ArticleViewModel
+    private val context: Context
 ) : ViewModel(){
 
     private val client = OkHttpClient()
@@ -456,25 +447,6 @@ class AppViewModel @Inject constructor(
                 dataStore.updateData {
                     it.copy(token = "")
                 }
-//                datastore1.updateData {
-//                    Company().apply {
-//                        id = 0
-//                        name = ""
-//                        code = ""
-//                        matfisc = ""
-//                        address = ""
-//                        phone = ""
-//                        bankaccountnumber = ""
-//                        email = ""
-//                        capital = ""
-//                        logo = ""
-//                        workForce = 0
-//                        rate = 0.0
-//                        raters = 0
-//                        category = CompanyCategory.DAIRY.toString()
-//                        user = User()
-//                    }
-//                }
                 companyDataStore.updateData {
                     CompanyDto().copy(
                         id = 0,
@@ -494,16 +466,6 @@ class AppViewModel @Inject constructor(
                         user = UserDto()
                     )
                 }
-//                userdatastore.updateData {
-//                    User().apply {
-//                        id = 0
-//                        username = ""
-//                        address = ""
-//                        phone = ""
-//                        balance = 0.0
-//                        image = ""
-//                    }
-//                }
                 userDatastore.updateData {
                     UserDto().copy(
                         id = 0,
@@ -515,17 +477,12 @@ class AppViewModel @Inject constructor(
                     )
                 }
                 sharedViewModel.accountType = AccountType.USER
-               realmBlock()
                roomBlock()
             }
         }
     }
 
-    fun realmBlock(){
-        realm.writeBlocking {
-            deleteAll()
-        }
-    }
+
 
     fun roomBlock(){
         room.clearAllTables()

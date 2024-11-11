@@ -6,15 +6,12 @@ import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.entity.dto.CommandLineDto
 import com.aymen.store.model.entity.dto.InvoiceDto
-import com.aymen.store.model.entity.realm.Invoice
 import retrofit2.Response
 
 interface InvoiceRepository {
 
     suspend fun getAllMyInvoicesAsProvider(companyId : Long) : Response<List<InvoiceDto>>
-    suspend fun getAllMyInvoicesAsProviderr(companyId : Long) : Response<List<Invoice>>
     suspend fun getAllMyInvoicesAsClient(companyId : Long) : Response<List<InvoiceDto>>
-    suspend fun getAllMyInvoicesAsClientt(companyId : Long) : Response<List<Invoice>>
     suspend fun getLastInvoiceCode():Response<Long>
     suspend fun addInvoice(commandLineDtos : List<CommandLineDto>,
                            clientId : Long,
@@ -23,16 +20,13 @@ interface InvoiceRepository {
                            clientType :  AccountType,
                            invoiceMode: InvoiceMode):Response<Void>
 
-    suspend fun getAllMyInvoicesNotAccepted():Response<List<InvoiceDto>>
-    suspend fun getAllMyInvoicesNotAcceptedd():Response<List<Invoice>>
+    suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status):Response<List<InvoiceDto>>
 
     suspend fun accepteInvoice(invoiceId : Long, status : Status): Response<Void>
 
     suspend fun getAllMyInvoicesAsProviderAndStatus(companyId : Long, status : PaymentStatus) : Response<List<InvoiceDto>>
-    suspend fun getAllMyInvoicesAsProviderAndStatuss(companyId : Long, status : PaymentStatus) : Response<List<Invoice>>
 
     suspend fun getAllMyPaymentNotAccepted(companyId : Long) : Response<List<InvoiceDto>>
-    suspend fun getAllMyPaymentNotAcceptedd(companyId : Long) : Response<List<Invoice>>
 
 
 }

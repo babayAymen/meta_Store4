@@ -1,9 +1,7 @@
 package com.aymen.store.ui.screen.user
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,12 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.material.icons.filled.StarPurple500
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -52,21 +47,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.R
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToCompanyDto
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
+import com.aymen.metastore.model.entity.room.Company
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.ui.screen.user.RatingScreen
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
-import com.aymen.store.model.entity.realm.Company
-import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.entity.realm.Category
-import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
@@ -97,11 +87,13 @@ fun CompanyScreen(company: Company) {
     val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
     val subCategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
     val randomArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
+    val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
+    val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
     var category by remember {
         mutableStateOf(com.aymen.metastore.model.entity.room.Category())
     }
     val context = LocalContext.current
-    var myCompany by remember {
+    val myCompany by remember {
         mutableStateOf(Company())
     }
     DisposableEffect(key1 = Unit) {
@@ -111,8 +103,8 @@ fun CompanyScreen(company: Company) {
     }
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentCompany(companyId = company.id!!)
-        articleViewModel.getAllArticlesApi(company.id!!)
-        categoryViewModel.getAllCategoryByCompany(company.id!!)
+        articleViewModel.getAllArticlesApi(company.id)
+        categoryViewModel.getAllCategoryByCompany(company.id)
 //        if (sharedViewModel.accountType == AccountType.COMPANY) {
 //            myCompany = sharedViewModel._company.value
 //        }
@@ -153,7 +145,7 @@ fun CompanyScreen(company: Company) {
                                     )
                             )
                         } else {
-                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
+                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.userId}")
                         }
                         Icon(
                             imageVector = Icons.Default.Verified,
@@ -166,7 +158,7 @@ fun CompanyScreen(company: Company) {
                     Row(
                         modifier = Modifier.padding(2.dp)
                     ) {
-                        companyDetails(
+                        CompanyDetails(
                             messageViewModel,
                             appViewModel,
                             clientViewModel,
@@ -205,8 +197,12 @@ fun CompanyScreen(company: Company) {
                         }
                 }
                 items(randomArticles) {
-                    ArticleCardForSearch(article = it) {
-                        companyViewModel.myCompany = mapCompanyToCompanyDto(it.company!!)
+                    companyViewModel.fetchCompanyByArticleId(it.id!! ,it.companyId!!)
+                    articleViewModel.fetchArticlesByArticleId(it.id,it.articleId!!)
+                    val art = articles[it.articleId]
+                    val com = companies[it.companyId]
+                    ArticleCardForSearch( it, art!!,com!!) {
+                        companyViewModel.myCompany = mapRoomCompanyToCompanyDto(com)
                         articleViewModel.articleCompany = it
                         RouteController.navigateTo(Screen.ArticleDetailScreen)
 
@@ -261,7 +257,7 @@ fun StarRating(
 }
 
 @Composable
-fun companyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,clientViewModel: ClientViewModel,companyViewModel: CompanyViewModel,
+fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,clientViewModel: ClientViewModel,companyViewModel: CompanyViewModel,
                    ratingViewModel : RatingViewModel,company: Company, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     Row {
         Row(
@@ -270,7 +266,7 @@ fun companyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
                 .padding(end = 2.dp)
         ) {
             AddTypeDialog(isOpen = false, company.id!!, true) {
-                clientViewModel.sendClientRequest(company.id!!, it)
+                clientViewModel.sendClientRequest(company.id, it)
             }
         }
         Row(
@@ -294,7 +290,7 @@ fun companyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
             Row(
                 modifier = Modifier.weight(1f)
             ) {
-                SendPointDialog(isOpen = false, User(), company)
+                SendPointDialog(isOpen = false, com.aymen.metastore.model.entity.room.User(), company)
             }
         }
         if (appViewModel.userRole == RoleEnum.AYMEN) {

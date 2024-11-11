@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aymen.store.dependencyInjection.TokenUtils
 import com.aymen.store.model.entity.dto.AuthenticationRequest
 import com.aymen.store.model.entity.dto.AuthenticationResponse
 import com.aymen.store.model.entity.dto.RegisterRequest
@@ -30,12 +29,10 @@ class SignInViewModel @Inject constructor(
                 try {
                     val token = repository.SignIn(authenticationRequest)
                     if (token.isSuccessful) {
-                        Log.e("aymenbabaysignIn","clicked true")
                         appViewModel.block()
                         storeToken(token.body()!!)
                         onSignInSuccess(true)
                     } else {
-                        Log.e("aymenbabaysignIn","clicked false")
                         onSignInSuccess(false)
                     }
                 } catch (_ex: Exception) {
@@ -95,12 +92,10 @@ class SignInViewModel @Inject constructor(
 private fun storeToken(token: AuthenticationResponse) {
     viewModelScope.launch(Dispatchers.Main) {
             try {
-                Log.e("aymenbabay","storing token : ${token.token}")
                 dataStore.updateData {
                     it.copy(token = token.token)
                 }
                 appViewModel.block()
-                Log.e("aymenbabaysignin", "storing token in sign in view model :")
             } catch (e: Exception) {
                 Log.e("storeTokenError", "Error storing token in signin view model store token fun: ${e.message}")
             }

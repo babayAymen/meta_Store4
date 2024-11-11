@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ProviderViewModel
@@ -21,8 +23,9 @@ import com.aymen.store.ui.component.ProviderCard
 
 @Composable
 fun ProviderScreen() {
-    val appViewModel : AppViewModel = viewModel()
-    val providerViewModel : ProviderViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val providerViewModel : ProviderViewModel = hiltViewModel()
+    val providers by providerViewModel.providers.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = true) {
         providerViewModel.getAllMyProviders()
     }
@@ -46,7 +49,7 @@ fun ProviderScreen() {
                 modifier = Modifier.fillMaxWidth()
             ){
                 Column {
-                    providerViewModel.providers.forEach{
+                    providers.forEach{
                         SwipeToDeleteContainer(
                             it,
                             onDelete = {
@@ -55,7 +58,7 @@ fun ProviderScreen() {
                             appViewModel = appViewModel
                         ){provider ->
                             ProviderCard(it,
-                                image = "${BASE_URL}werehouse/image/${provider.provider?.logo}/company/"+ if(provider.provider?.virtual == true){provider.client?.user?.id} else {provider.provider?.user?.id}
+                                image = "${BASE_URL}werehouse/image/${provider.provider?.logo}/company/"+ if(provider.provider?.virtual == true){provider.clientCompany?.id} else {provider.provider?.userId}
                             )
                         }
 

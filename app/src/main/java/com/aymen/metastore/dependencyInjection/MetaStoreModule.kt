@@ -131,9 +131,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import kotlin.math.exp
 
-const val BASE_URL = "http://192.168.1.3:8080/"
-//const val BASE_URL = "http://192.168.134.21:8080/"
-private const val DATABASE_NAME = "meta_store_data_base"
+//const val BASE_URL = "http://192.168.1.4:8080/"
+const val BASE_URL = "http://192.168.134.119:8080/"
+private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -210,7 +210,7 @@ class MetaStoreModule {
                     ArticleCompany::class
                 )
             )
-                .schemaVersion(1)
+                .schemaVersion(2)
                 .build()
         )
     }
@@ -220,61 +220,56 @@ class MetaStoreModule {
     @Singleton
     fun provideAppViewModel(repository: GlobalRepository,
                             dataStore: DataStore<AuthenticationResponse>,
-//                            dataStore1: DataStore<Company>,
                             companyDataStore : DataStore<CompanyDto>,
                             userDataStore: DataStore<UserDto>,
-//                            userdataStore: DataStore<User>,
-                            realm : Realm,
                             room : AppDatabase,
                             sharedViewModel: SharedViewModel,
                             context: Context,
-                            articleViewModel: ArticleViewModel
                             )
     :AppViewModel{
-        return AppViewModel(repository,dataStore, companyDataStore, userDataStore, realm,room, sharedViewModel, context, articleViewModel)
+        return AppViewModel(repository,dataStore, companyDataStore, userDataStore,room, sharedViewModel, context)
     }
 
     @Provides
     @Singleton
-    fun providerCategoryViewModel(repository: GlobalRepository, realm: Realm,room : AppDatabase,sharedViewModel: SharedViewModel):CategoryViewModel{
-        return CategoryViewModel(repository,realm,room, sharedViewModel)
+    fun providerCategoryViewModel(repository: GlobalRepository,room : AppDatabase,sharedViewModel: SharedViewModel):CategoryViewModel{
+        return CategoryViewModel(repository,room, sharedViewModel)
     }
 
     @Provides
     @Singleton
-    fun providArticleViewModel(repository: GlobalRepository, realm: Realm, sharedViewModel: SharedViewModel, room : AppDatabase):ArticleViewModel{
-        return ArticleViewModel(repository,realm,sharedViewModel, room)
+    fun providArticleViewModel(repository: GlobalRepository, sharedViewModel: SharedViewModel, room : AppDatabase):ArticleViewModel{
+        return ArticleViewModel(repository,sharedViewModel, room)
     }
 
     @Provides
     @Singleton
-    fun provideShoppingViewModel(repository: GlobalRepository, realm: Realm,room: AppDatabase, sharedViewModel: SharedViewModel, appViewModel: AppViewModel):ShoppingViewModel{
-        return ShoppingViewModel(repository,realm,room, sharedViewModel, appViewModel)
+    fun provideShoppingViewModel(repository: GlobalRepository, room: AppDatabase, sharedViewModel: SharedViewModel, appViewModel: AppViewModel, context : Context):ShoppingViewModel{
+        return ShoppingViewModel(repository,room, sharedViewModel, appViewModel, context)
     }
 
     @Provides
     @Singleton
-    fun provideCompanyViewModel(globalRepository: GlobalRepository, realm: Realm,room : AppDatabase,
-//                                dataStore: DataStore<Company>,
+    fun provideCompanyViewModel(globalRepository: GlobalRepository,room : AppDatabase,
                                 companyDataStore: DataStore<CompanyDto>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel):CompanyViewModel{
-        return CompanyViewModel(globalRepository,realm,room,companyDataStore, appViewModel, sharedViewModel)
+        return CompanyViewModel(globalRepository,room,companyDataStore, appViewModel, sharedViewModel)
     }
 
     @Provides
     @Singleton
-    fun providerClientViewModel(repository: GlobalRepository, realm: Realm, room : AppDatabase):ClientViewModel{
-        return ClientViewModel(repository,realm, room)
+    fun providerClientViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel):ClientViewModel{
+        return ClientViewModel(repository, room, sharedViewModel)
     }
     @Provides
     @Singleton
-    fun provideInventoryViewModel(repository: GlobalRepository,realm: Realm, room : AppDatabase):InventoryViewModel{
-        return InventoryViewModel(repository,realm, room)
+    fun provideInventoryViewModel(repository: GlobalRepository, room : AppDatabase):InventoryViewModel{
+        return InventoryViewModel(repository, room)
     }
 
     @Provides
     @Singleton
-    fun providerInvoiceViewModel(repository: GlobalRepository, realm: Realm, room : AppDatabase, sharedViewModel: SharedViewModel):InvoiceViewModel{
-        return InvoiceViewModel(repository, realm, room, sharedViewModel)
+    fun providerInvoiceViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel):InvoiceViewModel{
+        return InvoiceViewModel(repository, room, sharedViewModel)
     }
     @Provides
     @Singleton
@@ -286,15 +281,12 @@ class MetaStoreModule {
     @Singleton
     fun provideSharedViewModel(
         authDataStore : DataStore<AuthenticationResponse>,
-//        companyDataStore: DataStore<Company>,
         companyDtoDataStore: DataStore<CompanyDto>,
-//        userDataStore: DataStore<User>,
         userDtoDataStore: DataStore<UserDto>,
-        realm: Realm,
         room: AppDatabase,
         context: Context
                                ):SharedViewModel{
-        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore,realm, room, context)
+        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context)
     }
 
     @Provides
@@ -387,7 +379,7 @@ class MetaStoreModule {
             signInRepository,
             articleRepository,subCategoryRepository,
             categoryRepository, companyRepository,
-            realmRepository, inventoryRepository,
+              inventoryRepository,
             clientRepository, providerRepository,
             paymentRepository, orderRepository,
             workerRepository, invoiceRepository,

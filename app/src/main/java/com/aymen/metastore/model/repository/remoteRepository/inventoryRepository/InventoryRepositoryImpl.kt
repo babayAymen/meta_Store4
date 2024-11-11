@@ -8,5 +8,4 @@ class InventoryRepositoryImpl @Inject constructor(
 )
     :InventoryRepository{
     override suspend fun getInventory(companyId : Long) = api.getInventory(companyId = companyId)
-    override suspend fun getInventoryy(companyId : Long) = api.getInventoryy(companyId = companyId)
 }

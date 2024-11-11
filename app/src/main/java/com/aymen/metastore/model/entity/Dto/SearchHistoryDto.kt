@@ -13,9 +13,9 @@ data class SearchHistoryDto(
 
     val user : UserDto? = null,
 
-    val searchCategory : SearchCategory = SearchCategory.OTHER,
+    val searchCategory : SearchCategory? = SearchCategory.OTHER,
 
-    val createdDate : String = "",
+    val createdDate : String? = "",
 
-    val lastModifiedDate : String = "",
+    val lastModifiedDate : String? = "",
 )

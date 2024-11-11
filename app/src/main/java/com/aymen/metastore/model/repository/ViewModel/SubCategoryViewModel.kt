@@ -144,8 +144,8 @@ class SubCategoryViewModel @Inject constructor(
          }
 
          viewModelScope.launch {
-             val result = room.categoryDao().getCategoryWithCompanyAndUser(categoryId) // Fetch the data
-             stateFlow.value = result // Set the result into the StateFlow for this ID
+             val result = room.categoryDao().getCategoryWithCompanyAndUser(categoryId)
+             stateFlow.value = result
          }
 
 

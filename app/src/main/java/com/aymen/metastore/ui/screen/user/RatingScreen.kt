@@ -17,31 +17,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.entity.Dto.RatingDto
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.entity.realm.Company
-import com.aymen.metastore.model.entity.realm.User
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.ui.component.InputTextField
 import com.google.gson.Gson
 import android.net.Uri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.ui.component.ShowImage
 
 @Composable
-fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
+fun RatingScreen(mode: AccountType, company: com.aymen.metastore.model.entity.room.Company?, user: com.aymen.metastore.model.entity.room.User?) {
 
     val current = LocalContext.current
     var height = LocalConfiguration.current.screenHeightDp.dp
-    val ratingViewModel: RatingViewModel = viewModel()
-    val appViewModel: AppViewModel = viewModel()
+    val ratingViewModel: RatingViewModel = hiltViewModel()
+    val appViewModel: AppViewModel = hiltViewModel()
     var id by remember { mutableLongStateOf(0) }
     val gson = Gson()
 

@@ -1,7 +1,16 @@
 package com.aymen.metastore.model.entity.Dao
 
 import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Upsert
+import com.aymen.metastore.model.entity.room.Comment
 
 @Dao
 interface CommentDao {
+
+    @Upsert
+    suspend fun insertComment(comment : Comment)
+
+    @Query("SELECT * FROM comment WHERE articleId = :articleId")
+    suspend fun getAllCommentByArticleId(articleId : Long):List<Comment>
 }

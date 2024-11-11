@@ -13,5 +13,5 @@
             entityColumn = "id",
             entity = Company::class
         )
-        val companyWithUser: CompanyWithUser?
+        val companyWithUser: CompanyWithUser? = null
     )

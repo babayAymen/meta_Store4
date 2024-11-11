@@ -24,7 +24,7 @@ data class Invitation(
     @PrimaryKey
     val id : Long? = null,
 
-    val clientId : Long? = null,
+    val clientId : Long? = null, //user
 
     val workerId : Long? = null,
 

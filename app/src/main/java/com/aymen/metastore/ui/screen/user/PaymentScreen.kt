@@ -1,40 +1,33 @@
 package com.aymen.store.ui.screen.user
 
 import android.util.Log
-import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
+import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
-import com.aymen.store.model.entity.realm.Invoice
-import com.aymen.store.model.entity.realm.PointsPayment
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.PaymentViewModel
 import com.aymen.store.model.repository.ViewModel.PointsPaymentViewModel
@@ -42,7 +35,6 @@ import com.aymen.store.ui.component.ButtonSubmit
 import com.aymen.store.ui.component.BuyHistoryCard
 import com.aymen.store.ui.component.DateFilterUI
 import com.aymen.store.ui.component.LodingShape
-import com.aymen.store.ui.component.PaymentCard
 import com.aymen.store.ui.screen.admin.SwipeToDeleteContainer
 
 
@@ -243,7 +235,7 @@ fun PaymentScreen() {
 }
 
 @Composable
-fun PaymentView(allMyPointsPayment : List<PointsPayment>, appViewModel: AppViewModel ) {
+fun PaymentView(allMyPointsPayment : List<PointsWithProviderclientcompanyanduser>, appViewModel: AppViewModel ) {
 
 
             allMyPointsPayment.forEach {
@@ -254,7 +246,7 @@ fun PaymentView(allMyPointsPayment : List<PointsPayment>, appViewModel: AppViewM
                     },
                     appViewModel = appViewModel
                 ) { pointPay ->
-                    Text(text = pointPay.provider?.name.toString() + " has sent " + pointPay.amount + " points for " + if (pointPay.clientUser?.username != null) pointPay.clientUser?.username else pointPay.clientCompany?.name)
+                    Text(text = pointPay.provider.name + " has sent " + pointPay.pointsPayment.amount + " points for " + if (pointPay.person?.username != null) pointPay.person.username else pointPay.client?.name)
                 }
 
             }
@@ -262,7 +254,7 @@ fun PaymentView(allMyPointsPayment : List<PointsPayment>, appViewModel: AppViewM
 }
 
 @Composable
-fun BuyView(invoice : Invoice, appViewModel: AppViewModel,isLoading : Boolean) {
+fun BuyView(invoice : InvoiceWithClientPersonProvider, appViewModel: AppViewModel,isLoading : Boolean) {
     val view by appViewModel.view
     if (isLoading){
         LodingShape()
@@ -271,50 +263,50 @@ fun BuyView(invoice : Invoice, appViewModel: AppViewModel,isLoading : Boolean) {
 
             "payed" -> {
                 Row {
-                    Text(text = invoice.code.toString())
+                    Text(text = invoice.invoice.code.toString())
                     Spacer(modifier = Modifier.padding(6.dp))
-                    Text(text = invoice.prix_invoice_tot.toString())
+                    Text(text = invoice.invoice.prix_invoice_tot.toString())
                     Spacer(modifier = Modifier.padding(6.dp))
-                    Text(text = invoice.paid)
+                    Text(text = invoice.invoice.paid.toString())
                     Spacer(modifier = Modifier.padding(6.dp))
-                    Text(text = if (invoice.paid == PaymentStatus.INCOMPLETE.toString()) invoice.rest.toString() else "")
+                    Text(text = if (invoice.invoice.paid == PaymentStatus.INCOMPLETE) invoice.invoice.rest.toString() else "")
                 }
             }
 
             "incomplete" -> {
                 Row {
-                    Text(text = "invoice code : " + invoice.code.toString())
+                    Text(text = "invoice code : " + invoice.invoice.code.toString())
                     Spacer(modifier = Modifier.padding(6.dp))
                     Text(
                         text = "client name : " + (invoice.person?.username
                             ?: invoice.client?.name!!)
                     )
                     Spacer(modifier = Modifier.padding(6.dp))
-                    Text(text = "rest is : " + invoice.rest.toString())
+                    Text(text = "rest is : " + invoice.invoice.rest.toString())
                 }
             }
 
             "notpayed" -> {
                 Row {
-                    Text(text = invoice.code.toString())
+                    Text(text = invoice.invoice.code.toString())
                     Spacer(modifier = Modifier.padding(6.dp))
                     Text(
                         text = "client name :" + (invoice.client?.name ?: invoice.person?.username)
                     )
                     Spacer(modifier = Modifier.padding(6.dp))
-                    Text(text = "invoice date :" + invoice.lastModifiedDate)
+                    Text(text = "invoice date :" + invoice.invoice.lastModifiedDate)
                 }
             }
 
             "notaccepted" -> {
                 Row {
-                    Text(text = invoice.code.toString())
+                    Text(text = invoice.invoice.code.toString())
                     Spacer(modifier = Modifier.padding(6.dp))
                     Text(
                         text = "client name :" + (invoice.client?.name ?: invoice.person?.username)
                     )
                     Spacer(modifier = Modifier.padding(6.dp))
-                    Text(text = "invoice date :" + invoice.lastModifiedDate)
+                    Text(text = "invoice date :" + invoice.invoice.lastModifiedDate)
 
                 }
             }
@@ -344,7 +336,7 @@ fun ProfitView(isLoading: Boolean, pointPaymentViewModel : PointsPaymentViewMode
                         color = Color.Green,
                         enabled = true
                     ) {
-                        paymentViewModel.getAllMyPaymentsEspeceByDate(
+                        paymentViewModel.getAllMyPaymentsEspeceFromMetaByDate(
                             beginDate,
                             finalDate
                         )
@@ -431,8 +423,8 @@ fun ProfitView(isLoading: Boolean, pointPaymentViewModel : PointsPaymentViewMode
         } else {
             allMyProfits.forEach {
                 Column {
-                    Text(text = it.amount.toString())
-                    Text(text = it.payed.toString())
+                    Text(text = it.paymentForProviderPerDay.amount.toString())
+                    Text(text = it.paymentForProviderPerDay.payed.toString())
                 }
             }
         }

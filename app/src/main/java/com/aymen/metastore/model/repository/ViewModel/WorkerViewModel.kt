@@ -1,5 +1,6 @@
 package com.aymen.store.model.repository.ViewModel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -11,19 +12,16 @@ import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomComp
 import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
 import com.aymen.metastore.model.entity.converterRealmToApi.mapWorkerToRoomWorker
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.Worker
 import com.aymen.store.model.entity.dto.WorkerDto
-import com.aymen.store.model.entity.realm.Worker
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class WorkerViewModel @Inject constructor(
     private val repository: GlobalRepository,
-    private val realm : Realm,
     private val room : AppDatabase
 ) : ViewModel() {
 
@@ -33,22 +31,16 @@ class WorkerViewModel @Inject constructor(
     fun getAllMyWorkers(){
         viewModelScope.launch {
           try {
-              val worke = repository.getAllMyWorkerr(companyId)
-              if(worke.isSuccessful){
-                  worke.body()?.forEach{
-                      realm.write {
-                          copyToRealm(it, UpdatePolicy.ALL)
-                      }
-                  }
-              }
               val response = repository.getAllMyWorker(companyId)
               if(response.isSuccessful){
                   response.body()?.forEach{worker ->
                       insertWorker(worker)
                   }
               }
-          }  catch (ex : Exception){}
-            workers = repository.getAllMyWorkerLocally()
+          }  catch (ex : Exception){
+              Log.e("getAllWorkers","exception : ${ex.message}")
+          }
+            workers = room.workerDao().getAllWorkors()
         }
     }
 

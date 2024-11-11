@@ -27,7 +27,7 @@ data class SearchHistory(
 
     val searchCategory : SearchCategory? = SearchCategory.OTHER,
 
-    val createdDate : String = "",
+    val createdDate : String? = "",
 
-    val lastModifiedDate : String = ""
+    val lastModifiedDate : String? = ""
 )

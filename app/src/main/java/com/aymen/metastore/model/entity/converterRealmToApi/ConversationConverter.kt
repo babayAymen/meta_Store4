@@ -1,19 +1,19 @@
 package com.aymen.metastore.model.entity.converterRealmToApi
 
-import com.aymen.metastore.model.Enum.MessageType
+import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.dto.ConversationDto
-import com.aymen.store.model.entity.realm.Conversation
+import com.aymen.store.model.entity.dto.UserDto
 
 
-fun mapConversationToConversationDto(conversation: Conversation): ConversationDto {
+fun mapRoomConversationToConversationDto(conversation: com.aymen.metastore.model.entity.room.Conversation): ConversationDto {
     return ConversationDto(
         id = conversation.id,
-        user1 = conversation.user1?.let { mapUserToUserDto(it) },
-        user2 = conversation.user2?.let { mapUserToUserDto(it) },
-        company1 = conversation.company1?.let { mapCompanyToCompanyDto(it) },
-        company2 = conversation.company2?.let { mapCompanyToCompanyDto(it) },
+        user1 = conversation.user1Id?.let { UserDto(id = it) },
+        user2 = conversation.user2Id?.let { UserDto(id = it) },
+        company1 = conversation.company1Id?.let { CompanyDto(id = it) },
+        company2 = conversation.company2Id?.let { CompanyDto(id = it) },
         message = conversation.message,
-        type = conversation.type?.let { MessageType.valueOf(it) }
+        type = conversation.type
     )
 }
 

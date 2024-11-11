@@ -44,7 +44,7 @@ fun OrderScreen() {
                 modifier = Modifier.fillMaxWidth()
             ){
                 Column {
-                    orderViewModel.orders.forEach(){
+                    orderViewModel.orders.forEach{
                         SwipeToDeleteContainer(
                             it,
                             onDelete = {

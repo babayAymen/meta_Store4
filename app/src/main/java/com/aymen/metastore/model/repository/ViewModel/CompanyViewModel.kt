@@ -14,16 +14,15 @@ import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomComp
 import com.aymen.metastore.model.entity.converterRealmToApi.mapRelationToRoomRelation
 import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.entity.realm.Company
-import com.aymen.store.model.entity.realm.Parent
-import com.aymen.store.model.entity.realm.Provider
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,20 +32,23 @@ import javax.inject.Inject
 @HiltViewModel
 class CompanyViewModel @Inject constructor(
     private val repository: GlobalRepository,
-    private val realm : Realm,
     private val room : AppDatabase,
-//    private val dataStore: DataStore<Company>,
     private val companyDataStore: DataStore<CompanyDto>,
     private val appViewModel: AppViewModel,
     private  val sharedViewModel: SharedViewModel
 ) : ViewModel() {
 
-    var providers by mutableStateOf(emptyList<Provider>())
+    private var _myProviders = MutableStateFlow(emptyList<CompanyWithCompanyClient>())
+    val myProviders: StateFlow<List<CompanyWithCompanyClient>> = _myProviders
+
     var allCompanies by mutableStateOf(emptyList<Company>())
     var providerId by mutableLongStateOf(0)
-    var parent by mutableStateOf(Parent())
+    var parent by mutableStateOf(Company())
     var myCompany by mutableStateOf(sharedViewModel.company.value)
     var update by mutableStateOf(false)
+
+    private val _companiesByArticleId = MutableStateFlow<Map<Long, Company>>(emptyMap())
+    val companiesByArticleId: StateFlow<Map<Long, Company>> = _companiesByArticleId
 
     init {
         getMyCompany()
@@ -73,31 +75,22 @@ class CompanyViewModel @Inject constructor(
     }
 
     fun getAllMyProvider() {
-                Log.d("aymenbabay", "getAllMyProvider begin")
-        getMyCompany { company ->
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
-                    val respons = repository.getAllMyProviderr(company?.id!!).body()!!
-                    respons.forEach {
-                        realm.write {
-                            copyToRealm(it, UpdatePolicy.ALL)
-                        }
-                    }
-                    val response = repository.getAllMyProvider(company.id!!).body()!!
+                    val response = repository.getAllMyProvider(myCompany.id!!).body()!!
                     response.forEach {provider ->
                         insertRelation(provider)
                     }
                 } catch (_ex: Exception) {
                     Log.e("aymenbabay", "error is : $_ex")
                 }
-                providers = repository.getAllMyProviderLocally()
-                if (providers.isNotEmpty()) {
-                    providerId = providers[0].id!!
-                }
+                _myProviders.value = room.clientProviderRelationDao().getAllProvidersByClientId(myCompany.id!!)
+//                if (providers.isNotEmpty()) {
+//                    providerId = providers[0].id!!
+//                }
         }
             }
-        }
     }
 
     @Transaction
@@ -121,39 +114,25 @@ class CompanyViewModel @Inject constructor(
     }
 
     fun getMyParent(){
-        getMyCompany { company ->
-
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-
             try {
-                val parents = repository.getMyParentt(company?.id!!)
-                if(parents.isSuccessful){
-                    realm.write {
-                        copyToRealm(parents.body()!!,UpdatePolicy.ALL)
-                    }
-                }
-                val response = repository.getMyParent(company.id!!)
+                val response = repository.getMyParent(myCompany.id!!)
                 if(response.isSuccessful && response.body() != null){
                    insertCompany(response.body()!!)
                 }
             }catch (ex : Exception){
                 Log.e("aymenbabayparent","c bon error ${ex.message}")
             }
-            parent = repository.getMyParentLocally()[0]
+            parent = room.companyDao().getCompanyById(myCompany.parentCompany?.id!!)
         }
             }
-        }
     }
 
     fun getMyCompany(){
         viewModelScope.launch {
             withContext(Dispatchers.Main) {
                 try {
-                    val company = repository.getMyCompany(0)
-                    if (company.isSuccessful) {
-//                        appViewModel.storeCompany(company.body()!!)
-                    }
                     val response = repository.getMeAsCompany()
                     if (response.isSuccessful) {
                         appViewModel.storeCompany(response.body()!!)
@@ -169,20 +148,16 @@ class CompanyViewModel @Inject constructor(
         allCompanies = emptyList()
         viewModelScope.launch {
             try {
-                val companies = repository.getAllCompaniesContainingg(search)
-                if(companies.isSuccessful){
-                    allCompanies = companies.body()!!
-                }
                 val response = repository.getAllCompaniesContaining(search)
                 if(response.isSuccessful){
                     response.body()?.forEach {company ->
                         insertCompany(company)
                     }
-                    allCompanies = companies.body()!!
                 }
             }catch (ex : Exception){
                 Log.e("aymenbabaycompanies","error is : ${ex.message}")
             }
+                    allCompanies = room.companyDao().getAllCompaniesContaining(search)
         }
     }
 
@@ -213,6 +188,18 @@ class CompanyViewModel @Inject constructor(
             }catch (ex : Exception){
                 Log.e("getTokenError", "Error getting token: ${ex.message}")
             }
+        }
+    }
+
+    fun fetchCompanyByArticleId(articleId: Long, companyId: Long) {
+        viewModelScope.launch {
+            val company = getCompanyByIdLocally(companyId)
+            _companiesByArticleId.value = _companiesByArticleId.value + (articleId to company)
+        }
+    }
+    private suspend fun getCompanyByIdLocally(companyId: Long): com.aymen.metastore.model.entity.room.Company {
+        return withContext(Dispatchers.IO) {
+            room.companyDao().getCompanyById(companyId)
         }
     }
 }

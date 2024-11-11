@@ -13,7 +13,6 @@ class SignInRepositoryImpl @Inject constructor
     override suspend fun SignUp(registerRequest: RegisterRequest) = api.SignUp(registerRequest)
     override suspend fun refreshToken(token: String) = api.refreshToken(token)
     override suspend fun getMyUserDetails() = api.getMyUserDetails()
-    override suspend fun getMyUserDetailss() = api.getMyUserDetailss()
     override suspend fun updateLocations(latitude: Double, logitude: Double) = api.updateLocations(latitude, logitude)
 
 }

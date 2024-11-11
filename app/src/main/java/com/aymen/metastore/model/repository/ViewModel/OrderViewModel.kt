@@ -8,12 +8,10 @@ import androidx.lifecycle.ViewModel
 import com.aymen.store.model.entity.realm.PurchaseOrderLine
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
 import javax.inject.Inject
 @HiltViewModel
 class OrderViewModel @Inject constructor(
     private val repository: GlobalRepository,
-    private val realm : Realm
 ) :ViewModel(){
 
     var orders by mutableStateOf(emptyList<PurchaseOrderLine>())

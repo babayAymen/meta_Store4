@@ -16,8 +16,8 @@ import androidx.room.PrimaryKey
 )
 data class SubCategory(
     @PrimaryKey(autoGenerate = true) val id: Long? = null,
-    val code: String? = null,
-    val libelle: String? = null,
+    var code: String? = null,
+    var libelle: String? = null,
     val image: String? = null,
     val categoryId: Long? = null,
     val companyId: Long? = null

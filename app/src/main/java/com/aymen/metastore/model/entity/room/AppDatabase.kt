@@ -7,6 +7,7 @@ import com.aymen.metastore.model.entity.Dao.ArticleDao
 import com.aymen.metastore.model.entity.Dao.CategoryDao
 import com.aymen.metastore.model.entity.Dao.ClientProviderRelationDao
 import com.aymen.metastore.model.entity.Dao.CommanLineDao
+import com.aymen.metastore.model.entity.Dao.CommentDao
 import com.aymen.metastore.model.entity.Dao.CompanyDao
 import com.aymen.metastore.model.entity.Dao.ConversationDao
 import com.aymen.metastore.model.entity.Dao.InventoryDao
@@ -29,7 +30,7 @@ import com.aymen.metastore.model.entity.Dao.WorkerDao
     Comment::class, Conversation::class, Category::class, SubCategory::class, Invoice::class, ClientProviderRelation::class,
                      SearchHistory::class, Inventory::class, Invitation::class, Message::class, PaymentForProviders::class, PointsPayment::class,
     PaymentForProviderPerDay::class, Rating::class, Worker::class
-                     ], version = 3, exportSchema = false)
+                     ], version = 9, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao
@@ -53,4 +54,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun paymentForProviderPerDayDao() : PaymentForProviderPerDayDao
     abstract fun ratingDao() : RatingDao
     abstract fun workerDao() : WorkerDao
+    abstract fun commentDao() : CommentDao
 }

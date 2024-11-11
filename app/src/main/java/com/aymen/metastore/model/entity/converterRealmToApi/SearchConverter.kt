@@ -14,3 +14,11 @@ fun mapSearchToSearchRoom(search : SearchHistoryDto): SearchHistory{
      lastModifiedDate = search.lastModifiedDate
     )
 }
+fun mapRoomSearchToSearchDto(search : SearchHistory): SearchHistoryDto{
+    return SearchHistoryDto(
+     id = search.id,
+     searchCategory = search.searchCategory!!,
+     createdDate = search.createdDate,
+     lastModifiedDate = search.lastModifiedDate
+    )
+}

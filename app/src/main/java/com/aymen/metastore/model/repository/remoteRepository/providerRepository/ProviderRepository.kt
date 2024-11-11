@@ -1,6 +1,5 @@
 package com.aymen.store.model.repository.remoteRepository.providerRepository
 
-import retrofit2.Response
 import java.io.File
 
 interface ProviderRepository {

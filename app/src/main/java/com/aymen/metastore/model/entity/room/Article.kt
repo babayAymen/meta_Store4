@@ -9,11 +9,11 @@ data class Article(
     @PrimaryKey val id: Long? = null,
 
     val libelle: String = "",
-    val code: String = "",
-    val discription: String = "",
+    val code: String? = "",
+    val discription: String? = "",
     val barcode: String? = null,
-    val tva: Double = 0.0,
-    val image: String = "",
+    val tva: Double? = 0.0,
+    val image: String? = "",
     val isDiscounted : Boolean = false,
-    val category : CompanyCategory = CompanyCategory.DAIRY
+    val category : CompanyCategory? = CompanyCategory.DAIRY
 )

@@ -36,12 +36,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.aymen.metastore.model.entity.realm.ArticleCompany
+import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
+import com.aymen.metastore.model.entity.room.SubCategory
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
-import com.aymen.store.model.entity.realm.Article
-import com.aymen.store.model.entity.realm.SubCategory
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
@@ -99,7 +98,7 @@ fun AddArticleScreen(){
         }
         val subcategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
         val context = LocalContext.current
-        val articleCompany = ArticleCompany()
+        val articleCompany = ArticleCompanyDto()
         val gson = Gson()
         var tva by remember {
             mutableDoubleStateOf(0.0)
@@ -138,8 +137,9 @@ fun AddArticleScreen(){
             mutableStateOf(false)
         }
         var subCategory by remember {
-            mutableStateOf(com.aymen.metastore.model.entity.room.SubCategory())
+            mutableStateOf(SubCategory())
         }
+        val providers by companyViewModel.myProviders.collectAsStateWithLifecycle()
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -345,7 +345,7 @@ fun AddArticleScreen(){
                     }
                 }
                 Row {
-                    DropDownCompany(list = companyViewModel.providers)
+                    DropDownCompany(list = providers)
                 }
                 if(article.id == null) {
                 ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
@@ -387,8 +387,8 @@ fun AddArticleScreen(){
                             articleCompany.category?.id = categoryViewModel.category.id
                             articleCompany.subCategory?.id = subCategory.id
                             articleCompany.provider?.id = sharedViewModel.company.value.id
-                            articleCompany.unit = unitItem.toString()
-                            articleCompany.isVisible = privacy.toString()
+                            articleCompany.unit = unitItem
+                            articleCompany.isVisible = privacy
                             val photo = resolveUriToFile(image, context)
                             val articleJsonString = gson.toJson(articleCompany)
                             val projsonstring = gson.toJson(companyViewModel.myCompany)

@@ -13,7 +13,7 @@ import androidx.room.PrimaryKey
 )
 data class PurchaseOrder(
 
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = false) val id: Long? = 0,
 
     val companyId: Long? = null,
 

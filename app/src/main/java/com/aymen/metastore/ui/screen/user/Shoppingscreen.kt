@@ -1,6 +1,7 @@
 package com.aymen.store.ui.screen.user
 
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -28,7 +28,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -36,9 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.model.Enum.InvoiceMode
-import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderLineDtoToRealm
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
@@ -47,14 +44,13 @@ import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.store.ui.component.ButtonSubmit
 import com.aymen.store.ui.component.DividerComponent
-import com.aymen.store.ui.component.DividerTextComponent
 import com.aymen.store.ui.component.InvoiceCard
 import com.aymen.store.ui.component.LodingShape
 import com.aymen.store.ui.component.OrderShow
+import com.aymen.store.ui.component.ShowFeesDialog
 import com.aymen.store.ui.screen.admin.AddInvoiceScreen
 import com.aymen.store.ui.screen.admin.OrderScreen
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -69,20 +65,25 @@ fun ShoppingScreen() {
     LaunchedEffect(key1 = Unit) {
         shoppingViewModel.getAllMyOrders()
         if(sharedViewModel.accountType == AccountType.USER){
-        shoppingViewModel.getAllMyInvoicesNotAccepted()
+        invoiceViewModel.getAllMyInvoiceAsClientAndStatus(Status.INWAITING)
             invoiceViewModel.getAllMyInvoicesAsClient()
         }
     }
-    val invoicesNotAccepted by shoppingViewModel.allMyInvoiceNotAccepted.collectAsStateWithLifecycle()
+    val invoicesNotAccepted by invoiceViewModel.allMyInvoiceNotAccepted.collectAsStateWithLifecycle()
     DisposableEffect(Unit) {
         onDispose {
-
+           shoppingViewModel.deleteAll()
+            invoiceViewModel.deleteAll()
+            Log.e("deleteall","delete all")
         }
     }
-
+    val allMyOrders by shoppingViewModel.allMyOrders.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val show by appViewModel.show
+
+    var showFeesDialog by remember { mutableStateOf(false) }
+    var balancee by remember { mutableStateOf(0.0) }
     when(show) {
         "add invoice" -> AddInvoiceScreen(InvoiceMode.VERIFY)
         "orderLine" -> OrderScreen()
@@ -113,19 +114,35 @@ fun ShoppingScreen() {
                                                 modifier = Modifier.weight(0.8f)
                                             ) {
 
-                                                OrderShow(order = mapPurchaseOrderLineDtoToRealm(it))
+                                                OrderShow(order = it)
                                             }
                                             Row(
                                                 modifier = Modifier.weight(0.1f)
                                             ) {
                                                 IconButton(onClick = {
-                                                    shoppingViewModel.sendOrder(index)
+                                                    shoppingViewModel.beforSendOrder {isAccepted , balance ->
+                                                        if(isAccepted){
+                                                             shoppingViewModel.sendOrder(index, balance)
+                                                        }else{
+                                                            showFeesDialog = true
+                                                            balancee = balance
+                                                        }
+                                                    }
                                                 }) {
                                                     Icon(
                                                         imageVector = Icons.Default.Check,
                                                         contentDescription = "send",
                                                         tint = Color.Magenta
                                                     )
+                                                }
+                                            }
+                                            if(showFeesDialog){
+                                                ShowFeesDialog(isOpen = true) {submitfees ->
+                                                    if(submitfees){
+                                                        shoppingViewModel.sendOrder(-1,balancee)
+                                                    }else{
+                                                        showFeesDialog = false
+                                                    }
                                                 }
                                             }
                                             Row(
@@ -164,7 +181,13 @@ fun ShoppingScreen() {
                                             color = Color.Green,
                                             enabled = true
                                         ) {
-                                            shoppingViewModel.sendOrder(-1)
+                                            shoppingViewModel.beforSendOrder {isAccepte , balance ->
+                                                if(isAccepte){
+                                                     shoppingViewModel.sendOrder(-1,balance)
+                                                }else{
+                                                    showFeesDialog = true
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -201,13 +224,13 @@ fun ShoppingScreen() {
                                     LodingShape()
                                 }
                             }
-                            items(shoppingViewModel.allMyOrders) {
-                                val dateTime = LocalDateTime.parse(it.createdDate)
+                            items(allMyOrders) {
+                                val dateTime = LocalDateTime.parse(it.purchaseOrder.createdDate)
                                 val date = dateTime.toLocalDate()
                                 Text(text =
-                                if (it.company?.id == myCompany.id) "you have an order from ${it.person?.username ?: it.client?.name}" else "you have sent an order to ${it.company?.name}",
+                                if (it.company.id == myCompany.id) "you have an order from ${it.person?.username ?: it.client?.name}" else "you have sent an order to ${it.company.name}",
                                     modifier = Modifier.clickable {
-                                        shoppingViewModel.Order = it
+                                        shoppingViewModel.Order = it.purchaseOrder
                                         appViewModel.updateShow("orderLineDetails")
                                     }
                                 )
@@ -227,6 +250,7 @@ fun ShoppingScreen() {
                     ){
                         LazyColumn {
                             items(myInvoicesAccepted){
+                                Log.e("myinvoicesaccepted","size is !: ${myInvoicesAccepted.size}")
                                 InvoiceCard(
                                     invoice = it,
                                     appViewModel = appViewModel,

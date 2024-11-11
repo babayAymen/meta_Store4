@@ -17,10 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aymen.metastore.model.entity.converterRealmToApi.mapcompanyDtoToCompanyRealm
-import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.ui.navigation.RouteController
@@ -33,7 +30,6 @@ import com.aymen.store.ui.screen.user.AddCompanyScreen
 import com.aymen.store.ui.screen.user.ArticleDetailsScreen
 import com.aymen.store.ui.screen.user.CompanyScreen
 import com.aymen.store.ui.screen.user.HomeScreen
-import com.aymen.store.ui.screen.user.MenuScreen
 import com.aymen.store.ui.screen.user.ConversationScreen
 import com.aymen.store.ui.screen.user.NotificationScreen
 import com.aymen.store.ui.screen.user.PaymentScreen
@@ -105,7 +101,7 @@ fun MetaStore (){
                 }
 
                 is Screen.MenuScreen -> {
-                    MenuScreen()
+//                    MenuScreen()
                 }
 
                 is Screen.DashBoardScreen -> {
@@ -114,7 +110,7 @@ fun MetaStore (){
 
                 is Screen.CompanyScreen -> {
                     val company = companyViewModel.myCompany
-                    CompanyScreen(company = mapcompanyDtoToCompanyRealm(company))
+                    CompanyScreen(company = mapCompanyToRoomCompany(company))
                 }
 
                 is Screen.ArticleDetailScreen -> {

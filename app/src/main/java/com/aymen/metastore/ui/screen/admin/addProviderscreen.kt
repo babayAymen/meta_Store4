@@ -58,7 +58,7 @@ fun AddProviderScreen() {
     var companyMatriculeFiscal by remember {
         mutableStateOf("")
     }
-    var companysector by remember {
+    val companysector by remember {
         mutableStateOf(CompanyCategory.DAIRY)
     }
     var companycapital by remember {

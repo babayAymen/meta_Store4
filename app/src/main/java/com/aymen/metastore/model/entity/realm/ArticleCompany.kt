@@ -13,20 +13,20 @@ class ArticleCompany : RealmObject{
     @PrimaryKey
     var id : Long? = null
     var unit: String? = UnitArticle.U.toString()
-    var cost: Double = 0.0
-    var quantity: Double = 0.0
-    var minQuantity: Double = 0.0
+    var cost: Double? = 0.0
+    var quantity: Double? = 0.0
+    var minQuantity: Double? = 0.0
     var sharedPoint: Long? = null
-    var sellingPrice: Double = 0.0
-    var category: Category? = Category()
+    var sellingPrice: Double? = 0.0
+    var category: Category? = null
     var subCategory: SubCategory? = SubCategory()
     var provider : Company? = Company()
     var company: Company? = Company()
-    var isRandom : Boolean = false
-    var isFav : Boolean = false
+    var isRandom : Boolean? = false
+    var isFav : Boolean? = false
     var likeNumber : Long? = null
     var commentNumber : Long? = null
-    var isVisible : String = PrivacySetting.ONLY_ME.toString()
+    var isVisible : String? = PrivacySetting.ONLY_ME.toString()
     var article : Article? = null
-    var isEnabledToComment : Boolean = false
+    var isEnabledToComment : Boolean? = false
 }

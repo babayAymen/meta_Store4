@@ -39,7 +39,7 @@ fun AddCategoryScreen() {
     val context = LocalContext.current
     val appViewModel : AppViewModel = viewModel()
     val categoryViewModel : CategoryViewModel = viewModel()
-    var category = Category()
+    val category = Category()
     var libelle by remember {
         mutableStateOf("")
     }

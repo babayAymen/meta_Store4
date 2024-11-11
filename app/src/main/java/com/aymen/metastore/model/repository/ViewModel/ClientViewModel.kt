@@ -2,8 +2,6 @@ package com.aymen.store.model.repository.ViewModel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -19,17 +17,14 @@ import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Type
-import com.aymen.store.model.entity.realm.ClientProviderRelation
-import com.aymen.store.model.entity.realm.Company
-import com.aymen.store.model.entity.realm.SearchHistory
-import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.SearchHistory
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.entity.converterRealmToApi.mapArticelDtoToRoomArticle
 import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRoomArticleCompany
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,29 +36,23 @@ import javax.inject.Inject
 @HiltViewModel
 class ClientViewModel @Inject constructor(
     private val repository : GlobalRepository,
-    private val realm : Realm,
-    private val room : AppDatabase
+    private val room : AppDatabase,
+    private  val sharedViewModel: SharedViewModel
 ): ViewModel()
 {
-    var clientsCompany by mutableStateOf(emptyList<Company>())
-    var clientsUser by mutableStateOf(emptyList<User>())
-    val companyId by mutableLongStateOf(0)
     var histories by mutableStateOf(emptyList<SearchHistory>())
 
-    val _myClients = MutableStateFlow(emptyList<ClientProviderRelation>())
-    val myClients: StateFlow<List<ClientProviderRelation>> = _myClients
+    val _myClients = MutableStateFlow(emptyList<CompanyWithCompanyClient>())
+    val myClients: StateFlow<List<CompanyWithCompanyClient>> = _myClients
+
+
+    fun emptyClient(){
+        _myClients.value = emptyList()
+    }
     fun getAllMyClient(){
         viewModelScope.launch (Dispatchers.IO){
             try {
-                val respons = repository.getAllMyClientt(companyId)
-                if(respons.isSuccessful){
-                    respons.body()?.forEach{client ->
-                        realm.write {
-                            copyToRealm(client, UpdatePolicy.ALL)
-                        }
-                    }
-                }
-                val response = repository.getAllMyClient(companyId)
+                val response = repository.getAllMyClient(sharedViewModel.company.value.id!!)
                 if(response.isSuccessful){
                     response.body()?.forEach{client ->
                        insertRelation(client)
@@ -72,7 +61,7 @@ class ClientViewModel @Inject constructor(
             }catch (_ex : Exception){
                 Log.e("aymenbabayclient","error is : $_ex")
             }
-                _myClients.value = repository.getAllMyClientLocally()
+            _myClients.value = room.clientProviderRelationDao().getAllClientsByProviderId(sharedViewModel.company.value.id!!)
             }
 
     }
@@ -80,16 +69,7 @@ class ClientViewModel @Inject constructor(
     fun getAllMyClientContaining(clientname : String){
         viewModelScope.launch (Dispatchers.IO){
             try {
-                val respons = repository.getAllMyClientContainingg(clientname,companyId)
-                if(respons.isSuccessful){
-                    respons.body()?.forEach{client ->
-                        Log.e("clientcontaining","client name = ${client.person?.username}")
-                    }
-                    if(respons.body()?.isNotEmpty() == true){
-                    _myClients.value = respons.body()?: emptyList()
-                    }
-                }
-                val response = repository.getAllMyClientContaining(clientname,companyId)
+                val response = repository.getAllMyClientContaining(clientname, sharedViewModel.company.value.id!!)
                 if(response.isSuccessful){
                     response.body()?.forEach{client ->
                         insertRelation(client)
@@ -100,6 +80,10 @@ class ClientViewModel @Inject constructor(
             }catch (ex:Exception){
                 Log.e("aymenbabayclient","error is : $ex")
             }
+
+
+            _myClients.value = room.clientProviderRelationDao().getAllClientsUserContaining(clientname, sharedViewModel.company.value.id!!)
+            _myClients.value += room.clientProviderRelationDao().getAllClientsCompanyContaining(clientname, sharedViewModel.company.value.id!!)
         }
     }
 
@@ -122,14 +106,6 @@ class ClientViewModel @Inject constructor(
     fun getAllClientsCompanyContaining(search : String, searchType : SearchType, searchCategory: SearchCategory){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val respons = repository.getAllClientContainingg(search,searchType,searchCategory)
-                if(respons.isSuccessful){
-                    respons.body()?.forEach {
-                        realm.write {
-                            copyToRealm(it,UpdatePolicy.ALL)
-                        }
-                    }
-                }
                 val response = repository.getAllClientContaining(search,searchType,searchCategory)
                 if(response.isSuccessful){
                     response.body()?.forEach {company ->
@@ -137,35 +113,27 @@ class ClientViewModel @Inject constructor(
                         room.companyDao().insertCompany(mapCompanyToRoomCompany(company))
                     }
                 }
-                clientsCompany = respons.body()!!
             }catch (_ex : Exception){
                 Log.e("aymenbabayclients","error is : $_ex")
             }
+            _myClients.value = room.clientProviderRelationDao().getAllClientsCompanyContaining(search, sharedViewModel.company.value.id!!)
         }
     }
 
     fun getAllClientsUserContaining(search : String, searchType : SearchType, searchCategory: SearchCategory){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val respons = repository.getAllClientUserContainingg(search,searchType,searchCategory)
-                if(respons.isSuccessful){
-                    respons.body()?.forEach {
-                        realm.write {
-                            copyToRealm(it,UpdatePolicy.ALL)
-                        }
-                    }
-                }
                 val response = repository.getAllClientUserContaining(search,searchType,searchCategory)
                 if(response.isSuccessful){
                     response.body()?.forEach {user ->
                         room.userDao().insertUser(mapUserToRoomUser(user))
                     }
                 }
-                clientsUser = respons.body()!!
-                Log.e("aymenbabayclients","my all companies size : ${clientsCompany.size}")
             }catch (_ex : Exception){
                 Log.e("aymenbabayclients","error is : $_ex")
             }
+            _myClients.value = room.clientProviderRelationDao().getAllClientsUserContaining(search, sharedViewModel.company.value.id!!)
+
         }
     }
     fun addClient(client : String, file : File){
@@ -206,28 +174,17 @@ class ClientViewModel @Inject constructor(
     fun getAllSearchHistory(){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val respons = repository.getAllHistoryy()
-                if(respons.isSuccessful){
-                    respons.body()!!.forEach{
-                        realm.write {
-                            copyToRealm(it, UpdatePolicy.ALL)
-                        }
-                    }
-                }
                 val response = repository.getAllHistory()
                 if(response.isSuccessful){
-                    response.body()!!.forEach{
-                        Log.e("searchhistory","if ${response.body()?.size}")
+                    response.body()?.forEach{
                         insertSearchHistary(it)
                     }
-                }else{
-
-                    Log.e("searchhistory"," else ${response.body()?.size}")
                 }
             }catch (ex : Exception){
                 Log.e("getAllSearchHistory", "exception : ${ex.message}")
             }
-            histories = repository.getAllHistoryLocally()
+                histories = room.searchHistoryDao().getAllSearchHistories()
+
         }
     }
 
@@ -240,12 +197,12 @@ class ClientViewModel @Inject constructor(
             room.companyDao().insertCompany(mapCompanyToRoomCompany(search.company))
         }
         if(search.article != null) {
-            room.categoryDao().insertCategory(mapCategoryToRoomCategory(search.article.category))
-            room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(search.article.subCategory))
-            room.articleDao().insertArticle(mapArticelDtoToRoomArticle(search.article.article))
+            room.userDao().insertUser(mapUserToRoomUser(search.article.company?.user))
             room.companyDao().insertCompany(mapCompanyToRoomCompany(search.article.company))
-            room.articleCompanyDao()
-                .insertArticle(mapArticleCompanyToRoomArticleCompany(search.article))
+            room.categoryDao().insertCategory(mapCategoryToRoomCategory(search.article.category!!))
+            room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(search.article.subCategory!!))
+            room.articleDao().insertArticle(mapArticelDtoToRoomArticle(search.article.article!!))
+            room.articleCompanyDao().insertArticle(mapArticleCompanyToRoomArticleCompany(search.article))
         }
         room.searchHistoryDao().insertSearchHistory(mapSearchToSearchRoom(search))
     }

@@ -56,19 +56,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aymen.metastore.model.entity.realm.ArticleCompany
-import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.entity.converterRealmToApi.mapApiArticleToRealm
-import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRealm
-import com.aymen.store.model.entity.realm.Article
-import com.aymen.store.model.entity.realm.Company
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.ClientViewModel
 import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
-import kotlin.coroutines.coroutineContext
 
 
 @Composable
@@ -84,7 +79,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
     }
 
     // Collect clients as state from ViewModel
-    val clients by clientViewModel.myClients.collectAsState(emptyList())
+    val clients by clientViewModel.myClients.collectAsStateWithLifecycle()
 
     var clientname by remember {
         mutableStateOf("")
@@ -97,7 +92,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     LaunchedEffect(key1 = update) {
         if(clientType == AccountType.USER && update){
-        clientname = invoiceViewModel.clientUser.username
+        clientname = invoiceViewModel.clientUser.username!!
         }
         if(clientType == AccountType.COMPANY && update){
             clientname = invoiceViewModel.clientCompany.name
@@ -126,7 +121,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                 TextField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(55.dp) // heigtTextField
+                        .height(55.dp)
                         .border(
                             width = 1.8.dp,
                             color = Color.Black,
@@ -183,16 +178,16 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                         if (clientname.isNotEmpty()) {
                             items(
                                 clients.filter {
-                                    val clientName = it.person?.username?.lowercase() ?: it.client?.name?.lowercase()
+                                    val clientName = it.clientUser?.username?.lowercase() ?: it.clientCompany?.name?.lowercase()
                                     val query = clientname.lowercase()
                                     // Safely check if client name contains the query
                                     (clientName?.contains(query)
                                         ?: clientName?.contains("others")) == true
                                 }.sortedBy {
-                                    it.client?.name // Safely access client name
+                                    it.clientCompany?.name?:it.clientUser?.username
                                 }
                             ) { clientRelation ->
-                                clientRelation.client?.let { client ->
+                                clientRelation.clientCompany?.let { client ->
                                     ClientItem(client = client) { selectedClient ->
                                         clientname = selectedClient.name
                                         invoiceViewModel.clientCompany = selectedClient
@@ -201,9 +196,9 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                         expanded = false
                                     }
                                 }
-                                clientRelation.person?.let { client ->
+                                clientRelation.clientUser?.let { client ->
                                     ClientUserItem(client = client) { selectedClient ->
-                                        clientname = selectedClient.username
+                                        clientname = selectedClient.username!!
                                         invoiceViewModel.clientUser = selectedClient
                                         invoiceViewModel.clientType = AccountType.USER
                                         onClientSelected(true)
@@ -223,8 +218,8 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
 
 @Composable
 fun ClientItem(
-    client : Company,
-    onSelect : (Company) -> Unit
+    client : com.aymen.metastore.model.entity.room.Company,
+    onSelect : (com.aymen.metastore.model.entity.room.Company) -> Unit
 ) {
     Row (
         modifier = Modifier
@@ -241,8 +236,8 @@ fun ClientItem(
 
 @Composable
 fun ClientUserItem(
-    client : User,
-    onSelect : (User) -> Unit
+    client : com.aymen.metastore.model.entity.room.User,
+    onSelect : (com.aymen.metastore.model.entity.room.User) -> Unit
 ) {
     Log.e("aymenbabayclient","client name = ${client.username}")
     Row (
@@ -253,7 +248,7 @@ fun ClientUserItem(
             }
             .padding(10.dp)
     ){
-        Text(text = client.username, fontSize = 16.sp)
+        Text(text = client.username!!, fontSize = 16.sp)
 
     }
 }
@@ -263,8 +258,8 @@ fun ClientUserItem(
 ////////////////////////////////
 @Composable
 fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
-    val articleViewModel : ArticleViewModel = viewModel()
-    val invoiceViewModel : InvoiceViewModel = viewModel()
+    val articleViewModel : ArticleViewModel = hiltViewModel()
+    val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(key1 = Unit) {
         focusRequester.requestFocus()
@@ -305,7 +300,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
     ) {
 
         Text(
-            text = "com.aymen.metastore.model.entity.room.Article",
+            text = "Article",
             modifier = Modifier.padding(start = 3.dp, bottom = 2.dp),
             // fontSize = 16.dp,
             color = Color.Black,
@@ -430,8 +425,8 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
 
 @Composable
 fun ArticleItem(
-    article : ArticleCompany,
-    onSelect : (ArticleCompany) -> Unit
+    article : ArticleCompanyDto,
+    onSelect : (ArticleCompanyDto) -> Unit
 ) {
     Row (
         modifier = Modifier

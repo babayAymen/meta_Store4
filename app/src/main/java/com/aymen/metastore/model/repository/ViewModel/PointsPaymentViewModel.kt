@@ -16,18 +16,16 @@ import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomComp
 import com.aymen.metastore.model.entity.converterRealmToApi.mapPaymentForProviderPerDayToRoomPaymentForProviderPerDay
 import com.aymen.metastore.model.entity.converterRealmToApi.mapPointsPaymentToRoomPointsPayment
 import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
-import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
-import com.aymen.store.model.entity.realm.Company
-import com.aymen.store.model.entity.realm.PointsPayment
-import com.aymen.metastore.model.entity.realm.User
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.room.User
+import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
+import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +36,6 @@ import javax.inject.Inject
 class PointsPaymentViewModel @Inject constructor(
     private val repository : GlobalRepository,
     private val sharedViewModel: SharedViewModel,
-    private val realm : Realm,
     private val room : AppDatabase
 ) :ViewModel(){
 
@@ -62,12 +59,12 @@ class PointsPaymentViewModel @Inject constructor(
         }
     }
 
-    private val _allMyPointsPayment = MutableStateFlow<List<PointsPayment>>(emptyList())
-    val allMyPointsPayment: StateFlow<List<PointsPayment>> = _allMyPointsPayment
+    private val _allMyPointsPayment = MutableStateFlow<List<PointsWithProviderclientcompanyanduser>>(emptyList())
+    val allMyPointsPayment: StateFlow<List<PointsWithProviderclientcompanyanduser>> = _allMyPointsPayment
 
 
-    private val _allMyProfits = MutableStateFlow<List<PaymentForProviderPerDay>>(emptyList())
-    val allMyProfits : StateFlow<List<PaymentForProviderPerDay>> = _allMyProfits
+    private val _allMyProfits = MutableStateFlow<List<PaymentPerDayWithProvider>>(emptyList())
+    val allMyProfits : StateFlow<List<PaymentPerDayWithProvider>> = _allMyProfits
 
     private val _myProfits = MutableStateFlow<String>("")
     val myProfits : StateFlow<String> = _myProfits
@@ -82,14 +79,6 @@ class PointsPaymentViewModel @Inject constructor(
                     sharedViewModel.isLoading = true
                     _allMyPointsPayment.value = emptyList()
                     try {
-                        val respons = repository.getAllMyPointsPaymentt(sharedViewModel.company.value.id?: 0)
-                        if (respons.isSuccessful) {
-                            respons.body()?.forEach { pointsPayment ->
-                                realm.write {
-                                    copyToRealm(pointsPayment, UpdatePolicy.ALL)
-                                }
-                            }
-                        }
                         val response = repository.getAllMyPointsPayment(sharedViewModel.company.value.id?: 0)
                         if (response.isSuccessful) {
                             response.body()?.forEach { pointsPayment ->
@@ -102,7 +91,7 @@ class PointsPaymentViewModel @Inject constructor(
                         // Turn off loading regardless of success or failure
                         sharedViewModel.isLoading = false
                     }
-                    _allMyPointsPayment.value = repository.getAllMyPointsPaymentLocally()
+                    _allMyPointsPayment.value = room.pointsPaymentDao().getAllMyointsPayment()
 
             }
 
@@ -133,16 +122,17 @@ class PointsPaymentViewModel @Inject constructor(
         )
     }
     fun getMyProfitByDate(beginDate : String, finalDate : String){
-        sharedViewModel.isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
+        sharedViewModel.isLoading = true
             try {
                 val response = repository.getMyProfitByDate(beginDate, finalDate)
                 if(response.isSuccessful){
-                    sharedViewModel.isLoading = false
                     _myProfits.value = response.body()?:""
                 }
             }catch (ex : Exception){
                 Log.e("getMyProfitByDateException","${ex.message}")
+            }finally {
+                    sharedViewModel.isLoading = false
             }
         }
     }
@@ -151,14 +141,6 @@ class PointsPaymentViewModel @Inject constructor(
         sharedViewModel.isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val respons = repository.getAllMyProfitss()
-                if(respons.isSuccessful){
-                    respons.body()?.forEach { paymentForProviderPerDay ->
-                        realm.write {
-                            copyToRealm(paymentForProviderPerDay, UpdatePolicy.ALL)
-                        }
-                    }
-                }
                 val response = repository.getAllMyProfits()
                 if(response.isSuccessful){
                     response.body()?.forEach { paymentForProviderPerDay ->
@@ -170,7 +152,7 @@ class PointsPaymentViewModel @Inject constructor(
             }finally {
                     sharedViewModel.isLoading = false
             }
-            _allMyProfits.value = repository.getAllMyProfitsLocally()
+            _allMyProfits.value = room.paymentForProviderPerDayDao().getAllMyProfits()
         }
     }
 
@@ -178,10 +160,6 @@ class PointsPaymentViewModel @Inject constructor(
         sharedViewModel.isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val respons = repository.getMyHistoryProfitByDatee(beginDate, finalDate)
-                if(respons.isSuccessful){
-                    _allMyProfits.value = respons.body()?: emptyList()
-                }
                 val response = repository.getMyHistoryProfitByDate(beginDate, finalDate)
                 if(response.isSuccessful){
                     response.body()?.forEach { payment ->
@@ -193,6 +171,8 @@ class PointsPaymentViewModel @Inject constructor(
             }finally {
                     sharedViewModel.isLoading = false
             }
+            _allMyProfits.value = room.paymentForProviderPerDayDao().getAllMyProfitsByDate(beginDate, finalDate)
+
         }
     }
 

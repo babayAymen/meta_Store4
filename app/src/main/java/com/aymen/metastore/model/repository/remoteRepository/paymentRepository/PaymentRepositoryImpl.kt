@@ -7,9 +7,5 @@ import javax.inject.Inject
 class PaymentRepositoryImpl @Inject constructor(
     private val api: ServiceApi
 ) : PaymentRepository {
-    override suspend fun getAllMyPayments() = api.getAllMyPayments()
-
-
     override suspend fun getAllMyPaymentsEspeceByDate(date: String,findate : String) = api.getAllMyPaymentsEspeceByDate(date,findate)
-    override suspend fun getAllMyPaymentsEspeceByDatee(date: String,findate : String) = api.getAllMyPaymentsEspeceByDatee(date,findate)
-}
+ }

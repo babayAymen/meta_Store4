@@ -26,12 +26,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.aymen.metastore.model.entity.converterRealmToApi.mapcompanyDtoToCompanyRealm
+import com.aymen.metastore.model.entity.room.Company
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
-import com.aymen.store.model.entity.realm.Company
+import com.aymen.store.model.entity.dto.CompanyDto
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.ui.component.ButtonSubmit
@@ -45,8 +46,8 @@ import com.google.gson.Gson
 
 @Composable
 fun AddCompanyScreen(update : Boolean) {
-    val viewModel : CompanyViewModel = viewModel()
-    val appViewModel : AppViewModel = viewModel()
+    val viewModel : CompanyViewModel = hiltViewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
     var image by remember {
         mutableStateOf<Uri?>(null)
     }
@@ -58,7 +59,7 @@ fun AddCompanyScreen(update : Boolean) {
     val gson = Gson()
 //    val companyJsonString = gson.toJson(company)
     var company by remember {
-        mutableStateOf(Company())
+        mutableStateOf(CompanyDto())
     }
     var companyId by remember {
         mutableLongStateOf(0)
@@ -67,7 +68,7 @@ fun AddCompanyScreen(update : Boolean) {
         LaunchedEffect(Unit) {
             viewModel.getMyCompany {
                 if (it != null) {
-                    company = mapcompanyDtoToCompanyRealm(it)
+                    company = it
                     companyId = it.id!!
                     Log.e("aymenbabayjsoncompany","company name : ${company.name}")
                 }
@@ -87,7 +88,7 @@ fun AddCompanyScreen(update : Boolean) {
         mutableStateOf("")
     }
     var companyCategory by remember {
-        mutableStateOf(CompanyCategory.DAIRY.toString())
+        mutableStateOf(CompanyCategory.DAIRY)
     }
     var category by remember {
         mutableStateOf("")
@@ -111,7 +112,7 @@ fun AddCompanyScreen(update : Boolean) {
         companyName = company.name
         companyCode = company.code?:""
         companyMatriculeFiscal = company.matfisc?:""
-        companyCategory = company.category.toString()
+        companyCategory = company.category?:CompanyCategory.DAIRY
         companyCapital = company.capital?:""
         companyBankAccount = company.bankaccountnumber?:""
 //        companyAddress = company.address
@@ -162,16 +163,8 @@ fun AddCompanyScreen(update : Boolean) {
                 ){
 
                 }
-//                InputTextField(labelValue = companyCategory.toString(), label = "sector", singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
-//                    imeAction = ImeAction.Next
-//                ),
-//                    onValueChange = {
-//                        category = it
-//                    }
-//                ){
-//                }
                 DropDownCompanyCategory {
-                    companyCategory = it.toString()
+                    companyCategory = it
                 }
                 InputTextField(labelValue = companyCapital, label = "capital", singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next

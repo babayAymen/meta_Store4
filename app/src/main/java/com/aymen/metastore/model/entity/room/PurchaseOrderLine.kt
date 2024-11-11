@@ -8,13 +8,14 @@ import com.aymen.store.model.Enum.Status
 @Entity(tableName = "purchase_order_line",
     foreignKeys = [
         ForeignKey(entity = PurchaseOrder::class, parentColumns = ["id"], childColumns = ["purchaseOrderId"]),
-        ForeignKey(entity = Invoice::class, parentColumns = ["id"], childColumns = ["invoiceId"])
+        ForeignKey(entity = Invoice::class, parentColumns = ["id"], childColumns = ["invoiceId"]),
+        ForeignKey(entity = ArticleCompany::class, parentColumns = ["id"], childColumns = ["articleId"])
     ])
 data class PurchaseOrderLine(
 
     @PrimaryKey(autoGenerate = true) val id: Long? = null,
 
-    val quantity: Double? = 0.0,
+    var quantity: Double? = 0.0,
 
     val comment: String? = null,
 
@@ -22,11 +23,15 @@ data class PurchaseOrderLine(
 
     val delivery: Boolean? = false,
 
-    val purchaseOrderId: Long? = null,
 
     val createdDate : String? = null,
 
     val lastModifiedDate : String? = null,
 
-    val invoiceId : Long? = null
+    val purchaseOrderId: Long? = null,
+
+    val invoiceId : Long? = null,
+
+    var articleId: Long? = null
+
 )

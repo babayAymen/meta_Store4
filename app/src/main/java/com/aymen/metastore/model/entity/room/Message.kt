@@ -14,6 +14,8 @@ data class Message(
 
     val createdBy : Long? = null,
 
+    val createdDate : String? = null,
+
     val conversationId : Long? = null,
 
     val content : String? = ""

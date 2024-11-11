@@ -63,23 +63,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCategoryToCategory
-import com.aymen.metastore.model.entity.realm.ArticleCompany
+import com.aymen.metastore.model.entity.room.Article
 import com.aymen.metastore.model.entity.room.Category
+import com.aymen.metastore.model.entity.room.ClientProviderRelation
+import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
+import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.UnitArticle
-import com.aymen.store.model.entity.realm.Article
 import com.aymen.store.model.entity.dto.CommandLineDto
-import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToDto
-import com.aymen.store.model.entity.realm.ClientProviderRelation
-import com.aymen.store.model.entity.realm.Inventory
-import com.aymen.store.model.entity.realm.Invoice
-import com.aymen.store.model.entity.realm.Parent
-import com.aymen.store.model.entity.realm.Payment
-import com.aymen.store.model.entity.realm.Provider
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.model.repository.ViewModel.CompanyViewModel
@@ -313,8 +311,8 @@ fun DropDownSubCategory(list : List<com.aymen.metastore.model.entity.room.SubCat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCompany(list: List<Provider>) {
-    val companyViewModel : CompanyViewModel = viewModel()
+fun DropDownCompany(list: List<CompanyWithCompanyClient>) {
+    val companyViewModel : CompanyViewModel = hiltViewModel()
     if (list.isNotEmpty()) {
         var itemSelected by remember {
             mutableStateOf(list[0])
@@ -333,26 +331,24 @@ fun DropDownCompany(list: List<Provider>) {
                     expanded = isExpanded,
                     onExpandedChange = { isExpanded = !isExpanded }
                 ) {
-                    itemSelected.provider?.let {
-                        TextField(
-                            modifier = Modifier.menuAnchor(),
-                            value = it.name,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
-                        )
-                    }
+                    TextField(
+                        modifier = Modifier.menuAnchor(),
+                        value = itemSelected.provider.name,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
+                    )
 
                     ExposedDropdownMenu(
                         expanded = isExpanded,
                         onDismissRequest = { isExpanded = false }) {
                         list.forEachIndexed { index, text ->
                             DropdownMenuItem(
-                                text = { text.provider?.let { Text(it.name) } },
+                                text = { Text(text.provider.name) },
                                 onClick = {
                                     itemSelected = list[index]
                                     isExpanded = false
-                                    companyViewModel.providerId = itemSelected.id!!
+                                    companyViewModel.providerId = itemSelected.provider.id!!
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                             )
@@ -415,7 +411,9 @@ fun DropDownCompanyCategory(onSelected: (CompanyCategory) -> Unit) {
 
 
 @Composable
-fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: () -> Unit) {
+fun ArticleCardForAdmin(articleCompany : com.aymen.metastore.model.entity.room.ArticleCompany,articlee: com.aymen.metastore.model.entity.room.Article, image : String, onSelected: () -> Unit) {
+    val articlecompany = articleCompany
+    val article = articlee
     Row {
         Card(
             elevation = CardDefaults.cardElevation(6.dp),
@@ -429,21 +427,21 @@ fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: ()
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    NormalText(value = article.article!!.libelle, aligne = TextAlign.Start)
-                    NormalText(value = article.article!!.code, aligne = TextAlign.Start)
-                    NormalText(value = article.unit.toString(), aligne = TextAlign.Start)
-                    NormalText(value = article.article!!.tva.toString(), aligne = TextAlign.Start)
-                    NormalText(value = article.sellingPrice.toString(), aligne = TextAlign.Start)
-                    NormalText(value = article.minQuantity.toString(), aligne = TextAlign.Start)
-                    article.article!!.barcode?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    NormalText(value = article.article!!.discription, aligne = TextAlign.Start)
-                    NormalText(value = article.article!!.discription, aligne = TextAlign.Start)
+                    NormalText(value = article.libelle, aligne = TextAlign.Start)
+                    article.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    NormalText(value = articlecompany.unit.toString(), aligne = TextAlign.Start)
+                    NormalText(value = article.tva.toString(), aligne = TextAlign.Start)
+                    NormalText(value = articlecompany.sellingPrice.toString(), aligne = TextAlign.Start)
+                    NormalText(value = articlecompany.minQuantity.toString(), aligne = TextAlign.Start)
+                    article.barcode?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
 
                     Row (
                         verticalAlignment = Alignment.CenterVertically
                     ){
-                        ShowPrice(cost = article.cost, margin = article.sellingPrice, tva = article.article!!.tva)
-                        ArticleDetails(value = article.quantity.toString(), aligne = TextAlign.Start)
+                        article.tva?.let { ShowPrice(cost = articlecompany.cost?:0.0, margin = articlecompany.sellingPrice!!, tva = it) }
+                        ArticleDetails(value = articlecompany.quantity.toString(), aligne = TextAlign.Start)
                     }
                 }
                 Column(
@@ -461,7 +459,7 @@ fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: ()
 }
 
 @Composable
-fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (Double) -> Unit) {
+fun addQuantityDailog(article: com.aymen.metastore.model.entity.room.ArticleCompany,articlee : com.aymen.metastore.model.entity.room.Article,company : Company, openDailoge: Boolean, onSubmit: (Double) -> Unit) {
     var openDialog by remember { mutableStateOf(openDailoge) }
     var quantity by remember {
         mutableStateOf(0.0)
@@ -484,16 +482,14 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                         Row(
                             modifier = Modifier.weight(1f)
                         ) {
-                            NormalText(value = article.article?.libelle!!, aligne = TextAlign.Start)
+                            NormalText(value = articlee.libelle, aligne = TextAlign.Start)
                         }
                         Row (
                             modifier = Modifier.weight(1f)
                         ){
                             ShowImage(
-                                image = "${BASE_URL}werehouse/image/${article.article!!.image}/article/${
-                                    CompanyCategory.valueOf(
-                                        article.company?.category!!
-                                    ).ordinal
+                                image = "${BASE_URL}werehouse/image/${articlee.image}/article/${
+                                    company.category?.ordinal
                                 }"
                             )
                         }
@@ -614,7 +610,7 @@ fun SubCategoryCardForAdmin(subCategory: com.aymen.metastore.model.entity.room.S
 }
 
 @Composable
-fun InventoryCard(inventory: Inventory, image : String) {
+fun InventoryCard(inventory: InventoryWithArticle, image : String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -627,9 +623,9 @@ fun InventoryCard(inventory: Inventory, image : String) {
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    inventory.article?.let { NormalText(value = it.article!!.libelle, aligne = TextAlign.Start) }
-                    inventory.article?.let { NormalText(value = it.article!!.code, aligne = TextAlign.Start) }
-                    inventory.article?.let { NormalText(value = it.quantity.toString(), aligne = TextAlign.Start) }
+                    NormalText(value = inventory.article.article.libelle, aligne = TextAlign.Start)
+                    inventory.article.article.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    NormalText(value = inventory.article.articleCompany.quantity.toString(), aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -658,7 +654,7 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
         ) {
             NormalText(value = article.libelle, aligne = TextAlign.Start)
             NormalText(value = article.tva.toString(), aligne = TextAlign.Start)
-            NormalText(value = article.discription, aligne = TextAlign.Start)
+            article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
             ButtonSubmit(labelValue = "add", color = Color.Green, enabled = true) {
                 onSelected()
             }
@@ -667,7 +663,7 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
 }
 
 @Composable
-fun ClientCard(client: ClientProviderRelation, image : String) {
+fun ClientCard(client: CompanyWithCompanyClient, image : String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -680,10 +676,10 @@ fun ClientCard(client: ClientProviderRelation, image : String) {
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                       client.client?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
-                       client.client?.let { it.code?.let { it1 -> NormalText(value = it1, aligne = TextAlign.Start) } }
-                    client.person?.username?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    NormalText(value = client.mvt.toString(), aligne = TextAlign.Start)
+                       client.clientCompany?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
+                       client.clientCompany?.let { it.code?.let { it1 -> NormalText(value = it1, aligne = TextAlign.Start) } }
+                    client.clientUser?.username?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    NormalText(value = client.relation.mvt.toString(), aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -692,7 +688,7 @@ fun ClientCard(client: ClientProviderRelation, image : String) {
                         .align(Alignment.CenterVertically)
                 ) {
                         Log.e("showImageclinetcard",image)
-                    if(client.client?.logo != null || client.person?.image != null){
+                    if(client.clientCompany?.logo != null || client.clientUser?.image != null){
                     ShowImage(image = image)
                     }else {
                         val painter: Painter = painterResource(id = R.drawable.emptyprofile)
@@ -715,7 +711,7 @@ fun ClientCard(client: ClientProviderRelation, image : String) {
 }
 
 @Composable
-fun ProviderCard(provider: Provider, image : String) {
+fun ProviderCard(provider: CompanyWithCompanyClient, image : String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -730,7 +726,7 @@ fun ProviderCard(provider: Provider, image : String) {
                 ){
                        provider.provider?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
                     //   client.client?.let { NormalText(value = it.code, aligne = TextAlign.Start) }
-                    NormalText(value = provider.mvt.toString(), aligne = TextAlign.Start)
+                    NormalText(value = provider.relation.mvt.toString(), aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -746,8 +742,10 @@ fun ProviderCard(provider: Provider, image : String) {
 
     }
 }
+
+
 @Composable
-fun PaymentCard(payment: Payment) {
+fun ParentCard(parent: Company) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -760,34 +758,8 @@ fun PaymentCard(payment: Payment) {
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    //   client.client?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
-                    //   client.client?.let { NormalText(value = it.code, aligne = TextAlign.Start) }
-                    NormalText(value = payment.invoice?.code.toString(), aligne = TextAlign.Start)
-
-                }
-            }
-        }
-
-    }
-}
-
-@Composable
-fun ParentCard(parent: Parent) {
-    Row(
-        modifier = Modifier.padding(5.dp)
-    ) {
-        Card(
-            elevation = CardDefaults.cardElevation(6.dp),
-            modifier = Modifier
-                .padding(4.dp)
-        ) {
-            Row {
-                Column (
-                    modifier = Modifier.weight(0.7f)
-                ){
-                    //   client.client?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
-                    //   client.client?.let { NormalText(value = it.code, aligne = TextAlign.Start) }
-                    NormalText(value = parent.code, aligne = TextAlign.Start)
+                    NormalText(value = parent.name, aligne = TextAlign.Start)
+                    parent.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
 
                 }
             }
@@ -798,7 +770,7 @@ fun ParentCard(parent: Parent) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
+fun InvoiceCard(invoice: InvoiceWithClientPersonProvider, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
 val context = LocalContext.current
     Column(
         modifier = Modifier.padding(5.dp)
@@ -809,9 +781,9 @@ val context = LocalContext.current
                 .padding(4.dp)
                 .clickable {
                     invoiceViewModel.invoice = invoice
-                    invoiceViewModel.discount = invoice.discount
+                    invoiceViewModel.discount = invoice.invoice.discount
                     invoiceViewModel.invoiceMode = InvoiceMode.UPDATE
-                    if (invoice.type == InvoiceDetailsType.ORDER_LINE.toString() || invoice.status == Status.ACCEPTED.toString() || !asProvider) {
+                    if (invoice.invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.invoice.status == Status.ACCEPTED || !asProvider) {
                         invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
                     }
                     appViewModel.updateShow("add invoice")
@@ -821,29 +793,27 @@ val context = LocalContext.current
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    NormalText(value = invoice.code.toString(), aligne = TextAlign.Center)
+                    NormalText(value = invoice.invoice.code.toString(), aligne = TextAlign.Center)
                     if(asProvider) {
                         invoice.client?.let {
-                            NormalText(
-                                value = it.name,
-                                aligne = TextAlign.Start
-                            )
+                        NormalText(
+                            value = it.name,
+                            aligne = TextAlign.Start
+                        )
                         }
                         invoice.person?.let {
                             NormalText(
-                                value = it.username,
+                                value = it.username!!,
                                 aligne = TextAlign.Start
                             )
                         }
                     }else {
-                        invoice.provider?.let {
-                            NormalText(
-                                value = it.name,
-                                aligne = TextAlign.Start
-                            )
-                        }
+                        NormalText(
+                            value = invoice.provider.name,
+                            aligne = TextAlign.Start
+                        )
                     }
-                    NormalText(value = invoice.prix_invoice_tot.toString(), aligne = TextAlign.End)
+                    NormalText(value = invoice.invoice.prix_invoice_tot.toString(), aligne = TextAlign.End)
 
                 }
             }
@@ -1012,19 +982,19 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                                     val command = invoiceViewModel.commandLineDto.copy()
                                     command.quantity = quantity
                                     command.discount = discount
-                                    command.article = mapArticleCompanyToDto(invoiceViewModel.article)
+                                    command.article = invoiceViewModel.article
                                 if(update) {
                                     invoiceViewModel.commandLineDtos -= invoiceViewModel.commandLineDto
                                 }
                                     command.totTva =
-                                        quantity * command.article?.article?.tva!! * invoiceViewModel.article.sellingPrice / 100
+                                        quantity * command.article?.article?.tva!! * invoiceViewModel.article.sellingPrice!! / 100
                                     command.prixArticleTot =
                                         quantity * command.article?.sellingPrice!!*(1-command.discount!!/100)
                                     command.invoice?.code =
                                         invoiceViewModel.lastInvoiceCode
                                     invoiceViewModel.commandLineDtos += command
                                     invoiceViewModel.commandLineDto = CommandLineDto()
-                                    invoiceViewModel.article = ArticleCompany()
+                                    invoiceViewModel.article = ArticleCompanyDto()
                                     quantity = 0.0
                                     discount = 0.0
                                     openDialog = false

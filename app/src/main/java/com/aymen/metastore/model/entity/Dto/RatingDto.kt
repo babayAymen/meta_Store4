@@ -14,7 +14,7 @@ data class RatingDto (
 
     var rateeUser: UserDto? = null,
 
-    var rateValue : Int = 0,
+    var rateValue : Int? = 0,
 
     var raterCompany: CompanyDto? = null,
 

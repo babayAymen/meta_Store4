@@ -10,13 +10,16 @@ import androidx.room.Transaction
 import com.aymen.metastore.model.entity.Dto.RatingDto
 import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
 import com.aymen.metastore.model.entity.converterRealmToApi.mapRatingToRoomRating
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomRatingToRatingDto
+import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomUserToUserDto
 import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
-import com.aymen.metastore.model.entity.realm.Rating
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.room.User
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.kotlin.Realm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,11 +31,13 @@ import javax.inject.Inject
 class RatingViewModel @Inject constructor(
     private val repository : GlobalRepository,
     private val room : AppDatabase,
+    private val sharedViewModel: SharedViewModel
 ): ViewModel() {
 
     var rate by mutableStateOf(0)
-    var _allRating = MutableStateFlow<List<Rating>>(emptyList())
-    val allRating : StateFlow<List<Rating>> = _allRating
+
+    var _allRating = MutableStateFlow<List<RatingDto>>(emptyList())
+    val allRating : StateFlow<List<RatingDto>> = _allRating
 
     var rating by mutableStateOf(false)
     var enableToRating by mutableStateOf(false)
@@ -40,8 +45,6 @@ class RatingViewModel @Inject constructor(
     fun getAllRating(id : Long, type : AccountType){
         viewModelScope.launch(Dispatchers.IO) {
             try {
-               val respons = repository.getAllMyRatingg(id,type)
-                _allRating.value = respons.body()!!
                val response = repository.getAllMyRating(id,type)
                 if(response.isSuccessful){
                     response.body()?.forEach {
@@ -51,6 +54,18 @@ class RatingViewModel @Inject constructor(
             }catch (_ex : Exception){
                 Log.e("aymenbabayRating","getAllRating exption: $_ex")
             }
+            val ratings = when (type) {
+                AccountType.COMPANY -> room.ratingDao().getAllCompanyRating(id)
+                AccountType.USER -> room.ratingDao().getAllUserRating(id)
+                else -> emptyList()
+            }
+            ratings.forEach {
+                val ratingDto = mapRoomRatingToRatingDto(it.rating)
+                ratingDto.raterCompany = mapRoomCompanyToCompanyDto(it.raterCompany ?: Company())
+                ratingDto.raterUser = mapRoomUserToUserDto(it.raterUser ?: User())
+                _allRating.value += ratingDto
+            }
+
         }
     }
 
@@ -85,10 +100,8 @@ class RatingViewModel @Inject constructor(
 
     fun enabledToCommentCompany(companyId : Long){
         viewModelScope.launch(Dispatchers.IO) {
-            Log.e("aymenbabayRating","respons")
             try {
                 val response = repository.enabledToCommentCompany(companyId)
-                Log.e("aymenbabayRating","response : ${response.body()!!}")
                 enableToRating = response.body()!!
             }catch (ex : Exception){
                 Log.e("aymenbabayRating","enabledToCommentCompany exption: $ex")
@@ -98,11 +111,9 @@ class RatingViewModel @Inject constructor(
 
     fun enabledToCommentUser(userId : Long){
         viewModelScope.launch(Dispatchers.IO) {
-            Log.e("aymenbabayRating","respons")
             try {
                 val response = repository.enabledToCommentUser(userId)
                 enableToRating = response.body()!!
-                Log.e("aymenbabayRating","response : ${response.body()!!}")
             }catch (ex : Exception){
                 Log.e("aymenbabayRating","enabledToCommentUser exption: $ex")
             }
@@ -115,7 +126,6 @@ class RatingViewModel @Inject constructor(
             try {
                 val response = repository.enabledToCommentArticle(companyId)
                 enableToComment = response.body()!!
-                Log.e("aymenbabayRating","response : ${response.body()!!}")
             }catch (ex : Exception){
                 Log.e("aymenbabayRating","enabledToCommentUser exption: $ex")
             }

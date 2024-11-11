@@ -62,11 +62,9 @@ fun ClientScreen() {
                             appViewModel = appViewModel,
                         ){client ->
                             ClientCard(client,
-                                image = if(client.client != null) "${BASE_URL}werehouse/image/"
-                                        + client.client?.logo+"/company/"
-                                        +if(client.client?.virtual!!) {client.provider?.user?.id} else
-                                        client.client?.user?.id else "${BASE_URL}werehouse/image/"
-                                + client.person?.image+"/user/"+client.person?.id
+                                image = if(client.clientCompany != null) {"${BASE_URL}werehouse/image/${client.clientCompany.logo}/company/"
+                                        if(client.clientCompany.virtual!!) "${client.provider?.userId}" else ""}
+                                        else "${BASE_URL}werehouse/image/${ client.clientUser?.image }/user/${ client.clientUser?.id }"
                             )
                         }
 

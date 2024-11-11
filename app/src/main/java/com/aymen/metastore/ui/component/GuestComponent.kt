@@ -71,7 +71,6 @@ fun NormalText(value : String, aligne : TextAlign){
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConversationText(value : String, aligne : TextAlign,maxLines: Int,
                      overflow: TextOverflow = TextOverflow.Clip){

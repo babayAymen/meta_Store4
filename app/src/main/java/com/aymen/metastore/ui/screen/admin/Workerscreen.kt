@@ -12,7 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.WorkerViewModel
 import com.aymen.store.ui.component.ButtonSubmit
@@ -20,8 +20,8 @@ import com.aymen.store.ui.component.ButtonSubmit
 
 @Composable
 fun WorkerScreen() {
-    val appViewModel : AppViewModel = viewModel()
-    val workerViewModel : WorkerViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val workerViewModel : WorkerViewModel = hiltViewModel()
     LaunchedEffect(key1 = true) {
         workerViewModel.getAllMyWorkers()
     }
@@ -45,7 +45,7 @@ fun WorkerScreen() {
                 modifier = Modifier.fillMaxWidth()
             ){
                 Column {
-                    workerViewModel.workers.forEach(){
+                    workerViewModel.workers.forEach{
                         SwipeToDeleteContainer(
                             it,
                             onDelete = {
@@ -53,7 +53,7 @@ fun WorkerScreen() {
                             },
                             appViewModel = appViewModel,
                         ){
-                            //OrderCard(it)
+                            //WorkerCard(it)
                         }
 
                     }

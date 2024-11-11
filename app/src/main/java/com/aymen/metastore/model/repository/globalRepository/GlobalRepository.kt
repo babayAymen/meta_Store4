@@ -3,7 +3,6 @@ package com.aymen.store.model.repository.globalRepository
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepository
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepository
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepository
-import com.aymen.store.model.repository.realmRepository.RealmRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
 import com.aymen.store.model.repository.remoteRepository.shoppingRepository.ShoppingRepository
@@ -25,7 +24,8 @@ interface GlobalRepository :
     SignInRepository,
     ArticleRepository, CategoryRepository,
     SubCategoryRepository, CompanyRepository,
-    RealmRepository, InventoryRepository,
+//    RealmRepository,
+    InventoryRepository,
     ClientRepository, ProviderRepository,
         PaymentRepository, OrderRepository,
         WorkerRepository, InvoiceRepository,
