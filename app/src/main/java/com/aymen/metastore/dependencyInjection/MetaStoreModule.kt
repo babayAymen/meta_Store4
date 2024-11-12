@@ -58,6 +58,8 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepository
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepositoryImpl
+import com.aymen.metastore.model.usecase.GetPagingCategoryByCompany
+import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.metastore.userdtodatastore
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.entity.dto.CompanyDto
@@ -131,8 +133,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import kotlin.math.exp
 
-//const val BASE_URL = "http://192.168.1.4:8080/"
-const val BASE_URL = "http://192.168.134.119:8080/"
+const val BASE_URL = "http://192.168.1.4:8080/"
+//const val BASE_URL = "http://192.168.134.119:8080/"
 private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module
@@ -147,6 +149,14 @@ class MetaStoreModule {
             AppDatabase::class.java,
             DATABASE_NAME
         ).fallbackToDestructiveMigration().build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMetaUseCases(categoryRepository: CategoryRepository): MetaUseCases{
+        return MetaUseCases(
+            getPagingCategoryByCompany = GetPagingCategoryByCompany(repository = categoryRepository)
+        )
     }
 
     @Provides
@@ -232,8 +242,8 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providerCategoryViewModel(repository: GlobalRepository,room : AppDatabase,sharedViewModel: SharedViewModel):CategoryViewModel{
-        return CategoryViewModel(repository,room, sharedViewModel)
+    fun providerCategoryViewModel(repository: GlobalRepository,room : AppDatabase,sharedViewModel: SharedViewModel, useCases: MetaUseCases):CategoryViewModel{
+        return CategoryViewModel(repository,room, sharedViewModel, useCases)
     }
 
     @Provides

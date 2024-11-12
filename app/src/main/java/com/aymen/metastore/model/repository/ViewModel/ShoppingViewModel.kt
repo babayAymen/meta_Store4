@@ -123,6 +123,7 @@ fun submitShopping(newBalance: BigDecimal) {
 
 
     fun beforSendOrder(onFinish : (Boolean, Double) -> Unit){
+        if(delivery)
         when(accountType.value){
             AccountType.COMPANY -> if(cost < BigDecimal(30)){
                     onFinish(false, myCompany.value?.balance!!)

@@ -10,7 +10,6 @@ import com.aymen.metastore.model.entity.Dto.PaymentForProvidersDto
 import com.aymen.metastore.model.entity.Dto.PointsPaymentDto
 import com.aymen.metastore.model.entity.Dto.RatingDto
 import com.aymen.metastore.model.entity.Dto.SearchHistoryDto
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
@@ -262,4 +261,6 @@ interface ServiceApi {
     @GET("werehouse/aymen/make_as_point_seller/{status}/{companyId}")
     suspend fun makeAsPointSeller(@Path("status") status : Boolean,@Path("companyId") id : Long)
 
+    @GET("werehouse/category/get")
+    suspend fun getPagingCategoryByCompany(@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<CategoryDto>
 }

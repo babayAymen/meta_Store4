@@ -99,9 +99,11 @@ dependencies {
 
     // pagination
     implementation ( libs.androidx.paging.runtime)
-    implementation ( libs.androidx.paging.compose )
+//    implementation ( libs.androidx.paging.compose )
     implementation (libs.androidx.room.paging)
     implementation ( libs.kotlinx.coroutines.core)
+
+    implementation(libs.androidx.paging.compose.v320alpha01)
 
 }
 

@@ -47,8 +47,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.metastore.R
+import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
 import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
+import com.aymen.metastore.model.entity.room.Category
 import com.aymen.metastore.model.entity.room.Company
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.ui.screen.user.RatingScreen
@@ -57,6 +62,7 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.store.model.entity.dto.CategoryDto
 import com.aymen.store.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
@@ -84,13 +90,13 @@ fun CompanyScreen(company: Company) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
-    val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
+    val categories = categoryViewModel.categories.collectAsLazyPagingItems()
     val subCategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
     val randomArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
     val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
     val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
     var category by remember {
-        mutableStateOf(com.aymen.metastore.model.entity.room.Category())
+        mutableStateOf(CategoryDto())
     }
     val context = LocalContext.current
     val myCompany by remember {
@@ -110,14 +116,12 @@ fun CompanyScreen(company: Company) {
 //        }
     }
     LaunchedEffect(key1 = categories) {
-        if(categories.isNotEmpty()) {
-            category = categories[0]
+        if(categories[0] != null) {
+            category = categories[0]!!
         }
     }
     LaunchedEffect(key1 = category) {
-        if(categories.isNotEmpty()) {
             subCategoryViewModel.getAllSubCtaegoriesByCategory(category.id!!,company.id!!)
-        }
     }
     val rating = ratingViewModel.rating
     val listState = rememberLazyListState()
@@ -185,7 +189,7 @@ fun CompanyScreen(company: Company) {
                                 category = categ
                                 articleViewModel.getRandomArticlesByCategory(
                                     categ.id!!,
-                                    categ.companyId!!
+                                    categ.company?.id!!
                                 )
                             }
                             ScreenByCompanySubCategory(items = subCategories) { categ ->
@@ -348,34 +352,69 @@ fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
         }
     }
 }
-
-
 @Composable
-fun ScreenByCompanyCategory(items : List<com.aymen.metastore.model.entity.room.Category>, onCategorySelected : (com.aymen.metastore.model.entity.room.Category) -> Unit) {
-    var selectedCateg by remember {
-        mutableStateOf(com.aymen.metastore.model.entity.room.Category())
-    }
+fun ScreenByCompanyCategory(
+    items: LazyPagingItems<CategoryDto>,
+    onCategorySelected: (CategoryDto) -> Unit
+) {
+    var selectedCateg by remember { mutableStateOf(CategoryDto()) }
+
     LazyRow {
-        items(items){ categ ->
-            Spacer(modifier = Modifier.size(6.dp))
-            Card(onClick = {
-                selectedCateg = categ
-                onCategorySelected(categ)
-            },
-                modifier = Modifier
-                    .height(30.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (selectedCateg == categ) Color.Yellow else Color.Transparent // Set color conditionally
-                )
-            )
-            {
-                Text(text = categ.libelle!!,
-                    color = Color.Red)
+        items(
+            count = items.itemCount,
+            key = items.itemKey { it.id?:0 }
+        ) { index ->
+            val categ = items[index] // Safely access item
+
+            if (categ != null) { // Handle non-null items
+                Spacer(modifier = Modifier.size(6.dp))
+                Card(
+                    onClick = {
+                        selectedCateg = categ
+                        onCategorySelected(selectedCateg)
+                    },
+                    modifier = Modifier.height(30.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (selectedCateg == categ) Color.Yellow else Color.Transparent
+                    )
+                ) {
+                    Text(text = categ.libelle ?: "", color = Color.Red)
+                }
+                Spacer(modifier = Modifier.size(6.dp))
+            } else {
+                // Placeholder or Loading state if needed
             }
-            Spacer(modifier = Modifier.size(6.dp))
         }
     }
 }
+
+
+//@Composable
+//fun ScreenByCompanyCategory(items : LazyPagingItems<CategoryDto>, onCategorySelected : (CategoryDto) -> Unit) {
+//    var selectedCateg by remember {
+//        mutableStateOf(CategoryDto())
+//    }
+//    LazyRow {
+//        items(items.itemKey { it.id }){ categ ->
+//            Spacer(modifier = Modifier.size(6.dp))
+//            Card(onClick = {
+//                selectedCateg = items[categ]!!
+//                onCategorySelected(selectedCateg)
+//            },
+//                modifier = Modifier
+//                    .height(30.dp),
+//                colors = CardDefaults.cardColors(
+//                    containerColor = if (selectedCateg == items[categ]!!) Color.Yellow else Color.Transparent // Set color conditionally
+//                )
+//            )
+//            {
+//                Text(text = items[categ]!!.libelle!!,
+//                    color = Color.Red)
+//            }
+//            Spacer(modifier = Modifier.size(6.dp))
+//        }
+//    }
+//}
 
 @Composable
 fun ScreenByCompanySubCategory(items : List<com.aymen.metastore.model.entity.room.SubCategory>, onSubCategorySelected : (com.aymen.metastore.model.entity.room.SubCategory) -> Unit) {

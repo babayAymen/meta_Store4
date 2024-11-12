@@ -1,5 +1,6 @@
 package com.aymen.store.model.repository.globalRepository
 
+import androidx.paging.PagingData
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.metastore.model.entity.Dto.PointsPaymentDto
@@ -13,6 +14,7 @@ import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
 import com.aymen.store.model.entity.dto.AuthenticationRequest
+import com.aymen.store.model.entity.dto.CategoryDto
 import com.aymen.store.model.entity.dto.RegisterRequest
 import com.aymen.store.model.entity.dto.CommandLineDto
 import com.aymen.store.model.entity.dto.ConversationDto
@@ -33,6 +35,7 @@ import com.aymen.store.model.repository.remoteRepository.providerRepository.Prov
 import com.aymen.store.model.repository.remoteRepository.signInRepository.SignInRepository
 import com.aymen.store.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepository
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepository
+import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 import java.io.File
 import javax.inject.Inject
@@ -81,6 +84,8 @@ class GlobalRepositoryImpl  @Inject constructor
     )
     override suspend fun addCategoryApiWithImage(category: String, file: File) = categoryRepository.addCategoryApiWithImage(category, file)
     override suspend fun addCategoryApiWithoutImeg(category: String) = categoryRepository.addCategoryApiWithoutImeg(category)
+    override fun getAllCategory(pageSize: Int): Flow<PagingData<CategoryDto>> = categoryRepository.getAllCategory(pageSize)
+
     override suspend fun getSubCategoryByCategory(id: Long,companyId : Long) = subCategoryRepository.getSubCategoryByCategory(id,companyId = companyId)
     override suspend fun getAllSubCategories(companyId : Long) = subCategoryRepository.getAllSubCategories(companyId = companyId)
     override suspend fun addSubCtagoryWithImage(sousCategory: String, file: File) = subCategoryRepository.addSubCtagoryWithImage(sousCategory,file)

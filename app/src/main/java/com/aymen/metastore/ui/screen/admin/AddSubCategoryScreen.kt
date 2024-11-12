@@ -107,7 +107,7 @@ fun AddSubCategoryScreen() {
 
             }
             Row {
-                DropDownCategory(list = categories )
+//                DropDownCategory(list = categories )
             }
             ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
                 singlePhotoPickerLauncher.launch(

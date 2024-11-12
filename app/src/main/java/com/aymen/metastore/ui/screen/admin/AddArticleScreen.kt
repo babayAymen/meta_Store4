@@ -332,7 +332,7 @@ fun AddArticleScreen(){
                 }
 
                 Row {
-                    DropDownCategory(list = categories)
+//                    DropDownCategory(list = categories)
                 }
 
                 Row {
