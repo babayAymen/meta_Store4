@@ -6,8 +6,7 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxCoroutinesCore = "1.6.0"
-pagingCompose = "3.2.0-alpha01"
-pagingRuntime = "3.3.2"
+pagingRuntimeKtx = "3.3.4"
 room = "2.6.1"
 lifecycleRuntimeCompose = "2.8.6"
 lifecycleRuntimeKtx = "2.8.6"
@@ -21,12 +20,12 @@ coilCompose = "2.6.0"
 hiltAndroidCompiler = "2.49"
 hiltNavigationCompose = "1.2.0"
 libraryBase = "1.11.0"
-material = "1.7.2"
+material = "1.7.5"
 converterGson = "2.10.0"
 okhttp = "4.12.0"
 playServicesLocation = "21.3.0"
 retrofit = "2.10.0"
-lifecycleService = "2.8.6"
+lifecycleService = "2.8.7"
 roomPaging = "2.6.1"
 stompprotocolandroid = "1.6.6"
 
@@ -34,8 +33,8 @@ stompprotocolandroid = "1.6.6"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 #androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingRuntime" }
-androidx-paging-compose-v320alpha01 = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
-androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRuntime" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingRuntimeKtx" }
+androidx-paging-runtime-ktx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "roomPaging" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

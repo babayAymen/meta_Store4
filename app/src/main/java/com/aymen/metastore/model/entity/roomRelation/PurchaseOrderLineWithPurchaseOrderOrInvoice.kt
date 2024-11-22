@@ -2,10 +2,10 @@ package com.aymen.metastore.model.entity.roomRelation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.aymen.metastore.model.entity.room.ArticleCompany
-import com.aymen.metastore.model.entity.room.Invoice
-import com.aymen.metastore.model.entity.room.PurchaseOrder
-import com.aymen.metastore.model.entity.room.PurchaseOrderLine
+import com.aymen.metastore.model.entity.room.entity.ArticleCompany
+import com.aymen.metastore.model.entity.room.entity.Invoice
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrderLine
 
 data class PurchaseOrderLineWithPurchaseOrderOrInvoice(
     @Embedded val purchaseOrderLine: PurchaseOrderLine,
@@ -19,9 +19,10 @@ data class PurchaseOrderLineWithPurchaseOrderOrInvoice(
 
     @Relation(
         parentColumn = "invoiceId",
-        entityColumn = "id"
+        entityColumn = "id",
+        entity = Invoice::class
     )
-    val invoice : Invoice? = null,
+    val invoice : InvoiceWithClientPersonProvider? = null,
 
     @Relation(
         parentColumn = "articleId",
@@ -29,4 +30,12 @@ data class PurchaseOrderLineWithPurchaseOrderOrInvoice(
         entity = ArticleCompany::class
     )
     var article : ArticleWithArticleCompany? = null
-)
+){
+    fun toPurchaseOrderineWithPurchaseOrderOrinvoice():com.aymen.metastore.model.entity.model.PurchaseOrderLine{
+        return purchaseOrderLine.toPurchaseOrderLine(
+            purchaseOrder?.toPurchaseOrderWithCompanyAndUserOrClient(),
+            invoice?.toInvoiceWithClientPersonProvider(),
+            article?.toArticleRelation()
+        )
+    }
+}

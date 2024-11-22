@@ -2,24 +2,26 @@ package com.aymen.metastore.model.entity.roomRelation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.room.PurchaseOrder
-import com.aymen.metastore.model.entity.room.User
+import com.aymen.metastore.model.entity.room.entity.Company
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
+import com.aymen.metastore.model.entity.room.entity.User
 
 data class PurchaseOrderWithCompanyAndUserOrClient(
     @Embedded val purchaseOrder: PurchaseOrder,
 
     @Relation(
-        parentColumn = "companyId",
-        entityColumn = "id"
+        parentColumn = "userId",
+        entityColumn = "userId",
+        entity = Company::class
     )
-    val company: Company,
+    val company: CompanyWithUser,
 
     @Relation(
         parentColumn = "clientId",
-        entityColumn = "id"
+        entityColumn = "userId",
+        entity = Company::class
     )
-    val client: Company? = null,
+    val client: CompanyWithUser? = null,
 
     @Relation(
         parentColumn = "userId",
@@ -27,4 +29,12 @@ data class PurchaseOrderWithCompanyAndUserOrClient(
     )
     val person: User? = null
 
-)
+){
+    fun toPurchaseOrderWithCompanyAndUserOrClient(): com.aymen.metastore.model.entity.model.PurchaseOrder{
+        return purchaseOrder.toPurchaseOrder(
+            company = company.toCompany(),
+            client = client?.toCompany(),
+            user = person?.toUser()
+        )
+    }
+}

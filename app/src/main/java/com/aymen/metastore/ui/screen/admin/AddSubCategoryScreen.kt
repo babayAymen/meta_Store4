@@ -27,16 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import com.aymen.metastore.model.entity.room.SubCategory
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.entity.dto.SubCategoryDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.entity.dto.SubCategoryDto
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
-import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.DropDownCategory
-import com.aymen.store.ui.component.InputTextField
-import com.aymen.store.ui.component.resolveUriToFile
+import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.ui.component.resolveUriToFile
 import com.google.gson.Gson
 
 @Composable
@@ -48,7 +46,7 @@ fun AddSubCategoryScreen() {
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
     LaunchedEffect(key1 = true) {
-        categoryViewModel.getAllCategoryByCompany(sharedViewModel.company.value.id!!)
+//        categoryViewModel.getAllCategoryByCompany(sharedViewModel.company.value.id!!)
     }
     val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
     val subCategory = SubCategoryDto()

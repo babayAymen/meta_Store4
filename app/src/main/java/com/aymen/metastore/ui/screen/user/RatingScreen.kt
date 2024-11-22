@@ -4,7 +4,6 @@ package com.aymen.metastore.ui.screen.user
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,23 +17,25 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.aymen.metastore.model.Enum.RateType
-import com.aymen.metastore.model.entity.Dto.RatingDto
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.RoleEnum
-import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.ui.component.InputTextField
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.ui.component.InputTextField
 import com.google.gson.Gson
 import android.net.Uri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.Rating
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.store.dependencyInjection.BASE_URL
-import com.aymen.store.model.entity.dto.UserDto
-import com.aymen.store.ui.component.ShowImage
+import com.aymen.metastore.ui.component.ShowImage
 
 @Composable
-fun RatingScreen(mode: AccountType, company: com.aymen.metastore.model.entity.room.Company?, user: com.aymen.metastore.model.entity.room.User?) {
+fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
 
     val current = LocalContext.current
     var height = LocalConfiguration.current.screenHeightDp.dp
@@ -53,17 +54,18 @@ fun RatingScreen(mode: AccountType, company: com.aymen.metastore.model.entity.ro
     }
     DisposableEffect(Unit) {
         onDispose {
-            ratingViewModel._allRating.value = emptyList()
+            ratingViewModel._allRating.value = PagingData.empty()
             ratingViewModel.rating = false
         }
     }
-    val allRating by ratingViewModel.allRating.collectAsStateWithLifecycle()
+    val allRating = ratingViewModel.allRating.collectAsLazyPagingItems()
+
     var comment by remember { mutableStateOf("") }
     val rating by remember {
         mutableStateOf(
-            RatingDto(
-                rateeCompany = CompanyDto(),
-                rateeUser = UserDto()
+            Rating(
+                rateeCompany = Company(),
+                rateeUser = User()
             )
         )
     }
@@ -80,16 +82,17 @@ fun RatingScreen(mode: AccountType, company: com.aymen.metastore.model.entity.ro
                     .padding(bottom = 10.dp)
                     .fillMaxWidth()
             ) {
-                items(allRating) {
-                    it.raterUser?.let { user ->
+                items(allRating.itemCount) { index ->
+                    val rate = allRating[index]
+                    rate?.raterUser?.let { user ->
                         ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
                     }
-                    it.raterCompany?.let { company ->
+                    rate?.raterCompany?.let { company ->
                         ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
                     }
-                    Text(text = it.raterUser?.username ?: it.raterCompany?.name ?: "")
-                    Text(text = it.comment ?: "")
-                    //  ShowImage(image = "${BASE_URL}werehouse/image/${it.photo}/rating/${it.raterCompany?.user?.id?:it.raterUser?.id}")
+                    Text(text = rate?.raterUser?.username ?: rate?.raterCompany?.name ?: "")
+                    Text(text = rate?.comment ?: "")
+                      ShowImage(image = "${BASE_URL}werehouse/image/${rate?.photo}/rating/${rate?.raterCompany?.user?.id?:rate?.raterUser?.id}")
                 }
             }
 

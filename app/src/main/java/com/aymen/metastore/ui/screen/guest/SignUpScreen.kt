@@ -30,20 +30,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.entity.dto.RegisterRequest
-import com.aymen.store.model.repository.ViewModel.SignInViewModel
-import com.aymen.store.ui.component.ButtonComponent
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.CheckBoxComponent
-import com.aymen.store.ui.component.ClickableLoginTextComponent
-import com.aymen.store.ui.component.DividerTextComponent
-import com.aymen.store.ui.component.HeadingText
-import com.aymen.store.ui.component.NormalText
-import com.aymen.store.ui.component.PhoneField
-import com.aymen.store.ui.component.dropDownCompanyCategory
-import com.aymen.store.ui.component.emailField
-import com.aymen.store.ui.component.passwordTextField
-import com.aymen.store.ui.component.textField
+import com.aymen.metastore.model.entity.dto.RegisterRequest
+import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
+import com.aymen.metastore.ui.component.ButtonComponent
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.CheckBoxComponent
+import com.aymen.metastore.ui.component.ClickableLoginTextComponent
+import com.aymen.metastore.ui.component.DividerTextComponent
+import com.aymen.metastore.ui.component.HeadingText
+import com.aymen.metastore.ui.component.NormalText
+import com.aymen.metastore.ui.component.PhoneField
+import com.aymen.metastore.ui.component.dropDownCompanyCategory
+import com.aymen.metastore.ui.component.emailField
+import com.aymen.metastore.ui.component.passwordTextField
+import com.aymen.metastore.ui.component.textField
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
@@ -100,7 +100,7 @@ fun SignUpScreen() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     ButtonSubmit(
-                        labelValue = if (asCompany) "com.aymen.metastore.model.entity.room.Company" else "user",
+                        labelValue = if (asCompany) "com.aymen.metastore.model.entity.room.entity.Company" else "user",
                         color = Color.Green,
                         enabled = true
                     ) {
@@ -108,7 +108,7 @@ fun SignUpScreen() {
                     }
                 }
                 textField(
-                    label = if (asCompany) "com.aymen.metastore.model.entity.room.Company name" else "user name",
+                    label = if (asCompany) "com.aymen.metastore.model.entity.room.entity.Company name" else "user name",
                     labelValue = userName,
                     Icons.Outlined.Person
                 ) {

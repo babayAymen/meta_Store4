@@ -1,3 +1,3 @@
 package com.aymen.metastore.util
 
-const val PAGE_SIZE = 20
+const val PAGE_SIZE = 5

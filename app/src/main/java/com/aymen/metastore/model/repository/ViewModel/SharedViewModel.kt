@@ -8,11 +8,11 @@ import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.entity.dto.AuthenticationResponse
-import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.dto.AuthenticationResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,8 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SharedViewModel @Inject constructor(
     private val authDataStore: DataStore<AuthenticationResponse>,
-    private val companyDtoDataStore: DataStore<CompanyDto>,
-    private val userDtoDatastore : DataStore<UserDto>,
+    private val companyDtoDataStore: DataStore<Company>,
+    private val userDtoDatastore : DataStore<User>,
     private val room : AppDatabase,
     private  val context: Context
 ): ViewModel() {
@@ -36,13 +36,13 @@ class SharedViewModel @Inject constructor(
     var accountType by mutableStateOf(AccountType.USER)
 
     var isLoading by mutableStateOf(false)
-    val _user = MutableStateFlow(UserDto())
-    val user: StateFlow<UserDto> = _user
+    val _user = MutableStateFlow(User())
+    val user: StateFlow<User> = _user
 
-    val _company = MutableStateFlow(CompanyDto())
-    val company: StateFlow<CompanyDto> = _company
+    val _company = MutableStateFlow(Company())
+    val company: StateFlow<Company> = _company
 
-    fun getMyCompany(onCompanyRetrieved: (CompanyDto?) -> Unit) {
+    fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
         viewModelScope.launch {
             withContext(Dispatchers.Main){
                 try {

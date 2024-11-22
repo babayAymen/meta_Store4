@@ -1,7 +1,7 @@
 package com.aymen.store.dependencyInjection
 
 import androidx.datastore.core.Serializer
-import com.aymen.metastore.model.entity.realm.User
+import com.aymen.metastore.model.entity.model.User
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

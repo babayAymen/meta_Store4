@@ -1,7 +1,6 @@
 package com.aymen.store.app
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,24 +16,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
-import com.aymen.store.ui.screen.admin.DashBoardScreen
-import com.aymen.store.ui.screen.guest.SignInScreen
+import com.aymen.metastore.ui.screen.admin.DashBoardScreen
+import com.aymen.metastore.ui.screen.guest.SignInScreen
 import com.aymen.store.ui.screen.guest.SignUpScreen
 import com.aymen.store.ui.screen.guest.TermConditionScreen
-import com.aymen.store.ui.screen.user.AddCompanyScreen
-import com.aymen.store.ui.screen.user.ArticleDetailsScreen
-import com.aymen.store.ui.screen.user.CompanyScreen
-import com.aymen.store.ui.screen.user.HomeScreen
-import com.aymen.store.ui.screen.user.ConversationScreen
+import com.aymen.metastore.ui.screen.user.AddCompanyScreen
+import com.aymen.metastore.ui.screen.user.ArticleDetailsScreen
+import com.aymen.metastore.ui.screen.user.CompanyScreen
+import com.aymen.metastore.ui.screen.user.HomeScreen
+import com.aymen.metastore.ui.screen.user.ConversationScreen
 import com.aymen.store.ui.screen.user.NotificationScreen
-import com.aymen.store.ui.screen.user.PaymentScreen
-import com.aymen.store.ui.screen.user.ShoppingScreen
-import com.aymen.store.ui.screen.user.UserScreen
+import com.aymen.metastore.ui.screen.user.PaymentScreen
+import com.aymen.metastore.ui.screen.user.ShoppingScreen
+import com.aymen.metastore.ui.screen.user.UserScreen
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -110,7 +108,7 @@ fun MetaStore (){
 
                 is Screen.CompanyScreen -> {
                     val company = companyViewModel.myCompany
-                    CompanyScreen(company = mapCompanyToRoomCompany(company))
+                    CompanyScreen(company = company)
                 }
 
                 is Screen.ArticleDetailScreen -> {

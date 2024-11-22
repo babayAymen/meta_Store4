@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 
 @Composable
@@ -27,7 +27,6 @@ fun NotificationScreen(){
             .padding(3.dp)
     ) {
         Text(text = "notification",Modifier.clickable {
-            Log.e("testinvoice","size as client : ${myInvoicesAccepted.size} , size not accepted : ${invoicesNotAccepted.size} ")
         })
     }
 }

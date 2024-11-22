@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,13 +25,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.ClientViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.InputTextField
-import com.aymen.store.ui.component.resolveUriToFile
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.ui.component.resolveUriToFile
 import com.google.gson.Gson
 
 @Composable
@@ -40,7 +40,7 @@ fun AddClientScreen() {
     val clientViewModel : ClientViewModel = viewModel()
     val context  = LocalContext.current
     val gson = Gson()
-    val client = CompanyDto()
+    val client = Company()
     var image by remember {
         mutableStateOf<Uri?>(null)
     }

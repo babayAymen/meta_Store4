@@ -1,9 +1,9 @@
 package com.aymen.store.model.repository.remoteRepository.signInRepository
 
-import com.aymen.store.model.entity.dto.AuthenticationRequest
-import com.aymen.store.model.entity.dto.AuthenticationResponse
-import com.aymen.store.model.entity.dto.RegisterRequest
-import com.aymen.store.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.dto.AuthenticationRequest
+import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.dto.RegisterRequest
+import com.aymen.metastore.model.entity.dto.UserDto
 import retrofit2.Response
 
 interface SignInRepository {

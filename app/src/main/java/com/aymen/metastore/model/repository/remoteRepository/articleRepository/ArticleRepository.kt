@@ -1,18 +1,30 @@
 package com.aymen.store.model.repository.remoteRepository.articleRepository
 
-import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
-import com.aymen.metastore.model.entity.Dto.CommentDto
-import com.aymen.metastore.model.entity.room.Article
+import androidx.paging.PagingData
+import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
+import com.aymen.metastore.model.entity.dto.ArticleDto
+import com.aymen.metastore.model.entity.dto.CommentDto
+import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.room.entity.Article
+import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.util.Resource
+import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
+import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 import java.io.File
 
 interface ArticleRepository {
-    suspend fun getRandomArticles(): Response<List<ArticleCompanyDto>>
     suspend fun getRandomArticlesByCompanyCategory(categName : String): Response<List<ArticleCompanyDto>>
      suspend fun getRandomArticlesByCategory(categoryId : Long,  companyId : Long ) : Response<List<ArticleCompanyDto>>
     suspend fun getRandomArticlesBySubCategory(subcategoryId : Long , companyId: Long) : Response<List<ArticleCompanyDto>>
-    suspend fun getAll(companyId : Long, offset : Int, pageSize : Int): Response<List<ArticleCompanyDto>>
+
+     fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>
+     fun getRandomArticles(categoryName : CompanyCategory): Flow<PagingData<ArticleWithArticleCompany>>
+     fun getArticleDetails(id : Long) : Flow<Resource<ArticleCompany>>
+     fun getAllMyArticleContaining(libelle : String, searchType: SearchType, companyId : Long) : Flow<PagingData<ArticleWithArticleCompany>>
+     fun getAllArticlesByCategor(companyId : Long, companyCategory: CompanyCategory): Flow<PagingData<Article>>
+
 
     suspend fun deleteArticle(id: String): Response<Void>
 
@@ -23,6 +35,5 @@ interface ArticleRepository {
     suspend fun likeAnArticle(articleId : Long, isFav : Boolean) : Response<Void>
     suspend fun sendComment(comment : String, articleId : Long) : Response<Void>
     suspend fun getComments(articleId : Long) : Response<List<CommentDto>>
-    suspend fun getAllArticlesByCategor():Response<List<Article>>
     suspend fun addQuantityArticle(quantity : Double, articleId : Long) : Response<Void>
 }

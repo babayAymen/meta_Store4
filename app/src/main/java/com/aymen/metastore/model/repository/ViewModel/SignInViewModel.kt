@@ -1,12 +1,12 @@
-package com.aymen.store.model.repository.ViewModel
+package com.aymen.metastore.model.repository.ViewModel
 
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aymen.store.model.entity.dto.AuthenticationRequest
-import com.aymen.store.model.entity.dto.AuthenticationResponse
-import com.aymen.store.model.entity.dto.RegisterRequest
+import com.aymen.metastore.model.entity.dto.AuthenticationRequest
+import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -23,14 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.store.model.Enum.PaymentStatus
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.ClientDialog
-import com.aymen.store.ui.component.InvoiceCard
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.ClientDialog
+import com.aymen.metastore.ui.component.InvoiceCard
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -48,9 +47,9 @@ fun InvoiceScreenAsProvider() {
         }
     }
     val invoicesAsProvider = if (asProvider) {
-        invoiceViewModel.myInvoicesAsProvider.collectAsStateWithLifecycle().value
+        invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
     } else {
-        invoiceViewModel.myInvoicesAsClient.collectAsStateWithLifecycle().value
+        invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()
     }
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -156,9 +155,9 @@ fun InvoiceScreenAsProvider() {
                         }
                     }
                     }
-                    items(invoicesAsProvider) {
-
-                        InvoiceCard(it, appViewModel, invoiceViewModel,asProvider)
+                    items(invoicesAsProvider.itemCount) {index ->
+                           val invoice = invoicesAsProvider[index]
+                        InvoiceCard(invoice!!, appViewModel, invoiceViewModel,asProvider)
 
                     }
                 }

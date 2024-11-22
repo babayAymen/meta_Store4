@@ -2,18 +2,19 @@ package com.aymen.metastore.model.entity.roomRelation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.room.Invoice
-import com.aymen.metastore.model.entity.room.User
+import com.aymen.metastore.model.entity.room.entity.Company
+import com.aymen.metastore.model.entity.room.entity.Invoice
+import com.aymen.metastore.model.entity.room.entity.User
 
 data class InvoiceWithClientPersonProvider(
     @Embedded val invoice: Invoice,
 
     @Relation(
         parentColumn = "clientId",
-        entityColumn = "id"
+        entityColumn = "userId",
+        entity = Company::class
     )
-    val client : Company? = null,
+    val client : CompanyWithUser? = null,
 
     @Relation(
         parentColumn = "personId",
@@ -23,7 +24,16 @@ data class InvoiceWithClientPersonProvider(
 
     @Relation(
         parentColumn = "providerId",
-        entityColumn = "id"
+        entityColumn = "userId",
+        entity = Company::class
     )
-    val provider : Company
-)
+    val provider : CompanyWithUser
+){
+    fun toInvoiceWithClientPersonProvider():com.aymen.metastore.model.entity.model.Invoice{
+        return invoice.toInvoice(
+            user = person?.toUser(),
+            client = client?.toCompany(),
+            provider = provider.toCompany()
+        )
+    }
+}

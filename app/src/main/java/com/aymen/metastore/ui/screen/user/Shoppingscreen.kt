@@ -1,8 +1,7 @@
-package com.aymen.store.ui.screen.user
+package com.aymen.metastore.ui.screen.user
 
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -35,21 +34,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.DividerComponent
-import com.aymen.store.ui.component.InvoiceCard
-import com.aymen.store.ui.component.LodingShape
-import com.aymen.store.ui.component.OrderShow
-import com.aymen.store.ui.component.ShowFeesDialog
-import com.aymen.store.ui.screen.admin.AddInvoiceScreen
-import com.aymen.store.ui.screen.admin.OrderScreen
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.DividerComponent
+import com.aymen.metastore.ui.component.InvoiceCard
+import com.aymen.metastore.ui.component.LodingShape
+import com.aymen.metastore.ui.component.OrderShow
+import com.aymen.metastore.ui.component.ShowFeesDialog
+import com.aymen.metastore.ui.screen.admin.AddInvoiceScreen
+import com.aymen.metastore.ui.screen.admin.OrderScreen
 import java.time.LocalDateTime
 
 
@@ -61,7 +61,7 @@ fun ShoppingScreen() {
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
-    val myInvoicesAccepted by invoiceViewModel.myInvoicesAsClient.collectAsStateWithLifecycle()
+    val myInvoicesAccepted = invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()
     LaunchedEffect(key1 = Unit) {
         shoppingViewModel.getAllMyOrders()
         if(sharedViewModel.accountType == AccountType.USER){
@@ -69,7 +69,7 @@ fun ShoppingScreen() {
             invoiceViewModel.getAllMyInvoicesAsClient()
         }
     }
-    val invoicesNotAccepted by invoiceViewModel.allMyInvoiceNotAccepted.collectAsStateWithLifecycle()
+    val invoicesNotAccepted = invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()
     DisposableEffect(Unit) {
         onDispose {
            shoppingViewModel.deleteAll()
@@ -199,9 +199,10 @@ fun ShoppingScreen() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         LazyColumn {
-                            items(invoicesNotAccepted) { invoice ->
+                            items(invoicesNotAccepted.itemCount) { index ->
+                                val invoice = invoicesNotAccepted[index]
                                 InvoiceCard(
-                                    invoice = invoice,
+                                    invoice = invoice!!,
                                     appViewModel = appViewModel,
                                     invoiceViewModel = invoiceViewModel,
                                     asProvider = false
@@ -225,12 +226,12 @@ fun ShoppingScreen() {
                                 }
                             }
                             items(allMyOrders) {
-                                val dateTime = LocalDateTime.parse(it.purchaseOrder.createdDate)
+                                val dateTime = LocalDateTime.parse(it.createdDate)
                                 val date = dateTime.toLocalDate()
                                 Text(text =
-                                if (it.company.id == myCompany.id) "you have an order from ${it.person?.username ?: it.client?.name}" else "you have sent an order to ${it.company.name}",
+                                if (it.company?.id == myCompany.id) "you have an order from ${it.person?.username ?: it.client?.name}" else "you have sent an order to ${it.company?.name}",
                                     modifier = Modifier.clickable {
-                                        shoppingViewModel.Order = it.purchaseOrder
+                                        shoppingViewModel.Order = it
                                         appViewModel.updateShow("orderLineDetails")
                                     }
                                 )
@@ -249,10 +250,10 @@ fun ShoppingScreen() {
                         modifier = Modifier.fillMaxWidth()
                     ){
                         LazyColumn {
-                            items(myInvoicesAccepted){
-                                Log.e("myinvoicesaccepted","size is !: ${myInvoicesAccepted.size}")
+                            items(myInvoicesAccepted.itemCount){index ->
+                                val invoice = myInvoicesAccepted[index]
                                 InvoiceCard(
-                                    invoice = it,
+                                    invoice = invoice!!,
                                     appViewModel = appViewModel,
                                     invoiceViewModel = invoiceViewModel,
                                     asProvider = false)

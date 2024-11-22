@@ -6,17 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import androidx.room.Transaction
-import com.aymen.metastore.model.entity.Dto.RatingDto
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
-import com.aymen.metastore.model.entity.converterRealmToApi.mapRatingToRoomRating
-import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
-import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomRatingToRatingDto
-import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomUserToUserDto
-import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
+import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.room.User
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,8 +29,8 @@ class RatingViewModel @Inject constructor(
 
     var rate by mutableStateOf(0)
 
-    var _allRating = MutableStateFlow<List<RatingDto>>(emptyList())
-    val allRating : StateFlow<List<RatingDto>> = _allRating
+    var _allRating : MutableStateFlow<PagingData<Rating>> = MutableStateFlow(PagingData.empty())
+    val allRating : StateFlow<PagingData<Rating>> get() = _allRating
 
     var rating by mutableStateOf(false)
     var enableToRating by mutableStateOf(false)
@@ -48,7 +41,6 @@ class RatingViewModel @Inject constructor(
                val response = repository.getAllMyRating(id,type)
                 if(response.isSuccessful){
                     response.body()?.forEach {
-                        insertRating(it)
                     }
                 }
             }catch (_ex : Exception){
@@ -60,33 +52,11 @@ class RatingViewModel @Inject constructor(
                 else -> emptyList()
             }
             ratings.forEach {
-                val ratingDto = mapRoomRatingToRatingDto(it.rating)
-                ratingDto.raterCompany = mapRoomCompanyToCompanyDto(it.raterCompany ?: Company())
-                ratingDto.raterUser = mapRoomUserToUserDto(it.raterUser ?: User())
-                _allRating.value += ratingDto
             }
 
         }
     }
 
-    @Transaction
-    suspend fun insertRating(rating : RatingDto){
-        rating.rateeUser?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it))
-        }
-        rating.raterUser?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it))
-        }
-        rating.rateeCompany?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it.user))
-            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
-        }
-        rating.raterCompany?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it.user))
-            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
-        }
-        room.ratingDao().insertRating(mapRatingToRoomRating(rating))
-    }
 
     fun doRate(rating : String, image : File?){
         viewModelScope.launch(Dispatchers.IO) {

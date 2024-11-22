@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.ParentCard
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.ParentCard
 
 @Composable
 fun ParentScreen() {

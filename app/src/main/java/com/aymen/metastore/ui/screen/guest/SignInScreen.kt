@@ -1,6 +1,5 @@
-package com.aymen.store.ui.screen.guest
+package com.aymen.metastore.ui.screen.guest
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -26,21 +25,19 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aymen.store.model.entity.dto.AuthenticationRequest
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.SignInViewModel
-import com.aymen.store.ui.component.ButtonComponent
-import com.aymen.store.ui.component.ClickableLoginTextComponent
-import com.aymen.store.ui.component.DividerTextComponent
-import com.aymen.store.ui.component.HeadingText
-import com.aymen.store.ui.component.NormalText
-import com.aymen.store.ui.component.passwordTextField
-import com.aymen.store.ui.component.textField
+import com.aymen.metastore.model.entity.dto.AuthenticationRequest
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
+import com.aymen.metastore.ui.component.ButtonComponent
+import com.aymen.metastore.ui.component.ClickableLoginTextComponent
+import com.aymen.metastore.ui.component.DividerTextComponent
+import com.aymen.metastore.ui.component.HeadingText
+import com.aymen.metastore.ui.component.NormalText
+import com.aymen.metastore.ui.component.passwordTextField
+import com.aymen.metastore.ui.component.textField
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
-import kotlinx.coroutines.withContext
 
 @Composable
 fun SignInScreen(){

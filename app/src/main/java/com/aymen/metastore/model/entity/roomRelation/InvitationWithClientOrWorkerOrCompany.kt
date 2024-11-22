@@ -2,10 +2,10 @@ package com.aymen.metastore.model.entity.roomRelation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.room.Invitation
-import com.aymen.metastore.model.entity.room.User
-import com.aymen.metastore.model.entity.room.Worker
+import com.aymen.metastore.model.entity.room.entity.Company
+import com.aymen.metastore.model.entity.room.entity.Invitation
+import com.aymen.metastore.model.entity.room.entity.User
+import com.aymen.metastore.model.entity.room.entity.Worker
 
 data class InvitationWithClientOrWorkerOrCompany(
     @Embedded val invitation: Invitation,
@@ -25,14 +25,25 @@ data class InvitationWithClientOrWorkerOrCompany(
 
     @Relation(
         parentColumn = "companySenderId",
-        entityColumn = "id"
+        entityColumn = "userId",
+        entity = Company::class
     )
-    val companySender : Company? = null,
+    val companySender : CompanyWithUser? = null,
 
     @Relation(
         parentColumn = "companyReceiverId",
-        entityColumn = "id"
+        entityColumn = "userId",
+        entity = Company::class
     )
-    val companyReceiver : Company? = null,
+    val companyReceiver : CompanyWithUser? = null,
 
-)
+    ){
+    fun toInvitationWithClientOrWorkerOrCompany():com.aymen.metastore.model.entity.model.Invitation{
+        return invitation.toInvitation(
+            client = client?.toUser(),
+            worker = workerWithUser?.toWorkerWithUser(),
+            companySender = companySender?.toCompany(),
+            companyReceiver = companyReceiver?.toCompany()
+        )
+    }
+}

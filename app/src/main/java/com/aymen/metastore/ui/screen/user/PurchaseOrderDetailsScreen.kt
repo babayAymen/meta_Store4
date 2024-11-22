@@ -1,6 +1,5 @@
-package com.aymen.store.ui.screen.user
+package com.aymen.metastore.ui.screen.user
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,10 +26,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.LodingShape
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.LodingShape
 
 @Composable
 fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
@@ -47,7 +46,7 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
     }
     val allMyOrdersLine by shoppingViewModel.allMyOrdersLine.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = allMyOrdersLine) {
-        hasWaitingStatus = allMyOrdersLine.any{it.purchaseOrderLine.status == Status.INWAITING}
+        hasWaitingStatus = allMyOrdersLine.any{it.status == Status.INWAITING}
     }
     DisposableEffect(key1 = Unit) {
         onDispose {
@@ -70,7 +69,7 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if(shoppingViewModel.Order.companyId == myCompany.id) {
+                if(shoppingViewModel.Order.company?.id == myCompany.id) {
                     item {
                         if (hasWaitingStatus) {
                             Row {
@@ -131,15 +130,15 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
                 }
                 items(allMyOrdersLine) { line ->
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text(text = line.purchaseOrderLine.quantity.toString())
-                        Text(text = line.purchaseOrderLine.delivery.toString())
+                        Text(text = line.quantity.toString())
+                        Text(text = line.delivery.toString())
                         Text(text = line.article?.article?.libelle ?: "")
-                        Text(text = line.purchaseOrder?.purchaseOrder?.orderNumber.toString())
-                        line.purchaseOrderLine.comment?.let { Text(text = it) }
-                        Text(text = line.purchaseOrderLine.status.toString())
-                        when (line.purchaseOrderLine.status) {
+                        Text(text = line.purchaseorder?.orderNumber.toString())
+                        line.comment?.let { Text(text = it) }
+                        Text(text = line.status.toString())
+                        when (line.status) {
                             Status.INWAITING -> {
-                                if (line.purchaseOrder?.company?.id == myCompany.id) {
+                                if (line.purchaseorder?.company?.id == myCompany.id) {
                                     Row {
                                         Row(
                                             modifier = Modifier.weight(1f)
@@ -151,7 +150,7 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
                                         ) {
                                             shoppingViewModel.orderLineResponse(
                                                 status = Status.ACCEPTED,
-                                                id = line.purchaseOrderLine.id!!,
+                                                id = line.id!!,
                                                 isAll = false
                                             )
                                         }
@@ -167,7 +166,7 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
                                         ) {
                                             shoppingViewModel.orderLineResponse(
                                                 status = Status.REFUSED,
-                                                id = line.purchaseOrderLine.id!!,
+                                                id = line.id!!,
                                                 isAll = false
                                             )
                                         }
@@ -181,7 +180,7 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
                                     ) {
                                         shoppingViewModel.orderLineResponse(
                                             status = Status.CANCELLED,
-                                            id = line.purchaseOrderLine.id!!,
+                                            id = line.id!!,
                                             isAll = false
                                         )
                                     }
@@ -189,28 +188,28 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
                             }
 
                             Status.ACCEPTED -> {
-                                if(line.purchaseOrder?.company?.id != companyViewModel.myCompany.id){
+                                if(line.purchaseorder?.company?.id != companyViewModel.myCompany.id){
                                 Text(text = "${line.article?.company?.name} has accepted ${line.article?.article?.libelle} order")
                                 }
                                 else{
-                                Text(text = "you have accepted ${line.article?.article?.libelle} order from ${line.purchaseOrder?.person?.username ?: line.purchaseOrder?.client?.name}")
+                                Text(text = "you have accepted ${line.article?.article?.libelle} order from ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
                                 }
                             }
 
                             Status.CANCELLED -> {
-                                if(line.purchaseOrder?.company?.id == companyViewModel.myCompany.id){
-                                Text(text = "${line.purchaseOrder?.person?.username ?: line.purchaseOrder?.client?.name} has cancelled ${line.article?.article?.libelle} order")
+                                if(line.purchaseorder?.company?.id == companyViewModel.myCompany.id){
+                                Text(text = "${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name} has cancelled ${line.article?.article?.libelle} order")
                                 }else{
-                                Text(text = "you have cancelled ${line.article?.article?.libelle} order to ${line.purchaseOrder?.person?.username ?: line.purchaseOrder?.client?.name}")
+                                Text(text = "you have cancelled ${line.article?.article?.libelle} order to ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
                                 }
                             }
 
                             Status.REFUSED -> {
-                                if(line.purchaseOrder?.company?.id != companyViewModel.myCompany.id){
-                                Text(text = "${line.purchaseOrder?.company?.name} has refused ${line.article?.article?.libelle} order")
+                                if(line.purchaseorder?.company?.id != companyViewModel.myCompany.id){
+                                Text(text = "${line.purchaseorder?.company?.name} has refused ${line.article?.article?.libelle} order")
                                 }
                                 else{
-                                Text(text = "you have refused ${line.article?.article?.libelle} order from ${line.purchaseOrder?.person?.username ?: line.purchaseOrder?.client?.name}")
+                                Text(text = "you have refused ${line.article?.article?.libelle} order from ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
                                 }
                             }
 

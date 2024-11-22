@@ -2,17 +2,23 @@ package com.aymen.metastore.model.entity.roomRelation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.aymen.metastore.model.entity.room.CommandLine
-import com.aymen.metastore.model.entity.room.PaymentForProviders
-import com.aymen.metastore.model.entity.room.PurchaseOrderLine
+import com.aymen.metastore.model.entity.room.entity.PaymentForProviders
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrderLine
 
 data class PaymentForProvidersWithCommandLine(
 
     @Embedded val paymentForProviders: PaymentForProviders,
 
     @Relation(
-        parentColumn = "purchaseOrderLineId",
-        entityColumn = "id"
+        parentColumn = "id",
+        entityColumn = "id",//a change
+        entity = PurchaseOrderLine::class
     )
-    val purchaseOrderLine: PurchaseOrderLine
-)
+    val purchaseOrderLine: PurchaseOrderLineWithPurchaseOrderOrInvoice
+){
+    fun toPaymentForProvidersWithCommandLine(): com.aymen.metastore.model.entity.model.PaymentForProviders {
+        return paymentForProviders.toPaymentForProviders(
+            purchaseOrderLine.toPurchaseOrderineWithPurchaseOrderOrinvoice()
+        )
+    }
+}

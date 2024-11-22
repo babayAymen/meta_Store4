@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.user
+package com.aymen.metastore.ui.screen.user
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -51,30 +51,28 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.R
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
-import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCompanyToCompanyDto
-import com.aymen.metastore.model.entity.room.Category
-import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.SubCategory
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
-import com.aymen.metastore.ui.screen.user.RatingScreen
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.entity.dto.CategoryDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.ArticleViewModel
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
-import com.aymen.store.model.repository.ViewModel.ClientViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.model.repository.ViewModel.MessageViewModel
-import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
-import com.aymen.store.ui.component.AddTypeDialog
-import com.aymen.store.ui.component.ArticleCardForSearch
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.SendPointDialog
-import com.aymen.store.ui.component.ShowImage
+import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
+import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
+import com.aymen.metastore.ui.component.AddTypeDialog
+import com.aymen.metastore.ui.component.ArticleCardForSearch
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.SendPointDialog
+import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
@@ -91,12 +89,10 @@ fun CompanyScreen(company: Company) {
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     val categories = categoryViewModel.categories.collectAsLazyPagingItems()
-    val subCategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
-    val randomArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
-    val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
-    val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
+    val subCategories = subCategoryViewModel.subCategories.collectAsLazyPagingItems()
+    val randomArticles = articleViewModel.adminArticles.collectAsLazyPagingItems()
     var category by remember {
-        mutableStateOf(CategoryDto())
+        mutableStateOf(Category())
     }
     val context = LocalContext.current
     val myCompany by remember {
@@ -109,20 +105,9 @@ fun CompanyScreen(company: Company) {
     }
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentCompany(companyId = company.id!!)
-        articleViewModel.getAllArticlesApi(company.id)
-        categoryViewModel.getAllCategoryByCompany(company.id)
-//        if (sharedViewModel.accountType == AccountType.COMPANY) {
-//            myCompany = sharedViewModel._company.value
-//        }
     }
-    LaunchedEffect(key1 = categories) {
-        if(categories[0] != null) {
-            category = categories[0]!!
-        }
-    }
-    LaunchedEffect(key1 = category) {
-            subCategoryViewModel.getAllSubCtaegoriesByCategory(category.id!!,company.id!!)
-    }
+
+
     val rating = ratingViewModel.rating
     val listState = rememberLazyListState()
     Surface(
@@ -149,7 +134,7 @@ fun CompanyScreen(company: Company) {
                                     )
                             )
                         } else {
-                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.userId}")
+                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
                         }
                         Icon(
                             imageVector = Icons.Default.Verified,
@@ -195,19 +180,16 @@ fun CompanyScreen(company: Company) {
                             ScreenByCompanySubCategory(items = subCategories) { categ ->
                                 articleViewModel.getRandomArticlesBySubCategory(
                                     categ.id!!,
-                                    categ.companyId!!
+                                    categ.company?.id!!
                                 )
                             }
                         }
                 }
-                items(randomArticles) {
-                    companyViewModel.fetchCompanyByArticleId(it.id!! ,it.companyId!!)
-                    articleViewModel.fetchArticlesByArticleId(it.id,it.articleId!!)
-                    val art = articles[it.articleId]
-                    val com = companies[it.companyId]
-                    ArticleCardForSearch( it, art!!,com!!) {
-                        companyViewModel.myCompany = mapRoomCompanyToCompanyDto(com)
-                        articleViewModel.articleCompany = it
+                items(randomArticles.itemCount) {index ->
+                    val article = randomArticles[index]
+                    ArticleCardForSearch( article!!) {
+                        companyViewModel.myCompany = article.company!!
+//                        articleViewModel.articleCompany = article  a determine
                         RouteController.navigateTo(Screen.ArticleDetailScreen)
 
                     }
@@ -261,8 +243,8 @@ fun StarRating(
 }
 
 @Composable
-fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,clientViewModel: ClientViewModel,companyViewModel: CompanyViewModel,
-                   ratingViewModel : RatingViewModel,company: Company, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
+fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
+                   ratingViewModel : RatingViewModel, company: Company, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     Row {
         Row(
             modifier = Modifier
@@ -270,7 +252,7 @@ fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
                 .padding(end = 2.dp)
         ) {
             AddTypeDialog(isOpen = false, company.id!!, true) {
-                clientViewModel.sendClientRequest(company.id, it)
+                clientViewModel.sendClientRequest(company.id!!, it)
             }
         }
         Row(
@@ -284,7 +266,7 @@ fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
 //                            RouteController.navigateTo(Screen.HomeScreen)
                     messageViewModel.receiverAccountType = AccountType.COMPANY
                     messageViewModel.receiverCompany = company
-                    messageViewModel.getAllMessageByCaleeId(company.id!!)// from company screen
+//                    messageViewModel.getAllMessageByCaleeId(company.id!!)// from company screen
                     appViewModel.updateShow("message")
                     appViewModel.updateScreen(IconType.MESSAGE)
                 }
@@ -294,7 +276,7 @@ fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
             Row(
                 modifier = Modifier.weight(1f)
             ) {
-                SendPointDialog(isOpen = false, com.aymen.metastore.model.entity.room.User(), company)
+                SendPointDialog(isOpen = false, User(), company)
             }
         }
         if (appViewModel.userRole == RoleEnum.AYMEN) {
@@ -354,10 +336,10 @@ fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
 }
 @Composable
 fun ScreenByCompanyCategory(
-    items: LazyPagingItems<CategoryDto>,
-    onCategorySelected: (CategoryDto) -> Unit
+    items: LazyPagingItems<Category>,
+    onCategorySelected: (Category) -> Unit
 ) {
-    var selectedCateg by remember { mutableStateOf(CategoryDto()) }
+    var selectedCateg by remember { mutableStateOf(Category()) }
 
     LazyRow {
         items(
@@ -417,14 +399,15 @@ fun ScreenByCompanyCategory(
 //}
 
 @Composable
-fun ScreenByCompanySubCategory(items : List<com.aymen.metastore.model.entity.room.SubCategory>, onSubCategorySelected : (com.aymen.metastore.model.entity.room.SubCategory) -> Unit) {
+fun ScreenByCompanySubCategory(items : LazyPagingItems<SubCategory>, onSubCategorySelected : (SubCategory) -> Unit) {
     var subcateg by remember {
-        mutableStateOf(com.aymen.metastore.model.entity.room.SubCategory())
+        mutableStateOf(SubCategory())
     }
     LazyRow {
-        items(items){ categ ->
+        items(items.itemCount){ index ->
+            val categ = items[index]
             Card(onClick = {
-                subcateg = categ
+                subcateg = categ!!
                 onSubCategorySelected(categ)
                 Log.e("screenbycateg",categ.libelle!!)
             },
@@ -435,7 +418,7 @@ fun ScreenByCompanySubCategory(items : List<com.aymen.metastore.model.entity.roo
                 )
             )
             {
-                Text(text = categ.libelle!!)
+                Text(text = categ?.libelle!!)
             }
         }
     }

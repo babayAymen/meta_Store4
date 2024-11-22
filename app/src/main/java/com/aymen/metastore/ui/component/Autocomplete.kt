@@ -1,7 +1,6 @@
-package com.aymen.store.ui.component
+package com.aymen.metastore.ui.component
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 
 import androidx.compose.foundation.border
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -47,7 +45,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -56,14 +53,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
+import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.repository.ViewModel.ArticleViewModel
-import com.aymen.store.model.repository.ViewModel.ClientViewModel
-import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
+import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.store.model.Enum.SearchType
 
 
 @Composable
@@ -73,13 +74,11 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
 
     val clientType = invoiceViewModel.clientType
     val focusRequester = remember { FocusRequester() }
-    // Fetch the clients when the composable is launched
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
-    // Collect clients as state from ViewModel
-    val clients by clientViewModel.myClients.collectAsStateWithLifecycle()
+    val clients = clientViewModel.myClients.collectAsLazyPagingItems()
 
     var clientname by remember {
         mutableStateOf("")
@@ -177,18 +176,22 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                     ) {
                         if (clientname.isNotEmpty()) {
                             items(
-                                clients.filter {
-                                    val clientName = it.clientUser?.username?.lowercase() ?: it.clientCompany?.name?.lowercase()
-                                    val query = clientname.lowercase()
-                                    // Safely check if client name contains the query
-                                    (clientName?.contains(query)
-                                        ?: clientName?.contains("others")) == true
-                                }.sortedBy {
-                                    it.clientCompany?.name?:it.clientUser?.username
-                                }
-                            ) { clientRelation ->
-                                clientRelation.clientCompany?.let { client ->
-                                    ClientItem(client = client) { selectedClient ->
+                                count = clients.itemCount,
+                                key = clients.itemKey { client -> client.id!! },
+                                contentType = { clients.itemContentType { "clients" } }) { index: Int ->
+                                val client = clients[index]
+//                                client.filter {
+//                                    val clientName = client?.person?.username?.lowercase()
+//                                        ?: client?.client?.name?.lowercase()
+//                                    val query = clientname.lowercase()
+//                                    // Safely check if client name contains the query
+//                                    (clientName?.contains(query)
+//                                        ?: clientName?.contains("others")) == true
+//                                }.sortedBy {
+//                                    client?.client?.name ?: client?.person?.username
+//                                }
+                                client?.client?.let { clt ->
+                                    ClientItem(client = clt) { selectedClient ->
                                         clientname = selectedClient.name
                                         invoiceViewModel.clientCompany = selectedClient
                                         invoiceViewModel.clientType = AccountType.COMPANY
@@ -196,8 +199,8 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                         expanded = false
                                     }
                                 }
-                                clientRelation.clientUser?.let { client ->
-                                    ClientUserItem(client = client) { selectedClient ->
+                                client?.person?.let { clt ->
+                                    ClientUserItem(client = clt) { selectedClient ->
                                         clientname = selectedClient.username!!
                                         invoiceViewModel.clientUser = selectedClient
                                         invoiceViewModel.clientType = AccountType.USER
@@ -218,8 +221,8 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
 
 @Composable
 fun ClientItem(
-    client : com.aymen.metastore.model.entity.room.Company,
-    onSelect : (com.aymen.metastore.model.entity.room.Company) -> Unit
+    client : Company,
+    onSelect : (Company) -> Unit
 ) {
     Row (
         modifier = Modifier
@@ -236,8 +239,8 @@ fun ClientItem(
 
 @Composable
 fun ClientUserItem(
-    client : com.aymen.metastore.model.entity.room.User,
-    onSelect : (com.aymen.metastore.model.entity.room.User) -> Unit
+    client : User,
+    onSelect : (User) -> Unit
 ) {
     Log.e("aymenbabayclient","client name = ${client.username}")
     Row (
@@ -264,7 +267,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
     LaunchedEffect(key1 = Unit) {
         focusRequester.requestFocus()
     }
-    val articles by articleViewModel.response.collectAsState(initial = emptyList())
+    val articles = articleViewModel.searchArticles.collectAsLazyPagingItems()
     var articleLibel by remember {
         mutableStateOf("")
     }
@@ -331,7 +334,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
                         onSelcetArticle(false)
                         expanded = true
                         if(it.isNotEmpty()){
-                        articleViewModel.getAllMyArticleContaining(it)
+                        articleViewModel.getAllMyArticleContaining(it,SearchType.MY)
                         }
                     },
                     colors = TextFieldDefaults.colors(
@@ -373,33 +376,42 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
                         if(articleLibel.isNotEmpty()){
                             if(!update) {
                                 items(
-                                    articles.filterNot { article ->
-                                        invoiceViewModel.commandLineDtos.any { commandLineDto ->
-                                            commandLineDto.article?.article?.libelle == article.article!!.libelle
-                                        }
-                                    }
-                                        .sortedBy {
-                                            it.article!!.libelle
-                                        }
-                                ) {
-                                    ArticleItem(article = it) { article ->
-                                        articleLibel = article.article!!.libelle
+
+                                    count = articles.itemCount,
+                                    key = articles.itemKey { client -> client.id!! },
+                                    contentType = { articles.itemContentType { "articles" } }) { index: Int ->
+                                    val article = articles[index]
+//                                    articles.filterNot { article ->
+//                                        invoiceViewModel.commandLineDtos.any { commandLineDto ->
+//                                            commandLineDto.article?.article?.libelle == article.article!!.libelle
+//                                        }
+//                                    }
+//                                        .sortedBy {
+//                                            it.article!!.libelle
+//                                        }
+//                                ) {
+                                    ArticleItem(article = article!!) { art ->
+                                        articleLibel = art.article!!.libelle
                                         expanded = false
-                                        invoiceViewModel.article = article
+                                        invoiceViewModel.article = art
                                         onSelcetArticle(true)
                                     }
                                 }
                             }else{
                                 items(
-                                    articles
-                                        .sortedBy {
-                                            it.article!!.libelle
-                                        }
-                                ) {
-                                    ArticleItem(article = it) { article ->
-                                        articleLibel = article.article!!.libelle
+                                    count = articles.itemCount,
+                                    key = articles.itemKey{article -> article.id!!},
+                                    contentType = {articles.itemContentType{"articles"}}
+//                                    articles
+//                                        .sortedBy {
+//                                            it.article!!.libelle
+//                                        }
+                                ) {index ->
+                                    val article = articles[index]
+                                    ArticleItem(article = article!!) { art ->
+                                        articleLibel = art.article!!.libelle
                                         expanded = false
-                                        invoiceViewModel.article = article
+                                        invoiceViewModel.article = art
                                         onSelcetArticle(true)
                                     }
                                 }
@@ -408,7 +420,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
 //                            items(
 //                                articles
 //                            ){
-//                                ArticleItem(article = com.aymen.metastore.model.entity.room.Article()) { title ->
+//                                ArticleItem(article = com.aymen.metastore.model.entity.room.entity.Article()) { title ->
 //
 //                                }
 //                            }
@@ -425,8 +437,8 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
 
 @Composable
 fun ArticleItem(
-    article : ArticleCompanyDto,
-    onSelect : (ArticleCompanyDto) -> Unit
+    article : ArticleCompany,
+    onSelect : (ArticleCompany) -> Unit
 ) {
     Row (
         modifier = Modifier
@@ -474,7 +486,7 @@ fun ArticleItem(
 //            )
 //    ) {
 //        Text(
-//            text = "com.aymen.metastore.model.entity.room.Company com.aymen.metastore.model.entity.room.Category",
+//            text = "com.aymen.metastore.model.entity.room.entity.Company com.aymen.metastore.model.entity.room.entity.Category",
 //            modifier = Modifier.padding(start = 3.dp, bottom = 2.dp),
 //            // fontSize = 16.dp,
 //            color = Color.Black,

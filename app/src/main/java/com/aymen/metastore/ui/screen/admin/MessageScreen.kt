@@ -1,6 +1,5 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,12 +19,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.aymen.store.model.entity.dto.ConversationDto
-import com.aymen.store.model.entity.dto.MessageDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.MessageViewModel
-import com.aymen.store.ui.component.InputTextField
-import com.aymen.store.ui.component.MessageCard
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.aymen.metastore.model.entity.model.Conversation
+import com.aymen.metastore.model.entity.model.Message
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
+import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.ui.component.MessageCard
 
 @Composable
 fun MessageScreen() {
@@ -34,20 +34,17 @@ fun MessageScreen() {
     var message by remember { mutableStateOf("") }
 
     if(messageViewModel.fromConve) {
-            Log.e("disposemessage","launch effect rue and if condition is false ${messageViewModel.fromConve}")
-            messageViewModel.getAllMyMessageByConversationId()
+//            messageViewModel.getAllMyMessageByConversationId()
     }
 
-    val allMyMessage by messageViewModel.myAllMessages.collectAsStateWithLifecycle()
+    val allMyMessage = messageViewModel.myAllMessages.collectAsLazyPagingItems()
 
     DisposableEffect(Unit) {
         onDispose {
-            messageViewModel._myAllMessages.value = emptyList()
-            messageViewModel.sendMessage = MessageDto()
-            messageViewModel.conversation = ConversationDto()
+            messageViewModel.sendMessage = Message()
+            messageViewModel.conversation = Conversation()
             messageViewModel.fromConve = false
-            Log.e("disposemessage"," ondespose run ${messageViewModel.myAllMessages.value.size} send message ${messageViewModel.sendMessage} conv ${messageViewModel.conversation}")
-        }
+           }
     }
 
     Surface(

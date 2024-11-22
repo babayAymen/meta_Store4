@@ -1,6 +1,6 @@
 package com.aymen.metastore.model.repository.remoteRepository.ratingRepository
 
-import com.aymen.metastore.model.entity.Dto.RatingDto
+import com.aymen.metastore.model.entity.dto.RatingDto
 import com.aymen.store.model.Enum.AccountType
 import retrofit2.Response
 import java.io.File

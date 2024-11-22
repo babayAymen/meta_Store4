@@ -2,28 +2,39 @@ package com.aymen.metastore.model.entity.roomRelation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.aymen.metastore.model.entity.room.ClientProviderRelation
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.room.User
+import com.aymen.metastore.model.entity.room.entity.ClientProviderRelation
+import com.aymen.metastore.model.entity.room.entity.Company
+import com.aymen.metastore.model.entity.room.entity.User
 
 data class CompanyWithCompanyClient(
-    @Embedded val relation: ClientProviderRelation,
+    @Embedded var relation: ClientProviderRelation,
+
+    @Relation(
+        parentColumn = "userId",
+        entityColumn = "id"
+    )
+    val clientUser: User? = null,
 
     @Relation(
         parentColumn = "clientId",
-        entityColumn = "id"
+        entityColumn = "companyId",
+        entity = Company::class
     )
-    val clientCompany: Company? = null,
+    val clientCompany: CompanyWithUser?= null,
+
     @Relation(
         parentColumn = "providerId",
-        entityColumn = "id"
+        entityColumn = "companyId",
+        entity = Company::class
     )
-    val provider: Company,
+    val provider: CompanyWithUser?= null,
 
-    @Relation(
-        parentColumn = "personId",
-        entityColumn = "id"
-    )
-    val clientUser: User? = null
-
-)
+){
+    fun toCompanyWithCompanyClient(): com.aymen.metastore.model.entity.model.ClientProviderRelation {
+        return relation.toClientProviderRelation(
+            person = clientUser?.toUser(),
+            provider = provider?.toCompany(),
+            client = clientCompany?.toCompany()
+        )
+    }
+}

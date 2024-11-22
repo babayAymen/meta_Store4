@@ -2,12 +2,10 @@ package com.aymen.metastore.model.entity.Dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Upsert
-import com.aymen.metastore.model.entity.room.PurchaseOrderLine
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrderLine
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.entity.dto.PurchaseOrderDto
 
 @Dao
 interface PurchaseOrderLineDao {

@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,22 +23,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.aymen.store.model.entity.realm.Category
-import com.aymen.store.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.InputTextField
-import com.aymen.store.ui.component.resolveUriToFile
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.ui.component.resolveUriToFile
 import com.google.gson.Gson
 
 @Composable
 fun AddCategoryScreen() {
     val gson = Gson()
     val context = LocalContext.current
-    val appViewModel : AppViewModel = viewModel()
-    val categoryViewModel : CategoryViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val categoryViewModel : CategoryViewModel = hiltViewModel()
     val category = Category()
     var libelle by remember {
         mutableStateOf("")

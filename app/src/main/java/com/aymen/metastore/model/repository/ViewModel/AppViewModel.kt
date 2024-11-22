@@ -1,34 +1,29 @@
-package com.aymen.store.model.repository.ViewModel
+package com.aymen.metastore.model.repository.ViewModel
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.model.Location.LocationService
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.store.dependencyInjection.TokenUtils
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
-import com.aymen.store.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.dto.AuthenticationResponse
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.User
-import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -39,11 +34,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.WebSocket
-import okhttp3.WebSocketListener
 import java.io.File
-import java.math.BigDecimal
 import javax.inject.Inject
 
 
@@ -51,8 +43,8 @@ import javax.inject.Inject
 class AppViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val dataStore: DataStore<AuthenticationResponse>,
-    private val companyDataStore: DataStore<CompanyDto>,
-    private val userDatastore: DataStore<UserDto>,
+    private val companyDataStore: DataStore<Company>,
+    private val userDatastore: DataStore<User>,
     private val room : AppDatabase,
     private val sharedViewModel: SharedViewModel,
     private val context: Context
@@ -71,38 +63,6 @@ class AppViewModel @Inject constructor(
     var _historySelected = mutableStateOf(currentScreen.value) // Match the type here
     val historySelected: State<IconType> get() = _historySelected
 
-//    val historySelected : State<IconType> get() = _historySelected
-
-    init {
-//        connectWebSocket()
-    }
-
-     fun connectWebSocket() {
-//        val request = Request.Builder().url("ws://192.168.1.15:8080/ws").build()
-         sharedViewModel.getToken{
-
-         val request = Request.Builder()
-             .addHeader("Authorization", "Bearer $it")
-             .url("http://192.168.162.154:8080/api/auth/ws/1").build()
-        val listener = object : WebSocketListener() {
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                viewModelScope.launch {
-                    _messages.value = _messages.value + text
-                }
-            }
-
-            // Handle other WebSocket events like onOpen, onFailure, etc.
-        }
-        webSocket = client.newWebSocket(request, listener)
-         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        // Close WebSocket when ViewModel is cleared
-        webSocket.close(1000, "App closed")
-        client.dispatcher.executorService.shutdown()
-    }
     var userRole by mutableStateOf(RoleEnum.USER)
     var authsize by mutableStateOf(1)
 
@@ -193,15 +153,11 @@ class AppViewModel @Inject constructor(
 
     fun getMyUserDetails() {
         viewModelScope.launch(Dispatchers.IO) {
-            Log.e("getmyuserdetails","user name : inside scoupe")
                 try {
                     val response = repository.getMyUserDetails()
                     if (response.isSuccessful) {
-                        Log.e("getmyuserdetails","user name1 : ")
-                        Log.e("getmyuserdetails","user name : ${response.body()?.username}")
-                        Log.e("getmyuserdetails","user name2 : ")
-                        storeUser(response.body()!!)
-                        sharedViewModel._user.value = response.body()!!
+                        storeUser(response.body()!!.toUserModel())
+                        sharedViewModel._user.value = response.body()!!.toUserModel()
                     }
                 } catch (ex: Exception) {
                     Log.e("getmyuserdetails", "error is : $ex")
@@ -277,12 +233,12 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    private fun storeUser(user: UserDto) {
+    private fun storeUser(user: User) {
         viewModelScope.launch(Dispatchers.IO) {
             Log.e("storeUser", "storeUser image: ${user.image}")
             try {
                 userDatastore.updateData{
-                    UserDto().copy(
+                    User().copy(
                         id = user.id,
                         username = user.username,
                         address = user.address,
@@ -306,9 +262,9 @@ class AppViewModel @Inject constructor(
             try {
                 val response = repository.getMeAsCompany()
                 if(response.isSuccessful){
-                    storeCompany(response.body()!!)
+                    storeCompany(response.body()!!.toCompanyModel())
                     Log.e("getmyuserdetails", "Error storing token store user fun in app view model:")
-                    sharedViewModel._company.value = response.body()!!
+                    sharedViewModel._company.value = response.body()!!.toCompanyModel()
                 }
             }catch (ex : Exception){
                 Log.e("exeptions","error is : $ex")
@@ -316,11 +272,11 @@ class AppViewModel @Inject constructor(
         }
     }
 
-     fun storeCompany(company: CompanyDto) {
+     fun storeCompany(company: Company) {
         viewModelScope.launch {
             try {
                 companyDataStore.updateData{
-                    CompanyDto().copy(
+                    Company().copy(
                         id = company.id,
                         name = company.name,
                         code = company.code,
@@ -349,7 +305,7 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    fun updateCompanyName(newName: String, onUpdated: (CompanyDto) -> Unit) {
+    fun updateCompanyName(newName: String, onUpdated: (Company) -> Unit) {
         viewModelScope.launch {
             try {
 //                datastore1.updateData { currentCompany ->
@@ -375,13 +331,6 @@ class AppViewModel @Inject constructor(
     fun updateUserName(newName: String) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
-//                userdatastore.updateData { currentUser ->
-//                    currentUser.apply {
-//                        image = newName
-//                    }.also {
-////                        sharedViewModel._user.value = currentUser
-//                    }
-//                }
                 userDatastore.updateData { currentUser ->
                     currentUser.copy (
                         image = newName
@@ -397,13 +346,6 @@ class AppViewModel @Inject constructor(
 
     fun updateCompanyBalance(blc : Double){
         viewModelScope.launch {
-//            datastore1.updateData { currentCompany ->
-//                currentCompany.apply {
-//                    balance = blc
-//                }.also {
-////                sharedViewModel._company.value = currentCompany
-//                }
-//            }
             companyDataStore.updateData { currentCompany ->
                 currentCompany.copy (
                     balance = blc
@@ -448,7 +390,7 @@ class AppViewModel @Inject constructor(
                     it.copy(token = "")
                 }
                 companyDataStore.updateData {
-                    CompanyDto().copy(
+                    Company().copy(
                         id = 0,
                         name = "",
                         code = "",
@@ -463,11 +405,11 @@ class AppViewModel @Inject constructor(
                         rate = 0.0,
                         raters = 0,
                         category = CompanyCategory.DAIRY,
-                        user = UserDto()
+                        user = User()
                     )
                 }
                 userDatastore.updateData {
-                    UserDto().copy(
+                    User().copy(
                         id = 0,
                         username = "",
                         address = "",

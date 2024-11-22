@@ -7,13 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Transaction
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
-import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
-import com.aymen.metastore.model.entity.converterRealmToApi.mapWorkerToRoomWorker
+import com.aymen.metastore.model.entity.model.Worker
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.Worker
-import com.aymen.store.model.entity.dto.WorkerDto
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -34,20 +29,12 @@ class WorkerViewModel @Inject constructor(
               val response = repository.getAllMyWorker(companyId)
               if(response.isSuccessful){
                   response.body()?.forEach{worker ->
-                      insertWorker(worker)
                   }
               }
           }  catch (ex : Exception){
               Log.e("getAllWorkers","exception : ${ex.message}")
           }
-            workers = room.workerDao().getAllWorkors()
         }
     }
 
-    @Transaction
-    suspend fun insertWorker(worker : WorkerDto){
-        room.userDao().insertUser(mapUserToRoomUser(worker.user))
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(worker.company))
-        room.workerDao().insertWorker(mapWorkerToRoomWorker(worker))
-    }
 }

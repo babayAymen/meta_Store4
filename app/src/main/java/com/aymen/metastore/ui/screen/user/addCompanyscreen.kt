@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.user
+package com.aymen.metastore.ui.screen.user
 
 import android.net.Uri
 import android.util.Log
@@ -27,18 +27,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.aymen.metastore.model.entity.room.Company
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
-import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.DropDownCompanyCategory
-import com.aymen.store.ui.component.InputTextField
-import com.aymen.store.ui.component.resolveUriToFile
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.DropDownCompanyCategory
+import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.ui.component.resolveUriToFile
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
@@ -59,7 +57,7 @@ fun AddCompanyScreen(update : Boolean) {
     val gson = Gson()
 //    val companyJsonString = gson.toJson(company)
     var company by remember {
-        mutableStateOf(CompanyDto())
+        mutableStateOf(Company())
     }
     var companyId by remember {
         mutableLongStateOf(0)

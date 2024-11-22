@@ -98,12 +98,13 @@ dependencies {
     implementation (libs.play.services.location)
 
     // pagination
-    implementation ( libs.androidx.paging.runtime)
 //    implementation ( libs.androidx.paging.compose )
     implementation (libs.androidx.room.paging)
     implementation ( libs.kotlinx.coroutines.core)
 
-    implementation(libs.androidx.paging.compose.v320alpha01)
+    implementation(libs.androidx.paging.runtime.ktx)
+    implementation(libs.androidx.paging.compose)
+
 
 }
 

@@ -1,7 +1,6 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,32 +31,26 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
-import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
-import com.aymen.metastore.model.entity.room.SubCategory
+import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.ArticleViewModel
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.CheckBoxComponent
-import com.aymen.store.ui.component.DropDownCategory
-import com.aymen.store.ui.component.DropDownCompany
-import com.aymen.store.ui.component.DropDownSubCategory
-import com.aymen.store.ui.component.RadioButtons
-import com.aymen.store.ui.component.dropDownItems
-import com.aymen.store.ui.component.InputTextField
-import com.aymen.store.ui.component.resolveUriToFile
-import com.aymen.store.ui.navigation.RouteController
-import com.aymen.store.ui.navigation.Screen
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.DropDownCompany
+import com.aymen.metastore.ui.component.DropDownSubCategory
+import com.aymen.metastore.ui.component.RadioButtons
+import com.aymen.metastore.ui.component.dropDownItems
+import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.ui.component.resolveUriToFile
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 
 @Composable
 fun AddArticleScreen(){
@@ -83,22 +75,22 @@ fun AddArticleScreen(){
             onResult = {uri -> image = uri }
         )
         LaunchedEffect(Unit){
-            categoryViewModel.getAllCategoryByCompany(0)
-            companyViewModel.getAllMyProvider()
+//            categoryViewModel.getAllCategoryByCompany(0)
+//            companyViewModel.getAllMyProvider()
         }
-        val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
+        val categories = categoryViewModel.categories.collectAsLazyPagingItems()
+
         LaunchedEffect(categoryViewModel.category) {
-            // Reload subcategories when categoryId changes
-            categoryViewModel.category.id?.let { subCategoryViewModel.insertsubcategory(it) }
-            categoryViewModel.category.id?.let {
-                subCategoryViewModel.getAllSubCtaegoriesByCategory(
-                    it,sharedViewModel.company.value.id!!
-                )
-            }
+//            categoryViewModel.category.id?.let { subCategoryViewModel.insertsubcategory(it) }
+//            categoryViewModel.category.id?.let {
+//                subCategoryViewModel.getAllSubCtaegoriesByCategory(
+//                    it,sharedViewModel.company.value.id!!
+//                )
+//            }
         }
-        val subcategories by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
+        val subcategories = subCategoryViewModel.subCategories.collectAsLazyPagingItems()
         val context = LocalContext.current
-        val articleCompany = ArticleCompanyDto()
+        val articleCompany = ArticleCompany()
         val gson = Gson()
         var tva by remember {
             mutableDoubleStateOf(0.0)
@@ -139,7 +131,8 @@ fun AddArticleScreen(){
         var subCategory by remember {
             mutableStateOf(SubCategory())
         }
-        val providers by companyViewModel.myProviders.collectAsStateWithLifecycle()
+        val providers = companyViewModel.myProviders.collectAsLazyPagingItems()
+
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {

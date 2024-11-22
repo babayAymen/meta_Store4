@@ -1,7 +1,0 @@
-package com.aymen.store.model.entity.dto
-
-import com.aymen.store.model.Enum.RoleEnum
-
-data class Role(
-    var name : RoleEnum
-)

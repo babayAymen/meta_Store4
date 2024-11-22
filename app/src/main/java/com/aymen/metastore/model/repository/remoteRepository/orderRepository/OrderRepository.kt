@@ -1,6 +1,7 @@
 package com.aymen.store.model.repository.remoteRepository.orderRepository
-import com.aymen.store.model.entity.dto.PurchaseOrderLineDto
-import com.aymen.store.model.entity.dto.PurchaseOrderDto
+import com.aymen.metastore.model.entity.model.PurchaseOrderLine
+import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
 import retrofit2.Response
 
 interface OrderRepository {
@@ -9,7 +10,7 @@ interface OrderRepository {
 
     suspend fun getAllMyOrdersLinesByOrderId(orderId : Long) : Response<List<PurchaseOrderLineDto>>
 
-    suspend fun sendOrder(orderList : List<PurchaseOrderLineDto>):Response<Void>
+    suspend fun sendOrder(orderList : List<PurchaseOrderLine>):Response<Void>
 
     suspend fun getAllMyOrders(companyId : Long):Response<List<PurchaseOrderLineDto>>
 

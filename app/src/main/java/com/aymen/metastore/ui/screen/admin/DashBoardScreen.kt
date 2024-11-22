@@ -1,7 +1,6 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -20,16 +19,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.aymen.metastore.ui.screen.admin.ArticlesScreenForCompanyByCategory
 import com.aymen.store.model.Enum.IconType
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
-import com.aymen.store.ui.component.Item
-import com.aymen.store.ui.screen.user.AddCompanyScreen
-import com.aymen.store.ui.screen.user.PaymentScreen
-import com.aymen.store.ui.screen.user.ShoppingScreen
+import com.aymen.metastore.ui.component.Item
+import com.aymen.metastore.ui.screen.user.AddCompanyScreen
+import com.aymen.metastore.ui.screen.user.PaymentScreen
+import com.aymen.metastore.ui.screen.user.ShoppingScreen
+import com.aymen.store.ui.screen.admin.AddSubCategoryScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

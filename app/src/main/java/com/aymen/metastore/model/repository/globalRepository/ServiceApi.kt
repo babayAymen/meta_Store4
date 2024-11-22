@@ -2,36 +2,39 @@ package com.aymen.store.model.repository.globalRepository
 
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.MessageType
-import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
-import com.aymen.metastore.model.entity.Dto.ClientProviderRelationDto
-import com.aymen.metastore.model.entity.Dto.CommentDto
-import com.aymen.metastore.model.entity.Dto.PaymentForProviderPerDayDto
-import com.aymen.metastore.model.entity.Dto.PaymentForProvidersDto
-import com.aymen.metastore.model.entity.Dto.PointsPaymentDto
-import com.aymen.metastore.model.entity.Dto.RatingDto
-import com.aymen.metastore.model.entity.Dto.SearchHistoryDto
+import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
+import com.aymen.metastore.model.entity.dto.ArticleDto
+import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
+import com.aymen.metastore.model.entity.dto.CommentDto
+import com.aymen.metastore.model.entity.dto.PaymentForProviderPerDayDto
+import com.aymen.metastore.model.entity.dto.PaymentForProvidersDto
+import com.aymen.metastore.model.entity.dto.PointsPaymentDto
+import com.aymen.metastore.model.entity.dto.RatingDto
+import com.aymen.metastore.model.entity.dto.SearchHistoryDto
+import com.aymen.metastore.model.entity.model.CommandLine
+import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
-import com.aymen.store.model.entity.dto.AuthenticationRequest
-import com.aymen.store.model.entity.dto.AuthenticationResponse
-import com.aymen.store.model.entity.dto.RegisterRequest
-import com.aymen.store.model.entity.dto.CommandLineDto
-import com.aymen.store.model.entity.dto.ConversationDto
-import com.aymen.store.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.dto.AuthenticationRequest
+import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.dto.RegisterRequest
+import com.aymen.metastore.model.entity.dto.CommandLineDto
+import com.aymen.metastore.model.entity.dto.ConversationDto
+import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.store.model.Enum.PaymentStatus
-import com.aymen.store.model.entity.dto.CategoryDto
-import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.entity.dto.InventoryDto
-import com.aymen.store.model.entity.dto.InvitationDto
-import com.aymen.store.model.entity.dto.InvoiceDto
-import com.aymen.store.model.entity.dto.MessageDto
-import com.aymen.store.model.entity.dto.PurchaseOrderDto
-import com.aymen.store.model.entity.dto.SubCategoryDto
-import com.aymen.store.model.entity.dto.UserDto
-import com.aymen.store.model.entity.dto.WorkerDto
+import com.aymen.metastore.model.entity.dto.CategoryDto
+import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.dto.InventoryDto
+import com.aymen.metastore.model.entity.dto.InvitationDto
+import com.aymen.metastore.model.entity.dto.InvoiceDto
+import com.aymen.metastore.model.entity.dto.MessageDto
+import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
+import com.aymen.metastore.model.entity.dto.SubCategoryDto
+import com.aymen.metastore.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.dto.WorkerDto
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -45,10 +48,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ServiceApi {
-    @GET("werehouse/article/getAllMyArticle/{companyId}/{offset}/{pageSize}")
-    suspend fun getAl(@Path("companyId") companyId : Long, @Path("offset") offset : Int, @Path("pageSize") pageSize : Int): Response<List<ArticleCompanyDto>>
-    @GET("werehouse/article/getrandom")
-    suspend fun getRandomArticles(): Response<List<ArticleCompanyDto>>
     @GET("werehouse/article/getrandom/{categname}")
     suspend fun getRandomArticlesByCompanyCategory(@Path("categname") categName : String): Response<List<ArticleCompanyDto>>
     @GET("werehouse/article/category/{categId}/{companyId}")
@@ -87,15 +86,8 @@ interface ServiceApi {
     @POST("api/auth/register")
     suspend fun SignUp(@Body registerRequest: RegisterRequest) : Response<AuthenticationResponse>
 
-    @GET("werehouse/category/getbycompany/{companyId}")
-    suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long): Response<List<CategoryDto>>
     @GET("werehouse/subcategory/{categoryId}/{companyId}")
     suspend fun getAllSubCategoryByCategory(@Path("categoryId") categoryId : Long, @Path("companyId") companyId : Long) : Response<List<SubCategoryDto>>
-
-    @GET("werehouse/subcategory/getbycompany/{companyId}")
-    suspend fun getAllSubCategories(@Path("companyId") companyId : Long): Response<List<SubCategoryDto>>
-    @GET("werehouse/provider/get_all_my/{companyId}")
-    suspend fun getAllMyProvider(@Path("companyId") companyId : Long): Response<List<ClientProviderRelationDto>>
 
     @Multipart
     @POST("werehouse/category/add")
@@ -115,11 +107,7 @@ interface ServiceApi {
     @POST("werehouse/subcategory/add")
     suspend fun addSubCategoryWithoutImage(@Query("sousCategory") sousCategory:String)
 
-    @GET("werehouse/inventory/getbycompany/{companyId}")
-    suspend fun getInventory(@Path("companyId") companyId : Long): Response<List<InventoryDto>>
 
-    @GET("werehouse/client/get_all_my/{companyId}")
-    suspend fun getAllMyClient(@Path("companyId") companyId: Long): Response<List<ClientProviderRelationDto>>
 
     @Multipart
     @POST("werehouse/client/add")
@@ -136,10 +124,6 @@ interface ServiceApi {
         @Part file: MultipartBody.Part? = null): Response<Void>
     @POST("werehouse/provider/add")
     suspend fun addProviderWithoutImage(@Query("company") company:String)
-    @GET("werehouse/point/get_all_my_as_company/{date}/{findate}")
-    suspend fun getAllMyPaymentsEspeceByDate(@Path("date") date : String, @Path("findate") findate : String):Response<List<PaymentForProvidersDto>>
-    @GET("werehouse/point/get_all_my_payment/{companyId}")
-    suspend fun getAllMyPaymentsEspece(@Path("companyId") companyId: Long): Response<List<PaymentForProvidersDto>>
     @GET("werehouse/point/get_my_profit_by_date/{beginDate}/{finalDate}")
     suspend fun getMyProfitByDate(@Path("beginDate") beginDate : String ,@Path("finalDate") finalDate : String):Response<String>
     @GET("werehouse/point/get_all_my_profits")
@@ -148,14 +132,10 @@ interface ServiceApi {
     suspend fun getMyHistoryProfitByDate(@Path("beginday") beginDay : String, @Path("finalday") finalDay : String):Response<List<PaymentForProviderPerDayDto>>
     @GET("werehouse/worker/getbycompany/{companyId}")
     suspend fun getAllMyWorker(@Path("companyId") companyId: Long): Response<List<WorkerDto>>
-    @GET("werehouse/invoice/getMyInvoiceAsProvider/{companyId}")
-    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long): Response<List<InvoiceDto>>
-    @GET("werehouse/invoice/getMyInvoiceAsClient/{companyId}")
-    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long) : Response<List<InvoiceDto>>
     @GET("werehouse/invoice/getlastinvoice")
     suspend fun getLastInvoiceCode():Response<Long>
     @POST("werehouse/commandline/save/{invoiceCode}/{clientId}/{discount}/{clientType}/{invoiceMode}")
-    suspend fun addInvoice(@Body commandLineDtos : List<CommandLineDto>,
+    suspend fun addInvoice(@Body commandLineDtos : List<CommandLine>,
                            @Path("clientId") clientId : Long,
                            @Path("invoiceCode") invoiceCode : Long,
                            @Path("discount") discount : Double,
@@ -166,26 +146,16 @@ interface ServiceApi {
     suspend fun getAllMyInvoicesNotAccepted(@Path("id") id : Long ,@Path("status") status: Status):Response<List<InvoiceDto>>
     @GET("werehouse/invoice/response/{invoiceId}/{status}")
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
-    @GET("werehouse/invoice/get_by_status/{companyId}/{status}")
-    suspend fun getAllMyInvoicesAsProviderAndStatus(@Path("companyId") companyId : Long, @Path("status") status: PaymentStatus) : Response<List<InvoiceDto>>
-    @GET("werehouse/invoice/get_all_my_invoices_notaccepted/{companyId}")
-    suspend fun getAllMyPaymentNotAccepted(@Path("companyId") companyId : Long): Response<List<InvoiceDto>>
     @GET("werehouse/commandline/getcommandline/{invoiceId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("invoiceId") invoiceId : Long):Response<List<CommandLineDto>>
     @GET("werehouse/client/get_all_my_containing/{clientName}/{companyId}")
     suspend fun getAllMyClientContaining(@Path("clientName") clientName : String, @Path("companyId") companyId: Long):Response<List<ClientProviderRelationDto>>
-    @GET("werehouse/message/get_conversation")
-    suspend fun getAllMyConversations():Response<List<ConversationDto>>
-    @GET("werehouse/message/get_message/{conversationId}")
-    suspend fun getAllMyMessageByConversationId(@Path("conversationId") conversationId : Long):Response<List<MessageDto>>
     @GET("werehouse/message/getconversation/{id}/{type}")
     suspend fun getConversationByCaleeId(@Path("id") id : Long,@Path("type") type : MessageType): Response<ConversationDto>
-    @GET("werehouse/message/getmessage/{id}/{type}")
-    suspend fun getAllMessageByCaleeId(@Path("id") id : Long, @Path("type") type: AccountType): Response<List<MessageDto>>
     @POST("werehouse/message/send")
     suspend fun sendMessage( @Body conversation : ConversationDto):Response<Void>
     @POST("werehouse/order/")
-    suspend fun sendOrder(@Body orderList : List<PurchaseOrderLineDto>):Response<Void>
+    suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<Void>
     @POST("werehouse/order/test")
     suspend fun test(@Body order : PurchaseOrderLineDto): Response<Void>
     @GET("werehouse/order/{id}/{status}/{isall}")
@@ -198,19 +168,13 @@ interface ServiceApi {
     suspend fun getAllMyOrder(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderDto>>
     @GET("werehouse/order/get_lines/{orderId}")
     suspend fun getAllMyOrdersLineByOrderId(@Path("orderId") orderId : Long) : Response<List<PurchaseOrderLineDto>>
-    @GET("werehouse/invetation/get_invetation")
-    suspend fun getAllMyInvetations() : Response<List<InvitationDto>>
     @GET("werehouse/invetation/response/{status}/{id}")
     suspend fun RequestResponse(@Path("status") status : Status,@Path("id") id : Long) : Response<Void>
     @GET("werehouse/invetation/cancel/{id}")
     suspend fun cancelInvitation(@Path("id") id : Long) : Response<Void>
-    @GET("werehouse/company/get_companies_containing/{search}")
-    suspend fun getAllCompaniesContaining(@Path("search") search : String): Response<List<CompanyDto>>
     @GET("werehouse/search/user/{search}/{searchType}/{searchCategory}")
     suspend fun getAllUsersContaining(@Path ("search") search : String,@Path("searchType")  searchType: SearchType,
                                       @Path("searchCategory")  searchCategory: SearchCategory):Response<List<UserDto>>
-    @GET("werehouse/article/search/{search}/{searchType}")
-    suspend fun getAllArticlesContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType) : Response<List<ArticleCompanyDto>>
     @GET("werehouse/like/{articleId}/{isFav}")
     suspend fun likeAnArticle(@Path("articleId") articleId : Long, @Path("isFav") isFav : Boolean):Response<Void>
     @GET("werehouse/invetation/send/{id}/{type}")
@@ -228,14 +192,10 @@ interface ServiceApi {
     suspend fun sendComment(@Body comment : String,@Path("articleId") articleId : Long):Response<Void>
     @GET("werehouse/article/get_comments/{articleId}")
     suspend fun getComments(@Path("articleId") articleId : Long):Response<List<CommentDto>>
-    @GET("werehouse/article/get_articles_by_category")
-    suspend fun getAllArticlesByCategor():Response<List<com.aymen.metastore.model.entity.room.Article>>
     @GET("werehouse/article/{articleId}/{quantity}")
     suspend fun addQuantityArticle(@Path("quantity") quantity : Double, @Path("articleId") articleId : Long ): Response<Void>
     @POST("werehouse/point/")
     suspend fun sendPoints(@Body pointsPayment: PointsPaymentDto):Response<Void>
-    @GET("werehouse/point/get_all_my/{companyId}")
-    suspend fun getAllMyPointsPayment(@Path("companyId") companyId : Long):Response<List<PointsPaymentDto>>
     @POST("api/auth/refresh")
     suspend fun refreshToken(@Body token: String): Response<AuthenticationResponse>
     @GET("api/auth/myuser")
@@ -253,14 +213,92 @@ interface ServiceApi {
     suspend fun enabledToCommentUser(@Path("userId") userid: Long):Response<Boolean>
     @GET("werehouse/rate/enable_to_comment_article/{companyId}")
     suspend fun enabledToCommentArticle(@Path("companyId") companyId: Long):Response<Boolean>
+
+    @GET("werehouse/article/search/{search}/{searchType}")
+    suspend fun getAllArticlesContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType) : Response<List<ArticleCompanyDto>>
 //suspend fun doRating(
 //    @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>,
 //    @Part file: MultipartBody.Part? = null
 //): Response<Void>
-
+////////////////////////// pagination ///////////////////////////////////////////////////////
     @GET("werehouse/aymen/make_as_point_seller/{status}/{companyId}")
     suspend fun makeAsPointSeller(@Path("status") status : Boolean,@Path("companyId") id : Long)
 
-    @GET("werehouse/category/get")
-    suspend fun getPagingCategoryByCompany(@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<CategoryDto>
+    @GET("werehouse/category/get_all/{companyId}")
+    suspend fun getPagingCategoryByCompany(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<CategoryDto>
+
+    @GET("werehouse/article/getAllMyArticle/{companyId}/{offset}/{pageSize}")
+    suspend fun getAll(@Path("companyId") companyId : Long?, @Path("offset") offset : Int, @Path("pageSize") pageSize : Int): List<ArticleCompanyDto>
+
+    @GET("werehouse/article/getrandom")
+    suspend fun getRandomArticles( @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): List<ArticleCompanyDto>
+
+    @GET("werehouse/subcategory/getbycompany/{companyId}")
+    suspend fun getAllSubCategories(@Path("companyId") companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
+
+    @GET("werehouse/article/my_article/{id}")
+    suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
+
+    @GET("werehouse/article/search/{search}/{searchType}")
+    suspend fun getAllMyArticleContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
+
+    @GET("werehouse/category/get/{companyId}")
+    suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CategoryDto>
+
+    @GET("werehouse/client/get_all_my/{companyId}")
+    suspend fun getAllMyClient(@Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+
+    @GET("werehouse/client/get_all_my_client_containing/{companyId}")
+    suspend fun getAllMyClientsContaining(@Path("companyId") companyId: Long,@Query("searchType")searchType : SearchType, @Query("search") libelle : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+
+    @GET("werehouse/message/get_conversation")
+    suspend fun getAllMyConversations(@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ConversationDto>
+
+    @GET("werehouse/message/getmessage/{id}/{type}")
+    suspend fun getAllMessageByCaleeId(@Path("id") id : Long, @Path("type") type: AccountType, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
+
+    @GET("werehouse/message/get_message/{conversationId}")
+    suspend fun getAllMyMessageByConversationId(@Path("conversationId") conversationId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
+
+    @GET("werehouse/invoice/getMyInvoiceAsProvider/{companyId}")
+    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
+
+    @GET("werehouse/invoice/getMyInvoiceAsClient/{companyId}")
+    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+
+    @GET("werehouse/invoice/get_by_status/{companyId}")
+    suspend fun getAllMyInvoicesAsProviderAndStatus(@Path("companyId") companyId : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+
+    @GET("werehouse/inventory/getbycompany/{companyId}")
+    suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InventoryDto>
+
+    @GET("werehouse/invetation/get_invetation")
+    suspend fun getAllMyInvetations(@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvitationDto>
+
+    @GET("werehouse/point/get_all_my_payment/{companyId}")
+    suspend fun getAllMyPaymentsEspece(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProvidersDto>
+
+    @GET("werehouse/point/get_all_my_as_company/{id}")
+    suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<PaymentForProvidersDto>
+
+    @GET("werehouse/point/get_all_my/{companyId}")
+    suspend fun getAllMyPointsPayment(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PointsPaymentDto>
+
+    @GET("werehouse/invoice/get_all_my_invoices_notaccepted/{companyId}")
+    suspend fun getAllMyPaymentNotAccepted(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
+
+    @GET("werehouse/company/get_companies_containing/{id}")
+    suspend fun getAllCompaniesContaining(@Path("id") id : Long, @Query("search") search : String, @Query("searchType") searchType : SearchType ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ClientProviderRelationDto>
+
+    @GET("werehouse/article/get_articles_by_category/{id}")
+    suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleDto>
+
+    @GET("werehouse/provider/get_all_my/{companyId}")
+    suspend fun getAllMyProvider(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+
+
+
+
+
+
 }

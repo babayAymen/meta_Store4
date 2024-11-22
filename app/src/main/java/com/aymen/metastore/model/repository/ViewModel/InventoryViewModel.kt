@@ -1,67 +1,51 @@
-package com.aymen.store.model.repository.ViewModel
+package com.aymen.metastore.model.repository.ViewModel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
-import com.aymen.metastore.model.entity.converterRealmToApi.mapInventoryToRoomInventor
-import com.aymen.metastore.model.entity.converterRealmToApi.mapSubCategoryToRoomSubCategory
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
+import com.aymen.metastore.model.entity.model.Inventory
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.Inventory
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
-import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
-import com.aymen.store.model.entity.converterRealmToApi.mapArticelDtoToRoomArticle
-import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRoomArticleCompany
-import com.aymen.store.model.entity.dto.InventoryDto
-import com.aymen.store.model.repository.globalRepository.GlobalRepository
+import com.aymen.metastore.model.usecase.MetaUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class InventoryViewModel  @Inject constructor
     (
-    private val repository: GlobalRepository,
-    private val room : AppDatabase
+    private val room : AppDatabase,
+    private val useCases: MetaUseCases,
+            private val sharedViewModel: SharedViewModel
 )
     : ViewModel() {
 
 
-    private var _inventories = MutableStateFlow(emptyList<InventoryWithArticle>())
-    val inventories: StateFlow<List<InventoryWithArticle>> = _inventories
+    private var _inventories : MutableStateFlow<PagingData<Inventory>> = MutableStateFlow(PagingData.empty())
+    val inventories: StateFlow<PagingData<Inventory>> = _inventories
 
     val companyId by mutableLongStateOf(0)
 
-    fun getInventory(){
+    init {
+        getMyInventory()
+    }
+
+    fun getMyInventory(){
         viewModelScope.launch {
-            try {
-                val response = repository.getInventory(companyId)
-                if (response.isSuccessful) {
-                    response.body()?.forEach {inventory ->
-                        insertInventory(inventory)
-                    }
+            useCases.getAllMyInventory(sharedViewModel.company.value.id!!)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _inventories.value = it.map { inventory -> inventory.toInventory() }
                 }
-            }catch (exception : Exception){
-                Log.e("getInventory","exception is : ${exception.message}")
-            }
-            _inventories.value = room.inventoryDao().getAllInventories()
         }
     }
 
-    suspend fun insertInventory(inventory : InventoryDto){
-        room.categoryDao().insertCategory(mapCategoryToRoomCategory(inventory.article?.category!!))
-        room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(inventory.article.subCategory!!))
-        room.articleDao().insertArticle(mapArticelDtoToRoomArticle(inventory.article.article!!))
-        room.articleCompanyDao().insertArticle(mapArticleCompanyToRoomArticleCompany(inventory.article))
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(inventory.company))
-        room.inventoryDao().insertInventory(mapInventoryToRoomInventor(inventory))
-    }
 
 }

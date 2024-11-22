@@ -1,4 +1,4 @@
-package com.aymen.store.model.repository.ViewModel
+package com.aymen.metastore.model.repository.ViewModel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -8,22 +8,22 @@ import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Transaction
-import com.aymen.metastore.model.entity.Dto.ClientProviderRelationDto
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
-import com.aymen.metastore.model.entity.converterRealmToApi.mapRelationToRoomRelation
-import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
-import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.store.model.Enum.SearchCategory
+import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -33,27 +33,27 @@ import javax.inject.Inject
 class CompanyViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val room : AppDatabase,
-    private val companyDataStore: DataStore<CompanyDto>,
+    private val companyDataStore: DataStore<Company>,
     private val appViewModel: AppViewModel,
-    private  val sharedViewModel: SharedViewModel
+    private  val sharedViewModel: SharedViewModel,
+    private val useCases: MetaUseCases
 ) : ViewModel() {
 
-    private var _myProviders = MutableStateFlow(emptyList<CompanyWithCompanyClient>())
-    val myProviders: StateFlow<List<CompanyWithCompanyClient>> = _myProviders
+    private var _myProviders : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
+    val myProviders: StateFlow<PagingData<ClientProviderRelation>> get() = _myProviders
 
-    var allCompanies by mutableStateOf(emptyList<Company>())
+    private var _allCompanies : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
+    val allCompanies : StateFlow<PagingData<ClientProviderRelation>> get() = _allCompanies
+
     var providerId by mutableLongStateOf(0)
     var parent by mutableStateOf(Company())
     var myCompany by mutableStateOf(sharedViewModel.company.value)
     var update by mutableStateOf(false)
 
-    private val _companiesByArticleId = MutableStateFlow<Map<Long, Company>>(emptyMap())
-    val companiesByArticleId: StateFlow<Map<Long, Company>> = _companiesByArticleId
-
     init {
         getMyCompany()
         getMyCompany {
-            sharedViewModel._company.value = it ?: CompanyDto()
+            sharedViewModel._company.value = it ?: Company()
         }
     }
 
@@ -74,58 +74,10 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
-    fun getAllMyProvider() {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                    val response = repository.getAllMyProvider(myCompany.id!!).body()!!
-                    response.forEach {provider ->
-                        insertRelation(provider)
-                    }
-                } catch (_ex: Exception) {
-                    Log.e("aymenbabay", "error is : $_ex")
-                }
-                _myProviders.value = room.clientProviderRelationDao().getAllProvidersByClientId(myCompany.id!!)
-//                if (providers.isNotEmpty()) {
-//                    providerId = providers[0].id!!
-//                }
-        }
-            }
-    }
-
-    @Transaction
-    suspend fun insertRelation(relation : ClientProviderRelationDto){
-
-        relation.person?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it))
-        }
-        relation.client?.let {
-            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
-        }
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(relation.provider))
-        room.clientProviderRelationDao().insertClientProviderRelation(mapRelationToRoomRelation(relation))
-    }
-
-
-    @Transaction
-    suspend fun insertCompany(company : CompanyDto){
-        room.userDao().insertUser(mapUserToRoomUser(company.user))
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(company))
-    }
 
     fun getMyParent(){
         viewModelScope.launch {
-            withContext(Dispatchers.IO){
-            try {
-                val response = repository.getMyParent(myCompany.id!!)
-                if(response.isSuccessful && response.body() != null){
-                   insertCompany(response.body()!!)
-                }
-            }catch (ex : Exception){
-                Log.e("aymenbabayparent","c bon error ${ex.message}")
-            }
-            parent = room.companyDao().getCompanyById(myCompany.parentCompany?.id!!)
-        }
+
             }
     }
 
@@ -135,7 +87,7 @@ class CompanyViewModel @Inject constructor(
                 try {
                     val response = repository.getMeAsCompany()
                     if (response.isSuccessful) {
-                        appViewModel.storeCompany(response.body()!!)
+                        appViewModel.storeCompany(response.body()?.toCompanyModel()!!)
                     }
                 } catch (ex: Exception) {
                     Log.e("aymenbabaycompany", "c bon error ${ex.message}")
@@ -144,24 +96,18 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
-    fun getAllCompaniesContaining(search : String){
-        allCompanies = emptyList()
+    fun getAllCompaniesContaining(search : String, searchType : SearchType,searchCategory : SearchCategory){
         viewModelScope.launch {
-            try {
-                val response = repository.getAllCompaniesContaining(search)
-                if(response.isSuccessful){
-                    response.body()?.forEach {company ->
-                        insertCompany(company)
-                    }
+            useCases.getAllCompaniesContaining(search, searchType)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _allCompanies.value = it.map { company -> company.toCompanyWithCompanyClient() }
                 }
-            }catch (ex : Exception){
-                Log.e("aymenbabaycompanies","error is : ${ex.message}")
-            }
-                    allCompanies = room.companyDao().getAllCompaniesContaining(search)
         }
     }
 
-     fun getMyCompany(onCompanyRetrieved: (CompanyDto?) -> Unit) {
+     fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
         viewModelScope.launch {
             withContext(Dispatchers.Main){
             try {
@@ -191,15 +137,4 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
-    fun fetchCompanyByArticleId(articleId: Long, companyId: Long) {
-        viewModelScope.launch {
-            val company = getCompanyByIdLocally(companyId)
-            _companiesByArticleId.value = _companiesByArticleId.value + (articleId to company)
-        }
-    }
-    private suspend fun getCompanyByIdLocally(companyId: Long): com.aymen.metastore.model.entity.room.Company {
-        return withContext(Dispatchers.IO) {
-            room.companyDao().getCompanyById(companyId)
-        }
-    }
 }

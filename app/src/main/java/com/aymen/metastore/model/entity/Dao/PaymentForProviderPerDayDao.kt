@@ -3,7 +3,7 @@ package com.aymen.metastore.model.entity.Dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import com.aymen.metastore.model.entity.room.PaymentForProviderPerDay
+import com.aymen.metastore.model.entity.room.entity.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 
 @Dao

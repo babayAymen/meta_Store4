@@ -1,33 +1,6 @@
 package com.aymen.store.model.repository.realmRepository
 
-import android.util.Log
-import com.aymen.metastore.model.entity.realm.ArticleCompany
-import com.aymen.metastore.model.entity.realm.PaymentForProviderPerDay
-import com.aymen.metastore.model.entity.realm.PaymentForProviders
-import com.aymen.store.model.Enum.PaymentStatus
-import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.entity.realm.Article
-import com.aymen.store.model.entity.realm.Category
-import com.aymen.store.model.entity.realm.ClientProviderRelation
-import com.aymen.store.model.entity.realm.Comment
-import com.aymen.store.model.entity.realm.Conversation
-import com.aymen.store.model.entity.realm.Inventory
-import com.aymen.store.model.entity.realm.Invetation
-import com.aymen.store.model.entity.realm.Invoice
-import com.aymen.store.model.entity.realm.Message
-import com.aymen.store.model.entity.realm.Parent
-import com.aymen.store.model.entity.realm.Payment
-import com.aymen.store.model.entity.realm.PointsPayment
-import com.aymen.store.model.entity.realm.Provider
-import com.aymen.store.model.entity.realm.PurchaseOrder
-import com.aymen.store.model.entity.realm.PurchaseOrderLine
-import com.aymen.store.model.entity.realm.SearchHistory
-import com.aymen.store.model.entity.realm.SubCategory
-import com.aymen.store.model.entity.realm.Worker
 import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
 import javax.inject.Inject
 
 class RealmRepositoryImpl @Inject constructor(

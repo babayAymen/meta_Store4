@@ -3,42 +3,22 @@ package com.aymen.store.model.repository.ViewModel
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Transaction
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCategoryToRoomCategory
-import com.aymen.metastore.model.entity.converterRealmToApi.mapCompanyToRoomCompany
-import com.aymen.metastore.model.entity.converterRealmToApi.mapInvoiceToRoomInvoice
-import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderLineToRoomPurchaseOrderLine
-import com.aymen.metastore.model.entity.converterRealmToApi.mapPurchaseOrderToRoomPurchaseOrder
-import com.aymen.metastore.model.entity.converterRealmToApi.mapSubCategoryToRoomSubCategory
-import com.aymen.metastore.model.entity.converterRealmToApi.mapUserToRoomUser
+import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.PurchaseOrder
+import com.aymen.metastore.model.entity.model.PurchaseOrderLine
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.Article
-import com.aymen.metastore.model.entity.room.ArticleCompany
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.room.PurchaseOrder
-import com.aymen.metastore.model.entity.room.PurchaseOrderLine
-import com.aymen.metastore.model.entity.room.User
-import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
-import com.aymen.store.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.entity.converterRealmToApi.mapArticelDtoToRoomArticle
-import com.aymen.store.model.entity.converterRealmToApi.mapArticleCompanyToRoomArticleCompany
-import com.aymen.store.model.entity.converterRealmToApi.mapRoomArticleToArticleDto
-import com.aymen.store.model.entity.dto.CompanyDto
-import com.aymen.store.model.entity.dto.InvoiceDto
-import com.aymen.store.model.entity.dto.PurchaseOrderDto
-import com.aymen.store.model.entity.dto.UserDto
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -59,26 +39,26 @@ class ShoppingViewModel @Inject constructor(
 
     var qte by mutableDoubleStateOf(0.0)
     var comment by mutableStateOf("")
-    var order by mutableStateOf(PurchaseOrderLineWithPurchaseOrderOrInvoice(PurchaseOrderLine()))
+    var order by mutableStateOf(PurchaseOrderLine())
 
-    var orderArray by mutableStateOf(listOf<PurchaseOrderLineWithPurchaseOrderOrInvoice>())
+    var orderArray by mutableStateOf(listOf<PurchaseOrderLine>())
 
     var delivery by mutableStateOf(false)
-    var randomArticle by mutableStateOf(ArticleWithArticleCompany(articleCompany = ArticleCompany(), article = Article(), company = Company()))
+    var randomArticle by mutableStateOf(ArticleCompany())
     // StateFlow properties that will update reactively
     private val _myCompany = MutableStateFlow(sharedViewModel.company.value)
-    val myCompany: StateFlow<CompanyDto?> = _myCompany
+    val myCompany: StateFlow<Company?> = _myCompany
 
     private val _myUser = MutableStateFlow(sharedViewModel.user.value)
-    val myUser: StateFlow<UserDto?> = _myUser
+    val myUser: StateFlow<User?> = _myUser
 
     private val _accountType = MutableStateFlow(sharedViewModel.accountType)
     val accountType: StateFlow<AccountType> = _accountType
-    private val _allMyOrdersLine = MutableStateFlow<List<PurchaseOrderLineWithPurchaseOrderOrInvoice>>(emptyList())
-    val allMyOrdersLine: StateFlow<List<PurchaseOrderLineWithPurchaseOrderOrInvoice>> = _allMyOrdersLine
+    private val _allMyOrdersLine = MutableStateFlow<List<PurchaseOrderLine>>(emptyList())
+    val allMyOrdersLine: StateFlow<List<PurchaseOrderLine>> = _allMyOrdersLine
 
-    private val _allMyOrders = MutableStateFlow<List<PurchaseOrderWithCompanyAndUserOrClient>>(emptyList())
-    val allMyOrders: StateFlow<List<PurchaseOrderWithCompanyAndUserOrClient>> = _allMyOrders
+    private val _allMyOrders = MutableStateFlow<List<PurchaseOrder>>(emptyList())
+    val allMyOrders: StateFlow<List<PurchaseOrder>> = _allMyOrders
 
 
     var Order by mutableStateOf(PurchaseOrder())
@@ -91,8 +71,8 @@ init {
 }
     fun removeOrderById(index: Int) {
         orderArray = orderArray.toMutableList().also {
-            val quantity = it[index].purchaseOrderLine.quantity
-            val sellingPrice = it[index].article?.articleCompany?.sellingPrice
+            val quantity = it[index].quantity
+            val sellingPrice = it[index].article?.sellingPrice
             val price = BigDecimal(quantity!!).multiply(BigDecimal(sellingPrice!!))
             sharedViewModel.returnThePrevioseBalance(price)
             it.removeAt(index)
@@ -100,20 +80,15 @@ init {
     }
 
 fun submitShopping(newBalance: BigDecimal) {
-    val existingOrder = orderArray.find { it.article?.articleCompany?.id == randomArticle.articleCompany.id }
+    val existingOrder = orderArray.find { it.article?.id == randomArticle.id }
 
     if (existingOrder != null) {
-        val updatedOrder = existingOrder.copy(
-            purchaseOrderLine = existingOrder.purchaseOrderLine.copy(quantity = qte, comment = comment , delivery = delivery)
-        )
+        val updatedOrder = existingOrder.copy(quantity = qte, comment = comment , delivery = delivery)
         orderArray = orderArray.map {
             if (it == existingOrder) updatedOrder else it
         }
     } else {
-        val newOrder = PurchaseOrderLineWithPurchaseOrderOrInvoice(
-            purchaseOrderLine = PurchaseOrderLine(quantity = qte, comment = comment , delivery = delivery , articleId = randomArticle.articleCompany.id),
-            article = ArticleWithArticleCompany(articleCompany = randomArticle.articleCompany , article = randomArticle.article, company = randomArticle.company  )
-        )
+        val newOrder =  PurchaseOrderLine(quantity = qte, comment = comment , delivery = delivery , article = randomArticle)
         orderArray = orderArray + newOrder
     }
     calculateCost()
@@ -142,8 +117,7 @@ fun submitShopping(newBalance: BigDecimal) {
         viewModelScope.launch (Dispatchers.IO){
             if(orderArray.isNotEmpty() && index == -1){
                 try {
-                    val sn = mapOrderArrayToDto(orderArray)
-                    val response = repository.sendOrder(sn)
+                    val response = repository.sendOrder(orderArray)
                     if(response.isSuccessful){
                         val diff = BigDecimal(myBalance).subtract(cost)
                         if(diff<BigDecimal(30)){
@@ -169,7 +143,7 @@ fun submitShopping(newBalance: BigDecimal) {
                     }
                 val newOrderArray = orderArray.toMutableList()
                 newOrderArray.retainAll { newOrderArray.indexOf(it) == index }
-                val response = repository.sendOrder(mapOrderArrayToDto(newOrderArray))
+                val response = repository.sendOrder(newOrderArray)
                     if (response.isSuccessful) {
                         removeOrderById(index)
                     }
@@ -180,26 +154,26 @@ fun submitShopping(newBalance: BigDecimal) {
         }
     }
 
-
-    fun mapOrderArrayToDto(orderArray : List<PurchaseOrderLineWithPurchaseOrderOrInvoice>):List<PurchaseOrderLineDto>{
-        val dtoArray = emptyList<PurchaseOrderLineDto>().toMutableList()
-        orderArray.forEach {
-            val line = PurchaseOrderLineDto()
-            line.article = mapRoomArticleToArticleDto(it.article?.articleCompany!!)
-            line.quantity = it.purchaseOrderLine.quantity
-            line.delivery = it.purchaseOrderLine.delivery
-            line.comment = it.purchaseOrderLine.comment
-             dtoArray += line
-        }
-        return dtoArray
-    }
+//
+//    fun mapOrderArrayToDto(orderArray : List<PurchaseOrderLineWithPurchaseOrderOrInvoice>):List<PurchaseOrderLineDto>{
+//        val dtoArray = emptyList<PurchaseOrderLineDto>().toMutableList()
+//        orderArray.forEach {
+//            val line = PurchaseOrderLineDto()
+//            line.article = mapRoomArticleToArticleDto(it.article?.articleCompany!!)
+//            line.quantity = it.purchaseOrderLine.quantity
+//            line.delivery = it.purchaseOrderLine.delivery
+//            line.comment = it.purchaseOrderLine.comment
+//             dtoArray += line
+//        }
+//        return dtoArray
+//    }
 
     fun remiseAZero(){
         delivery = false
-        order = PurchaseOrderLineWithPurchaseOrderOrInvoice(PurchaseOrderLine())
+        order = PurchaseOrderLine()
         qte = 0.0
         comment = ""
-        randomArticle = ArticleWithArticleCompany(ArticleCompany(), Article(), Company())
+        randomArticle = ArticleCompany()
     }
 
     fun returnAllMyMony(){
@@ -213,7 +187,7 @@ fun submitShopping(newBalance: BigDecimal) {
     fun calculateCost(){
         cost = BigDecimal.ZERO
         orderArray.forEach {
-            cost = cost.add(BigDecimal(it.article?.articleCompany?.sellingPrice!!).multiply(BigDecimal(it.purchaseOrderLine.quantity!!)))
+            cost = cost.add(BigDecimal(it.article?.sellingPrice!!).multiply(BigDecimal(it.quantity!!)))
         }
     }
 
@@ -226,7 +200,6 @@ fun submitShopping(newBalance: BigDecimal) {
                     Log.e("getAllMyOrders","size : ${orders.body()?.size}")
                     if (orders.isSuccessful) {
                         orders.body()?.forEach { purchaseLineDto ->
-                           insertShopping(purchaseLineDto)
                         }
                     }
                 } catch (_ex: Exception) {
@@ -234,45 +207,13 @@ fun submitShopping(newBalance: BigDecimal) {
                 }finally {
                             isLoading = false
                 }
-                _allMyOrdersLine.value = room.purchaseOrderLineDao().getAllMyOrdersLinesByOrderId(Order.id!!)
+//                _allMyOrdersLine.value = room.purchaseOrderLineDao().getAllMyOrdersLinesByOrderId(Order.id!!)
             }
         }
     }
 
-    @Transaction
-    suspend fun insertShopping(shopping : PurchaseOrderLineDto){
-        room.categoryDao().insertCategory(mapCategoryToRoomCategory(shopping.article!!.category!!))
-        room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(shopping.article!!.subCategory!!))
-        room.userDao().insertUser(mapUserToRoomUser(shopping.article!!.company?.user))
-        shopping.article!!.provider?.user?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it))
-        }
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(shopping.article!!.provider))
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(shopping.article!!.company))
-        room.articleDao().insertArticle(mapArticelDtoToRoomArticle(shopping.article?.article!!))
-        room.articleCompanyDao().insertArticle(mapArticleCompanyToRoomArticleCompany(shopping.article))
-        shopping.invoice?.let {
-            room.invoiceDao().insertInvoice(mapInvoiceToRoomInvoice(it))
-        }
-        room.purchaseOrderDao().insertOrder(mapPurchaseOrderToRoomPurchaseOrder(shopping.purchaseorder!!))
-        room.purchaseOrderLineDao().insertOrderLine(
-            mapPurchaseOrderLineToRoomPurchaseOrderLine(shopping)
-        )
-    }
 
 
-    @Transaction
-    suspend fun insertInvoice(invoice : InvoiceDto){
-        invoice.client?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it.user))
-            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
-        }
-        invoice.person?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it))
-        }
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(invoice.provider))
-        room.invoiceDao().insertInvoice(mapInvoiceToRoomInvoice(invoice))
-    }
 
     fun getAllMyOrders() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -283,17 +224,16 @@ fun submitShopping(newBalance: BigDecimal) {
 
                 if (response.isSuccessful) {
                     response.body()?.forEach { order ->
-                        inserPurchaseorder(order)
                     }
                 }
-                _allMyOrders.value = when (sharedViewModel.accountType ) {
-                    AccountType.COMPANY -> room.purchaseOrderDao().getAllMyOrdersAsCompany(sharedViewModel.company.value.id!!)
-                    AccountType.USER -> room.purchaseOrderDao().getAllMyOrdersAsUser(sharedViewModel.user.value.id!!)
-                    else -> {
-                        Log.e("purchaseorderfromroom", "Account type not recognized, returning empty list.")
-                        emptyList()
-                    }
-                }
+//                _allMyOrders.value = when (sharedViewModel.accountType ) {
+//                    AccountType.COMPANY -> room.purchaseOrderDao().getAllMyOrdersAsCompany(sharedViewModel.company.value.id!!)
+//                    AccountType.USER ->  room.purchaseOrderDao().getAllMyOrdersAsUser(sharedViewModel.user.value.id!!)
+//                    else -> {
+//                        Log.e("purchaseorderfromroom", "Account type not recognized, returning empty list.")
+//                        emptyList()
+//                    }
+//                }
                 Log.e("purchaseorderfromroom", "Account type: ${sharedViewModel.accountType}, Retrieved orders size: ${_allMyOrders.value.size}")
 
             } catch (ex: Exception) {
@@ -339,24 +279,6 @@ fun submitShopping(newBalance: BigDecimal) {
     fun deleteAll(){
         _allMyOrders.value = emptyList()
         _allMyOrdersLine.value = emptyList()
-    }
-    @Transaction
-    suspend fun inserPurchaseorder(order : PurchaseOrderDto){
-        order.person?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it))
-        }
-        order.client?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it.user))
-            room.companyDao().insertCompany(mapCompanyToRoomCompany(it))
-        }
-        order.person?.let {
-            room.userDao().insertUser(mapUserToRoomUser(it))
-        }
-        room.userDao().insertUser(mapUserToRoomUser(order.company?.user))
-        room.companyDao().insertCompany(mapCompanyToRoomCompany(order.company))
-        room.purchaseOrderDao().insertOrder(
-            mapPurchaseOrderToRoomPurchaseOrder(order)
-        )
     }
     fun orderLineResponse(status: Status, id : Long, isAll : Boolean){
         viewModelScope.launch(Dispatchers.IO) {

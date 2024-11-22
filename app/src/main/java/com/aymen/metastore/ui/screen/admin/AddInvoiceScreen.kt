@@ -1,7 +1,6 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,16 +47,16 @@ import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.entity.dto.InvoiceDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
-import com.aymen.store.ui.component.ArticleDialog
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.ClientDialog
-import com.aymen.store.ui.component.DiscountTextField
-import com.aymen.store.ui.component.LodingShape
-import com.aymen.store.ui.component.ShowImage
-import com.aymen.store.ui.component.ShowPaymentDailog
+import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.ui.component.ArticleDialog
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.ClientDialog
+import com.aymen.metastore.ui.component.DiscountTextField
+import com.aymen.metastore.ui.component.LodingShape
+import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.ui.component.ShowPaymentDailog
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDateTime
@@ -77,7 +74,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val clientUser = invoiceViewModel.clientUser
     val clientType = invoiceViewModel.clientType
     val isLoading = invoiceViewModel.isLoading
-    val invoice = invoiceViewModel.invoice
+    val invoice = Invoice()
     val currentDateTime = LocalDateTime.now()
     val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) // HH:mm:ss
     LaunchedEffect(key1 = Unit) {
@@ -109,7 +106,6 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     DisposableEffect(key1 = Unit) {
         onDispose {
             invoiceViewModel.commandLineDtos = emptyList()
-            invoiceViewModel._ordersLineArray.value = emptyList()
             invoiceViewModel.discount = 0.0
             tottva = BigDecimal.ZERO
             totprice = BigDecimal.ZERO
@@ -228,7 +224,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         PaymentStatus.NOT_PAID
                                     }
                                 }
-                                val invoicee = InvoiceDto().copy()
+                                val invoicee = Invoice().copy()
                                     invoicee.rest = mony.toDouble()
                                     invoicee.paid = paid
                                 for (x in invoiceViewModel.commandLineDtos){
@@ -460,7 +456,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = invoice.provider.name)
+                                Text(text = invoice.provider?.name!!)
                                 invoice.provider.phone?.let { Text(text = it) }
                                 invoice.provider.address?.let { Text(text = it) }
                             }
@@ -472,10 +468,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${invoice.provider.logo}/company/${invoice.provider.userId}"
+                                    image = "${BASE_URL}werehouse/image/${invoice.provider?.logo}/company/${invoice.provider?.user?.id}"
                                 )
-                                Text(text = invoice.provider.email ?: "")
-                                invoice.provider.matfisc?.let { Text(text = it) }
+                                Text(text = invoice.provider?.email ?: "")
+                                invoice.provider?.matfisc?.let { Text(text = it) }
                             }
                         }
                     }
@@ -485,11 +481,11 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                             .wrapContentWidth(Alignment.CenterHorizontally)
                     ) {
                         Column {
-                            Text(text = invoice.invoice.code.toString(),
+                            Text(text = invoice.code.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally))
-                            Text(text = "invoice date: ${invoice.invoice.createdDate}",
+                            Text(text = "invoice date: ${invoice.createdDate}",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally))
@@ -755,7 +751,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
         }
         InvoiceMode.VERIFY ->{
             LaunchedEffect(key1 = Unit) {
-                if(invoiceViewModel.invoice.invoice.type == InvoiceDetailsType.COMMAND_LINE){
+                if(invoiceViewModel.invoice.type == InvoiceDetailsType.COMMAND_LINE){
                     invoiceViewModel.getAllCommandLineByInvoiceId()
                 }else{
                     invoiceViewModel.getAllOrdersLineByInvoiceId()
@@ -768,9 +764,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = invoice.provider.name)
-                                invoice.provider.phone?.let { Text(text = it) }
-                                invoice.provider.address?.let { Text(text = it) }
+                                Text(text = invoice.provider?.name!!)
+                                invoice.provider?.phone?.let { Text(text = it) }
+                                invoice.provider?.address?.let { Text(text = it) }
                             }
                         }
                         Row(
@@ -780,10 +776,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${invoice.provider.logo}/company/${invoice.provider.userId}"
+                                    image = "${BASE_URL}werehouse/image/${invoice.provider?.logo}/company/${invoice.provider?.user?.id}"
                                 )
-                                Text(text = invoice.provider.email ?: "")
-                                invoice.provider.matfisc?.let { Text(text = it) }
+                                Text(text = invoice.provider?.email ?: "")
+                                invoice.provider?.matfisc?.let { Text(text = it) }
                             }
                         }
                     }
@@ -794,21 +790,21 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     ) {
                         Column {
                             Text(
-                                text = invoice.invoice.code.toString(),
+                                text = invoice.code.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
                             Text(
-                                text = "invoice date: ${invoice.invoice.createdDate}",
+                                text = "invoice date: ${invoice.createdDate}",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
-                            if(invoice.invoice.status == Status.INWAITING){
-                                if(invoice.invoice.providerId != myCompany.id){
+                            if(invoice.status == Status.INWAITING){
+                                if(invoice.provider?.id != myCompany.id){
                             ButtonSubmit(labelValue = "Accept", color = Color.Green, enabled = true) {
-                                invoiceViewModel.accepteInvoice(invoice.invoice.id!! , Status.ACCEPTED)
+                                invoiceViewModel.accepteInvoice(invoice.id!! , Status.ACCEPTED)
                             }
                                 }else{
                                     Text("waiting for accept")
@@ -998,13 +994,15 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                         .weight(1f)
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
-                                                Text(
-                                                    text = order.article?.article!!.code,
-                                                    modifier = Modifier
-                                                        .padding(end = 3.dp)
-                                                        .weight(1f)
-                                                        .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
-                                                )
+                                                order.article?.article!!.code?.let {
+                                                    Text(
+                                                        text = it,
+                                                        modifier = Modifier
+                                                            .padding(end = 3.dp)
+                                                            .weight(1f)
+                                                            .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
+                                                    )
+                                                }
                                                 Text(
                                                     text = order.quantity.toString(),
                                                     modifier = Modifier

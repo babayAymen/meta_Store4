@@ -1,10 +1,9 @@
-package com.aymen.store.ui.screen.user
+package com.aymen.metastore.ui.screen.user
 
 import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
@@ -59,9 +57,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,25 +68,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.ArticleViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.model.repository.ViewModel.MessageViewModel
-import com.aymen.store.ui.component.ArticleCardForUser
-import com.aymen.store.ui.component.EmptyImage
-import com.aymen.store.ui.component.ShowImage
-import com.aymen.store.ui.component.CheckLocation
-import com.aymen.store.ui.component.UpdateImageDialog
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
+import com.aymen.metastore.ui.component.ArticleCardForUser
+import com.aymen.metastore.ui.component.EmptyImage
+import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.ui.component.CheckLocation
+import com.aymen.metastore.ui.component.UpdateImageDialog
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
-import com.aymen.store.ui.screen.admin.DashBoardScreen
+import com.aymen.metastore.ui.screen.admin.DashBoardScreen
+import com.aymen.store.ui.screen.user.NotificationScreen
 import java.math.RoundingMode
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -121,8 +119,10 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     val type = sharedViewModel.accountType
     val currentScreen by appViewModel.currentScreen
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val listState = rememberLazyListState()
-    val randomArticles by articleViewModel.randomArticles.collectAsStateWithLifecycle()
+    val randomArticles = articleViewModel.randomArticles.collectAsLazyPagingItems()
+    LaunchedEffect(key1 = randomArticles) {
+        Log.e("fetchrandomarticleforhomepage","size : ${randomArticles.itemCount}")
+    }
     var triggerLocationCheck by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = type, key2 = user, key3 = company) { //, key2 = user, key3 = company should be exist
@@ -135,17 +135,7 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     if(triggerLocationCheck) {
         CheckLocation(type, user, company, context)
     }
-    LaunchedEffect(key1 = Unit, type) {
-        articleViewModel.getRandomArticles()
-    }
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-            .collect { lastVisibleIndex ->
-                if (lastVisibleIndex != null && lastVisibleIndex >= articleViewModel.randomArticles.value.size - 2) {
-                    articleViewModel.getRandomArticles()
-                }
-            }
-    }
+
     Scaffold (
         modifier = Modifier
             .fillMaxSize()
@@ -156,7 +146,6 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
         }
     ){value ->
         Column (
-//            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(value)
@@ -171,7 +160,6 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
                     NotificationScreen()
                 }           
                 IconType.MESSAGE -> {
-                    messageViewModel.getAllMyConversation()
                     ConversationScreen()
                 }
                 IconType.COMPANY ->
@@ -258,7 +246,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             }
                     ) {
                         if (opDialog) {
-                            UpdateImageDialog(isOpen = opDialog) {
+                            UpdateImageDialog(isOpen = true) {
                                 opDialog = false
 
                             }
@@ -428,7 +416,6 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.Search,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.SEARCH)
                         },
                         description = "search"
@@ -438,9 +425,8 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         selectedIcon = selectedIcon,
                         iconSelected = Icons.Default.GroupAdd,
                         iconUnselected = Icons.Outlined.GroupAdd,
-                        badgeCount = 0, // Example of a message badge
+                        badgeCount = 0,
                         onClick = {
-//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.USER)
                         },
                         description = "user"
@@ -450,11 +436,8 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
         },
         scrollBehavior =  scrollBehavior
     )
-
-    val scope = rememberCoroutineScope()
-    val doubleBackToExitPressedOnce = remember { mutableStateOf(false) }
     SystemBackButtonHandler {
-        if (historySelected == selectedIcon && viewModel.currentScreen.value == IconType.HOME) { //doubleBackToExitPressedOnce.value
+        if (historySelected == selectedIcon && viewModel.currentScreen.value == IconType.HOME) {
 
             (context as? Activity)?.moveTaskToBack(true)
 
@@ -565,7 +548,7 @@ fun ScreenByCategory(articleViewModel: ArticleViewModel) {
     LazyRow {
         items(CompanyCategory.entries){ categ ->
             Card(onClick = {
-                articleViewModel.getRandomArticlesByCompanyCategory(categ)
+                articleViewModel.fetchRandomArticlesForHomePage(categ)
                            },
                 modifier = Modifier.height(50.dp))
             {

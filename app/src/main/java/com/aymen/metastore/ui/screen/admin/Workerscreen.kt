@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.util.Log
 import androidx.compose.foundation.layout.Column
@@ -8,23 +8,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.aymen.store.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.WorkerViewModel
-import com.aymen.store.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.ButtonSubmit
 
 
 @Composable
 fun WorkerScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val workerViewModel : WorkerViewModel = hiltViewModel()
-    LaunchedEffect(key1 = true) {
-        workerViewModel.getAllMyWorkers()
-    }
+
     Surface(
         modifier = Modifier
             .fillMaxSize()

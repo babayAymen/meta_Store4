@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.user
+package com.aymen.metastore.ui.screen.user
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -36,23 +36,22 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.IconType
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.MessageViewModel
-import com.aymen.store.ui.component.AddTypeDialog
-import com.aymen.store.ui.component.SendPointDialog
-import com.aymen.store.ui.component.ShowImage
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
+import com.aymen.metastore.ui.component.AddTypeDialog
+import com.aymen.metastore.ui.component.SendPointDialog
+import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.room.User
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.metastore.ui.screen.user.RatingScreen
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.repository.ViewModel.ClientViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 
 @Composable
 fun UserScreen() {
@@ -143,8 +142,8 @@ fun UserScreen() {
 }
 
 @Composable
-fun userDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,clientViewModel: ClientViewModel,companyViewModel: CompanyViewModel,
-                   ratingViewModel : RatingViewModel,user: User, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
+fun userDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
+                ratingViewModel : RatingViewModel, user: User, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     Row {
         Row(
             modifier = Modifier
@@ -152,7 +151,7 @@ fun userDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel,c
                 .padding(end = 2.dp)
         ) {
             AddTypeDialog(isOpen = false, user.id!!, false) {
-                clientViewModel.sendClientRequest(user.id, it)
+                clientViewModel.sendClientRequest(user.id!!, it)
             }
         }
         Row(

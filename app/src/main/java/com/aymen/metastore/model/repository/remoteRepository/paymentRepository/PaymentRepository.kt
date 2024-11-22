@@ -1,6 +1,6 @@
 package com.aymen.store.model.repository.remoteRepository.paymentRepository
 
-import com.aymen.metastore.model.entity.Dto.PaymentForProvidersDto
+import com.aymen.metastore.model.entity.dto.PaymentForProvidersDto
 import retrofit2.Response
 
 interface PaymentRepository {

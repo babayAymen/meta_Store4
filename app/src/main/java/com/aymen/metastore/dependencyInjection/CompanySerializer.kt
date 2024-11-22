@@ -1,7 +1,7 @@
 package com.aymen.store.dependencyInjection
 
 import androidx.datastore.core.Serializer
-import com.aymen.store.model.entity.realm.Company
+import com.aymen.metastore.model.entity.model.Company
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +13,7 @@ object CompanySerializer : Serializer<Company> {
         get() = Company()
 
     override suspend fun readFrom(input: InputStream): Company {
-        return Gson().fromJson(input.readBytes().decodeToString(),Company::class.java)
+        return Gson().fromJson(input.readBytes().decodeToString(), Company::class.java)
     }
 
     override suspend fun writeTo(t: Company, output: OutputStream) {

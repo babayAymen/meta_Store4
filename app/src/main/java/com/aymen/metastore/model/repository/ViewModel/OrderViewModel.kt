@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.aymen.store.model.entity.realm.PurchaseOrderLine
+import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

@@ -1,4 +1,4 @@
-package com.aymen.store.ui.component
+package com.aymen.metastore.ui.component
 
 import android.content.Intent
 import android.net.Uri
@@ -60,30 +60,31 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.map
 import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
-import com.aymen.metastore.model.entity.Dto.ArticleCompanyDto
-import com.aymen.metastore.model.entity.converterRealmToApi.mapRoomCategoryToCategory
-import com.aymen.metastore.model.entity.room.Article
-import com.aymen.metastore.model.entity.room.Category
-import com.aymen.metastore.model.entity.room.ClientProviderRelation
-import com.aymen.metastore.model.entity.room.Company
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
-import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
-import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
+import com.aymen.metastore.model.entity.model.Article
+import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
+import com.aymen.metastore.model.entity.model.CommandLine
+import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.Inventory
+import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.UnitArticle
-import com.aymen.store.model.entity.dto.CommandLineDto
-import com.aymen.store.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.model.repository.ViewModel.InvoiceViewModel
-import com.aymen.store.model.repository.ViewModel.PaymentViewModel
-import com.aymen.store.model.repository.ViewModel.SubCategoryViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.PaymentViewModel
+import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -205,7 +206,7 @@ fun DropDownCategory(list: List<Category>) {
         var itemSelected by remember {
             mutableStateOf(list[0])
         }
-        categoryViewModel.category = mapRoomCategoryToCategory(itemSelected)
+        categoryViewModel.category = itemSelected
         var isExpanded by remember {
             mutableStateOf(false)
         }
@@ -237,7 +238,7 @@ fun DropDownCategory(list: List<Category>) {
                                 onClick = {
                                     itemSelected = list[index]
                                     isExpanded = false
-                                    categoryViewModel.category = mapRoomCategoryToCategory(itemSelected)
+                                    categoryViewModel.category = itemSelected
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                             )
@@ -251,19 +252,21 @@ fun DropDownCategory(list: List<Category>) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownSubCategory(list : List<com.aymen.metastore.model.entity.room.SubCategory>, categoryId : Long, onSelected : (com.aymen.metastore.model.entity.room.SubCategory) -> Unit) {
+fun DropDownSubCategory(list : LazyPagingItems<com.aymen.metastore.model.entity.model.SubCategory>, categoryId : Long, onSelected : (com.aymen.metastore.model.entity.model.SubCategory) -> Unit) {
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
-    var itemSelected by remember {
+    var itemSelectedLibell by remember {
         mutableStateOf("select sub category")
+    }
+    var itemSelected by remember {
+        mutableStateOf(com.aymen.metastore.model.entity.model.SubCategory())
     }
         val subCategoryList by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
     LaunchedEffect(categoryId) {
-         if(subCategoryList.isNotEmpty()){
-             itemSelected = subCategoryList[0].libelle!!
-            onSelected(subCategoryList[0])
-        }else{
-            "select sub category"
+        subCategoryList.let {
+        it.map { itemSelectedLibell = it.libelle!! }
+            onSelected(itemSelected)
         }
+
     }
     var isExpanded by remember {
         mutableStateOf(false)
@@ -281,7 +284,7 @@ fun DropDownSubCategory(list : List<com.aymen.metastore.model.entity.room.SubCat
             ) {
                 TextField(
                     modifier = Modifier.menuAnchor(),
-                    value = itemSelected,
+                    value = itemSelectedLibell,
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -289,12 +292,13 @@ fun DropDownSubCategory(list : List<com.aymen.metastore.model.entity.room.SubCat
 
                 ExposedDropdownMenu(
                     expanded = isExpanded,
-                    onDismissRequest = { isExpanded = false }) {
-                    list.forEach { subCategory ->
+                    onDismissRequest = { isExpanded = false }
+                ) {
+                    list.itemSnapshotList.items.forEach { subCategory ->
                         DropdownMenuItem(
                             text = { Text(subCategory.libelle!!) },
                             onClick = {
-                                itemSelected = subCategory.libelle!!
+                                itemSelectedLibell = subCategory.libelle!!
                                 isExpanded = false
                                 subCategoryViewModel.subCategoryId = subCategory.id!!
                                 onSelected(subCategory)
@@ -311,11 +315,10 @@ fun DropDownSubCategory(list : List<com.aymen.metastore.model.entity.room.SubCat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCompany(list: List<CompanyWithCompanyClient>) {
+fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>) {
     val companyViewModel : CompanyViewModel = hiltViewModel()
-    if (list.isNotEmpty()) {
         var itemSelected by remember {
-            mutableStateOf(list[0])
+            mutableStateOf(ClientProviderRelation())
         }
         var isExpanded by remember {
             mutableStateOf(false)
@@ -333,7 +336,7 @@ fun DropDownCompany(list: List<CompanyWithCompanyClient>) {
                 ) {
                     TextField(
                         modifier = Modifier.menuAnchor(),
-                        value = itemSelected.provider.name,
+                        value = itemSelected.provider?.name?:"",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -342,13 +345,14 @@ fun DropDownCompany(list: List<CompanyWithCompanyClient>) {
                     ExposedDropdownMenu(
                         expanded = isExpanded,
                         onDismissRequest = { isExpanded = false }) {
-                        list.forEachIndexed { index, text ->
+                        for(index in 0 until  list.itemCount){
+                            val text = list[index]
                             DropdownMenuItem(
-                                text = { Text(text.provider.name) },
+                                text = { Text(text?.provider?.name!!) },
                                 onClick = {
-                                    itemSelected = list[index]
+                                    itemSelected = text!!
                                     isExpanded = false
-                                    companyViewModel.providerId = itemSelected.provider.id!!
+                                    companyViewModel.providerId = itemSelected.provider?.id?:0
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                             )
@@ -357,8 +361,8 @@ fun DropDownCompany(list: List<CompanyWithCompanyClient>) {
                 }
             }
         }
-    }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -411,9 +415,7 @@ fun DropDownCompanyCategory(onSelected: (CompanyCategory) -> Unit) {
 
 
 @Composable
-fun ArticleCardForAdmin(articleCompany : com.aymen.metastore.model.entity.room.ArticleCompany,articlee: com.aymen.metastore.model.entity.room.Article, image : String, onSelected: () -> Unit) {
-    val articlecompany = articleCompany
-    val article = articlee
+fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: () -> Unit) {
     Row {
         Card(
             elevation = CardDefaults.cardElevation(6.dp),
@@ -427,21 +429,20 @@ fun ArticleCardForAdmin(articleCompany : com.aymen.metastore.model.entity.room.A
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    NormalText(value = article.libelle, aligne = TextAlign.Start)
-                    article.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    NormalText(value = articlecompany.unit.toString(), aligne = TextAlign.Start)
-                    NormalText(value = article.tva.toString(), aligne = TextAlign.Start)
-                    NormalText(value = articlecompany.sellingPrice.toString(), aligne = TextAlign.Start)
-                    NormalText(value = articlecompany.minQuantity.toString(), aligne = TextAlign.Start)
-                    article.barcode?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    NormalText(value = article.article?.libelle?:"", aligne = TextAlign.Start)
+                    article.article?.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    NormalText(value = article.unit.toString(), aligne = TextAlign.Start)
+                    NormalText(value = article.article?.tva.toString(), aligne = TextAlign.Start)
+                    NormalText(value = article.sellingPrice.toString(), aligne = TextAlign.Start)
+                    NormalText(value = article.minQuantity.toString(), aligne = TextAlign.Start)
+                    article.article?.barcode?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    article.article?.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
 
                     Row (
                         verticalAlignment = Alignment.CenterVertically
                     ){
-                        article.tva?.let { ShowPrice(cost = articlecompany.cost?:0.0, margin = articlecompany.sellingPrice!!, tva = it) }
-                        ArticleDetails(value = articlecompany.quantity.toString(), aligne = TextAlign.Start)
+                        article.article?.tva?.let { ShowPrice(cost = article.cost?:0.0, margin = article.sellingPrice!!, tva = it) }
+                        ArticleDetails(value = article.quantity.toString(), aligne = TextAlign.Start)
                     }
                 }
                 Column(
@@ -459,7 +460,7 @@ fun ArticleCardForAdmin(articleCompany : com.aymen.metastore.model.entity.room.A
 }
 
 @Composable
-fun addQuantityDailog(article: com.aymen.metastore.model.entity.room.ArticleCompany,articlee : com.aymen.metastore.model.entity.room.Article,company : Company, openDailoge: Boolean, onSubmit: (Double) -> Unit) {
+fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (Double) -> Unit) {
     var openDialog by remember { mutableStateOf(openDailoge) }
     var quantity by remember {
         mutableStateOf(0.0)
@@ -476,20 +477,20 @@ fun addQuantityDailog(article: com.aymen.metastore.model.entity.room.ArticleComp
                     .clip(RoundedCornerShape(10.dp)),
             ) {
                 Column {
-                    NormalText(value = "Add com.aymen.metastore.model.entity.room.Article Quantiry", aligne = TextAlign.Center)
+                    NormalText(value = "Add Quantiry", aligne = TextAlign.Center)
                     Spacer(modifier = Modifier.padding(10.dp))
                     Row {
                         Row(
                             modifier = Modifier.weight(1f)
                         ) {
-                            NormalText(value = articlee.libelle, aligne = TextAlign.Start)
+                            NormalText(value = article.article?.libelle!!, aligne = TextAlign.Start)
                         }
                         Row (
                             modifier = Modifier.weight(1f)
                         ){
                             ShowImage(
-                                image = "${BASE_URL}werehouse/image/${articlee.image}/article/${
-                                    company.category?.ordinal
+                                image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${
+                                    article.company?.category?.ordinal
                                 }"
                             )
                         }
@@ -569,8 +570,9 @@ fun CategoryCardForAdmin(category: Category, image : String) {
 }
 
 @Composable
-fun SubCategoryCardForAdmin(subCategory: com.aymen.metastore.model.entity.room.SubCategory, image : String,
-                            category: Category) {
+fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String,
+                            category: Category
+) {
    val cat by remember {
        mutableStateOf(category)
    }
@@ -610,7 +612,7 @@ fun SubCategoryCardForAdmin(subCategory: com.aymen.metastore.model.entity.room.S
 }
 
 @Composable
-fun InventoryCard(inventory: InventoryWithArticle, image : String) {
+fun InventoryCard(inventory: Inventory, image : String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -623,9 +625,9 @@ fun InventoryCard(inventory: InventoryWithArticle, image : String) {
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    NormalText(value = inventory.article.article.libelle, aligne = TextAlign.Start)
-                    inventory.article.article.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    NormalText(value = inventory.article.articleCompany.quantity.toString(), aligne = TextAlign.Start)
+                    NormalText(value = inventory.article?.article?.libelle!!, aligne = TextAlign.Start)
+                    inventory.article.article?.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    NormalText(value = inventory.article.quantity.toString(), aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -652,9 +654,23 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
             modifier = Modifier
                 .padding(4.dp)
         ) {
+            Row {
+             Column(
+                 modifier = Modifier.weight(2f)
+             ) {
+
             NormalText(value = article.libelle, aligne = TextAlign.Start)
             NormalText(value = article.tva.toString(), aligne = TextAlign.Start)
             article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
+             }
+                Column (
+                    modifier = Modifier.weight(1f)
+                ){
+                    ShowImage(image = "${BASE_URL}werehouse/image/${article.image}/article/${
+                        article.category?.ordinal
+                    }" )
+                }
+            }
             ButtonSubmit(labelValue = "add", color = Color.Green, enabled = true) {
                 onSelected()
             }
@@ -663,7 +679,7 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
 }
 
 @Composable
-fun ClientCard(client: CompanyWithCompanyClient, image : String) {
+fun ClientCard(client: ClientProviderRelation, image : String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -676,10 +692,10 @@ fun ClientCard(client: CompanyWithCompanyClient, image : String) {
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                       client.clientCompany?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
-                       client.clientCompany?.let { it.code?.let { it1 -> NormalText(value = it1, aligne = TextAlign.Start) } }
-                    client.clientUser?.username?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    NormalText(value = client.relation.mvt.toString(), aligne = TextAlign.Start)
+                       client.client?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
+                       client.client?.let { it.code?.let { it1 -> NormalText(value = it1, aligne = TextAlign.Start) } }
+                    client.person?.username?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    NormalText(value = client.mvt.toString(), aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -688,7 +704,7 @@ fun ClientCard(client: CompanyWithCompanyClient, image : String) {
                         .align(Alignment.CenterVertically)
                 ) {
                         Log.e("showImageclinetcard",image)
-                    if(client.clientCompany?.logo != null || client.clientUser?.image != null){
+                    if(client.client?.logo != null || client.person?.image != null){
                     ShowImage(image = image)
                     }else {
                         val painter: Painter = painterResource(id = R.drawable.emptyprofile)
@@ -711,7 +727,7 @@ fun ClientCard(client: CompanyWithCompanyClient, image : String) {
 }
 
 @Composable
-fun ProviderCard(provider: CompanyWithCompanyClient, image : String) {
+fun ProviderCard(provider: ClientProviderRelation, image : String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -726,7 +742,7 @@ fun ProviderCard(provider: CompanyWithCompanyClient, image : String) {
                 ){
                        provider.provider?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
                     //   client.client?.let { NormalText(value = it.code, aligne = TextAlign.Start) }
-                    NormalText(value = provider.relation.mvt.toString(), aligne = TextAlign.Start)
+                    NormalText(value = provider.mvt.toString(), aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -770,7 +786,7 @@ fun ParentCard(parent: Company) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InvoiceCard(invoice: InvoiceWithClientPersonProvider, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
+fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
 val context = LocalContext.current
     Column(
         modifier = Modifier.padding(5.dp)
@@ -781,9 +797,9 @@ val context = LocalContext.current
                 .padding(4.dp)
                 .clickable {
                     invoiceViewModel.invoice = invoice
-                    invoiceViewModel.discount = invoice.invoice.discount
+                    invoiceViewModel.discount = invoice.discount
                     invoiceViewModel.invoiceMode = InvoiceMode.UPDATE
-                    if (invoice.invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.invoice.status == Status.ACCEPTED || !asProvider) {
+                    if (invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.status == Status.ACCEPTED || !asProvider) {
                         invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
                     }
                     appViewModel.updateShow("add invoice")
@@ -793,7 +809,7 @@ val context = LocalContext.current
                 Column (
                     modifier = Modifier.weight(0.7f)
                 ){
-                    NormalText(value = invoice.invoice.code.toString(), aligne = TextAlign.Center)
+                    NormalText(value = invoice.code.toString(), aligne = TextAlign.Center)
                     if(asProvider) {
                         invoice.client?.let {
                         NormalText(
@@ -809,11 +825,11 @@ val context = LocalContext.current
                         }
                     }else {
                         NormalText(
-                            value = invoice.provider.name,
+                            value = invoice.provider?.name!!,
                             aligne = TextAlign.Start
                         )
                     }
-                    NormalText(value = invoice.invoice.prix_invoice_tot.toString(), aligne = TextAlign.End)
+                    NormalText(value = invoice.prix_invoice_tot.toString(), aligne = TextAlign.End)
 
                 }
             }
@@ -823,7 +839,7 @@ val context = LocalContext.current
 }
 
 @Composable
-fun TableRowContent(item: CommandLineDto) {
+fun TableRowContent(item: CommandLine) {
     Row(modifier = Modifier.fillMaxWidth()) {
         TableColumnItem(item.article?.article?.libelle!!)
         TableColumnItem(item.article?.article?.code?:"")
@@ -990,11 +1006,10 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                                         quantity * command.article?.article?.tva!! * invoiceViewModel.article.sellingPrice!! / 100
                                     command.prixArticleTot =
                                         quantity * command.article?.sellingPrice!!*(1-command.discount!!/100)
-                                    command.invoice?.code =
-                                        invoiceViewModel.lastInvoiceCode
+                                    command.invoice?.code = invoiceViewModel.lastInvoiceCode
                                     invoiceViewModel.commandLineDtos += command
-                                    invoiceViewModel.commandLineDto = CommandLineDto()
-                                    invoiceViewModel.article = ArticleCompanyDto()
+                                    invoiceViewModel.commandLineDto = CommandLine()
+                                    invoiceViewModel.article = ArticleCompany()
                                     quantity = 0.0
                                     discount = 0.0
                                     openDialog = false

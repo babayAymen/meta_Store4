@@ -1,4 +1,4 @@
-package com.aymen.store.ui.screen.admin
+package com.aymen.metastore.ui.screen.admin
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Update
@@ -39,27 +38,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.aymen.metastore.model.entity.room.Article
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.aymen.metastore.model.entity.model.Article
 import com.aymen.store.dependencyInjection.BASE_URL
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.aymen.store.model.repository.ViewModel.ArticleViewModel
-import com.aymen.store.model.repository.ViewModel.CompanyViewModel
-import com.aymen.store.ui.component.ArticleCardForAdmin
-import com.aymen.store.ui.component.ButtonSubmit
-import com.aymen.store.ui.component.addQuantityDailog
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
+import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.metastore.ui.component.ArticleCardForAdmin
+import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.addQuantityDailog
 import kotlinx.coroutines.delay
 
 @Composable
 fun ArticleScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
-    val companyViewModel : CompanyViewModel = hiltViewModel()
-    val adminArticles by articleViewModel.adminArticles.collectAsStateWithLifecycle()
-    val companies by companyViewModel.companiesByArticleId.collectAsStateWithLifecycle()
-    val articles by articleViewModel.articlesByArticleId.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        articleViewModel.getAllMyArticlesApi()
+    val sharedViewModel = hiltViewModel<SharedViewModel>()
+    val adminArticles = articleViewModel.adminArticles.collectAsLazyPagingItems()
+    LaunchedEffect(key1 = Unit) {
+        sharedViewModel.company.value.id?.let { articleViewModel.fetchAllMyArticlesApi(it) }
     }
     var isSelected by remember {
         mutableStateOf(false)
@@ -90,33 +89,35 @@ fun ArticleScreen() {
                     .fillMaxWidth()
             ){
                 LazyColumn {
-                    itemsIndexed(adminArticles){index , articleCompany ->
-//                        companyViewModel.fetchCompanyByArticleId(articleCompany.id!!, articleCompany.companyId!!)
-                        articleViewModel.fetchArticlesByArticleId(articleCompany.id!!, articleCompany.articleId!!)
-                        val com = companies[articleCompany.id]
-                        val art = articles[articleCompany.id]
-                        SwipeToDeleteContainer(
-                            articleCompany,
-                            onDelete = {
-                                Log.e("aymenbabatdelete","delete")
-                            },
-                            appViewModel = appViewModel,
-                        ){article ->
-                            ArticleCardForAdmin(article,
-                                 art?:Article(),
-                                image = "${BASE_URL}werehouse/image/${art?.image}/article/${com?.category!!.ordinal}") {
-                                articleIndex = index
-                                isSelected = true
-                            }
-                            if(isSelected && index == articleIndex) {
-                                addQuantityDailog(article, art?:Article(), com, true) {
-                                    articleViewModel.addQuantityArticle(it, article.id!!)
-                                    isSelected = false
-                                    articleIndex = -1
+                    items(
+                       count =  adminArticles.itemCount,
+                        key = adminArticles.itemKey{ it.id!! },
+                    ){ index ->
+                        val articleCompany = adminArticles[index]
+                        Log.e("article","article : $articleCompany")
+                        if(articleCompany != null) {
+                            SwipeToDeleteContainer(
+                                articleCompany,
+                                onDelete = {
+                                    Log.e("aymenbabatdelete", "delete")
+                                },
+                                appViewModel = appViewModel,
+                            ) { article ->
+                                ArticleCardForAdmin(
+                                    articleCompany,
+                                    image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.company?.category!!.ordinal}"
+                                ) {
+                                    isSelected = true
+                                }
+                                if (isSelected) {
+                                    addQuantityDailog(article, true) {
+                                        articleViewModel.addQuantityArticle(it, article.id!!)
+                                        isSelected = false
+                                        articleIndex = -1
+                                    }
                                 }
                             }
                         }
-
                     }
                 }
 
@@ -193,7 +194,7 @@ fun <T> SwipeToDeleteContainer(
 
         SwipeToDismissBox(
             state = state,
-            backgroundContent = { DeleteArticle(swipeDismissState = state)},
+            backgroundContent = { DeleteArticle(swipeDismissState = state) },
             enableDismissFromEndToStart = true,
             content = {content(item)}
         )
@@ -313,7 +314,7 @@ fun <T> SwipeToUpdateContainer(
 
         SwipeToDismissBox(
             state = state,
-            backgroundContent = { UpdateArticle(swipeDismissState = state)},
+            backgroundContent = { UpdateArticle(swipeDismissState = state) },
             enableDismissFromEndToStart = true,
             content = {content(item)}
         )

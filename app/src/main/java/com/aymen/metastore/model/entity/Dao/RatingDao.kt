@@ -3,7 +3,7 @@ package com.aymen.metastore.model.entity.Dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import com.aymen.metastore.model.entity.room.Rating
+import com.aymen.metastore.model.entity.room.entity.Rating
 import com.aymen.metastore.model.entity.roomRelation.RatingWithRater
 
 @Dao

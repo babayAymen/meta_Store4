@@ -24,13 +24,58 @@ import com.aymen.metastore.model.entity.Dao.SearchHistoryDao
 import com.aymen.metastore.model.entity.Dao.SubCategoryDao
 import com.aymen.metastore.model.entity.Dao.UserDao
 import com.aymen.metastore.model.entity.Dao.WorkerDao
+import com.aymen.metastore.model.entity.room.entity.Article
+import com.aymen.metastore.model.entity.room.entity.ArticleCompany
+import com.aymen.metastore.model.entity.room.entity.Bill
+import com.aymen.metastore.model.entity.room.entity.Cash
+import com.aymen.metastore.model.entity.room.entity.Category
+import com.aymen.metastore.model.entity.room.entity.ClientProviderRelation
+import com.aymen.metastore.model.entity.room.entity.CommandLine
+import com.aymen.metastore.model.entity.room.entity.Comment
+import com.aymen.metastore.model.entity.room.entity.Company
+import com.aymen.metastore.model.entity.room.entity.Conversation
+import com.aymen.metastore.model.entity.room.entity.Inventory
+import com.aymen.metastore.model.entity.room.entity.Invitation
+import com.aymen.metastore.model.entity.room.entity.Invoice
+import com.aymen.metastore.model.entity.room.entity.Message
+import com.aymen.metastore.model.entity.room.entity.PaymentForProviderPerDay
+import com.aymen.metastore.model.entity.room.entity.PaymentForProviders
+import com.aymen.metastore.model.entity.room.entity.PointsPayment
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrderLine
+import com.aymen.metastore.model.entity.room.entity.Rating
+import com.aymen.metastore.model.entity.room.entity.SearchHistory
+import com.aymen.metastore.model.entity.room.entity.SubCategory
+import com.aymen.metastore.model.entity.room.entity.User
+import com.aymen.metastore.model.entity.room.entity.Worker
+import com.aymen.metastore.model.entity.room.entity.bankTransfer
+import com.aymen.metastore.model.entity.room.remoteKeys.ArtRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
+import com.aymen.metastore.model.entity.room.remoteKeys.ArticleContainingRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.CategoryRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.ClientProviderRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.ClientRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.ConversationRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InventoryRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InvitationRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.MessageRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentForProviderRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.ProviderRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.RechageRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.SubCategoryRemoteKeysEntity
 
 @Database(entities = [PurchaseOrder::class, PurchaseOrderLine::class, Company::class, User::class,
     Article::class, ArticleCompany::class, bankTransfer::class, Bill::class, Cash::class, CommandLine::class,
     Comment::class, Conversation::class, Category::class, SubCategory::class, Invoice::class, ClientProviderRelation::class,
                      SearchHistory::class, Inventory::class, Invitation::class, Message::class, PaymentForProviders::class, PointsPayment::class,
-    PaymentForProviderPerDay::class, Rating::class, Worker::class
-                     ], version = 9, exportSchema = false)
+    PaymentForProviderPerDay::class, Rating::class, Worker::class, ArticleRemoteKeysEntity::class, CategoryRemoteKeysEntity::class, ClientProviderRemoteKeysEntity::class,
+ConversationRemoteKeysEntity::class, InventoryRemoteKeysEntity::class, InvitationRemoteKeysEntity::class, InvoiceRemoteKeysEntity::class, MessageRemoteKeysEntity::class,
+ PointsPaymentRemoteKeysEntity::class, PointsPaymentForProviderRemoteKeysEntity::class, RechageRemoteKeysEntity::class, SubCategoryRemoteKeysEntity::class,
+ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRemoteKeysEntity::class, ClientRemoteKeysEntity::class, ProviderRemoteKeysEntity::class
+], version = 24, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

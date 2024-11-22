@@ -9,5 +9,7 @@ enum class CompanyCategory {
 
     FISH,
 
-    GROCER
+    GROCER,
+
+    NULL
 }

@@ -1,9 +1,31 @@
-package com.aymen.store.model.repository.remoteRepository.articleRepository
+package com.aymen.metastore.model.repository.remoteRepository.articleRepository
 
-import android.util.Log
-import com.aymen.metastore.model.entity.Dto.CommentDto
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
+import com.aymen.metastore.model.Enum.LoadType
+import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
+import com.aymen.metastore.model.entity.dto.CommentDto
+import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.paging.ArticleCompanyRandomMediator
+import com.aymen.metastore.model.entity.paging.ArticleCompanyRemoteMediator
+import com.aymen.metastore.model.entity.paging.ArticleContainingRemoteMediator
+import com.aymen.metastore.model.entity.paging.ArticleRemoteMediator
+import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.entity.Article
+import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.Resource
+import com.aymen.metastore.util.networkBoundResource
+import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.store.model.repository.remoteRepository.articleRepository.ArticleRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Response
@@ -11,10 +33,94 @@ import java.io.File
 import javax.inject.Inject
 
 class ArticleRepositoryImpl @Inject constructor
-    (private val api: ServiceApi)
-    :ArticleRepository
+    (       private val api: ServiceApi,
+            private val sharedViewModel: SharedViewModel,
+            private val room : AppDatabase
+            )
+    : ArticleRepository
 {
-    override suspend fun getRandomArticles() = api.getRandomArticles()
+    private val articleCompanyDao = room.articleCompanyDao()
+    private val categoryDao = room.categoryDao()
+    private val subCategoryDao = room.subCategoryDao()
+    private val companyDao = room.companyDao()
+    private val userDao = room.userDao()
+    private val articleDao = room.articleDao()
+
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getRandomArticles(categoryName : CompanyCategory) :Flow<PagingData<ArticleWithArticleCompany>>{
+            return Pager(
+    config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 0),
+    remoteMediator = ArticleCompanyRandomMediator(
+    api = api, room = room
+    ),
+    pagingSourceFactory = {
+        articleCompanyDao.getRandomArticles()
+    }
+    ).flow.map {
+                it.map { article ->
+                    article
+                }
+            }
+    }
+
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>{
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            remoteMediator = ArticleCompanyRemoteMediator(
+                api = api, room = room, id = companyId
+            ),
+            pagingSourceFactory = { articleCompanyDao.getAllMyArticles(companyId = companyId)}
+        ).flow.map {
+            it.map { article ->
+                article
+            }
+        }
+    }
+
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getAllMyArticleContaining(libelle: String, searchType: SearchType, companyId : Long): Flow<PagingData<ArticleWithArticleCompany>> {
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            remoteMediator = ArticleContainingRemoteMediator(
+                api = api, room = room,search = libelle, searchType = searchType
+            ),
+            pagingSourceFactory = { articleCompanyDao.getAllMyArticleContaining(libelle,companyId)}
+        ).flow.map {
+            it.map { article ->
+                article
+            }
+        }
+    }
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getAllArticlesByCategor(companyId : Long, companyCategory : CompanyCategory) :Flow<PagingData<Article>>{
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 2),
+            remoteMediator = ArticleRemoteMediator(
+                api = api, room = room,  companyId = companyId
+            ),
+            pagingSourceFactory = { articleDao.getArticlesForCompanyByCompanyCategory( companyCategory = companyCategory)}
+        ).flow.map {
+            it.map { article ->
+                article
+            }
+        }
+    }
+
+    override fun getArticleDetails(id: Long): Flow<Resource<ArticleCompany>> {
+        return networkBoundResource(
+            databaseQuery = {
+                articleCompanyDao.getArticleDetails(id).map { it.toArticleRelation() }
+             },
+            apiCall = {
+                api.getArticleDetails(id)
+            },
+            saveApiCallResult = {
+                insert(it)
+            }
+        )
+    }
+
 
     override suspend fun getRandomArticlesByCompanyCategory(categName : String) = api.getRandomArticlesByCompanyCategory(categName)
     override suspend fun getRandomArticlesByCategory(categoryId: Long, companyId : Long) = api.getRandomArticlesByCategory(categoryId, companyId)
@@ -22,10 +128,8 @@ class ArticleRepositoryImpl @Inject constructor
         subcategoryId: Long,
         companyId: Long
     ) = api.getRandomArticlesBySubCategory(subcategoryId, companyId)
-  override suspend fun getAll(companyId : Long, offset : Int, pageSize : Int) = api.getAl(companyId = companyId, offset = offset, pageSize = pageSize)
     override suspend fun deleteArticle(id: String) =api.deleteArticle(id)
     override suspend fun addArticle(article: String, file: File): Response<Void> {
-        Log.e("aymenbabayarticle","c bon ")
        return api.addArticle(article,
             file = MultipartBody.Part
                 .createFormData(
@@ -40,7 +144,17 @@ class ArticleRepositoryImpl @Inject constructor
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = api.likeAnArticle(articleId,isFav)
     override suspend fun sendComment(comment: String, articleId: Long) = api.sendComment(comment, articleId)
     override suspend fun getComments(articleId: Long): Response<List<CommentDto>> = api.getComments(articleId)
-    override suspend fun getAllArticlesByCategor() = api.getAllArticlesByCategor()
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long) = api.addQuantityArticle(quantity, articleId)
 
+    private suspend fun insert(articleDetails : List<ArticleCompanyDto>){
+        userDao.insertUser(articleDetails.map {user -> user.company?.user?.toUser()!!})
+        companyDao.insertCompany(articleDetails.map {company -> company.company?.toCompany()!!})
+        userDao.insertUser(articleDetails.map {user -> user.provider?.user?.toUser()!!})
+        companyDao.insertCompany(articleDetails.map { company -> company.provider?.toCompany()!! })
+        categoryDao.insertCategory(articleDetails.map {category -> category.category?.toCategory()!! })
+        subCategoryDao.insertSubCategory(articleDetails.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
+        articleDao.insertArticle(articleDetails.map {article -> article.article?.toArticle()!! })
+        articleCompanyDao.insertArticle(articleDetails.map {dto ->
+            dto.toArticleCompany(false) })
+    }
 }

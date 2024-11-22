@@ -1,28 +1,14 @@
 package com.aymen.metastore.model.Location
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
-import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
-import com.aymen.metastore.R
-import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.repository.ViewModel.AppViewModel
-import com.google.android.gms.location.LocationServices
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +17,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import okhttp3.internal.notify
 import javax.inject.Inject
 
 //class LocationService : Service() {
