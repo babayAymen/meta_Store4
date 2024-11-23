@@ -16,14 +16,14 @@ data class CompanyWithCompanyClient(
     val clientUser: User? = null,
 
     @Relation(
-        parentColumn = "clientId",
+        parentColumn = "userId",
         entityColumn = "companyId",
         entity = Company::class
     )
     val clientCompany: CompanyWithUser?= null,
 
     @Relation(
-        parentColumn = "providerId",
+        parentColumn = "userId",
         entityColumn = "companyId",
         entity = Company::class
     )

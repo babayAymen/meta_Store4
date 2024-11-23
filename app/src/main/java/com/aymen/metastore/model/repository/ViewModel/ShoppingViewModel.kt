@@ -9,14 +9,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
@@ -24,6 +29,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -34,7 +40,8 @@ class ShoppingViewModel @Inject constructor(
     private val room: AppDatabase,
     private val sharedViewModel: SharedViewModel,
     private val appViewModel: AppViewModel,
-    private val context : Context
+    private val context : Context,
+    private val useCases: MetaUseCases
 ): ViewModel() {
 
     var qte by mutableDoubleStateOf(0.0)
@@ -54,8 +61,12 @@ class ShoppingViewModel @Inject constructor(
 
     private val _accountType = MutableStateFlow(sharedViewModel.accountType)
     val accountType: StateFlow<AccountType> = _accountType
-    private val _allMyOrdersLine = MutableStateFlow<List<PurchaseOrderLine>>(emptyList())
-    val allMyOrdersLine: StateFlow<List<PurchaseOrderLine>> = _allMyOrdersLine
+
+    private val _allMyOrdersLineDetails : MutableStateFlow<PagingData<PurchaseOrderLine>> = MutableStateFlow(PagingData.empty())
+    val allMyOrdersLineDetails: StateFlow<PagingData<PurchaseOrderLine>> get() = _allMyOrdersLineDetails
+
+    private val _allMyOrdersNotAccepted : MutableStateFlow<PagingData<PurchaseOrder>> = MutableStateFlow(PagingData.empty())
+    val allMyOrdersNotAccepted: StateFlow<PagingData<PurchaseOrder>> get() = _allMyOrdersNotAccepted
 
     private val _allMyOrders = MutableStateFlow<List<PurchaseOrder>>(emptyList())
     val allMyOrders: StateFlow<List<PurchaseOrder>> = _allMyOrders
@@ -65,9 +76,7 @@ class ShoppingViewModel @Inject constructor(
     var cost by mutableStateOf(BigDecimal.ZERO)
     var isLoading by mutableStateOf(false)
 init {
-//     myCompany = sharedViewModel.company.value
-//     myUser  by mutableStateOf( sharedViewModel.user.value)
-//     accountType by mutableStateOf( sharedViewModel.accountType)
+    getAllMyOrdersNotAccepted()
 }
     fun removeOrderById(index: Int) {
         orderArray = orderArray.toMutableList().also {
@@ -191,23 +200,13 @@ fun submitShopping(newBalance: BigDecimal) {
         }
     }
 
-    fun getAllMyOrdersLine() {
+    fun getAllMyOrdersLine(orderId : Long) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                     isLoading = true
-                    val orders = repository.getAllMyOrdersLinesByOrderId(Order.id!!)
-                    Log.e("getAllMyOrders","size : ${orders.body()?.size}")
-                    if (orders.isSuccessful) {
-                        orders.body()?.forEach { purchaseLineDto ->
-                        }
-                    }
-                } catch (_ex: Exception) {
-                    Log.e("aymenbabayOrder", "all my orders exception: $_ex")
-                }finally {
-                            isLoading = false
-                }
-//                _allMyOrdersLine.value = room.purchaseOrderLineDao().getAllMyOrdersLinesByOrderId(Order.id!!)
+             useCases.getPurchaseOrderDetails(orderId)
+                 .distinctUntilChanged()
+                 .cachedIn(viewModelScope)
+                 .collect{order ->
+                 _allMyOrdersLineDetails.value = order.map { or -> or.toPurchaseOrderineWithPurchaseOrderOrinvoice() }
             }
         }
     }
@@ -215,83 +214,26 @@ fun submitShopping(newBalance: BigDecimal) {
 
 
 
-    fun getAllMyOrders() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                isLoading = true
-                val response = repository.getAllMyOrdersLines(sharedViewModel.company.value.id ?: 0)
-                Log.e("purchaseorderfromroom", "Fetched orders size: ${response.body()?.size}, company id: ${sharedViewModel.company.value.id}")
-
-                if (response.isSuccessful) {
-                    response.body()?.forEach { order ->
-                    }
-                }
-//                _allMyOrders.value = when (sharedViewModel.accountType ) {
-//                    AccountType.COMPANY -> room.purchaseOrderDao().getAllMyOrdersAsCompany(sharedViewModel.company.value.id!!)
-//                    AccountType.USER ->  room.purchaseOrderDao().getAllMyOrdersAsUser(sharedViewModel.user.value.id!!)
-//                    else -> {
-//                        Log.e("purchaseorderfromroom", "Account type not recognized, returning empty list.")
-//                        emptyList()
-//                    }
-//                }
-                Log.e("purchaseorderfromroom", "Account type: ${sharedViewModel.accountType}, Retrieved orders size: ${_allMyOrders.value.size}")
-
-            } catch (ex: Exception) {
-                Log.e("purchaseorderfromroom", "Exception in getAllMyOrders: ${ex.message}")
-            } finally {
-                isLoading = false
-            }
+    fun getAllMyOrdersNotAccepted() {
+        viewModelScope.launch {
+            val id = if(sharedViewModel.accountType == AccountType.COMPANY) sharedViewModel.company.value.id else sharedViewModel.user.value.id
+            Log.e("getallorders","id : $id")
+          useCases.getAllMyOrdersNotAccepted(id?:0)
+              .distinctUntilChanged()
+              .cachedIn(viewModelScope)
+              .collect{
+                  _allMyOrdersNotAccepted.value = it.map { line -> line.toPurchaseOrderWithCompanyAndUserOrClient() }
+              }
         }
     }
 
-//
-//    fun getAllMyOrders() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            try {
-//                isLoading = true
-//                val response = repository.getAllMyOrdersLines(myCompany.id ?: 0)
-//                Log.e("purchaseorderfromroom","size : ${response.body()?.size} and company id : ${myCompany.id}")
-//                if (response.isSuccessful) {
-//                    response.body()?.forEach { order ->
-//                        inserPurchaseorder(order)
-//                    }
-//                }
-//            } catch (_ex: Exception) {
-//                Log.e("purchaseorderfromroom", "all my orders exception: ${_ex.message} ")
-//            } finally {
-//                isLoading = false
-//            }
-//            _allMyOrders.value = when (accountType) {
-//                AccountType.COMPANY -> room.purchaseOrderDao().getAllMyOrdersAsCompany(myCompany.id!!)
-//                AccountType.USER -> room.purchaseOrderDao().getAllMyOrdersAsUser(myUser.id!!)
-//                else -> {
-//                    Log.e("purchaseorderfromroom", "in else section")
-//                    emptyList()
-//                }
-//            }
-//            val orders = room.purchaseOrderDao().getAllMyOrdersAsUser(myUser.id!!)
-//            Log.d("Database", "Retrieved orders: ${orders.size}")
-//            orders.forEach { Log.d("Database", it.toString()) }
-//            Log.e("getAllmyorders","account type : ${sharedViewModel.accountType} and response size : ${_allMyOrders.value.size}")
-//        }
-//    }
 
-    fun deleteAll(){
-        _allMyOrders.value = emptyList()
-        _allMyOrdersLine.value = emptyList()
-    }
+
     fun orderLineResponse(status: Status, id : Long, isAll : Boolean){
         viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val order = repository.orderLineResponse(status,id,isAll)
                     if(order.isSuccessful){
-                        if(!isAll){
-                            room.purchaseOrderLineDao().changeStatusByLine(status,id)
-                            _allMyOrdersLine.value //should retreive some thing
-                        }else{
-                             room.purchaseOrderLineDao().changeStatusByOrder(status,id)
-                            _allMyOrdersLine.value // should also
-                        }
                         appViewModel.updateCompanyBalance(order.body()!!)
                     }
                 }catch (_ex : Exception){

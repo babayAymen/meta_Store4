@@ -35,7 +35,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.entity.model.PurchaseOrder
+import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
@@ -62,23 +65,20 @@ fun ShoppingScreen() {
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     val myInvoicesAccepted = invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()
+    val invoicesNotAccepted = invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()
+    val allMyOrdersNotAccepted = shoppingViewModel.allMyOrdersNotAccepted.collectAsLazyPagingItems()
+
     LaunchedEffect(key1 = Unit) {
-        shoppingViewModel.getAllMyOrders()
+        shoppingViewModel.getAllMyOrdersNotAccepted()
         if(sharedViewModel.accountType == AccountType.USER){
         invoiceViewModel.getAllMyInvoiceAsClientAndStatus(Status.INWAITING)
             invoiceViewModel.getAllMyInvoicesAsClient()
         }
     }
-    val invoicesNotAccepted = invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()
-    DisposableEffect(Unit) {
-        onDispose {
-           shoppingViewModel.deleteAll()
-            invoiceViewModel.deleteAll()
-            Log.e("deleteall","delete all")
-        }
-    }
     val allMyOrders by shoppingViewModel.allMyOrders.collectAsStateWithLifecycle()
-
+    var order by remember {
+        mutableStateOf(PurchaseOrder())
+    }
     val context = LocalContext.current
     val show by appViewModel.show
 
@@ -87,7 +87,7 @@ fun ShoppingScreen() {
     when(show) {
         "add invoice" -> AddInvoiceScreen(InvoiceMode.VERIFY)
         "orderLine" -> OrderScreen()
-        "orderLineDetails" -> PurchaseOrderDetailsScreen(shoppingViewModel = shoppingViewModel)
+        "orderLineDetails" -> PurchaseOrderDetailsScreen(order, shoppingViewModel)
         else -> {
             Surface(
                 modifier = Modifier
@@ -219,26 +219,26 @@ fun ShoppingScreen() {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth()
                         ) {
-
-                            if (shoppingViewModel.isLoading) {
-                                item {
-                                    LodingShape()
+                            items(count = allMyOrdersNotAccepted.itemCount,
+                                key = allMyOrdersNotAccepted.itemKey{it.id!!})
+                            { index: Int ->
+                                val orderLine = allMyOrdersNotAccepted[index]
+                                if (orderLine != null) {
+                                    val dateTime = LocalDateTime.parse(orderLine.createdDate)
+                                    val date = dateTime.toLocalDate()
+                                    Text(text =
+                                    if (orderLine.company?.id == myCompany.id) "you have an order from ${orderLine.person?.username ?: orderLine.client?.name}" else "you have sent an order to ${orderLine.company?.name}",
+                                        modifier = Modifier.clickable {
+                                            order = orderLine
+                                            shoppingViewModel.Order = orderLine
+                                            appViewModel.updateShow("orderLineDetails")
+                                        }
+                                    )
+                                    Text(
+                                        text = date.toString(),
+                                        style = TextStyle(fontSize = 8.sp)
+                                    )
                                 }
-                            }
-                            items(allMyOrders) {
-                                val dateTime = LocalDateTime.parse(it.createdDate)
-                                val date = dateTime.toLocalDate()
-                                Text(text =
-                                if (it.company?.id == myCompany.id) "you have an order from ${it.person?.username ?: it.client?.name}" else "you have sent an order to ${it.company?.name}",
-                                    modifier = Modifier.clickable {
-                                        shoppingViewModel.Order = it
-                                        appViewModel.updateShow("orderLineDetails")
-                                    }
-                                )
-                                Text(
-                                    text = date.toString(),
-                                    style = TextStyle(fontSize = 8.sp)
-                                )
                             }
                             item {
                                 DividerComponent()

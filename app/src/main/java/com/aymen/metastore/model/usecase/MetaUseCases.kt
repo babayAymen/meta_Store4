@@ -24,7 +24,8 @@ data class MetaUseCases(
     val getAllPersonContaining : GetAllPersonContaining,
     val getArticlesForCompanyByCompanyCategory : GetArticlesForCompanyByCompanyCategory,
     val getAllMyProviders: GetAllMyProviders,
-//    val getAllMyPaymentNotAccepted : GetAllMyPaymentNotAccepted,
+    val getAllMyOrdersNotAccepted : GetAllMyOrdersNotAccepted,
+    val getPurchaseOrderDetails: GetPurchaseOrderDetails
 //    val getAllMyPaymentFromInvoice : GetAllMyPaymentFromInvoice,
 
 )

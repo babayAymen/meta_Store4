@@ -3,7 +3,6 @@ package com.aymen.store.model.repository.globalRepository
 import androidx.paging.PagingData
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.MessageType
-import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
@@ -11,13 +10,11 @@ import com.aymen.metastore.model.repository.remoteRepository.CommandLineReposito
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepository
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepository
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
-import com.aymen.metastore.model.entity.dto.CategoryDto
 import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.dto.ConversationDto
@@ -33,6 +30,8 @@ import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorke
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAndConversation
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
+import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
+import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -46,7 +45,7 @@ import com.aymen.metastore.model.repository.remoteRepository.invoiceRepository.I
 import com.aymen.metastore.model.repository.remoteRepository.messageRepository.MessageRepository
 import com.aymen.metastore.util.Resource
 import com.aymen.store.model.Enum.CompanyCategory
-import com.aymen.store.model.repository.remoteRepository.orderRepository.OrderRepository
+import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepository
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.providerRepository.ProviderRepository
 import com.aymen.store.model.repository.remoteRepository.signInRepository.SignInRepository
@@ -162,6 +161,15 @@ class GlobalRepositoryImpl  @Inject constructor
     ): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
         TODO("Not yet implemented")
     }
+
+    override fun getAllMyOrdersNotAccepted(id: Long): Flow<PagingData<PurchaseOrderWithCompanyAndUserOrClient>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPurchaqseOrderDetails(orderId: Long): Flow<PagingData<PurchaseOrderLineWithPurchaseOrderOrInvoice>> {
+        TODO("Not yet implemented")
+    }
+
 
     override suspend fun getAllMyOrdersLines(companyId: Long) = orderRepository.getAllMyOrdersLines((companyId))
     override suspend fun getAllMyOrdersLinesByOrderId(orderId: Long) = orderRepository.getAllMyOrdersLinesByOrderId(orderId)

@@ -22,12 +22,12 @@ data class InventoryWithArticle(
         entityColumn = "userId",
         entity = Company::class
     )
-    val company : CompanyWithUser
+    val company : CompanyWithUser?
 ){
     fun toInventory(): com.aymen.metastore.model.entity.model.Inventory {
         return inventory.toInventory(
             article = article.toArticleRelation(),
-            company = company.toCompany()
+            company = company?.toCompany()
         )
     }
 }

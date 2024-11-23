@@ -83,8 +83,10 @@ import com.aymen.metastore.model.usecase.GetAllPersonContaining
 import com.aymen.metastore.model.usecase.GetAllRechargeHistory
 import com.aymen.metastore.model.usecase.GetArticlesForCompanyByCompanyCategory
 import com.aymen.store.model.repository.remoteRepository.messageRepository.MessageRepositoryImpl
-import com.aymen.store.model.repository.remoteRepository.orderRepository.OrderRepository
-import com.aymen.store.model.repository.remoteRepository.orderRepository.OrderRepositoryImpl
+import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepository
+import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepositoryImpl
+import com.aymen.metastore.model.usecase.GetAllMyOrdersNotAccepted
+import com.aymen.metastore.model.usecase.GetPurchaseOrderDetails
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.providerRepository.ProviderRepository
@@ -134,7 +136,7 @@ class MetaStoreModule {
     fun provideMetaUseCases(categoryRepository: CategoryRepository, subCategoryRepository: SubCategoryRepository, articleRepository: ArticleRepository,
                             clientRepository: ClientRepository, companyRepository: CompanyRepository, messageRepository: MessageRepository,
                             invoiceRepository: InvoiceRepository, pointPaymentRepository: PointPaymentRepository,inventoryRepository: InventoryRepository,
-                            invetationRepository: InvetationRepository): MetaUseCases{
+                            invetationRepository: InvetationRepository, orderRepository: OrderRepository): MetaUseCases{
         return MetaUseCases(
             getPagingCategoryByCompany = GetPagingCategoryByCompany(repository = categoryRepository),
             getPagingSubCategoryByCompany = GetPagingSubCategoryByCompany(repository = subCategoryRepository),
@@ -158,7 +160,9 @@ class MetaStoreModule {
             getAllMyPointsPayment = GetAllMyPointsPayment(repository = pointPaymentRepository),
             getAllPersonContaining = GetAllPersonContaining(repository = clientRepository),
             getArticlesForCompanyByCompanyCategory = GetArticlesForCompanyByCompanyCategory(repository = articleRepository),
-            getAllMyProviders = GetAllMyProviders(repository = companyRepository)
+            getAllMyProviders = GetAllMyProviders(repository = companyRepository),
+            getAllMyOrdersNotAccepted = GetAllMyOrdersNotAccepted(repository = orderRepository),
+            getPurchaseOrderDetails = GetPurchaseOrderDetails(repository = orderRepository)
 
         )
     }
@@ -212,8 +216,9 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun provideShoppingViewModel(repository: GlobalRepository, room: AppDatabase, sharedViewModel: SharedViewModel, appViewModel: AppViewModel, context : Context):ShoppingViewModel{
-        return ShoppingViewModel(repository,room, sharedViewModel, appViewModel, context)
+    fun provideShoppingViewModel(repository: GlobalRepository, room: AppDatabase, sharedViewModel: SharedViewModel, appViewModel: AppViewModel,
+                                 context : Context, useCases: MetaUseCases):ShoppingViewModel{
+        return ShoppingViewModel(repository,room, sharedViewModel, appViewModel, context,useCases)
     }
 
     @Provides
@@ -304,11 +309,7 @@ class MetaStoreModule {
             ).build()
         return retrofit.create(ServiceApi::class.java)
     }
-//    @Provides
-//    @Singleton
-//    fun provideRealmRepository(realm: Realm):RealmRepository{
-//        return RealmRepositoryImpl(realm)
-//    }
+
     @Provides
     @Singleton
     fun provideInventoryRepository(api : ServiceApi, room: AppDatabase): InventoryRepository{
@@ -418,9 +419,10 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideOrderRepository(
-        serviceApi: ServiceApi
-    ): OrderRepository{
-        return OrderRepositoryImpl(serviceApi)
+        serviceApi: ServiceApi,
+        room : AppDatabase
+    ): OrderRepository {
+        return OrderRepositoryImpl(serviceApi, room)
     }
 
     @Provides

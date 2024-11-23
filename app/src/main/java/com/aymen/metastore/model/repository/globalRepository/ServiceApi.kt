@@ -239,6 +239,10 @@ interface ServiceApi {
     @GET("werehouse/article/my_article/{id}")
     suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
 
+    @GET("werehouse/order/get_by_order_id/{id}")
+    suspend fun getPurchaqseOrderDetails(@Path("id") orderId: Long) : List<PurchaseOrderLineDto>
+
+
     @GET("werehouse/article/search/{search}/{searchType}")
     suspend fun getAllMyArticleContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
 
@@ -296,7 +300,11 @@ interface ServiceApi {
     @GET("werehouse/provider/get_all_my/{companyId}")
     suspend fun getAllMyProvider(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
 
+    @GET("werehouse/order/get_all_my_orders_not_accepted/{id}")
+    suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PurchaseOrderLineDto>
 
+    @GET("werehouse/order/get_by_order_id/{orderId}")
+    suspend fun getOrdersLineDetails(@Path("orderId") orderId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
 
 
 

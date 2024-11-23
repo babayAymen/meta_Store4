@@ -24,6 +24,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.aymen.metastore.model.entity.model.PurchaseOrder
+import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
@@ -32,27 +36,23 @@ import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.LodingShape
 
 @Composable
-fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
+fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: ShoppingViewModel) {
 
     val companyViewModel: CompanyViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val context = LocalContext.current
     var hasWaitingStatus by remember {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
     LaunchedEffect(Unit) {
-        shoppingViewModel.getAllMyOrdersLine()
+        shoppingViewModel.getAllMyOrdersLine(order.id!!)
 
     }
-    val allMyOrdersLine by shoppingViewModel.allMyOrdersLine.collectAsStateWithLifecycle()
-    LaunchedEffect(key1 = allMyOrdersLine) {
-        hasWaitingStatus = allMyOrdersLine.any{it.status == Status.INWAITING}
-    }
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-            shoppingViewModel.deleteAll()
-        }
-    }
+    val allMyOrdersLineDetails = shoppingViewModel.allMyOrdersLineDetails.collectAsLazyPagingItems()
+    //    val allMyOrdersLine = shoppingViewModel.allMyOrdersLine.collectAsLazyPagingItems()
+//    LaunchedEffect(key1 = allMyOrdersLine) {
+//        hasWaitingStatus = allMyOrdersLine.any{it.status == Status.INWAITING}
+//    }
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
 
     Surface(
@@ -60,16 +60,11 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
             .fillMaxSize()
             .padding(3.dp)
     ) {
-        if (allMyOrdersLine.isEmpty() || shoppingViewModel.isLoading) {
-            // Display loading indicator or empty state
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                LodingShape()
-            }
-        } else {
+
             LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if(shoppingViewModel.Order.company?.id == myCompany.id) {
+                if(order.company?.id == myCompany.id) {
                     item {
                         if (hasWaitingStatus) {
                             Row {
@@ -128,97 +123,100 @@ fun PurchaseOrderDetailsScreen(shoppingViewModel : ShoppingViewModel) {
                         }
                     }
                 }
-                items(allMyOrdersLine) { line ->
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text(text = line.quantity.toString())
-                        Text(text = line.delivery.toString())
-                        Text(text = line.article?.article?.libelle ?: "")
-                        Text(text = line.purchaseorder?.orderNumber.toString())
-                        line.comment?.let { Text(text = it) }
-                        Text(text = line.status.toString())
-                        when (line.status) {
-                            Status.INWAITING -> {
-                                if (line.purchaseorder?.company?.id == myCompany.id) {
-                                    Row {
-                                        Row(
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                        ButtonSubmit(
-                                            labelValue = "Accept",
-                                            color = Color.Green,
-                                            enabled = true,
-                                        ) {
-                                            shoppingViewModel.orderLineResponse(
-                                                status = Status.ACCEPTED,
-                                                id = line.id!!,
-                                                isAll = false
-                                            )
-                                        }
-                                        }
-                                        Row (
-                                            modifier = Modifier.weight(1f)
-                                        ){
+                items(count = allMyOrdersLineDetails.itemCount,
+                    key = allMyOrdersLineDetails.itemKey { it.id!! }
+                ) {index : Int ->
+                    val line = allMyOrdersLineDetails[index]
+                    if(line != null) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(text = line.quantity.toString())
+                            Text(text = line.delivery.toString())
+                            Text(text = line.article?.article?.libelle ?: "")
+                            Text(text = line.purchaseorder?.orderNumber.toString())
+                            line.comment?.let { Text(text = it) }
+                            Text(text = line.status.toString())
+                            when (line.status) {
+                                Status.INWAITING -> {
+                                    if (line.purchaseorder?.company?.id == myCompany.id) {
+                                        Row {
+                                            Row(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                ButtonSubmit(
+                                                    labelValue = "Accept",
+                                                    color = Color.Green,
+                                                    enabled = true,
+                                                ) {
+                                                    shoppingViewModel.orderLineResponse(
+                                                        status = Status.ACCEPTED,
+                                                        id = line.id!!,
+                                                        isAll = false
+                                                    )
+                                                }
+                                            }
+                                            Row(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
 
+                                                ButtonSubmit(
+                                                    labelValue = "Refuse",
+                                                    color = Color.Red,
+                                                    enabled = true,
+                                                ) {
+                                                    shoppingViewModel.orderLineResponse(
+                                                        status = Status.REFUSED,
+                                                        id = line.id!!,
+                                                        isAll = false
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
                                         ButtonSubmit(
-                                            labelValue = "Refuse",
+                                            labelValue = "Cancel",
                                             color = Color.Red,
-                                            enabled = true,
+                                            enabled = true
                                         ) {
                                             shoppingViewModel.orderLineResponse(
-                                                status = Status.REFUSED,
+                                                status = Status.CANCELLED,
                                                 id = line.id!!,
                                                 isAll = false
                                             )
                                         }
-                                        }
-                                    }
-                                } else {
-                                    ButtonSubmit(
-                                        labelValue = "Cancel",
-                                        color = Color.Red,
-                                        enabled = true
-                                    ) {
-                                        shoppingViewModel.orderLineResponse(
-                                            status = Status.CANCELLED,
-                                            id = line.id!!,
-                                            isAll = false
-                                        )
                                     }
                                 }
-                            }
 
-                            Status.ACCEPTED -> {
-                                if(line.purchaseorder?.company?.id != companyViewModel.myCompany.id){
-                                Text(text = "${line.article?.company?.name} has accepted ${line.article?.article?.libelle} order")
+                                Status.ACCEPTED -> {
+                                    if (line.purchaseorder?.company?.id != companyViewModel.myCompany.id) {
+                                        Text(text = "${line.article?.company?.name} has accepted ${line.article?.article?.libelle} order")
+                                    } else {
+                                        Text(text = "you have accepted ${line.article?.article?.libelle} order from ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
+                                    }
                                 }
-                                else{
-                                Text(text = "you have accepted ${line.article?.article?.libelle} order from ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
-                                }
-                            }
 
-                            Status.CANCELLED -> {
-                                if(line.purchaseorder?.company?.id == companyViewModel.myCompany.id){
-                                Text(text = "${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name} has cancelled ${line.article?.article?.libelle} order")
-                                }else{
-                                Text(text = "you have cancelled ${line.article?.article?.libelle} order to ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
+                                Status.CANCELLED -> {
+                                    if (line.purchaseorder?.company?.id == companyViewModel.myCompany.id) {
+                                        Text(text = "${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name} has cancelled ${line.article?.article?.libelle} order")
+                                    } else {
+                                        Text(text = "you have cancelled ${line.article?.article?.libelle} order to ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
+                                    }
                                 }
-                            }
 
-                            Status.REFUSED -> {
-                                if(line.purchaseorder?.company?.id != companyViewModel.myCompany.id){
-                                Text(text = "${line.purchaseorder?.company?.name} has refused ${line.article?.article?.libelle} order")
+                                Status.REFUSED -> {
+                                    if (line.purchaseorder?.company?.id != companyViewModel.myCompany.id) {
+                                        Text(text = "${line.purchaseorder?.company?.name} has refused ${line.article?.article?.libelle} order")
+                                    } else {
+                                        Text(text = "you have refused ${line.article?.article?.libelle} order from ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
+                                    }
                                 }
-                                else{
-                                Text(text = "you have refused ${line.article?.article?.libelle} order from ${line.purchaseorder?.person?.username ?: line.purchaseorder?.client?.name}")
-                                }
-                            }
 
-                            null -> TODO()
+                                null -> TODO()
+                            }
                         }
                     }
                 }
             }
-        }
+
 
 //    Surface(
 //        modifier = Modifier

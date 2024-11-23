@@ -37,7 +37,7 @@ data class Inventory(
     val companyId : Long? = null,
     val articleId : Long? = null
 ){
-    fun toInventory(company : com.aymen.metastore.model.entity.model.Company,
+    fun toInventory(company : com.aymen.metastore.model.entity.model.Company?,
                     article : com.aymen.metastore.model.entity.model.ArticleCompany) : Inventory{
         return Inventory(
             id = id,

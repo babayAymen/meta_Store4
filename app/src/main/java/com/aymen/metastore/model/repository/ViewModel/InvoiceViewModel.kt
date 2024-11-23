@@ -130,11 +130,7 @@ class InvoiceViewModel @Inject constructor(
                 }
          }
     }
-fun deleteAll(){
-    _myInvoicesAsClient.value = PagingData.empty()
-    _myInvoicesAsProvider.value = PagingData.empty()
-    _allMyInvoiceNotAccepted.value = PagingData.empty()
-}
+
     fun getLastInvoiceCode(){
         viewModelScope.launch (Dispatchers.IO){
             try {

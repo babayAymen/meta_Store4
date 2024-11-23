@@ -10,15 +10,15 @@ data class PurchaseOrderWithCompanyAndUserOrClient(
     @Embedded val purchaseOrder: PurchaseOrder,
 
     @Relation(
-        parentColumn = "userId",
-        entityColumn = "userId",
+        parentColumn = "companyId",
+        entityColumn = "companyId",
         entity = Company::class
     )
-    val company: CompanyWithUser,
+    val company: CompanyWithUser?,
 
     @Relation(
         parentColumn = "clientId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val client: CompanyWithUser? = null,
@@ -32,7 +32,7 @@ data class PurchaseOrderWithCompanyAndUserOrClient(
 ){
     fun toPurchaseOrderWithCompanyAndUserOrClient(): com.aymen.metastore.model.entity.model.PurchaseOrder{
         return purchaseOrder.toPurchaseOrder(
-            company = company.toCompany(),
+            company = company?.toCompany(),
             client = client?.toCompany(),
             user = person?.toUser()
         )

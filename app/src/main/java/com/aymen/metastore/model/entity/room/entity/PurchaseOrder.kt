@@ -29,7 +29,7 @@ data class PurchaseOrder(
     val createdDate : String? = "",
     val orderNumber : Long? = 0
 ){
-    fun toPurchaseOrder(company: com.aymen.metastore.model.entity.model.Company,
+    fun toPurchaseOrder(company: com.aymen.metastore.model.entity.model.Company?,
                         client: com.aymen.metastore.model.entity.model.Company?,
                         user: com.aymen.metastore.model.entity.model.User?): PurchaseOrder {
         return PurchaseOrder(

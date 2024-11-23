@@ -50,6 +50,7 @@ fun ProviderScreen() {
                        count = providers.itemCount,
                        key = providers.itemKey { it.id!! }) { index ->
                        val provider = providers[index]
+                       Log.e("clienttest","provider : $provider")
                        if (provider != null) {
                            SwipeToDeleteContainer(
                                provider,
