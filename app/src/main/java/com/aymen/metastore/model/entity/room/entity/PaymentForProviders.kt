@@ -8,7 +8,7 @@ import com.aymen.metastore.model.entity.model.PaymentForProviders
 
 @Entity(tableName = "payment_for_providers",
     foreignKeys = [
-        ForeignKey(entity = PurchaseOrderLine::class, parentColumns = ["id"], childColumns = ["purchaseOrderLineId"],
+        ForeignKey(entity = PurchaseOrderLine::class, parentColumns = ["purchaseOrderLineId"], childColumns = ["purchaseOrderLineId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE)
     ],

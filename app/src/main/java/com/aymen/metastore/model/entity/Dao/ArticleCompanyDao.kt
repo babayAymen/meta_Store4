@@ -82,7 +82,7 @@ interface ArticleCompanyDao {
     @Query("DELETE FROM article_company_random_remote_keys")
     suspend fun clearAllRandomRemoteKeysTable()
 
-    @Query("DELETE FROM article_company")
+    @Query("DELETE FROM article_company WHERE isRandom = 1")
     suspend fun clearAllArticleCompanyTable()
 
     @Query("DELETE FROM article_containing_remote_keys")

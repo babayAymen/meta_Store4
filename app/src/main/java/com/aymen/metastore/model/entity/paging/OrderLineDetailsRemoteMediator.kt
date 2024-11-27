@@ -110,19 +110,19 @@ class OrderLineDetailsRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PurchaseOrderLineWithPurchaseOrderOrInvoice>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it.purchaseOrderLine.id!!).prevPage }
+        return entity?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it.purchaseOrderLine.purchaseOrderLineId!!).prevPage }
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, PurchaseOrderLineWithPurchaseOrderOrInvoice>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it.purchaseOrderLine.id!!).nextPage }
+        return entity?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it.purchaseOrderLine.purchaseOrderLineId!!).nextPage }
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PurchaseOrderLineWithPurchaseOrderOrInvoice>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.purchaseOrderLine?.id?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it).nextPage }
+        return entity?.purchaseOrderLine?.purchaseOrderLineId?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it).nextPage }
     }
 
     private suspend fun deleteCache(){

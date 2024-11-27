@@ -22,7 +22,7 @@ import com.aymen.metastore.model.entity.model.PurchaseOrder
 )
 data class PurchaseOrder(
 
-    @PrimaryKey(autoGenerate = false) val id: Long? = 0,
+    @PrimaryKey(autoGenerate = false) val purchaseOrderId: Long? = null,
     val companyId: Long? = null,
     val clientId: Long? = null,
     val userId: Long? = null,
@@ -33,7 +33,7 @@ data class PurchaseOrder(
                         client: com.aymen.metastore.model.entity.model.Company?,
                         user: com.aymen.metastore.model.entity.model.User?): PurchaseOrder {
         return PurchaseOrder(
-            id = id,
+            id = purchaseOrderId,
             company = company,
             client = client,
             person = user,

@@ -40,7 +40,7 @@ class ArticleRemoteMediator(
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     previousePage
                 }
@@ -48,7 +48,7 @@ class ArticleRemoteMediator(
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     nextePage
                 }
@@ -75,12 +75,13 @@ class ArticleRemoteMediator(
                     articleDao.insertArticle(response.map {article -> article.toArticle() })
 
                 } catch (ex: Exception) {
-                    Log.e("error", "article ${ex.message}")
+                    Log.e("errorinvoice", "article ${ex.message}")
                 }
             }
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
+            Log.e("errorinvoice", "article ${ex.message}")
             MediatorResult.Error(ex)
         }
     }
@@ -88,20 +89,22 @@ class ArticleRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, Article>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { articleDao.getArticleRemoteKey(it.id!!).prevPage }
+        val remoteKey = entity?.let { articleDao.getArticleRemoteKey(it.id!!) }
+        return remoteKey?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, Article>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { articleDao.getArticleRemoteKey(it.id!!).nextPage }
+        val remoteKey = entity?.let { articleDao.getArticleRemoteKey(it.id!!) }
+        return remoteKey?.nextPage
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, Article>): Int? {
         val position = state.anchorPosition
-        Log.e("getNextPageClosestToCurrentPosition", "position $position")
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.id?.let { articleDao.getArticleRemoteKey(it).nextPage }
+        val remoteKey = entity?.id?.let { articleDao.getArticleRemoteKey(it) }
+        return remoteKey?.nextPage
     }
 
     private suspend fun deleteCache(){

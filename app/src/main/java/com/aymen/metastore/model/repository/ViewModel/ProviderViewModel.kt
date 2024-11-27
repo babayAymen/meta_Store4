@@ -38,7 +38,7 @@ class ProviderViewModel @Inject constructor(
     private var _providers : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val providers : StateFlow<PagingData<ClientProviderRelation>> get() = _providers
 
-    val companyId by mutableLongStateOf(0)// chenge when i try to change to room
+    val companyId by mutableLongStateOf(0)
     val company : StateFlow<Company?> = MutableStateFlow(sharedViewModel.company.value)
 
     init {
@@ -51,7 +51,7 @@ class ProviderViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _providers.value = it.map { provider -> provider.toCompanyWithCompanyClient() }
+                    _providers.value = it.map { provider -> provider.toClientProviderRelation() }
                 }
         }
     }

@@ -128,8 +128,6 @@ interface ServiceApi {
     suspend fun getMyProfitByDate(@Path("beginDate") beginDate : String ,@Path("finalDate") finalDate : String):Response<String>
     @GET("werehouse/point/get_all_my_profits")
     suspend fun getAllMyProfits(): Response<List<PaymentForProviderPerDayDto>>
-    @GET("werehouse/point/get_all_my_profits_per_day/{beginday}/{finalday}")
-    suspend fun getMyHistoryProfitByDate(@Path("beginday") beginDay : String, @Path("finalday") finalDay : String):Response<List<PaymentForProviderPerDayDto>>
     @GET("werehouse/worker/getbycompany/{companyId}")
     suspend fun getAllMyWorker(@Path("companyId") companyId: Long): Response<List<WorkerDto>>
     @GET("werehouse/invoice/getlastinvoice")
@@ -184,8 +182,6 @@ interface ServiceApi {
                                        @Path("searchCategory")  searchCategory: SearchCategory):Response<List<CompanyDto>>
     @GET("werehouse/search/save_history/{category}/{id}")
     suspend fun saveHistory(@Path("category") category : SearchCategory, @Path("id") id : Long):Response<Void>
-    @GET("werehouse/search/get_search_history")
-    suspend fun getAllHistory():Response<List<SearchHistoryDto>>
     @GET("werehouse/company/me")
     suspend fun getMeAsCompany(): Response<CompanyDto>
     @POST("werehouse/article/sendComment/{articleId}")
@@ -279,9 +275,6 @@ interface ServiceApi {
     @GET("werehouse/invetation/get_invetation")
     suspend fun getAllMyInvetations(@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvitationDto>
 
-    @GET("werehouse/point/get_all_my_payment/{companyId}")
-    suspend fun getAllMyPaymentsEspece(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProvidersDto>
-
     @GET("werehouse/point/get_all_my_as_company/{id}")
     suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<PaymentForProvidersDto>
 
@@ -305,6 +298,34 @@ interface ServiceApi {
 
     @GET("werehouse/order/get_by_order_id/{orderId}")
     suspend fun getOrdersLineDetails(@Path("orderId") orderId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
+
+    @GET("werehouse/point/get_all_my/{id}")
+    suspend fun getRechargeHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PointsPaymentDto>
+
+    @GET("werehouse/invoice/getMyInvoiceAsProvider/{id}")
+    suspend fun getAllBuyHistory(@Path("id")id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+
+    @GET("werehouse/invoice/get_by_payment_paid_status/{id}")
+    suspend fun getAllBuyHistoryByPaidStatus(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+
+    @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_client/{id}")
+    suspend fun getAllBuyHistoryByStatusAsClient(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+
+    @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_provider/{id}")
+    suspend fun getAllBuyHistoryByStatus(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+
+    @GET("werehouse/point/get_all_my_payment/{id}")
+    suspend fun getAllProvidersProfit(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PaymentForProvidersDto>
+
+    @GET("werehouse/point/get_all_my_profits/{id}")
+    suspend fun getAllProfitPerDay(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
+
+    @GET("werehouse/point/get_all_my_profits_per_day/{id}")
+    suspend fun getMyHistoryProfitByDate(@Path("id") id : Long, @Query("beginday") beginDay : String, @Query("finalday") finalDay : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
+
+    @GET("werehouse/search/get_search_history/{id}")
+    suspend fun getAllHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SearchHistoryDto>
+
 
 
 

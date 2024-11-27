@@ -40,7 +40,7 @@ class InvitationRemoteMediator(
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     previousePage
                 }
@@ -48,7 +48,7 @@ class InvitationRemoteMediator(
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     nextePage
                 }
@@ -71,12 +71,12 @@ class InvitationRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.worker?.toUser()!!})
-                    userDao.insertUser(response.map {user -> user.client?.toUser()!!})
-                    userDao.insertUser(response.map {user -> user.companySender?.user?.toUser()!!})
-                    userDao.insertUser(response.map {user -> user.companyReceiver?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map {company -> company.companySender?.toCompany()!!})
-                    companyDao.insertCompany(response.map {company -> company.companyReceiver?.toCompany()!!})
+                    userDao.insertUser(response.map {user -> user.worker?.toUser()})
+                    userDao.insertUser(response.map {user -> user.client?.toUser()})
+                    userDao.insertUser(response.map {user -> user.companySender?.user?.toUser()})
+                    userDao.insertUser(response.map {user -> user.companyReceiver?.user?.toUser()})
+                    companyDao.insertCompany(response.map {company -> company.companySender?.toCompany()})
+                    companyDao.insertCompany(response.map {company -> company.companyReceiver?.toCompany()})
                     invitationDao.insertInvitation(response.map { invitation -> invitation.toInvitation() })
 
                 } catch (ex: Exception) {
@@ -93,19 +93,23 @@ class InvitationRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, InvitationWithClientOrWorkerOrCompany>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { invitationDao.getInvitationRemoteKey(it.invitation.id!!).prevPage }
+        val remoteKey = entity?.let { invitationDao.getInvitationRemoteKey(it.invitation.id!!) }
+        return remoteKey?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, InvitationWithClientOrWorkerOrCompany>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { invitationDao.getInvitationRemoteKey(it.invitation.id!!).nextPage }
+        val remoteKey = entity?.let { invitationDao.getInvitationRemoteKey(it.invitation.id!!) }
+        return remoteKey?.nextPage
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, InvitationWithClientOrWorkerOrCompany>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.invitation?.id?.let { invitationDao.getInvitationRemoteKey(it).nextPage }
+        val remoteKey = entity?.invitation?.id?.let { invitationDao.getInvitationRemoteKey(it) }
+        return remoteKey?.nextPage
+
     }
 
     private suspend fun deleteCache(){

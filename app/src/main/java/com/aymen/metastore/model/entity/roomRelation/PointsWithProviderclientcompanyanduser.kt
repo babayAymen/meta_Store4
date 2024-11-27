@@ -11,14 +11,14 @@ data class PointsWithProviderclientcompanyanduser(
 
     @Relation(
         parentColumn = "clientCompanyId",
-        entityColumn = "id",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val client : CompanyWithUser? = null,
 
     @Relation(
         parentColumn = "providerId",
-        entityColumn = "id",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val provider : CompanyWithUser,

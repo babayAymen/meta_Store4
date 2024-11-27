@@ -10,9 +10,9 @@ data class PaymentForProvidersWithCommandLine(
     @Embedded val paymentForProviders: PaymentForProviders,
 
     @Relation(
-        parentColumn = "id",
-        entityColumn = "id",//a change
-        entity = PurchaseOrderLine::class
+        entity = PurchaseOrderLine::class,
+        parentColumn = "purchaseOrderLineId",
+        entityColumn = "purchaseOrderLineId",
     )
     val purchaseOrderLine: PurchaseOrderLineWithPurchaseOrderOrInvoice
 ){

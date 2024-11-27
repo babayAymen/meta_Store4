@@ -9,7 +9,7 @@ data class PaymentDto(
 
     val id : Long? = null,
     val amount : Double,
-    val delay : Date,
+    val delay : String,
     val agency : String,
     val bankAccount : String,
     val number : String,

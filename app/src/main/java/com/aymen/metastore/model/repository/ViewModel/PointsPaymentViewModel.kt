@@ -1,8 +1,6 @@
 package com.aymen.metastore.model.repository.ViewModel
 
-import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,8 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import androidx.room.Transaction
-import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PaymentForProviders
@@ -60,24 +56,30 @@ class PointsPaymentViewModel @Inject constructor(
     private val _allMyPointsPaymentForProviders : MutableStateFlow<PagingData<PaymentForProviders>> = MutableStateFlow(PagingData.empty())
     val allMyPointsPaymentForProviders: StateFlow<PagingData<PaymentForProviders>> get() = _allMyPointsPaymentForProviders
 
-    private val _allMyPointsPayment : MutableStateFlow<PagingData<PointsPayment>> = MutableStateFlow(PagingData.empty())
-    val allMyPointsPayment: StateFlow<PagingData<PointsPayment>> get() = _allMyPointsPayment
+    private val _allMyPointsPaymentRecharge : MutableStateFlow<PagingData<PointsPayment>> = MutableStateFlow(PagingData.empty())
+    val allMyPointsPaymentRecharge: StateFlow<PagingData<PointsPayment>> get() = _allMyPointsPaymentRecharge
 
 
-    private val _allMyProfits : MutableStateFlow<PagingData<PaymentForProviderPerDay>> = MutableStateFlow(PagingData.empty())
-    val allMyProfits : StateFlow<PagingData<PaymentForProviderPerDay>> get() = _allMyProfits
+    private val _allMyProfitsPerDay : MutableStateFlow<PagingData<PaymentForProviderPerDay>> = MutableStateFlow(PagingData.empty())
+    val allMyProfitsPerDay : StateFlow<PagingData<PaymentForProviderPerDay>> get() = _allMyProfitsPerDay
+
+    private val _allMyProfitsPerDayByDate : MutableStateFlow<PagingData<PaymentForProviderPerDay>> = MutableStateFlow(PagingData.empty())
+    val allMyProfitsPerDayByDate : StateFlow<PagingData<PaymentForProviderPerDay>> get() = _allMyProfitsPerDayByDate
 
     private val _myProfits = MutableStateFlow<String>("")
     val myProfits : StateFlow<String> = _myProfits
 
-
-    fun getAllMyPointsPayment(context : Context) {
-        if(!NetworkUtil.isOnline(context)){
-            Toast.makeText(context, "You are offline", Toast.LENGTH_LONG).show()
-            return
-        }
-            viewModelScope.launch(Dispatchers.IO) {
-             useCases.getAllMyPointsPayment(sharedViewModel.company.value.id!!)
+init {
+    getAllMyPointsPayment()
+    getAllMyPointsPaymentRecharge()
+}
+    fun getAllMyPointsPayment() {
+//        if(!NetworkUtil.isOnline(context)){
+//            Toast.makeText(context, "You are offline", Toast.LENGTH_LONG).show()
+//            return
+//        }
+            viewModelScope.launch {
+             useCases.getAllMyPointsPaymentForProvider(sharedViewModel.company.value.id!!)
                  .distinctUntilChanged()
                  .cachedIn(viewModelScope)
                  .collect{
@@ -87,10 +89,31 @@ class PointsPaymentViewModel @Inject constructor(
 
     }
 
+    fun getAllMyPointsPaymentRecharge() {
+        viewModelScope.launch {
+            useCases.getAllRechargeHistory(sharedViewModel.company.value.id!!)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect {
+                    _allMyPointsPaymentRecharge.value =
+                        it.map { pointPayment -> pointPayment.toPointsWithProvidersClientCompanyAndUser() }
+                }
+        }
+    }
+
+    fun getAllMyProfitsPerDay(){
+        viewModelScope.launch {
+            useCases.getAllMyProfitsPerDay(sharedViewModel.company.value.id!!)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _allMyProfitsPerDay.value = it.map { profit -> profit.toPaymentPerDayWithProvider() }
+                }
+        }
+    }
 
     fun getMyProfitByDate(beginDate : String, finalDate : String){
         viewModelScope.launch(Dispatchers.IO) {
-        sharedViewModel.isLoading = true
             try {
                 val response = repository.getMyProfitByDate(beginDate, finalDate)
                 if(response.isSuccessful){
@@ -98,43 +121,19 @@ class PointsPaymentViewModel @Inject constructor(
                 }
             }catch (ex : Exception){
                 Log.e("getMyProfitByDateException","${ex.message}")
-            }finally {
-                    sharedViewModel.isLoading = false
             }
         }
     }
 
-    fun getAllMyProfits(){
-        sharedViewModel.isLoading = true
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val response = repository.getAllMyProfits()
-                if(response.isSuccessful){
-                    response.body()?.forEach { paymentForProviderPerDay ->
-                    }
-                }
-            }catch (ex : Exception){
-                Log.e("getAllMyProfitsException","${ex.message}")
-            }finally {
-                    sharedViewModel.isLoading = false
-            }
-        }
-    }
 
     fun getMyHistoryProfitByDate(beginDate : String, finalDate : String){
-        sharedViewModel.isLoading = true
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val response = repository.getMyHistoryProfitByDate(beginDate, finalDate)
-                if(response.isSuccessful){
-                    response.body()?.forEach { payment ->
-                    }
+        viewModelScope.launch {
+            useCases.getMyHistoryProfitByDate(sharedViewModel.company.value.id!!,beginDate, finalDate)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                  _allMyProfitsPerDayByDate.value = it.map{ profit -> profit.toPaymentPerDayWithProvider()}
                 }
-            }catch (ex : Exception){
-                Log.e("getMyHistoryProfitByDateException","${ex.message}")
-            }finally {
-                    sharedViewModel.isLoading = false
-            }
 
         }
     }

@@ -77,7 +77,7 @@ import com.aymen.metastore.model.usecase.GetAllMyInventory
 import com.aymen.metastore.model.usecase.GetAllMyInvitations
 import com.aymen.metastore.model.usecase.GetAllMyPaymentsEspece
 import com.aymen.metastore.model.usecase.GetAllMyPaymentsEspeceByDate
-import com.aymen.metastore.model.usecase.GetAllMyPointsPayment
+import com.aymen.metastore.model.usecase.GetAllMyPointsPaymentForPoviders
 import com.aymen.metastore.model.usecase.GetAllMyProviders
 import com.aymen.metastore.model.usecase.GetAllPersonContaining
 import com.aymen.metastore.model.usecase.GetAllRechargeHistory
@@ -85,7 +85,15 @@ import com.aymen.metastore.model.usecase.GetArticlesForCompanyByCompanyCategory
 import com.aymen.store.model.repository.remoteRepository.messageRepository.MessageRepositoryImpl
 import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepository
 import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepositoryImpl
+import com.aymen.metastore.model.usecase.GetAllMyBuyHistory
 import com.aymen.metastore.model.usecase.GetAllMyOrdersNotAccepted
+import com.aymen.metastore.model.usecase.GetAllMyProfitsPerDay
+import com.aymen.metastore.model.usecase.GetAllSearchHistory
+import com.aymen.metastore.model.usecase.GetInCompleteInvoice
+import com.aymen.metastore.model.usecase.GetMyHistoryProfitByDate
+import com.aymen.metastore.model.usecase.GetNotAcceptedInvoice
+import com.aymen.metastore.model.usecase.GetNotPaidInvoice
+import com.aymen.metastore.model.usecase.GetPaidInvoice
 import com.aymen.metastore.model.usecase.GetPurchaseOrderDetails
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepositoryImpl
@@ -114,7 +122,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 const val BASE_URL = "http://192.168.1.4:8080/"
-//const val BASE_URL = "http://192.168.167.80:8080/"
+//const val BASE_URL = "http://192.168.2.100:8080/"
 private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module
@@ -128,7 +136,12 @@ class MetaStoreModule {
             context,
             AppDatabase::class.java,
             DATABASE_NAME
-        ).fallbackToDestructiveMigration().build()
+        ).fallbackToDestructiveMigration()
+//            .setQueryCallback({ sqlQuery, bindArgs ->
+//            Log.d("RoomQuery", "SQL: $sqlQuery, Args: $bindArgs")
+//        }, Executors.newSingleThreadExecutor())
+            .build()
+
     }
 
     @Provides
@@ -136,7 +149,7 @@ class MetaStoreModule {
     fun provideMetaUseCases(categoryRepository: CategoryRepository, subCategoryRepository: SubCategoryRepository, articleRepository: ArticleRepository,
                             clientRepository: ClientRepository, companyRepository: CompanyRepository, messageRepository: MessageRepository,
                             invoiceRepository: InvoiceRepository, pointPaymentRepository: PointPaymentRepository,inventoryRepository: InventoryRepository,
-                            invetationRepository: InvetationRepository, orderRepository: OrderRepository): MetaUseCases{
+                            invetationRepository: InvetationRepository, orderRepository: OrderRepository, paymentRepository: PaymentRepository): MetaUseCases{
         return MetaUseCases(
             getPagingCategoryByCompany = GetPagingCategoryByCompany(repository = categoryRepository),
             getPagingSubCategoryByCompany = GetPagingSubCategoryByCompany(repository = subCategoryRepository),
@@ -157,12 +170,20 @@ class MetaStoreModule {
             getAllMyInvitations = GetAllMyInvitations(repository = invetationRepository),
             getAllMyPaymentsEspece = GetAllMyPaymentsEspece(repository = pointPaymentRepository),
             getAllMyPaymentsEspeceByDate = GetAllMyPaymentsEspeceByDate(repository = pointPaymentRepository),
-            getAllMyPointsPayment = GetAllMyPointsPayment(repository = pointPaymentRepository),
+            getAllMyPointsPaymentForProvider = GetAllMyPointsPaymentForPoviders(repository = pointPaymentRepository),
             getAllPersonContaining = GetAllPersonContaining(repository = clientRepository),
             getArticlesForCompanyByCompanyCategory = GetArticlesForCompanyByCompanyCategory(repository = articleRepository),
             getAllMyProviders = GetAllMyProviders(repository = companyRepository),
             getAllMyOrdersNotAccepted = GetAllMyOrdersNotAccepted(repository = orderRepository),
-            getPurchaseOrderDetails = GetPurchaseOrderDetails(repository = orderRepository)
+            getPurchaseOrderDetails = GetPurchaseOrderDetails(repository = orderRepository),
+            getAllMyBuyHistory = GetAllMyBuyHistory(repository = paymentRepository),
+            getPaidInvoice = GetPaidInvoice(repository = paymentRepository),
+            getNotPaidInvoice = GetNotPaidInvoice(repository = paymentRepository),
+            getNotAcceptedInvoice = GetNotAcceptedInvoice(repository = paymentRepository),
+            getInCompleteInvoice = GetInCompleteInvoice(repository = paymentRepository),
+            getAllMyProfitsPerDay = GetAllMyProfitsPerDay(repository = pointPaymentRepository),
+            getMyHistoryProfitByDate = GetMyHistoryProfitByDate(repository = pointPaymentRepository),
+            getAllSearchHistory = GetAllSearchHistory(repository = clientRepository)
 
         )
     }
@@ -411,9 +432,10 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun providePaymentRepository(
-        serviceApi: ServiceApi
+        serviceApi: ServiceApi,
+        room : AppDatabase
     ): PaymentRepository{
-        return PaymentRepositoryImpl(serviceApi)
+        return PaymentRepositoryImpl(serviceApi, room)
     }
 
     @Provides

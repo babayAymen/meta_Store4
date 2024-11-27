@@ -10,7 +10,9 @@ import com.aymen.store.model.Enum.Status
 
 @Entity(tableName = "invoice",
     foreignKeys = [
-        ForeignKey(entity = User::class, parentColumns = ["id"], childColumns = ["personId"],
+        ForeignKey(entity = User::class,
+            parentColumns = ["id"],
+            childColumns = ["personId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
         ForeignKey(
@@ -20,7 +22,9 @@ import com.aymen.store.model.Enum.Status
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         ),
-        ForeignKey(entity = Company::class, parentColumns = ["companyId"], childColumns = ["providerId"],
+        ForeignKey(entity = Company::class,
+            parentColumns = ["companyId"],
+            childColumns = ["providerId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
     ],

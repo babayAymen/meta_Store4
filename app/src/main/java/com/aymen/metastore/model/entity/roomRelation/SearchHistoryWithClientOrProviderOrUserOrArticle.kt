@@ -12,7 +12,7 @@ data class SearchHistoryWithClientOrProviderOrUserOrArticle(
 
     @Relation(
         parentColumn = "companyId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val company : CompanyWithUser? = null,

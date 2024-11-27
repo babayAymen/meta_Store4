@@ -9,6 +9,7 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.ClientProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType

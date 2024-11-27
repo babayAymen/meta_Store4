@@ -11,7 +11,7 @@ data class PaymentPerDayWithProvider(
 
     @Relation(
         parentColumn = "providerId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val provider: CompanyWithUser

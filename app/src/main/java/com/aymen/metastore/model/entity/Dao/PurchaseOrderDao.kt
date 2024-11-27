@@ -33,7 +33,7 @@ interface PurchaseOrderDao {
      suspend fun getAllMyOrdersAsCompany(id : Long) : List<PurchaseOrderWithCompanyAndUserOrClient>
 
 
-    @Query("SELECT * FROM purchase_order ORDER BY id DESC ")
+    @Query("SELECT * FROM purchase_order ORDER BY purchaseOrderId DESC ")
     fun getAllMyOrdersNotAccepted(): PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
 
     @Transaction

@@ -53,7 +53,7 @@ class InvoiceRemoteMediator(
                 }
 
                 androidx.paging.LoadType.APPEND -> {
-                    val nextPage = getNextPageClosestToCurrentPosition(state)
+                    val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -62,7 +62,7 @@ class InvoiceRemoteMediator(
             }
             val response = when(type){
                 LoadType.RANDOM -> {
-                    api.getAllMyInvoicesAsProvider(id,currentPage, PAGE_SIZE)
+                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, PAGE_SIZE)
                 }
                 LoadType.ADMIN -> {
                     api.getAllMyInvoicesAsClient(id,currentPage, PAGE_SIZE)
@@ -88,11 +88,11 @@ class InvoiceRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.person?.toUser()!!})
-                    userDao.insertUser(response.map {user -> user.client?.user?.toUser()!!})
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map {company -> company.client?.toCompany()!!})
-                    companyDao.insertCompany(response.map {company -> company.provider?.toCompany()!!})
+                    userDao.insertUser(response.map {user -> user.person?.toUser()})
+                    userDao.insertUser(response.map {user -> user.client?.user?.toUser()})
+                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
+                    companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
                     invoiceDao.insertInvoice(response.map {invoice -> invoice.toInvoice() })
 
                 } catch (ex: Exception) {

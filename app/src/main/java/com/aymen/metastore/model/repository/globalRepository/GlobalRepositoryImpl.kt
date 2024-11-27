@@ -24,14 +24,18 @@ import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.ConversationWithUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
 import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorkerOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAndConversation
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
+import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
+import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
+import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -109,7 +113,7 @@ class GlobalRepositoryImpl  @Inject constructor
 
 
     override suspend fun addCompany(company: String, file : File) = companyRepository.addCompany(company, file)
-    override fun getAllMyProvider(companyId: Long): Flow<PagingData<CompanyWithCompanyClient>> {
+    override fun getAllMyProvider(companyId: Long): Flow<PagingData<CompanyWithCompanyOrUser>> {
         TODO("Not yet implemented")
     }
 
@@ -135,7 +139,8 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getAllMyClient(companyId : Long) = clientRepository.getAllMyClient(companyId = companyId)
+    override fun getAllMyClient(companyId: Long): Flow<PagingData<CompanyWithCompanyOrUser>> = clientRepository.getAllMyClient(
+        companyId = companyId)
     override fun getAllClientUserContaining(
         search: String,
         searchType: SearchType,
@@ -150,8 +155,10 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun sendClientRequest(id: Long, type: Type) = clientRepository.sendClientRequest(id,type)
     override suspend fun getAllClientContaining(search: String, searchType: SearchType, searchCategory: SearchCategory) = clientRepository.getAllClientContaining(search,searchType,searchCategory)
     override suspend fun saveHistory(category: SearchCategory, id: Long) = clientRepository.saveHistory(category,id)
-    override suspend fun getAllHistory() = clientRepository.getAllHistory()
-    override suspend fun addProvider(provider: String, file: File) = providerRepository.addProvider(provider,file)
+    override fun getAllHistory(id: Long): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
+        TODO("Not yet implemented")
+    }
+   override suspend fun addProvider(provider: String, file: File) = providerRepository.addProvider(provider,file)
     override suspend fun addProviderWithoutImage(provider: String) = providerRepository.addProviderWithoutImage(provider)
      override suspend fun getAllMyPaymentsEspeceByDate(date: String, findate: String) = paymentRepository.getAllMyPaymentsEspeceByDate(date, findate = findate)
     override fun getAllMyPaymentsEspeceByDate(
@@ -159,6 +166,26 @@ class GlobalRepositoryImpl  @Inject constructor
         beginDate: String,
         finalDate: String
     ): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllMyBuyHistory(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPaidInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getNotPaidInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getInCompleteInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getNotAcceptedInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         TODO("Not yet implemented")
     }
 
@@ -222,7 +249,17 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getAllOrdersLineByInvoiceId(invoiceId: Long) = orderRepository.getAllOrdersLineByInvoiceId(invoiceId)
     override suspend fun RequestResponse(status :Status ,id: Long) = invetationRepository.RequestResponse(status,id)
     override suspend fun cancelInvitation(id: Long) = invetationRepository.cancelInvitation(id)
-    override fun getAllMyPointsPayment(companyId: Long): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
+
+
+    override fun getAllRechargeHistory(id: Long): Flow<PagingData<PointsWithProviderclientcompanyanduser>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllMyProfitsPerDay(companyId: Long): Flow<PagingData<PaymentPerDayWithProvider>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllMyPointsPaymentForPoviders(companyId: Long): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
         TODO("Not yet implemented")
     }
 
@@ -233,7 +270,16 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun getMyProfitByDate(beginDate: String, finalDate: String) = pointPaymentRepository.getMyProfitByDate(beginDate, finalDate)
     override suspend fun getAllMyProfits() = pointPaymentRepository.getAllMyProfits()
-    override suspend fun getMyHistoryProfitByDate(beginDate: String, finalDate: String) = pointPaymentRepository.getMyHistoryProfitByDate(beginDate, finalDate)
+    override fun getMyHistoryProfitByDate(
+        id: Long,
+        beginDate: String,
+        finalDate: String
+    ): Flow<PagingData<PaymentPerDayWithProvider>> {
+        TODO("Not yet implemented")
+    }
+
+
+
     override suspend fun getAllMyRating(id: Long, type: AccountType) = ratingRepository.getAllMyRating(id, type)
      override suspend fun doRating(rating : String, image : File?) = ratingRepository.doRating(rating, image)
     override suspend fun enabledToCommentCompany(companyId : Long) = ratingRepository.enabledToCommentCompany(companyId = companyId)

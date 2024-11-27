@@ -10,6 +10,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.ClientProviderRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.ClientRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,6 +18,7 @@ interface ClientProviderRelationDao {
 
     @Upsert
     suspend fun insertClientProviderRelation(relation : List<ClientProviderRelation>)
+
 
     @Upsert
     suspend fun insertClientKeys(keys : List<ClientRemoteKeysEntity>)
@@ -42,14 +44,17 @@ interface ClientProviderRelationDao {
         "SELECT  c.*, r.*, u.* " +
             "    FROM client_provider_relation AS r " +
             "    JOIN user AS u ON r.userId = u.id " +
-            "    JOIN company AS c ON r.clientId = c.companyId WHERE providerId = :id AND" +
+            "    JOIN company AS c ON r.clientId = c.companyId WHERE companyId = :id AND" +
             " (u.username LIKE '%' || :clientName || '%' OR c.name LIKE '%' || :clientName || '%' OR c.code LIKE '%' || :clientName || '%')"
     )
     fun getAllMyClientsContainig(id : Long , clientName : String) :PagingSource<Int,CompanyWithCompanyClient>
 
     @Transaction
-    @Query("SELECT * FROM client_provider_relation WHERE providerId = :myCompanyId")
-    fun getAllMyClients(myCompanyId : Long) : PagingSource<Int,CompanyWithCompanyClient>
+    @Query("SELECT * FROM client_provider_relation WHERE providerId  = :myCompanyId")
+    fun getAllMyClients(myCompanyId : Long) : PagingSource<Int,CompanyWithCompanyOrUser>
+    @Transaction
+    @Query("SELECT * FROM client_provider_relation WHERE providerId  = :myCompanyId")
+    fun getAllClients(myCompanyId : Long) : List<CompanyWithCompanyOrUser>
 
     @Transaction
     @Query("SELECT * FROM client_provider_relation WHERE clientId = :myCompanyId")
@@ -58,7 +63,7 @@ interface ClientProviderRelationDao {
 
     @Transaction
     @Query("SELECT * FROM client_provider_relation WHERE (clientId = :id OR userId = :id)")
-    fun getAllMyProviders(id : Long) : PagingSource<Int,CompanyWithCompanyClient>
+    fun getAllMyProviders(id : Long) : PagingSource<Int,CompanyWithCompanyOrUser>
 
     @Upsert
     fun insertKeys(keys : List<ClientProviderRemoteKeysEntity>)
@@ -72,8 +77,11 @@ interface ClientProviderRelationDao {
     @Query("DELETE FROM client_provider_relation")
     fun clearAllRelationTable()
 
+//    @Transaction
+//    @Query("SELECT * FROM company WHERE name LIKE '%' || :search || '%'") // WHERE username LIKE '%' || :search || '%'
+//     fun getAllUserContaining(search: String) : PagingSource<Int,CompanyWithCompanyClient>
     @Transaction
-    @Query("SELECT * FROM company WHERE name LIKE '%' || :search || '%'") // WHERE username LIKE '%' || :search || '%'
+    @Query("SELECT * FROM client_provider_relation WHERE createdDate = :search ")
      fun getAllUserContaining(search: String) : PagingSource<Int,CompanyWithCompanyClient>
 
 }

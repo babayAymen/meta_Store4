@@ -9,7 +9,7 @@ import com.aymen.store.model.Enum.Status
 
 @Entity(tableName = "purchase_order_line",
     foreignKeys = [
-        ForeignKey(entity = PurchaseOrder::class, parentColumns = ["id"], childColumns = ["purchaseOrderId"],
+        ForeignKey(entity = PurchaseOrder::class, parentColumns = ["purchaseOrderId"], childColumns = ["purchaseOrderId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
         ForeignKey(entity = Invoice::class, parentColumns = ["id"], childColumns = ["invoiceId"],
@@ -22,7 +22,7 @@ import com.aymen.store.model.Enum.Status
     indices = [Index("purchaseOrderId"), Index("invoiceId"), Index("articleId")])
 data class PurchaseOrderLine(
 
-    @PrimaryKey(autoGenerate = true) val id: Long? = null,
+    @PrimaryKey(autoGenerate = false) val purchaseOrderLineId: Long? = null,
     var quantity: Double? = 0.0,
     val comment: String? = null,
     val status: Status? = Status.INWAITING,
@@ -37,7 +37,7 @@ data class PurchaseOrderLine(
                             invoice: com.aymen.metastore.model.entity.model.Invoice?,
                             article: com.aymen.metastore.model.entity.model.ArticleCompany?): PurchaseOrderLine{
         return PurchaseOrderLine(
-            id = id,
+            id = purchaseOrderLineId,
             quantity = quantity,
             comment = comment,
             status = status,

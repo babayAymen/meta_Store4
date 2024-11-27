@@ -19,7 +19,7 @@ data class PurchaseOrderLineDto(
     fun toPurchaseOrderLine() : PurchaseOrderLine {
 
         return PurchaseOrderLine(
-            id = id,
+            purchaseOrderLineId = id,
             articleId = article?.id,
             quantity = quantity,
             comment = comment,

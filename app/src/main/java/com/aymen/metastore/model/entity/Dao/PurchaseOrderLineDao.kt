@@ -42,7 +42,7 @@ interface PurchaseOrderLineDao {
     @Query("SELECT * FROM purchase_order_line WHERE purchaseOrderId = :orderId")
      fun getAllMyOrdersLinesByOrderId(orderId : Long) : PagingSource<Int,PurchaseOrderLineWithPurchaseOrderOrInvoice>
 
-    @Query("UPDATE purchase_order_line SET status = :status WHERE id = :id")
+    @Query("UPDATE purchase_order_line SET status = :status WHERE purchaseOrderLineId = :id")
     suspend fun changeStatusByLine(status : Status , id : Long)
 
     @Query("UPDATE purchase_order_line SET status = :status WHERE purchaseOrderId = :id")

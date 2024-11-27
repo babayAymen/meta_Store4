@@ -9,14 +9,12 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.CategoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
-import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class CategoryRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val type : com.aymen.metastore.model.Enum.LoadType,
     private val id : Long?
 )
     : RemoteMediator<Int, CategoryWithCompanyAndUser>() {

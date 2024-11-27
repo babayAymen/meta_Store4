@@ -11,7 +11,7 @@ data class InvoiceWithClientPersonProvider(
 
     @Relation(
         parentColumn = "clientId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val client : CompanyWithUser? = null,
@@ -24,7 +24,7 @@ data class InvoiceWithClientPersonProvider(
 
     @Relation(
         parentColumn = "providerId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val provider : CompanyWithUser

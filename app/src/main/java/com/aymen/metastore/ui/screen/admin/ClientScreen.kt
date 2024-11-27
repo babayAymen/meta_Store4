@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
@@ -50,9 +51,9 @@ fun ClientScreen() {
                     }
                 }
             }
-            items(myClients.itemCount) { index ->
+            items(count = myClients.itemCount,
+                key = myClients.itemKey { it.id!! }) { index ->
                 val client = myClients[index]
-                Log.e("clienttest","client : $client")
                 if (client != null) {
                     Column {
                         SwipeToDeleteContainer(
@@ -65,8 +66,7 @@ fun ClientScreen() {
                             ClientCard(
                                 client,
                                 image = if (client.client != null) {
-                                    "${BASE_URL}werehouse/image/${client.client.logo}/company/"
-                                    if (client.client.virtual!!) "${client.provider?.user?.id}" else ""
+                                    "${BASE_URL}werehouse/image/${client.client.logo}/company/${if (client.client.virtual == true) client.provider?.user?.id else client.client.user?.id}"
                                 } else "${BASE_URL}werehouse/image/${client.person?.image}/user/${client.person?.id}"
                             )
                         }

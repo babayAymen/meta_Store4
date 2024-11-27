@@ -20,12 +20,19 @@ data class MetaUseCases(
     val getAllMyInvitations : GetAllMyInvitations,
     val getAllMyPaymentsEspece : GetAllMyPaymentsEspece,
     val getAllMyPaymentsEspeceByDate : GetAllMyPaymentsEspeceByDate,
-    val getAllMyPointsPayment : GetAllMyPointsPayment,
+    val getAllMyPointsPaymentForProvider : GetAllMyPointsPaymentForPoviders,
     val getAllPersonContaining : GetAllPersonContaining,
     val getArticlesForCompanyByCompanyCategory : GetArticlesForCompanyByCompanyCategory,
     val getAllMyProviders: GetAllMyProviders,
     val getAllMyOrdersNotAccepted : GetAllMyOrdersNotAccepted,
-    val getPurchaseOrderDetails: GetPurchaseOrderDetails
-//    val getAllMyPaymentFromInvoice : GetAllMyPaymentFromInvoice,
+    val getPurchaseOrderDetails: GetPurchaseOrderDetails,
+    val getAllMyBuyHistory : GetAllMyBuyHistory,
+    val getInCompleteInvoice: GetInCompleteInvoice,
+    val getNotAcceptedInvoice: GetNotAcceptedInvoice,
+    val getNotPaidInvoice: GetNotPaidInvoice,
+    val getPaidInvoice: GetPaidInvoice,
+    val getAllMyProfitsPerDay : GetAllMyProfitsPerDay,
+    val getMyHistoryProfitByDate : GetMyHistoryProfitByDate,
+    val getAllSearchHistory : GetAllSearchHistory,
 
 )

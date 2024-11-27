@@ -21,12 +21,11 @@ import com.aymen.store.model.Enum.PrivacySetting
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
     ],
-    indices = [Index( "userId" ,unique = true), Index(value = ["parentCompanyId"], unique = true), Index(value = ["companyId"], unique = true)]
+    indices = [Index( "userId" ,unique = true), Index(value = ["parentCompanyId"], unique = true), Index(value = ["companyId"])]
 )
 data class Company(
 
     @PrimaryKey(autoGenerate = false) val companyId: Long? = null,
-//    val providerId : Long? = null,
     val name: String = "",
     val code: String? = "",
     val matfisc: String? = "",

@@ -2,6 +2,7 @@ package com.aymen.metastore.model.entity.room.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 
@@ -10,7 +11,9 @@ import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
         ForeignKey(entity = Company::class, parentColumns = ["companyId"], childColumns = ["providerId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE)
-    ])
+    ],
+    indices = [Index(value = ["providerId"])]
+)
 data class PaymentForProviderPerDay(
 
     @PrimaryKey

@@ -11,6 +11,7 @@ import com.aymen.metastore.model.entity.paging.InvitationRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorkerOrCompany
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +29,7 @@ class InvetationRepositoryImpl @Inject constructor(
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyInvetations(): Flow<PagingData<InvitationWithClientOrWorkerOrCompany>>{
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = InvitationRemoteMediator(
                 api = api,room = room
             ),

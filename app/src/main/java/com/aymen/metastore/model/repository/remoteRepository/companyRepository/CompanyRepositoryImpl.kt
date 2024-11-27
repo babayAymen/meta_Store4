@@ -1,17 +1,16 @@
 package com.aymen.metastore.model.repository.remoteRepository.companyRepository
 
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.Enum.LoadType
-import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.paging.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.ProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
@@ -50,7 +49,7 @@ class CompanyRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyProvider(id: Long): Flow<PagingData<CompanyWithCompanyClient>>{
+    override fun getAllMyProvider(id: Long): Flow<PagingData<CompanyWithCompanyOrUser>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
             remoteMediator = ProviderRemoteMediator(

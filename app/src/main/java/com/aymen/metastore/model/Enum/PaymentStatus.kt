@@ -5,5 +5,7 @@ enum class PaymentStatus {
 
     PAID,
 
-    INCOMPLETE
+    INCOMPLETE,
+
+    ALL
 }

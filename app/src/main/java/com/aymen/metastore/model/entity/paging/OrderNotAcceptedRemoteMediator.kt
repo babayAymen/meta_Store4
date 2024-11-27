@@ -108,19 +108,19 @@ class OrderNotAcceptedRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PurchaseOrderWithCompanyAndUserOrClient>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.id!!).prevPage }
+        return entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.purchaseOrderId!!).prevPage }
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, PurchaseOrderWithCompanyAndUserOrClient>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.id!!).nextPage }
+        return entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.purchaseOrderId!!).nextPage }
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PurchaseOrderWithCompanyAndUserOrClient>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.purchaseOrder?.id?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it).nextPage }
+        return entity?.purchaseOrder?.purchaseOrderId?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it).nextPage }
     }
 
     private suspend fun deleteCache(){

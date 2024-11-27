@@ -6,7 +6,13 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.aymen.metastore.model.entity.room.entity.Invoice
+import com.aymen.metastore.model.entity.room.remoteKeys.AllInvoiceRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.BuyHistoryRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InCompleteRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.NotAcceptedRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.NotPayedRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.PayedRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
@@ -46,14 +52,70 @@ interface InvoiceDao {
     @Upsert
      fun insertKeys(keys: List<InvoiceRemoteKeysEntity>)
 
+     @Upsert
+     fun insertBuyHistoryKeys(keys : List<BuyHistoryRemoteKeysEntity>)
+
+     @Upsert
+     fun insertBuyHistoryPaidKeys(keys : List<PayedRemoteKeysEntity>)
+
+     @Upsert
+     fun insertBuyHistoryNotPaidKeys(keys : List<NotPayedRemoteKeysEntity>)
+
+     @Upsert
+     fun insertBuyHistoryIncompleteKeys(keys : List<InCompleteRemoteKeysEntity>)
+
+     @Upsert
+     fun insertBuyHistoryNotAcceptedKeys(keys : List<NotAcceptedRemoteKeysEntity>)
+
+     @Upsert
+     fun insertAllInvoiceKeys(keys : List<AllInvoiceRemoteKeysEntity>)
      @Query("SELECT * FROM invoice_remote_keys_table WHERE id = :id")
      suspend fun getInvoiceRemoteKey(id : Long) : InvoiceRemoteKeysEntity
 
-     @Query("Delete FROM invoice_remote_keys_table")
+     @Query("SELECT * FROM buy_history_remote_keys_table WHERE id = :id")
+     suspend fun getBuyHistoryRemoteKey(id : Long) : BuyHistoryRemoteKeysEntity
+
+     @Query("SELECT * FROM `payed_remote-keys_entity` WHERE id = :id")
+     suspend fun getBuyHistoryPaidRemoteKey(id : Long) : PayedRemoteKeysEntity
+
+     @Query("SELECT * FROM not_payed_remote_keys_table WHERE id = :id")
+     suspend fun getBuyHistoryNotPaidRemoteKey(id : Long) : NotPayedRemoteKeysEntity
+
+     @Query("SELECT * FROM in_complete_remote_keys WHERE id = :id")
+     suspend fun getBuyHistoryInCompleteRemoteKey(id : Long) : InCompleteRemoteKeysEntity
+
+     @Query("SELECT * FROM not_accepted_remote_keys WHERE id = :id")
+     suspend fun getBuyHistoryNotAcceptedRemoteKey(id : Long) : NotAcceptedRemoteKeysEntity
+
+     @Query("SELECT * FROM all_invoice_remote_keys WHERE id = :id")
+     suspend fun getAllInvoiceRemoteKey(id : Long) : AllInvoiceRemoteKeysEntity
+
+     @Query("Delete FROM all_invoice_remote_keys")
      suspend fun clearAllRemoteKeysTable()
+
+     @Query("DELETE FROM buy_history_remote_keys_table")
+     suspend fun clearAllBuyHistoryRemoteKeysTable()
+
+     @Query("DELETE FROM `payed_remote-keys_entity`")
+     suspend fun clearAllBuyHistoryPaidRemoteKeysTable()
+
+     @Query("DELETE FROM not_payed_remote_keys_table")
+     suspend fun clearAllBuyHistoryNotPaidRemoteKeysTable()
+
+     @Query("DELETE FROM in_complete_remote_keys")
+     suspend fun clearAllBuyHistoryIncompleteRemoteKeysTable()
+
+     @Query("DELETE FROM not_accepted_remote_keys")
+     suspend fun clearAllBuyHistoryNotAcceptedRemoteKeysTable()
 
      @Query("DELETE FROM invoice")
      suspend fun clearAllTable()
+
+     @Query("DELETE FROM invoice WHERE paid = :paid")
+     suspend fun clearAllBuyHistoryTableByPaidStatus(paid: PaymentStatus)
+
+     @Query("DELETE FROM invoice WHERE status = :status")
+     suspend fun clearAllBuyHistoryTableByStatus(status : Status)
 
      @Transaction
      @Query("SELECT * FROM invoice WHERE providerId = :companyId")
@@ -63,7 +125,22 @@ interface InvoiceDao {
      @Query("SELECT * FROM invoice WHERE (clientId = :clientId) OR (personId = :clientId)")
      fun getAllMyInvoiceAsClient(clientId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
 
+     @Transaction
+     @Query("SELECT * FROM invoice ")
+     fun getAllMyBuyHistory(): PagingSource<Int, InvoiceWithClientPersonProvider>
 
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE paid = :paid")
+     fun getAllMyBuyHistoryFromPaidInvoice(paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE paid = :paid")
+     fun getAllMyBuyHistoryFromNotPaidInvoice(paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE paid = :paid")
+     fun getAllMyBuyHistoryFromIncompleteInvoice(paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE status = :status")
+     fun getAllMyBuyHistoryFromNotAcceptedInvoice(status : Status) : PagingSource<Int, InvoiceWithClientPersonProvider>
 
 
 }

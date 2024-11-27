@@ -25,14 +25,14 @@ data class InvitationWithClientOrWorkerOrCompany(
 
     @Relation(
         parentColumn = "companySenderId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val companySender : CompanyWithUser? = null,
 
     @Relation(
         parentColumn = "companyReceiverId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val companyReceiver : CompanyWithUser? = null,

@@ -12,6 +12,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.ClientRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
@@ -20,7 +21,7 @@ class ProviderRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
     private val id : Long
-): RemoteMediator<Int,  CompanyWithCompanyClient>() {
+): RemoteMediator<Int,  CompanyWithCompanyOrUser>() {
     private val companyDao = room.companyDao()
     private val userDao = room.userDao()
     private val companyClientRelationDao = room.clientProviderRelationDao()
@@ -32,7 +33,7 @@ class ProviderRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, CompanyWithCompanyClient>
+        state: PagingState<Int, CompanyWithCompanyOrUser>
     ):  MediatorResult {
         return try {
             val currentPage = when (loadType) {
@@ -92,22 +93,22 @@ class ProviderRemoteMediator(
             MediatorResult.Error(ex)
         }
     }
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, CompanyWithCompanyClient>): Int? {
+    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, CompanyWithCompanyOrUser>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { companyClientRelationDao.getProviderRemoteKey(it.provider?.company?.companyId!!).prevPage }
+        return entity?.let { companyClientRelationDao.getProviderRemoteKey(it.relation.id!!).prevPage }
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, CompanyWithCompanyClient>): Int? {
+    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, CompanyWithCompanyOrUser>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { companyClientRelationDao.getProviderRemoteKey(it.provider?.company?.companyId!!).nextPage }
+        return entity?.let { companyClientRelationDao.getProviderRemoteKey(it.relation.id!!).nextPage }
     }
 
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, CompanyWithCompanyClient>): Int? {
+    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, CompanyWithCompanyOrUser>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.provider?.company?.companyId?.let { companyClientRelationDao.getProviderRemoteKey(it).nextPage }
+        return entity?.relation?.id?.let { companyClientRelationDao.getProviderRemoteKey(it).nextPage }
     }
 
     private suspend fun deleteCache(){

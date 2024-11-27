@@ -9,11 +9,13 @@ import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
+import com.aymen.metastore.model.entity.paging.AllInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.model.repository.remoteRepository.invoiceRepository.InvoiceRepository
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.ServiceApi
@@ -32,9 +34,9 @@ class InvoiceRepositoryImpl @Inject constructor(
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyInvoicesAsProvider(companyId : Long) :Flow<PagingData<InvoiceWithClientPersonProvider>>{
        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
-            remoteMediator = InvoiceRemoteMediator(
-                api = api, room = room, type = LoadType.RANDOM, id= companyId, status = null
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = AllInvoiceRemoteMediator(
+                api = api, room = room, id= companyId
             ),
             pagingSourceFactory = { invoiceDao.getAllMyInvoiceAsProvider(companyId = companyId)}
         ).flow.map {
@@ -47,7 +49,7 @@ class InvoiceRepositoryImpl @Inject constructor(
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllInvoicesAsClient(clientId: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = InvoiceRemoteMediator(
                 api = api, room = room, type = LoadType.ADMIN, id= clientId, status = null
             ),
@@ -65,7 +67,7 @@ class InvoiceRepositoryImpl @Inject constructor(
         status: Status
     ): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = InvoiceRemoteMediator(
                 api = api, room = room, type = LoadType.CONTAINING, id= clientId,status = status
             ),

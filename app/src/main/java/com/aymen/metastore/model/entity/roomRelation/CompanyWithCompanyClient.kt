@@ -8,7 +8,7 @@ import com.aymen.metastore.model.entity.room.entity.User
 
 data class CompanyWithCompanyClient(
     @Embedded var relation: ClientProviderRelation,
-
+//
     @Relation(
         parentColumn = "userId",
         entityColumn = "id"
@@ -16,25 +16,23 @@ data class CompanyWithCompanyClient(
     val clientUser: User? = null,
 
     @Relation(
-        parentColumn = "userId",
-        entityColumn = "companyId",
-        entity = Company::class
+        parentColumn = "clientId",
+        entityColumn = "companyId"
     )
-    val clientCompany: CompanyWithUser?= null,
+    val clientCompany: Company? = null,
 
     @Relation(
-        parentColumn = "userId",
-        entityColumn = "companyId",
-        entity = Company::class
+        parentColumn = "providerId",
+        entityColumn = "companyId"
     )
-    val provider: CompanyWithUser?= null,
+    val provider: Company? = null,
 
 ){
     fun toCompanyWithCompanyClient(): com.aymen.metastore.model.entity.model.ClientProviderRelation {
         return relation.toClientProviderRelation(
             person = clientUser?.toUser(),
-            provider = provider?.toCompany(),
-            client = clientCompany?.toCompany()
+            provider = provider?.toCompany(null, null),
+            client = clientCompany?.toCompany(null, null)
         )
     }
 }

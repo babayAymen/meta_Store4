@@ -1,9 +1,6 @@
 package com.aymen.metastore.model.repository.ViewModel
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -16,8 +13,8 @@ import com.aymen.metastore.model.entity.model.User
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,8 +34,7 @@ class ClientViewModel @Inject constructor(
     private  val sharedViewModel: SharedViewModel,
     private val useCases: MetaUseCases
 ): ViewModel() {
-    private var _histories: MutableStateFlow<PagingData<SearchHistory>> =
-        MutableStateFlow(PagingData.empty())
+    private var _histories: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
     val histories: StateFlow<PagingData<SearchHistory>> get() = _histories
 
     private val _myClients: MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
@@ -51,32 +47,30 @@ class ClientViewModel @Inject constructor(
     val company: StateFlow<Company?> = sharedViewModel.company
     val user: StateFlow<User?> = sharedViewModel.user
     init {
+
         getAllMyClient()
     }
 
-    fun emptyClient() {
-        _myClients.value = PagingData.empty()
-    }
 
     fun getAllMyClient() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch{
             useCases.getAllMyClient(company.value?.id!!)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
-                    _myClients.value = it.map { relation -> relation.toCompanyWithCompanyClient() }
+                    _myClients.value = it.map { relation -> relation.toClientProviderRelation() }
                 }
         }
 
     }
 
     fun getAllMyClientContaining(clientname: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             useCases.getAllMyClientContaining(sharedViewModel.company.value.id!!, clientname)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
-                    _myClients.value = it.map { relation -> relation.toCompanyWithCompanyClient() }
+                 //   _myClients.value = it.map { relation -> relation.toCompanyWithCompanyClient() }
                 }
         }
     }
@@ -87,7 +81,7 @@ class ClientViewModel @Inject constructor(
         searchCategory: SearchCategory
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            useCases.getAllPersonContaining(personName, searchType, searchCategory)
+            useCases.getAllPersonContaining(personName, searchType, searchCategory)// هذه سبب الخرب
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
@@ -137,28 +131,21 @@ class ClientViewModel @Inject constructor(
         }
 
         fun getAllSearchHistory() {
-            viewModelScope.launch(Dispatchers.IO) {
-
+            val id = when(sharedViewModel.accountType){
+                AccountType.USER -> user.value?.id
+                AccountType.COMPANY -> company.value?.id
+                AccountType.AYMEN -> TODO()
+            }
+            viewModelScope.launch {
+                    useCases.getAllSearchHistory(id!!)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _histories.value = it.map { search -> search.toSearchHistoryModel() }
+                        }
             }
         }
 
-//    suspend fun insertSearchHistary(search : SearchHistoryDto){
-//        if(search.user != null) {
-//            room.userDao().insertUser(mapUserToRoomUser(search.user))
-//        }
-//        if(search.company != null) {
-//            room.userDao().insertUser(mapUserToRoomUser(search.company.user))
-//            room.companyDao().insertCompany(mapCompanyToRoomCompany(search.company))
-//        }
-//        if(search.article != null) {
-//            room.userDao().insertUser(mapUserToRoomUser(search.article.company?.user))
-//            room.companyDao().insertCompany(mapCompanyToRoomCompany(search.article.company))
-//            room.categoryDao().insertCategory(mapCategoryToRoomCategory(search.article.category!!))
-//            room.subCategoryDao().insertSubCategory(mapSubCategoryToRoomSubCategory(search.article.subCategory!!))
-//            room.articleDao().insertArticle(mapArticelDtoToRoomArticle(search.article.article!!))
-//            room.articleCompanyDao().insertArticle(mapArticleCompanyToRoomArticleCompany(search.article))
-//        }
-//        room.searchHistoryDao().insertSearchHistory(mapSearchToSearchRoom(search))
-//    }
+
 
 }

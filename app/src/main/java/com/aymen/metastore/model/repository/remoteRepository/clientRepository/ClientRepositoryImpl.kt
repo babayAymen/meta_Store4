@@ -7,11 +7,15 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.Enum.LoadType
+import com.aymen.metastore.model.entity.paging.AllSearchRemoteMediator
 import com.aymen.metastore.model.entity.paging.ClientRemoteMediator
 import com.aymen.metastore.model.entity.paging.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
+import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
+import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Type
@@ -31,13 +35,13 @@ class ClientRepositoryImpl  @Inject constructor(
 ) :ClientRepository{
 
     private val clientProviderRelationDao = room.clientProviderRelationDao()
-
+    private val searchHistoryDao = room.searchHistoryDao()
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyClient(companyId : Long) :Flow<PagingData<CompanyWithCompanyClient>>{
+    override fun getAllMyClient(companyId: Long): Flow<PagingData<CompanyWithCompanyOrUser>> {
         Log.e("getallclient","company id : $companyId")
         return  Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = ClientRemoteMediator(
                 api = api, room = room, id = companyId
             ),
@@ -79,9 +83,9 @@ class ClientRepositoryImpl  @Inject constructor(
         search: String,
         searchType: SearchType,
         searchCategory: SearchCategory
-    ) :Flow<PagingData<CompanyWithCompanyClient>>{
+    ): Flow<PagingData<CompanyWithCompanyClient>> {
         return  Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = CompanyRemoteMediator(
                 api = api, room = room, type = LoadType.RANDOM, categoryName= null, searchType = null, libelle = null
             ),
@@ -95,5 +99,18 @@ class ClientRepositoryImpl  @Inject constructor(
 
 
     override suspend fun saveHistory(category: SearchCategory, id: Long) = api.saveHistory(category, id)
-    override suspend fun getAllHistory() = api.getAllHistory()
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getAllHistory(id : Long):Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>{
+        return  Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = AllSearchRemoteMediator(
+                api = api, room = room, id = id
+            ),
+            pagingSourceFactory = { searchHistoryDao.getAllSearchHistories() }
+        ).flow.map {
+            it.map { article ->
+                article
+            }
+        }
+    }
  }

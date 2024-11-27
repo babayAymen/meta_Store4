@@ -680,6 +680,7 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
 
 @Composable
 fun ClientCard(client: ClientProviderRelation, image : String) {
+    Log.e("clienttest","imegezzzz $image")
     Row(
         modifier = Modifier.padding(5.dp)
     ) {

@@ -11,9 +11,9 @@ data class PurchaseOrderLineWithPurchaseOrderOrInvoice(
     @Embedded val purchaseOrderLine: PurchaseOrderLine,
 
     @Relation(
+        entity = PurchaseOrder::class,
         parentColumn = "purchaseOrderId",
-        entityColumn = "id",
-        entity = PurchaseOrder::class
+        entityColumn = "purchaseOrderId",
     )
     val purchaseOrder: PurchaseOrderWithCompanyAndUserOrClient? =null,
 

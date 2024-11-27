@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.RoleEnum
@@ -64,12 +65,6 @@ fun SearchScreen(modifier: Modifier = Modifier) {
         mutableStateOf(false)
     }
     val role = appViewModel.userRole
-
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-//            clientViewModel.histories = emptyList()
-        }
-    }
 
     val com =  companyViewModel.allCompanies.collectAsLazyPagingItems()
     val cli = clientViewModel.searchPersons.collectAsLazyPagingItems()
@@ -123,54 +118,59 @@ fun SearchScreen(modifier: Modifier = Modifier) {
             }
             Row {
                 LazyColumn {
-                    item {
-
                         if (show) {
-                            SearchItem(searchCategory){
-                                searchCategory = it
-                            }
-                            if(role != RoleEnum.USER){
+                            item {
+                                SearchItem(searchCategory) {
+                                    searchCategory = it
+                                }
+                                if (role != RoleEnum.USER) {
 
-                            SearchTypeItem(appViewModel,searchType,searchCategory){
-                                searchType = it
-                            }
-                            }
-
-                            when(searchCategory){
-                                SearchCategory.COMPANY ->{
-                                           for(index in 0 until com.itemCount){
-                                               val company = com[index]
-                                    when(searchType){
-                                        SearchType.OTHER -> {
-                                                CompanyCard(company?.client!!, companyViewModel, articleViewModel){
-                                                    companyViewModel.myCompany = company.client
-                                                    articleViewModel.companyId = company.client.id!!
-                                                    RouteController.navigateTo(Screen.CompanyScreen)
-                                                    clientViewModel.saveHitory(searchCategory,company.id!!)
-                                                }
-                                            }
-                                        else ->{
-                                                   CompanyCard(
-                                                       company?.client!!,
-                                                       companyViewModel,
-                                                       articleViewModel
-                                                   ) {
-                                                       companyViewModel.myCompany = company.client
-                                                       articleViewModel.companyId =
-                                                           company.client.id!!
-                                                       RouteController.navigateTo(Screen.CompanyScreen)
-                                                       clientViewModel.saveHitory(
-                                                           searchCategory,
-                                                           company.client.id!!
-                                                       )
-                                                   }
-                                               }
-                                        }
+                                    SearchTypeItem(appViewModel, searchType, searchCategory) {
+                                        searchType = it
                                     }
                                 }
-                                SearchCategory.USER -> {
-                                    for (index in 0 until cli.itemCount) {
-                                        val user = cli[index]
+
+                                when (searchCategory) {
+                                    SearchCategory.COMPANY -> {
+                                        for (index in 0 until com.itemCount) {
+                                            val company = com[index]
+                                            when (searchType) {
+                                                SearchType.OTHER -> {
+                                                    CompanyCard(
+                                                        company?.client!!
+                                                    ) {
+                                                        companyViewModel.myCompany = company.client
+                                                        articleViewModel.companyId =
+                                                            company.client.id!!
+                                                        RouteController.navigateTo(Screen.CompanyScreen)
+                                                        clientViewModel.saveHitory(
+                                                            searchCategory,
+                                                            company.id!!
+                                                        )
+                                                    }
+                                                }
+
+                                                else -> {
+                                                    CompanyCard(
+                                                        company?.client!!
+                                                    ) {
+                                                        companyViewModel.myCompany = company.client
+                                                        articleViewModel.companyId =
+                                                            company.client.id!!
+                                                        RouteController.navigateTo(Screen.CompanyScreen)
+                                                        clientViewModel.saveHitory(
+                                                            searchCategory,
+                                                            company.client.id!!
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    SearchCategory.USER -> {
+                                        for (index in 0 until cli.itemCount) {
+                                            val user = cli[index]
                                             UserCard(user?.person!!, appViewModel) {
                                                 appViewModel._user.value = user.person
                                                 RouteController.navigateTo(Screen.UserScreen)
@@ -178,68 +178,88 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                     searchCategory,
                                                     user.person.id!!
                                                 )
-                                        }
-                                    }
-                                }
-                                SearchCategory.ARTICLE -> {
-                                           val art = articleViewModel.searchArticles.collectAsLazyPagingItems()
-                                           for(index in 0 until art.itemCount){
-                                               val article = art[index]
-                                                ArticleCardForSearch( article!!){
-                                                    companyViewModel.myCompany = article.company!!
-//                                                    articleViewModel.articleCompany = article a determine
-                                                    RouteController.navigateTo(Screen.ArticleDetailScreen)
-                                                    clientViewModel.saveHitory(searchCategory,article.id!!)
-                                                }
                                             }
-                                }
-                                else ->{
-
-                                }
-                            }
-                        } else {
-                            for(index in 0 until histories.itemCount){
-                                val history = histories[index]
-                                when(history?.searchCategory){
-                                    SearchCategory.COMPANY -> {
-                                        CompanyCard(companySearch, companyViewModel, articleViewModel){
-                                            companyViewModel.myCompany = companySearch
-                                            articleViewModel.companyId = history.company?.id!!
-                                            RouteController.navigateTo(Screen.CompanyScreen)
-                                            clientViewModel.saveHitory(searchCategory,history.id!!)
                                         }
                                     }
-                                    SearchCategory.USER ->{
-                                            UserCard(userSearch, appViewModel) {
-                                                appViewModel._user.value = userSearch
-                                                RouteController.navigateTo(Screen.UserScreen)
+
+                                    SearchCategory.ARTICLE -> {
+                                        val art =
+                                            articleViewModel.searchArticles.collectAsLazyPagingItems()
+                                        for (index in 0 until art.itemCount) {
+                                            val article = art[index]
+                                            ArticleCardForSearch(article!!) {
+                                                companyViewModel.myCompany = article.company!!
+//                                                    articleViewModel.articleCompany = article a determine
+                                                RouteController.navigateTo(Screen.ArticleDetailScreen)
                                                 clientViewModel.saveHitory(
                                                     searchCategory,
-                                                    history.user?.id!!
+                                                    article.id!!
                                                 )
+                                            }
                                         }
                                     }
-                                    SearchCategory.ARTICLE -> {
-                                            ArticleCardForSearch(
-                                                history.article!!
-                                            ) {
-                                                companyViewModel.myCompany = companySearch
-                                                articleViewModel.articleCompany = articleCompany
-                                                RouteController.navigateTo(Screen.ArticleDetailScreen)
-                                                clientViewModel.saveHitory(searchCategory, history.id!!)
-                                            }
-                                    }
-                                    else ->{
-                                        Log.e("searchhistory", "search history other")
+
+                                    else -> {
+
                                     }
                                 }
+                            }
+                        }else {
+                            items(count = histories.itemCount,
+                                key = histories.itemKey{it.id!!}){index : Int ->
+                                val history = histories[index]
+                                    Column {
+                                        when (history?.searchCategory) {
+                                            SearchCategory.COMPANY -> {
+                                                Log.e("search","company ${history.company}")
+                                                CompanyCard(
+                                                    history.company!!
+                                                ) {
+                                                    companyViewModel.myCompany = companySearch
+                                                    articleViewModel.companyId = history.company.id!!
+                                                    RouteController.navigateTo(Screen.CompanyScreen)
+                                                    clientViewModel.saveHitory(
+                                                        searchCategory,
+                                                        history.id!!
+                                                    )
+                                                }
+                                            }
+
+                                            SearchCategory.USER -> {
+                                                UserCard(history.user!!, appViewModel) {
+                                                    appViewModel._user.value = userSearch
+                                                    RouteController.navigateTo(Screen.UserScreen)
+                                                    clientViewModel.saveHitory(
+                                                        searchCategory,
+                                                        history.user.id!!
+                                                    )
+                                                }
+                                            }
+
+                                            SearchCategory.ARTICLE -> {
+                                                ArticleCardForSearch(
+                                                    history.article!!
+                                                ) {
+                                                    companyViewModel.myCompany = companySearch
+                                                    articleViewModel.articleCompany = articleCompany
+                                                    RouteController.navigateTo(Screen.ArticleDetailScreen)
+                                                    clientViewModel.saveHitory(
+                                                        searchCategory,
+                                                        history.id!!
+                                                    )
+                                                }
+                                            }
+
+                                            else -> {
+                                                Log.e("searchhistory", "search history other")
+                                            }
+                                        }
+                                    }
                             }
                         }
                     }
                 }
             }
-
-        }
     }
 }
 

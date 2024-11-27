@@ -53,7 +53,7 @@ class CategoryRepositoryImpl  @Inject constructor(
        return Pager(
            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 2),
            remoteMediator = CategoryRemoteMediator(
-               api = api, room = room, type = LoadType.RANDOM,id = sharedViewModel.company.value.id
+               api = api, room = room,id = sharedViewModel.company.value.id
            ),
            pagingSourceFactory = {
                categoryDao.getAllCategoriesByCompanyId(sharedViewModel.company.value.id!!)

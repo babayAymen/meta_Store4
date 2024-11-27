@@ -14,7 +14,7 @@ data class PurchaseOrderDto(
     fun toPurchaseOrder() : PurchaseOrder {
 
         return PurchaseOrder(
-            id = id,
+            purchaseOrderId = id,
             companyId = company?.id,
             clientId = client?.id,
             userId = person?.id,

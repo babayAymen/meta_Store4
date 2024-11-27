@@ -2117,7 +2117,7 @@ fun AcceptTypeProvider(invetation: Invitation,companyId: Long) {
                     if (invetation.companySender?.id == companyId) {
                         Text(text = invetation.client?.username!! + " has accepted your provider invitation ")
                     } else {
-                        Text(text = "you have accpted a provider invitation from ${invetation.companySender?.name!!}")
+                        Text(text = "you have accepted a provider invitation from ${invetation.companySender?.name!!}")
                     }
                 }
             }
@@ -2462,8 +2462,8 @@ fun AcceptTypeClient(invetation: Invitation,companyId: Long) {
 }
 
 @Composable
-fun CompanyCard(company : Company?, companyViewModel: CompanyViewModel, articleViewModel: ArticleViewModel, onClicked: () -> Unit) {
-    Text(text = company?.name?:"",
+fun CompanyCard(company : Company, onClicked: () -> Unit) {
+    Text(text = company.name,
         modifier = Modifier
             .padding(5.dp)
             .clickable {
@@ -2498,7 +2498,11 @@ fun EmptyImage(modifier: Modifier = Modifier) {
 @Composable
 fun BuyHistoryCard(paymentForProviders: PaymentForProviders){
     Box{
+        Column {
         Text(text = paymentForProviders.giveenespece.toString())
+        Text(text = paymentForProviders.lastModifiedDate)
+        Text(text = paymentForProviders.purchaseOrderLine?.purchaseorder?.orderNumber.toString())
+        }
     }
 }
 
