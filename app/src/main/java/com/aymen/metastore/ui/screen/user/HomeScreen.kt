@@ -120,8 +120,8 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     val currentScreen by appViewModel.currentScreen
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val randomArticles = articleViewModel.randomArticles.collectAsLazyPagingItems()
-    LaunchedEffect(key1 = randomArticles) {
-        Log.e("fetchrandomarticleforhomepage","size : ${randomArticles.itemCount}")
+    LaunchedEffect(key1 = type) {
+        articleViewModel.fetchRandomArticlesForHomePage(CompanyCategory.NULL)
     }
     var triggerLocationCheck by remember { mutableStateOf(false) }
 
@@ -318,7 +318,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             DropdownMenuItem(text = { Text(text = "logout") }, onClick = {
                                 RouteController.navigateTo(Screen.SignInScreen)
                                 viewModel.updateScreen(IconType.HOME)
-                                viewModel.logout()
+                                sharedViewModel.logout()
                             })
                         }
 

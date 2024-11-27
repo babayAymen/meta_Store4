@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
@@ -34,17 +35,10 @@ import com.aymen.metastore.ui.component.InvoiceCard
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceScreenAsProvider() {
-    val appViewModel : AppViewModel = hiltViewModel()
-    val invoiceViewModel : InvoiceViewModel = hiltViewModel()
+    val appViewModel: AppViewModel = hiltViewModel()
+    val invoiceViewModel: InvoiceViewModel = hiltViewModel()
     var asProvider by remember {
         mutableStateOf(true)
-    }
-    LaunchedEffect(asProvider) {
-        if (asProvider) {
-            invoiceViewModel.getAllMyInvoicesAsProvider()
-        } else {
-            invoiceViewModel.getAllMyInvoicesAsClient()
-        }
     }
     val invoicesAsProvider = if (asProvider) {
         invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
@@ -80,7 +74,6 @@ fun InvoiceScreenAsProvider() {
                         color = Color.Green,
                         enabled = asProvider
                     ) {
-                        invoiceViewModel.isLoading = true
                         asProvider = false
                     }
 
@@ -95,7 +88,6 @@ fun InvoiceScreenAsProvider() {
                         color = Color.Green,
                         enabled = !asProvider
                     ) {
-                        invoiceViewModel.isLoading = true
                         asProvider = true
                     }
 
@@ -104,64 +96,61 @@ fun InvoiceScreenAsProvider() {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (invoiceViewModel.isLoading) {
-                    item {
 
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                                .wrapContentWidth(Alignment.CenterHorizontally)
-                        )
-                    }
-                } else {
-                    item {
-                        Row {
+                item {
+                    Row {
 
-                    if(asProvider){
-                        Row (
-                            modifier = Modifier.weight(1f)
-                        ){
-                        ButtonSubmit(
-                            labelValue = "paid",
-                            color = Color.Green,
-                            enabled = true
-                        ) {
-                            invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus( PaymentStatus.PAID)
-                        }
-                        }
-                        Row (
-                            modifier = Modifier.weight(1f)
-                        ){
-                            ButtonSubmit(
-                                labelValue = "in complete",
-                                color = Color.Green,
-                                enabled = true
+                        if (asProvider) {
+                            Row(
+                                modifier = Modifier.weight(1f)
                             ) {
-                                invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus( PaymentStatus.INCOMPLETE)
+                                ButtonSubmit(
+                                    labelValue = "paid",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus(
+                                        PaymentStatus.PAID
+                                    )
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "in complete",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus(
+                                        PaymentStatus.INCOMPLETE
+                                    )
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ButtonSubmit(
+                                    labelValue = "not paid",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus(
+                                        PaymentStatus.NOT_PAID
+                                    )
+                                }
                             }
                         }
-                        Row (
-                            modifier = Modifier.weight(1f)
-                        ){
-                            ButtonSubmit(
-                                labelValue = "not paid",
-                                color = Color.Green,
-                                enabled = true
-                            ) {
-                                invoiceViewModel.getAllMyInvoicesAsProviderAndPaymentStatus( PaymentStatus.NOT_PAID)
-                            }
-                        }
-                        }
-                    }
-                    }
-                    items(invoicesAsProvider.itemCount) {index ->
-                           val invoice = invoicesAsProvider[index]
-                        InvoiceCard(invoice!!, appViewModel, invoiceViewModel,asProvider)
-
                     }
                 }
-
+                items(count = invoicesAsProvider.itemCount,
+                    key = invoicesAsProvider.itemKey { it.id!! }
+                ) { index ->
+                    val invoice = invoicesAsProvider[index]
+                    if (invoice != null) {
+                        InvoiceCard(invoice, appViewModel, invoiceViewModel, asProvider)
+                    }
+                }
             }
         }
 

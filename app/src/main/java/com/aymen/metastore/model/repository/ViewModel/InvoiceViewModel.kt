@@ -74,7 +74,10 @@ class InvoiceViewModel @Inject constructor(
 
     init {
         when(sharedViewModel.accountType){
-            AccountType.COMPANY -> getAllMyInvoicesAsProvider()
+            AccountType.COMPANY -> {
+                getAllMyInvoicesAsProvider()
+                getAllMyInvoicesAsClient()
+            }
             AccountType.USER -> {
                 getAllMyInvoicesAsClient()
                 getAllMyInvoiceAsClientAndStatus(Status.INWAITING)

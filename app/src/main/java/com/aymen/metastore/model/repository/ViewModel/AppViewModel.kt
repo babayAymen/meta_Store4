@@ -14,6 +14,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aymen.metastore.MainActivity
 import com.aymen.metastore.model.Location.LocationService
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User
@@ -26,6 +27,7 @@ import com.aymen.metastore.model.entity.dto.AuthenticationResponse
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.kotlin.ext.realmSetOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,8 +85,7 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val response = repository.updateLocations(latitude, longitude)
-                sharedViewModel._company.value.latitude = latitude
-                sharedViewModel._company.value.longitude = longitude
+                sharedViewModel.assignCordination(latitude, longitude)
                 if(response.isSuccessful) {
                     Toast.makeText(context, "you can turn off GPS service", Toast.LENGTH_LONG)
                         .show()
@@ -157,7 +158,7 @@ class AppViewModel @Inject constructor(
                     val response = repository.getMyUserDetails()
                     if (response.isSuccessful) {
                         storeUser(response.body()!!.toUserModel())
-                        sharedViewModel._user.value = response.body()!!.toUserModel()
+                        sharedViewModel.assignUser(response.body()!!.toUserModel())
                     }
                 } catch (ex: Exception) {
                     Log.e("getmyuserdetails", "error is : $ex")
@@ -264,7 +265,8 @@ class AppViewModel @Inject constructor(
                 if(response.isSuccessful){
                     storeCompany(response.body()!!.toCompanyModel())
                     Log.e("getmyuserdetails", "Error storing token store user fun in app view model:")
-                    sharedViewModel._company.value = response.body()!!.toCompanyModel()
+
+                    sharedViewModel.assignCompany( response.body()!!.toCompanyModel())
                 }
             }catch (ex : Exception){
                 Log.e("exeptions","error is : $ex")
@@ -335,7 +337,7 @@ class AppViewModel @Inject constructor(
                     currentUser.copy (
                         image = newName
                     ).also {
-                        sharedViewModel._user.value = currentUser
+                        sharedViewModel.assignUser( currentUser)
                     }
                 }
             } catch (e: Exception) {
@@ -350,7 +352,7 @@ class AppViewModel @Inject constructor(
                 currentCompany.copy (
                     balance = blc
                 ).also {
-                sharedViewModel._company.value = currentCompany
+                sharedViewModel.assignCompany(currentCompany)
                 }
             }
         }
@@ -366,7 +368,7 @@ class AppViewModel @Inject constructor(
                         AccountType.COMPANY ->{
 
                             updateCompanyName(file.name){
-                        sharedViewModel._company.value = it
+                                sharedViewModel.assignCompany(it)
                             }
                         }
                         AccountType.USER ->{
@@ -383,51 +385,66 @@ class AppViewModel @Inject constructor(
     }
 
 
-    fun logout(){
-        viewModelScope.launch {
-            withContext(Dispatchers.IO){
-                dataStore.updateData {
-                    it.copy(token = "")
-                }
-                companyDataStore.updateData {
-                    Company().copy(
-                        id = 0,
-                        name = "",
-                        code = "",
-                        matfisc = "",
-                        address = "",
-                        phone = "",
-                        bankaccountnumber = "",
-                        email = "",
-                        capital = "",
-                        logo = "",
-                        workForce = 0,
-                        rate = 0.0,
-                        raters = 0,
-                        category = CompanyCategory.DAIRY,
-                        user = User()
-                    )
-                }
-                userDatastore.updateData {
-                    User().copy(
-                        id = 0,
-                        username = "",
-                        address = "",
-                        phone = "",
-                        balance = 0.0,
-                        image = "",
-                    )
-                }
-                sharedViewModel.accountType = AccountType.USER
-               roomBlock()
-            }
-        }
-    }
-
-
-
-    fun roomBlock(){
-        room.clearAllTables()
-    }
+//    fun logout(context: Context){
+//        viewModelScope.launch {
+//            withContext(Dispatchers.IO){
+//                dataStore.updateData {
+//                    it.copy(token = "")
+//                }
+//                companyDataStore.updateData {
+//                    Company().copy(
+//                        id = 0,
+//                        name = "",
+//                        code = "",
+//                        matfisc = "",
+//                        address = "",
+//                        phone = "",
+//                        bankaccountnumber = "",
+//                        email = "",
+//                        capital = "",
+//                        logo = "",
+//                        workForce = 0,
+//                        rate = 0.0,
+//                        raters = 0,
+//                        category = CompanyCategory.DAIRY,
+//                        user = User()
+//                    )
+//                }
+//                userDatastore.updateData {
+//                    User().copy(
+//                        id = 0,
+//                        username = "",
+//                        address = "",
+//                        phone = "",
+//                        balance = 0.0,
+//                        image = "",
+//                    )
+//                }
+//                sharedViewModel.accountType = AccountType.USER
+//               roomBlock()
+//                restartApp(context)
+//            }
+//        }
+//    }
+//
+//    fun changeAccount(context: Context){
+//        viewModelScope.launch(Dispatchers.IO) {
+//            roomBlock()
+//            realmSetOf(context)
+//        }
+//    }
+//
+//    private fun roomBlock(){
+//        room.clearAllTables()
+//    }
+//    private fun restartApp(context: Context){
+//        val intent = Intent(context,MainActivity::class.java).apply {
+//            flags =
+//                Intent.FLAG_ACTIVITY_NEW_TASK or
+//                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+//        }
+//        context.startActivity(intent)
+//        Runtime.getRuntime().exit(0)
+//    }
 
 }

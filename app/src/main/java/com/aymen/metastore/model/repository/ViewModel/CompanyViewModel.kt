@@ -53,7 +53,7 @@ class CompanyViewModel @Inject constructor(
     init {
         getMyCompany()
         getMyCompany {
-            sharedViewModel._company.value = it ?: Company()
+            sharedViewModel.assignCompany( it ?: Company())
         }
     }
 

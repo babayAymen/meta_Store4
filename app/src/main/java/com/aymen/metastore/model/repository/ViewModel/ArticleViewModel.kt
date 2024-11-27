@@ -132,10 +132,7 @@ class ArticleViewModel @Inject constructor(
             }
         }
 
-        fun clearArticles() {
-            _randomArticles.value = PagingData.empty()
-            _adminArticles.value = PagingData.empty()
-        }
+
 
     fun assignArticleCompany(art : ArticleCompany){
         _articleCompany.value = art

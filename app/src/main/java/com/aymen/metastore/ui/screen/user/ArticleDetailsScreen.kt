@@ -68,7 +68,7 @@ fun ArticleDetailsScreen() {
         mutableStateOf(Company())
     }
     val company = companyViewModel.myCompany
-    val article by articleViewModel.articleCompany.collectAsState()
+    val article by articleViewModel.articleCompany.collectAsStateWithLifecycle()
     val art = articleViewModel.article
     val userComment by articleViewModel.userComment.collectAsStateWithLifecycle()
     val companyComment by articleViewModel.companyComment.collectAsStateWithLifecycle()
@@ -78,7 +78,7 @@ fun ArticleDetailsScreen() {
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentArticle(company.id!!)
         if (sharedViewModel.accountType == AccountType.COMPANY) {
-            myCompany = sharedViewModel._company.value
+            myCompany = sharedViewModel.company.value
         }
     }
     LaunchedEffect(articleViewModel.articleCompany) {
