@@ -121,7 +121,7 @@ class InCompleteRemoteMediator(
 
     private suspend fun deleteCache(){
      //   invoiceDao.clearAllBuyHistoryTableByPaidStatus(PaymentStatus.INCOMPLETE)
-        invoiceDao.clearAllTable()
+        invoiceDao.clearAllTableAsProvider(id)
         invoiceDao.clearAllRemoteKeysTable()
         invoiceDao.clearAllBuyHistoryIncompleteRemoteKeysTable()
     }

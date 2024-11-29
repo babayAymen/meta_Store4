@@ -7,9 +7,11 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.entity.SearchHistory
 import com.aymen.metastore.model.entity.room.remoteKeys.ClientProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
+import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
@@ -21,15 +23,15 @@ class CompanyRemoteMediator(
     private val room : AppDatabase,
     private val type : com.aymen.metastore.model.Enum.LoadType,
     private val id : Long? = null,
-    private val categoryName : CompanyCategory?,
     private val searchType : SearchType?,
     private val libelle : String?
-): RemoteMediator<Int, CompanyWithCompanyClient>() {
+): RemoteMediator<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>() {
 
 
     private val companyDao = room.companyDao()
     private val userDao = room.userDao()
     private val companyClientRelationDao = room.clientProviderRelationDao()
+    private val searchHistoryDao = room.searchHistoryDao()
 
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH
@@ -38,7 +40,7 @@ class CompanyRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, CompanyWithCompanyClient>
+        state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>
     ):  MediatorResult {
         return try {
             val currentPage = when (loadType) {
@@ -90,12 +92,17 @@ class CompanyRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.person?.toUser()!!})
-                    userDao.insertUser(response.map {user -> user.client?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map {company -> company.client?.toCompany()!!})
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map { company -> company.provider?.toCompany()!! })
-                    companyClientRelationDao.insertClientProviderRelation(response.map { relation -> relation.toClientProviderRelation() })
+                    userDao.insertUser(response.map {user -> user.person?.toUser()})
+                    userDao.insertUser(response.map {user -> user.client?.user?.toUser()})
+                    companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
+                    response.map { search ->
+                        val entity = SearchHistory(
+                            id = search.id,
+                            userId = search.person?.id,
+                            companyId = search.client?.id
+                        )
+                        searchHistoryDao.insertSearch(entity)
+                    }
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -107,26 +114,29 @@ class CompanyRemoteMediator(
             MediatorResult.Error(ex)
         }
     }
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, CompanyWithCompanyClient>): Int? {
+    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { companyClientRelationDao.getRelationRemoteKey(it.relation.id!!).previousPage }
+        val remoteKeys = entity?.let { searchHistoryDao.getSearchHistoryRemoteKey(it.company?.company?.companyId?:it.user?.id!!) }
+        return remoteKeys?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, CompanyWithCompanyClient>): Int? {
+    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { companyClientRelationDao.getRelationRemoteKey(it.relation.id!!).nextPage }
+        val remoteKeys =  entity?.let { searchHistoryDao.getSearchHistoryRemoteKey(it.company?.company?.companyId?:it.user?.id!!) }
+        return remoteKeys?.nextPage
     }
 
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, CompanyWithCompanyClient>): Int? {
+    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.relation?.id?.let { companyClientRelationDao.getRelationRemoteKey(it).nextPage }
+        val remoteKeys =  entity?.let { searchHistoryDao.getSearchHistoryRemoteKey(it.company?.company?.companyId?:it.user?.id!!) }
+        return remoteKeys?.nextPage
     }
 
     private suspend fun deleteCache(){
-        companyClientRelationDao.clearAllRelationTable()
-        companyClientRelationDao.clearAllRemoteKeysTable()
+        searchHistoryDao.clearAllSearchHistoryTable()
+        searchHistoryDao.clearAllSearchHistoryRemoteKeysTable()
     }
 }

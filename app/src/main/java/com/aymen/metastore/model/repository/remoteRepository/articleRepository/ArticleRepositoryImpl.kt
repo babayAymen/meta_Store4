@@ -107,6 +107,8 @@ class ArticleRepositoryImpl @Inject constructor
         }
     }
 
+    override suspend fun getArticleByBarcode(bareCode: String) = api.getArticleByBarcode(barCode = bareCode)
+
     override fun getArticleDetails(id: Long): Flow<Resource<ArticleCompany>> {
         return networkBoundResource(
             databaseQuery = {

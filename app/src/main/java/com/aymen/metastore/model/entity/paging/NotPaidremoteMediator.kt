@@ -113,7 +113,7 @@ class NotPaidremoteMediator(
 
     private suspend fun deleteCache(){
      //   invoiceDao.clearAllBuyHistoryTableByPaidStatus(PaymentStatus.NOT_PAID)
-        invoiceDao.clearAllTable()
+        invoiceDao.clearAllTableAsProvider(id)
         invoiceDao.clearAllRemoteKeysTable()
         invoiceDao.clearAllBuyHistoryNotPaidRemoteKeysTable()
     }

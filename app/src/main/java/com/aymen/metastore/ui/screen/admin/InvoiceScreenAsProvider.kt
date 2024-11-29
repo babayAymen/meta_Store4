@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,11 +41,12 @@ fun InvoiceScreenAsProvider() {
     var asProvider by remember {
         mutableStateOf(true)
     }
-    val invoicesAsProvider = if (asProvider) {
-        invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
-    } else {
-        invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()
+
+    LaunchedEffect(key1 = asProvider) {
+        invoiceViewModel.testClientContaing()
     }
+    val invoicesAsProvider = invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
+    val invoiceAsClient = invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -99,8 +101,6 @@ fun InvoiceScreenAsProvider() {
 
                 item {
                     Row {
-
-                        if (asProvider) {
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -140,15 +140,26 @@ fun InvoiceScreenAsProvider() {
                                     )
                                 }
                             }
-                        }
                     }
                 }
+                if(asProvider){
                 items(count = invoicesAsProvider.itemCount,
                     key = invoicesAsProvider.itemKey { it.id!! }
                 ) { index ->
                     val invoice = invoicesAsProvider[index]
                     if (invoice != null) {
                         InvoiceCard(invoice, appViewModel, invoiceViewModel, asProvider)
+                    }
+                }
+                }
+                else{
+                    items(count = invoiceAsClient.itemCount,
+                        key = invoiceAsClient.itemKey { it.id!! }
+                    ) { index ->
+                        val invoice = invoiceAsClient[index]
+                        if (invoice != null) {
+                            InvoiceCard(invoice, appViewModel, invoiceViewModel, asProvider)
+                        }
                     }
                 }
             }

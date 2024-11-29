@@ -74,7 +74,7 @@ class ShoppingViewModel @Inject constructor(
 
     var Order by mutableStateOf(PurchaseOrder())
     var cost by mutableStateOf(BigDecimal.ZERO)
-    var isLoading by mutableStateOf(false)
+
 init {
     getAllMyOrdersNotAccepted()
 }

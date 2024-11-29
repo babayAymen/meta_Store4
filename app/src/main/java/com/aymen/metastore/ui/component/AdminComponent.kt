@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -945,7 +946,6 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
         ){
             Surface(
                 modifier = Modifier
-//                    .height(350.dp)
                     .padding(10.dp)
                     .clip(RoundedCornerShape(10.dp)),
             ) {
@@ -1126,6 +1126,110 @@ fun ShowPaymentDailog(ttc: BigDecimal, openDailog: Boolean, onSelected: (BigDeci
         }
     }
 }
+
+@Composable
+fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceViewModel : InvoiceViewModel, update : Boolean, onSubmit: () -> Unit) {
+    var openDialog by remember { mutableStateOf(openDailog) }
+    var qte by remember {
+        mutableDoubleStateOf(0.0)
+    }
+    var discount by remember {
+        mutableDoubleStateOf(0.0)
+    }
+    var isEnabled by remember {
+        mutableStateOf(false)
+    }
+    if(openDialog){
+        Dialog(
+            onDismissRequest = {
+                openDialog = false
+                onSubmit()
+            }
+        ) {
+            Box{
+                Column(modifier = Modifier.background(Color.White)) {
+                    Row {
+                        Row(modifier = Modifier.weight(1f)) {
+
+                ShowImage(image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.article?.category?.ordinal}")
+                        }
+                        Row (modifier = Modifier.weight(2f)){
+
+                    Text(text = article.article?.libelle!!)
+                        }
+                    }
+                    InputTextField(
+                        labelValue = if(qte == 0.0) "" else qte.toString(),
+                        label = "quantity",
+                        singleLine = true,
+                        maxLine = 1,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
+                        onValueChange = {
+                            qte = it.toDouble()
+                            if(qte == 0.0 ){
+                                isEnabled = false
+                            }else{
+                                isEnabled = true
+                            }
+                                        },
+                        onImage = {}
+                    ) {
+
+                    }
+                    InputTextField(
+                        labelValue = if(discount == 0.0) "" else discount.toString(),
+                        label = "discount",
+                        singleLine = true,
+                        maxLine = 1,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
+                        onValueChange = {
+                            discount = it.toDouble()
+                                        },
+                        onImage = {}
+                    ) {
+
+                    }
+                    Row {
+                        Row(modifier = Modifier.weight(1f)) {
+                            ButtonSubmit(labelValue = "Ok", color = Color.Green, enabled = isEnabled) {
+                                val command = invoiceViewModel.commandLineDto.copy()
+                                command.quantity = qte
+                                command.discount = discount
+                                command.article = article
+                                if(update) {
+                                    invoiceViewModel.commandLineDtos -= invoiceViewModel.commandLineDto
+                                }
+                                command.totTva = qte * article.article?.tva!! * article.sellingPrice!! / 100
+                                command.prixArticleTot = qte * article.sellingPrice!!*(1-command.discount!!/100)
+                                command.invoice?.code = invoiceViewModel.lastInvoiceCode
+                                invoiceViewModel.commandLineDtos += command
+                                invoiceViewModel.commandLineDto = CommandLine()
+                                qte = 0.0
+                                discount = 0.0
+                                openDialog = false
+                                onSubmit()
+                            }
+                        }
+                        Row (modifier = Modifier.weight(1f)){
+                            ButtonSubmit(labelValue = "Cancel", color = Color.Red , enabled = true) {
+                                openDialog = false
+                                onSubmit()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
 
 @Composable
 fun PermissionSettingsDialog(onDismiss : () -> Unit) {

@@ -93,6 +93,10 @@ interface InvoiceDao {
      @Query("Delete FROM all_invoice_remote_keys")
      suspend fun clearAllRemoteKeysTable()
 
+     @Query("DELETE FROM invoice_remote_keys_table")
+     suspend fun clearInvoiceRemoteKeysTable()
+
+
      @Query("DELETE FROM buy_history_remote_keys_table")
      suspend fun clearAllBuyHistoryRemoteKeysTable()
 
@@ -108,8 +112,10 @@ interface InvoiceDao {
      @Query("DELETE FROM not_accepted_remote_keys")
      suspend fun clearAllBuyHistoryNotAcceptedRemoteKeysTable()
 
-     @Query("DELETE FROM invoice")
-     suspend fun clearAllTable()
+     @Query("DELETE FROM invoice WHERE (clientId = :id OR personId = :id)")
+     suspend fun clearAllTableAsClient(id : Long)
+     @Query("DELETE FROM invoice WHERE providerId = :id")
+     suspend fun clearAllTableAsProvider(id : Long)
 
      @Query("DELETE FROM invoice WHERE paid = :paid")
      suspend fun clearAllBuyHistoryTableByPaidStatus(paid: PaymentStatus)
@@ -122,8 +128,12 @@ interface InvoiceDao {
      fun getAllMyInvoiceAsProvider(companyId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE (clientId = :clientId) OR (personId = :clientId)")
+     @Query("SELECT * FROM invoice WHERE clientId = :clientId")
      fun getAllMyInvoiceAsClient(clientId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
+
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE  personId = :clientId")
+     fun getAllMyInvoiceAsPersonClient(clientId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
      @Query("SELECT * FROM invoice ")

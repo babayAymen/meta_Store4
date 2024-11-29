@@ -78,7 +78,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
         focusRequester.requestFocus()
     }
 
-    val clients = clientViewModel.myClients.collectAsLazyPagingItems()
+    val clients = clientViewModel.myClientsContaining.collectAsLazyPagingItems()
 
     var clientname by remember {
         mutableStateOf("")
@@ -174,12 +174,14 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 150.dp)
                     ) {
+                        Log.e("aymenbabay","clientname = ${clients.itemCount}")
                         if (clientname.isNotEmpty()) {
                             items(
                                 count = clients.itemCount,
-                                key = clients.itemKey { client -> client.id!! },
-                                contentType = { clients.itemContentType { "clients" } }) { index: Int ->
+                                key = clients.itemKey { client -> client.id!! }
+                            ) { index: Int ->
                                 val client = clients[index]
+                                if (client != null) {
 //                                client.filter {
 //                                    val clientName = client?.person?.username?.lowercase()
 //                                        ?: client?.client?.name?.lowercase()
@@ -190,7 +192,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
 //                                }.sortedBy {
 //                                    client?.client?.name ?: client?.person?.username
 //                                }
-                                client?.client?.let { clt ->
+                                client.company?.let { clt ->
                                     ClientItem(client = clt) { selectedClient ->
                                         clientname = selectedClient.name
                                         invoiceViewModel.clientCompany = selectedClient
@@ -199,7 +201,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                         expanded = false
                                     }
                                 }
-                                client?.person?.let { clt ->
+                                client.user?.let { clt ->
                                     ClientUserItem(client = clt) { selectedClient ->
                                         clientname = selectedClient.username!!
                                         invoiceViewModel.clientUser = selectedClient
@@ -209,6 +211,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                     }
                                 }
                             }
+                        }
                         } else {
                             expanded = false
                         }

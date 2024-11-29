@@ -3,6 +3,7 @@ package com.aymen.store.model.repository.globalRepository
 import androidx.paging.PagingData
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.MessageType
+import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
@@ -122,14 +123,14 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllCompaniesContaining(
         search: String,
         searchType: SearchType
-    ): Flow<PagingData<CompanyWithCompanyClient>> {
+    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         TODO("Not yet implemented")
     }
 
     override fun getAllMyClientContaining(
         id: Long,
         clientName: String
-    ): Flow<PagingData<CompanyWithCompanyClient>> {
+    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         TODO("Not yet implemented")
     }
 
@@ -145,7 +146,7 @@ class GlobalRepositoryImpl  @Inject constructor
         search: String,
         searchType: SearchType,
         searchCategory: SearchCategory
-    ): Flow<PagingData<CompanyWithCompanyClient>> {
+    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         TODO("Not yet implemented")
     }
 
@@ -205,7 +206,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getAllInvoicesAsClient(clientId: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getAllInvoicesAsClient(clientId: Long, accountType : AccountType): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         TODO("Not yet implemented")
     }
 
@@ -325,5 +326,7 @@ class GlobalRepositoryImpl  @Inject constructor
     ): Flow<PagingData<Article>> {
         TODO("Not yet implemented")
     }
+
+    override suspend fun getArticleByBarcode(bareCode: String) = articleRepository.getArticleByBarcode(bareCode)
 
 }

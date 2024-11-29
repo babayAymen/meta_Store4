@@ -68,14 +68,6 @@ fun ShoppingScreen() {
     val invoicesNotAccepted = invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()
     val allMyOrdersNotAccepted = shoppingViewModel.allMyOrdersNotAccepted.collectAsLazyPagingItems()
 
-    LaunchedEffect(key1 = Unit) {
-        shoppingViewModel.getAllMyOrdersNotAccepted()
-        if(sharedViewModel.accountType == AccountType.USER){
-        invoiceViewModel.getAllMyInvoiceAsClientAndStatus(Status.INWAITING)
-            invoiceViewModel.getAllMyInvoicesAsClient()
-        }
-    }
-    val allMyOrders by shoppingViewModel.allMyOrders.collectAsStateWithLifecycle()
     var order by remember {
         mutableStateOf(PurchaseOrder())
     }

@@ -17,7 +17,7 @@ import java.io.File
 interface ClientRepository {
 
     fun getAllMyClient(companyId : Long) : Flow<PagingData<CompanyWithCompanyOrUser>>
-    fun getAllClientUserContaining(search : String, searchType: SearchType, searchCategory: SearchCategory):Flow<PagingData<CompanyWithCompanyClient>>
+    fun getAllClientUserContaining(search : String, searchType: SearchType, searchCategory: SearchCategory):Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>
 
 
     suspend fun addClient(client: String, file : File)

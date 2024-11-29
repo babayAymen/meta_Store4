@@ -95,6 +95,7 @@ import com.aymen.metastore.model.usecase.GetNotAcceptedInvoice
 import com.aymen.metastore.model.usecase.GetNotPaidInvoice
 import com.aymen.metastore.model.usecase.GetPaidInvoice
 import com.aymen.metastore.model.usecase.GetPurchaseOrderDetails
+import com.aymen.metastore.util.BarcodeScanner
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.providerRepository.ProviderRepository
@@ -122,7 +123,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 const val BASE_URL = "http://192.168.1.4:8080/"
-//const val BASE_URL = "http://192.168.2.100:8080/"
+//const val BASE_URL = "http://192.168.109.209:8080/"
 private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module
@@ -262,8 +263,8 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providerInvoiceViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases): InvoiceViewModel {
-        return InvoiceViewModel(repository, room, sharedViewModel, useCases)
+    fun providerInvoiceViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases, barcodeScanner: BarcodeScanner): InvoiceViewModel {
+        return InvoiceViewModel(repository, room, sharedViewModel, useCases, barcodeScanner)
     }
     @Provides
     @Singleton
@@ -569,6 +570,12 @@ class MetaStoreModule {
     ): LocationClient {
         val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
         return DefaultLocationClient(context, fusedLocationProviderClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBarcodeScanner(@ApplicationContext context: Context): BarcodeScanner{
+        return BarcodeScanner(context)
     }
 
 }

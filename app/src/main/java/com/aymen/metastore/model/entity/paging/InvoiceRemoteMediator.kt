@@ -47,7 +47,7 @@ class InvoiceRemoteMediator(
                 androidx.paging.LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     previousePage
                 }
@@ -55,20 +55,20 @@ class InvoiceRemoteMediator(
                 androidx.paging.LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     nextePage
                 }
             }
             val response = when(type){
                 LoadType.RANDOM -> {
-                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, PAGE_SIZE)
+                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, state.config.pageSize)
                 }
                 LoadType.ADMIN -> {
-                    api.getAllMyInvoicesAsClient(id,currentPage, PAGE_SIZE)
+                    api.getAllMyInvoicesAsClient(id,currentPage, state.config.pageSize)
                 }
                 LoadType.CONTAINING -> {
-                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, PAGE_SIZE)
+                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, state.config.pageSize)
                 }
             }
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
@@ -109,23 +109,30 @@ class InvoiceRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { invoiceDao.getInvoiceRemoteKey(it.invoice.id!!).prevPage }
+        val reomteKey = entity?.let { invoiceDao.getInvoiceRemoteKey(it.invoice.id!!) }
+        return reomteKey?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { invoiceDao.getInvoiceRemoteKey(it.invoice.id!!).nextPage }
+        val reomteKey = entity?.let { invoiceDao.getInvoiceRemoteKey(it.invoice.id!!) }
+        return reomteKey?.nextPage
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.invoice?.id?.let { invoiceDao.getInvoiceRemoteKey(it).nextPage }
+        val reomteKey = entity?.invoice?.id?.let { invoiceDao.getInvoiceRemoteKey(it) }
+        return reomteKey?.nextPage
     }
 
     private suspend fun deleteCache(){
-        invoiceDao.clearAllTable()
-        invoiceDao.clearAllRemoteKeysTable()
+        if(type == LoadType.ADMIN){
+        invoiceDao.clearAllTableAsClient(id)
+        }else{
+            invoiceDao.clearAllTableAsProvider(id)
+        }
+        invoiceDao.clearInvoiceRemoteKeysTable()
     }
 }

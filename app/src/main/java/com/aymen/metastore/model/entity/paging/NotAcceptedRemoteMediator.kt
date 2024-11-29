@@ -115,7 +115,7 @@ class NotAcceptedRemoteMediator(
 
     private suspend fun deleteCache(){
       //  invoiceDao.clearAllBuyHistoryTableByStatus(Status.INWAITING)
-        invoiceDao.clearAllTable()
+        invoiceDao.clearAllTableAsProvider(id)
         invoiceDao.clearAllRemoteKeysTable()
         invoiceDao.clearAllBuyHistoryNotAcceptedRemoteKeysTable()
     }

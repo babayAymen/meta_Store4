@@ -22,6 +22,7 @@ import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.metastore.util.BarcodeScanner
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
@@ -39,7 +40,8 @@ class InvoiceViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val room : AppDatabase,
      private  val sharedViewModel : SharedViewModel,
-    private val useCases: MetaUseCases
+    private val useCases: MetaUseCases,
+    private val barcodeScanner: BarcodeScanner
 ) : ViewModel(){
 
     private val _myInvoicesAsProvider : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
@@ -71,6 +73,30 @@ class InvoiceViewModel @Inject constructor(
     var discount by mutableDoubleStateOf(0.0)
     val company by mutableStateOf(sharedViewModel.company.value)
     var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
+
+    fun startScan(onScan : (ArticleCompany?) ->Unit){
+        viewModelScope.launch(Dispatchers.Main) {
+            barcodeScanner.startScan().toString().also {
+               try {
+                        val article = repository.getArticleByBarcode(it)
+                   onScan(article.body()?.toArticleCompanyModel())
+                        Log.e("scanner","article : ${article.body()!!} result $it")
+               }catch (ex : Exception){
+                   onScan(null)
+                   Log.e("scanner","there is no article")
+               }
+
+           }
+        }
+    }
+
+
+    fun testClientContaing(){
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = room.clientProviderRelationDao().testClientContaing()
+            Log.e("aymenbabay","response from room ${response.size}")
+        }
+    }
 
     init {
         when(sharedViewModel.accountType){
@@ -125,7 +151,7 @@ class InvoiceViewModel @Inject constructor(
              AccountType.COMPANY ->   sharedViewModel.company.value.id
              AccountType.AYMEN ->   sharedViewModel.user.value.id
             }
-            useCases.getAllInvoicesAsClient(id!!)
+            useCases.getAllInvoicesAsClient(id!!, sharedViewModel.accountType)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{

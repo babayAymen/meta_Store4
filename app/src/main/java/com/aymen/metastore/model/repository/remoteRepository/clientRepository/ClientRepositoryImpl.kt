@@ -83,13 +83,13 @@ class ClientRepositoryImpl  @Inject constructor(
         search: String,
         searchType: SearchType,
         searchCategory: SearchCategory
-    ): Flow<PagingData<CompanyWithCompanyClient>> {
+    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         return  Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = CompanyRemoteMediator(
-                api = api, room = room, type = LoadType.RANDOM, categoryName= null, searchType = null, libelle = null
+                api = api, room = room, type = LoadType.RANDOM, searchType = null, libelle = null
             ),
-            pagingSourceFactory = { clientProviderRelationDao.getAllUserContaining(search) }
+            pagingSourceFactory = { searchHistoryDao.getAllSearchHistories() }
         ).flow.map {
             it.map { article ->
                 article

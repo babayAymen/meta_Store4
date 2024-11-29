@@ -9,8 +9,8 @@ import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.paging.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.ProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
+import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
@@ -33,6 +33,7 @@ class CompanyRepositoryImpl @Inject constructor(
 
         private val companyDao = room.companyDao()
     private val clientProviderDao = room.clientProviderRelationDao()
+    private val searchHistoryDao = room.searchHistoryDao()
 
     override suspend fun addCompany(company: String, file : File) {
         withContext(Dispatchers.IO){
@@ -67,13 +68,13 @@ class CompanyRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllCompaniesContaining(search: String, searchType: SearchType) : Flow<PagingData<CompanyWithCompanyClient>>{
+    override fun getAllCompaniesContaining(search: String, searchType: SearchType): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
             remoteMediator = CompanyRemoteMediator(
-                api = api, room = room, categoryName = null, searchType = searchType, type = LoadType.CONTAINING, libelle = search, id = null
+                api = api, room = room,searchType = searchType, type = LoadType.CONTAINING, libelle = search, id = null
             ),
-            pagingSourceFactory = { companyDao.getAllCompaniesContaining(search)}
+            pagingSourceFactory = { searchHistoryDao.getAllSearchHistories()}
         ).flow.map {
             it.map { article ->
                 article
@@ -85,13 +86,15 @@ class CompanyRepositoryImpl @Inject constructor(
     override fun getAllMyClientContaining(
         id: Long,
         clientName: String
-    ): Flow<PagingData<CompanyWithCompanyClient>> {
+    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
             remoteMediator = CompanyRemoteMediator(
-                api = api, room = room, categoryName = null, searchType = SearchType.MY, type = LoadType.RANDOM, libelle = clientName, id = id
+                api = api, room = room,  searchType = SearchType.MY, type = LoadType.RANDOM, libelle = clientName, id = id
             ),
-            pagingSourceFactory = { clientProviderDao.getAllMyClientsContainig(id ,clientName)}
+            pagingSourceFactory = {
+                searchHistoryDao.getAllSearchHistories()
+            }
         ).flow.map {
             it.map { article ->
                 article

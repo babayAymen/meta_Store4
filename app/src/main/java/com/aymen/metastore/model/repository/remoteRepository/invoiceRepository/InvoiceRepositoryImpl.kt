@@ -47,13 +47,19 @@ class InvoiceRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllInvoicesAsClient(clientId: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getAllInvoicesAsClient(clientId: Long, accountType : AccountType): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = InvoiceRemoteMediator(
                 api = api, room = room, type = LoadType.ADMIN, id= clientId, status = null
             ),
-            pagingSourceFactory = { invoiceDao.getAllMyInvoiceAsClient(clientId = clientId)}
+            pagingSourceFactory = {
+                if(accountType == AccountType.COMPANY){
+                invoiceDao.getAllMyInvoiceAsClient(clientId = clientId)
+                }else{
+                    invoiceDao.getAllMyInvoiceAsPersonClient(clientId = clientId)
+                }
+            }
         ).flow.map {
             it.map { article ->
                 article

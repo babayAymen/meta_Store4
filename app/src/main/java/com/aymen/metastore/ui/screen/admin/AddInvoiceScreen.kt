@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.admin
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.AddToHomeScreen
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
@@ -57,6 +60,7 @@ import com.aymen.metastore.ui.component.DiscountTextField
 import com.aymen.metastore.ui.component.LodingShape
 import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.ui.component.ShowPaymentDailog
+import com.aymen.metastore.ui.component.ShowQuantityDailog
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDateTime
@@ -97,8 +101,14 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     var showPaymentDailog by remember {
         mutableStateOf(false)
     }
+    var isShowQuantityDailog by remember {
+        mutableStateOf(false)
+    }
     var showArticleDialog by remember {
         mutableStateOf(false)
+    }
+    var article by remember {
+        mutableStateOf(ArticleCompany())
     }
 
     val commandsLine = invoiceViewModel.commandLineDtos
@@ -210,9 +220,32 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "send"
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                invoiceViewModel.startScan {
+                                    if(it == null){
+                                    Toast.makeText(context, "this barcode not found", Toast.LENGTH_SHORT).show()
+                                    }else{
+                                        article = it
+                                        isShowQuantityDailog = true
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.AddToHomeScreen,
                                 contentDescription = "Favorite"
                             )
                         }
+                        if(isShowQuantityDailog){
+                            ShowQuantityDailog(article , true,invoiceViewModel, false){
+                                    isShowQuantityDailog = false
+                            }
+                        }
+
                         if(showPaymentDailog){
                             ShowPaymentDailog(totgen,openDailog = true){mony, payed ->
                                 paid = if(payed) {

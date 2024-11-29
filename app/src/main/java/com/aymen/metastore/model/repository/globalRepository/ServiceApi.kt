@@ -212,6 +212,9 @@ interface ServiceApi {
 
     @GET("werehouse/article/search/{search}/{searchType}")
     suspend fun getAllArticlesContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType) : Response<List<ArticleCompanyDto>>
+
+    @GET("werehouse/article/get_by_barcode")
+    suspend fun getArticleByBarcode(@Query("barcode") barCode : String) : Response<ArticleCompanyDto>
 //suspend fun doRating(
 //    @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>,
 //    @Part file: MultipartBody.Part? = null

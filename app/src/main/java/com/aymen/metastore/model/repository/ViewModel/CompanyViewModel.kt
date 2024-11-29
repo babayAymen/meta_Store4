@@ -13,6 +13,7 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.store.model.Enum.SearchCategory
@@ -42,8 +43,8 @@ class CompanyViewModel @Inject constructor(
     private var _myProviders : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val myProviders: StateFlow<PagingData<ClientProviderRelation>> get() = _myProviders
 
-    private var _allCompanies : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
-    val allCompanies : StateFlow<PagingData<ClientProviderRelation>> get() = _allCompanies
+    private var _allCompanies : MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
+    val allCompanies : StateFlow<PagingData<SearchHistory>> get() = _allCompanies
 
     var providerId by mutableLongStateOf(0)
     var parent by mutableStateOf(Company())
@@ -102,7 +103,7 @@ class CompanyViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _allCompanies.value = it.map { company -> company.toCompanyWithCompanyClient() }
+                    _allCompanies.value = it.map { company -> company.toSearchHistoryModel() }
                 }
         }
     }

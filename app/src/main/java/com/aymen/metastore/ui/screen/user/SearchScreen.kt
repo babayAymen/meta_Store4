@@ -137,11 +137,11 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                             when (searchType) {
                                                 SearchType.OTHER -> {
                                                     CompanyCard(
-                                                        company?.client!!
+                                                        company?.company!!
                                                     ) {
-                                                        companyViewModel.myCompany = company.client
+                                                        companyViewModel.myCompany = company.company
                                                         articleViewModel.companyId =
-                                                            company.client.id!!
+                                                            company.company.id!!
                                                         RouteController.navigateTo(Screen.CompanyScreen)
                                                         clientViewModel.saveHitory(
                                                             searchCategory,
@@ -152,15 +152,15 @@ fun SearchScreen(modifier: Modifier = Modifier) {
 
                                                 else -> {
                                                     CompanyCard(
-                                                        company?.client!!
+                                                        company?.company!!
                                                     ) {
-                                                        companyViewModel.myCompany = company.client
+                                                        companyViewModel.myCompany = company.company
                                                         articleViewModel.companyId =
-                                                            company.client.id!!
+                                                            company.company.id!!
                                                         RouteController.navigateTo(Screen.CompanyScreen)
                                                         clientViewModel.saveHitory(
                                                             searchCategory,
-                                                            company.client.id!!
+                                                            company.company.id!!
                                                         )
                                                     }
                                                 }
@@ -171,12 +171,12 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                     SearchCategory.USER -> {
                                         for (index in 0 until cli.itemCount) {
                                             val user = cli[index]
-                                            UserCard(user?.person!!, appViewModel) {
-                                                appViewModel._user.value = user.person
+                                            UserCard(user?.user!!, appViewModel) {
+                                                appViewModel._user.value = user.user
                                                 RouteController.navigateTo(Screen.UserScreen)
                                                 clientViewModel.saveHitory(
                                                     searchCategory,
-                                                    user.person.id!!
+                                                    user.user.id!!
                                                 )
                                             }
                                         }

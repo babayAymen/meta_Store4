@@ -41,13 +41,13 @@ interface ClientProviderRelationDao {
 
     @Transaction
     @Query(
-        "SELECT  c.*, r.*, u.* " +
+        "SELECT c.*, r.*, u.* " +
             "    FROM client_provider_relation AS r " +
-            "    JOIN user AS u ON r.userId = u.id " +
-            "    JOIN company AS c ON r.clientId = c.companyId WHERE companyId = :id AND" +
-            " (u.username LIKE '%' || :clientName || '%' OR c.name LIKE '%' || :clientName || '%' OR c.code LIKE '%' || :clientName || '%')"
+            "    LEFT JOIN user AS u ON r.userId = u.id " +
+            "    LEFT JOIN company AS c ON r.clientId = c.companyId WHERE r.providerId = :id AND" +
+            " ((u.username LIKE '%' || :clientName || '%') OR (c.name LIKE '%' || :clientName || '%') OR (c.code LIKE '%' || :clientName || '%'))"
     )
-    fun getAllMyClientsContainig(id : Long , clientName : String) :PagingSource<Int,CompanyWithCompanyClient>
+    fun getAllMyClientsContainig(id : Long, clientName : String ) :PagingSource<Int,CompanyWithCompanyClient>
 
     @Transaction
     @Query("SELECT * FROM client_provider_relation WHERE providerId  = :myCompanyId")
@@ -75,7 +75,7 @@ interface ClientProviderRelationDao {
     fun clearAllRemoteKeysTable()
 
     @Query("DELETE FROM client_provider_relation")
-    fun clearAllRelationTable()
+    suspend fun clearAllRelationTable()
 
 //    @Transaction
 //    @Query("SELECT * FROM company WHERE name LIKE '%' || :search || '%'") // WHERE username LIKE '%' || :search || '%'
@@ -83,5 +83,23 @@ interface ClientProviderRelationDao {
     @Transaction
     @Query("SELECT * FROM client_provider_relation WHERE createdDate = :search ")
      fun getAllUserContaining(search: String) : PagingSource<Int,CompanyWithCompanyClient>
+
+
+
+//
+//    @Transaction
+//    @Query(
+//        "SELECT  c.*, r.*, u.* " +
+//                "    FROM client_provider_relation AS r " +
+//                "    JOIN user AS u ON r.userId = u.id " +
+//                "    JOIN company AS c ON r.clientId = c.companyId WHERE (r.providerId = :id AND" +
+//                " (u.username LIKE '%' || :clientName || '%' OR c.name LIKE '%' || :clientName || '%' OR c.code LIKE '%' || :clientName || '%'))"
+//    )
+//    fun testClientContaing(id : Long , clientName : String) :List<CompanyWithCompanyClient>
+
+
+     @Transaction
+     @Query("SELECT * FROM client_provider_relation")
+    fun testClientContaing() :List<CompanyWithCompanyClient>
 
 }

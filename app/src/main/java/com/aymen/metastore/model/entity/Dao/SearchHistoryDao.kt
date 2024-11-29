@@ -16,6 +16,9 @@ interface SearchHistoryDao {
     suspend fun insertSearchHistory(searchHistory: List<SearchHistory>)
 
     @Upsert
+    suspend fun insertSearch(searchHistory: SearchHistory)
+
+    @Upsert
     suspend fun insertAllSearchKeys(keys : List<AllSearchRemoteKeysEntity>)
     @Transaction
     @Query("SELECT * FROM search_history")

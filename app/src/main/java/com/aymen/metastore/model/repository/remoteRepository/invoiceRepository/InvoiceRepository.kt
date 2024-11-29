@@ -14,7 +14,7 @@ import retrofit2.Response
 interface InvoiceRepository {
 
      fun getAllMyInvoicesAsProvider(companyId : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
-     fun getAllInvoicesAsClient(clientId : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
+     fun getAllInvoicesAsClient(clientId : Long, accountType : AccountType) : Flow<PagingData<InvoiceWithClientPersonProvider>>
      fun getAllInvoicesAsClientAndStatus(clientId: Long , status : Status) : Flow<PagingData<InvoiceWithClientPersonProvider>>
 
 
