@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.entity.model
 
+import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.store.model.Enum.RoleEnum
 
 data class User (
@@ -18,4 +19,22 @@ data class User (
     val image : String? = "",
     val rate: Double? = 0.0,
     val rater: Int? = 0
-)
+){
+    fun toUserDto(): UserDto{
+        return UserDto(
+            id,
+            phone,
+            address,
+            username,
+            email,
+            resettoken,
+            longitude,
+            latitude,
+            role,
+            balance,
+            image,
+            rate,
+            rater
+        )
+    }
+}

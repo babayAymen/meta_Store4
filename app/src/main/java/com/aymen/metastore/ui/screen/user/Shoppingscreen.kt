@@ -53,6 +53,7 @@ import com.aymen.metastore.ui.component.OrderShow
 import com.aymen.metastore.ui.component.ShowFeesDialog
 import com.aymen.metastore.ui.screen.admin.AddInvoiceScreen
 import com.aymen.metastore.ui.screen.admin.OrderScreen
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 
@@ -64,8 +65,8 @@ fun ShoppingScreen() {
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
-    val myInvoicesAccepted = invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()
-    val invoicesNotAccepted = invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()
+    val myInvoicesAccepted = if(sharedViewModel.accountType == AccountType.USER)invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()else null
+    val invoicesNotAccepted = if(sharedViewModel.accountType == AccountType.USER)invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()else null
     val allMyOrdersNotAccepted = shoppingViewModel.allMyOrdersNotAccepted.collectAsLazyPagingItems()
 
     var order by remember {
@@ -114,7 +115,7 @@ fun ShoppingScreen() {
                                                 IconButton(onClick = {
                                                     shoppingViewModel.beforSendOrder {isAccepted , balance ->
                                                         if(isAccepted){
-                                                             shoppingViewModel.sendOrder(index, balance)
+                                                             shoppingViewModel.sendOrder(index, BigDecimal(balance))
                                                         }else{
                                                             showFeesDialog = true
                                                             balancee = balance
@@ -131,7 +132,9 @@ fun ShoppingScreen() {
                                             if(showFeesDialog){
                                                 ShowFeesDialog(isOpen = true) {submitfees ->
                                                     if(submitfees){
-                                                        shoppingViewModel.sendOrder(-1,balancee)
+                                                        shoppingViewModel.sendOrder(-1,
+                                                            BigDecimal(balancee)
+                                                        )
                                                     }else{
                                                         showFeesDialog = false
                                                     }
@@ -175,7 +178,9 @@ fun ShoppingScreen() {
                                         ) {
                                             shoppingViewModel.beforSendOrder {isAccepte , balance ->
                                                 if(isAccepte){
-                                                     shoppingViewModel.sendOrder(-1,balance)
+                                                     shoppingViewModel.sendOrder(-1,
+                                                         BigDecimal(balance)
+                                                     )
                                                 }else{
                                                     showFeesDialog = true
                                                 }
@@ -191,14 +196,21 @@ fun ShoppingScreen() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         LazyColumn {
-                            items(invoicesNotAccepted.itemCount) { index ->
-                                val invoice = invoicesNotAccepted[index]
-                                InvoiceCard(
-                                    invoice = invoice!!,
-                                    appViewModel = appViewModel,
-                                    invoiceViewModel = invoiceViewModel,
-                                    asProvider = false
-                                )
+
+                            if(sharedViewModel.accountType == AccountType.USER) {
+                                items(count = invoicesNotAccepted?.itemCount!!,
+                                    key = invoicesNotAccepted.itemKey{it.id!!}
+                                    ) { index ->
+                                    val invoice = invoicesNotAccepted[index]
+                                    if(invoice != null) {
+                                        InvoiceCard(
+                                            invoice = invoice,
+                                            appViewModel = appViewModel,
+                                            invoiceViewModel = invoiceViewModel,
+                                            asProvider = false
+                                        )
+                                    }
+                                }
                             }
                             item {
                                 DividerComponent()
@@ -211,6 +223,7 @@ fun ShoppingScreen() {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            Log.e("purchaseorder","size ${allMyOrdersNotAccepted.itemCount}")
                             items(count = allMyOrdersNotAccepted.itemCount,
                                 key = allMyOrdersNotAccepted.itemKey{it.id!!})
                             { index: Int ->
@@ -242,13 +255,19 @@ fun ShoppingScreen() {
                         modifier = Modifier.fillMaxWidth()
                     ){
                         LazyColumn {
-                            items(myInvoicesAccepted.itemCount){index ->
-                                val invoice = myInvoicesAccepted[index]
-                                InvoiceCard(
-                                    invoice = invoice!!,
-                                    appViewModel = appViewModel,
-                                    invoiceViewModel = invoiceViewModel,
-                                    asProvider = false)
+                            if(sharedViewModel.accountType == AccountType.USER) {
+                                items(count = myInvoicesAccepted?.itemCount!!,
+                                    key = myInvoicesAccepted.itemKey { it.id!! }) { index ->
+                                    val invoice = myInvoicesAccepted[index]
+                                    if(invoice != null) {
+                                        InvoiceCard(
+                                            invoice = invoice,
+                                            appViewModel = appViewModel,
+                                            invoiceViewModel = invoiceViewModel,
+                                            asProvider = false
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

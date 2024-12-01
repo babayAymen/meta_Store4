@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.user
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,10 +63,8 @@ fun PaymentScreen() {
     var buyInabled by remember {
         mutableStateOf(true)
     }
-    LaunchedEffect(key1 = show, key2 = type) {
-        if (type == AccountType.USER) {
-            rechargeInabled = true
-        }
+    LaunchedEffect(key1 = show) {
+        Toast.makeText(context, show, Toast.LENGTH_SHORT).show()
         when (show) {
             "payment" -> {
                 rechargeInabled = false
@@ -108,6 +107,8 @@ fun PaymentScreen() {
                                 appViewModel.updateShow("payment")
                             }
                         }
+
+
                         Row( // buy history
                             modifier = Modifier.weight(1f)
                         ) {
@@ -155,6 +156,7 @@ fun PaymentScreen() {
 fun PaymentView( appViewModel: AppViewModel, pointPaymentViewModel : PointsPaymentViewModel) {
 
     val allPaymentRecharge = pointPaymentViewModel.allMyPointsPaymentRecharge.collectAsLazyPagingItems()
+    Log.e("aymenbabatdelete", "${allPaymentRecharge.itemCount}")
     LazyColumn {
         items(count = allPaymentRecharge.itemCount,
             key = allPaymentRecharge.itemKey { it.id!! }

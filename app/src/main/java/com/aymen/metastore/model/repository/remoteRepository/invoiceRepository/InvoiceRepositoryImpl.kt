@@ -10,6 +10,7 @@ import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.paging.AllInvoiceRemoteMediator
+import com.aymen.metastore.model.entity.paging.InvoiceAsClientAndStatusRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
@@ -74,10 +75,10 @@ class InvoiceRepositoryImpl @Inject constructor(
     ): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-            remoteMediator = InvoiceRemoteMediator(
-                api = api, room = room, type = LoadType.CONTAINING, id= clientId,status = status
+            remoteMediator = InvoiceAsClientAndStatusRemoteMediator(
+                api = api, room = room, id= clientId,status = status
             ),
-            pagingSourceFactory = { invoiceDao.getAllMyInvoiceAsClient(clientId = clientId)}
+            pagingSourceFactory = { invoiceDao.getAllMyInvoiceAsClientAndStatus(clientId = clientId, status = status)}
         ).flow.map {
             it.map { article ->
                 article

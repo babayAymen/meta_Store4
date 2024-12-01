@@ -43,8 +43,7 @@ class ClientViewModel @Inject constructor(
     private val _myClientsContaining: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
     val myClientsContaining: StateFlow<PagingData<SearchHistory>> = _myClientsContaining
 
-    private val _searchPersons: MutableStateFlow<PagingData<SearchHistory>> =
-        MutableStateFlow(PagingData.empty())
+    private val _searchPersons: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
     var searchPersons: StateFlow<PagingData<SearchHistory>> = _searchPersons
 
     val company: StateFlow<Company?> = sharedViewModel.company
@@ -88,8 +87,7 @@ class ClientViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
-                    _searchPersons.value =
-                        it.map { relation -> relation.toSearchHistoryModel() }
+                    _searchPersons.value = it.map { relation -> relation.toSearchHistoryModel() }
                 }
         }
     }

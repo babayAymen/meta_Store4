@@ -7,7 +7,7 @@ import com.aymen.metastore.model.entity.model.User
 import com.aymen.store.model.Enum.RoleEnum
 
 @Entity(tableName = "user",
-    indices = [Index(value = ["id"], unique = true)]
+    indices = [Index(value = ["id"])]
 )
 data class User(
 

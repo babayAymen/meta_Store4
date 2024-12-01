@@ -9,6 +9,7 @@ import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.CategoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InvoicesAsClientAndStatusRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.util.PAGE_SIZE
@@ -17,12 +18,11 @@ import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
-class InvoiceRemoteMediator(
+class InvoiceAsClientAndStatusRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val type : LoadType,
     private val id : Long,
-    private val status : Status?
+    private val status : Status
 ): RemoteMediator<Int, InvoiceWithClientPersonProvider>()  {
 
     private val userDao = room.userDao()
@@ -60,17 +60,9 @@ class InvoiceRemoteMediator(
                     nextePage
                 }
             }
-            val response = when(type){
-                LoadType.RANDOM -> {
-                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, state.config.pageSize)
-                }
-                LoadType.ADMIN -> {
-                    api.getAllMyInvoicesAsClient(id,currentPage, state.config.pageSize)
-                }
-                LoadType.CONTAINING -> {
-                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, state.config.pageSize)
-                }
-            }
+            val response =
+                api.getAllMyInvoicesAsClientAndStatus(id, status,currentPage, state.config.pageSize)
+Log.e("invoiceresponse","response ${response.size} $response")
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -80,8 +72,8 @@ class InvoiceRemoteMediator(
                     if(loadType == androidx.paging.LoadType.REFRESH){
                         deleteCache()
                     }
-                    invoiceDao.insertKeys(response.map { article ->
-                        InvoiceRemoteKeysEntity(
+                    invoiceDao.insertInvoicesAsClientAndStatusKeys(response.map { article ->
+                        InvoicesAsClientAndStatusRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage,
@@ -109,32 +101,27 @@ class InvoiceRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        val reomteKey = entity?.let { invoiceDao.getInvoiceRemoteKey(it.invoice.id!!) }
+        val reomteKey = entity?.let { invoiceDao.getInvoiceAsClientAnStatusRemoteKey(it.invoice.id!!) }
         return reomteKey?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        val reomteKey = entity?.let { invoiceDao.getInvoiceRemoteKey(it.invoice.id!!) }
+        val reomteKey = entity?.let { invoiceDao.getInvoiceAsClientAnStatusRemoteKey(it.invoice.id!!) }
         return reomteKey?.nextPage
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        val reomteKey = entity?.invoice?.id?.let { invoiceDao.getInvoiceRemoteKey(it) }
+        val reomteKey = entity?.invoice?.id?.let { invoiceDao.getInvoiceAsClientAnStatusRemoteKey(it) }
         return reomteKey?.nextPage
     }
 
     private suspend fun deleteCache(){
-        if(type == LoadType.ADMIN){
-      //  invoiceDao.clearAllTableAsClient(id)
-        }
-        if(type == LoadType.RANDOM){
-            invoiceDao.clearAllTableAsProvider(id)
-        }
 
-        invoiceDao.clearInvoiceRemoteKeysTable()
+        invoiceDao.clearAllInvoiceTableAsClientAnStatus(status,id)
+        invoiceDao.clearInvoicesAsClientAndStatusRemoteKeysTable()
     }
 }

@@ -25,7 +25,7 @@ class OrderRepositoryImpl @Inject constructor(
 ) : OrderRepository {
 
     private val purchaseOrderDao = room.purchaseOrderDao()
-    private val purchaseLineOrderDao = room.purchaseOrderLineDao()
+    private val purchaseOrderLineDao = room.purchaseOrderLineDao()
 
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyOrdersNotAccepted(id:Long): Flow<PagingData<PurchaseOrderWithCompanyAndUserOrClient>> {
@@ -35,7 +35,7 @@ class OrderRepositoryImpl @Inject constructor(
                 api = api, room = room,id = id
             ),
             pagingSourceFactory = {
-                purchaseOrderDao.getAllMyOrdersNotAccepted()
+                purchaseOrderLineDao.getAllMyOrdersNotAccepted(Status.INWAITING)
             }
         ).flow.map {
             it.map { article ->
@@ -52,7 +52,7 @@ class OrderRepositoryImpl @Inject constructor(
                 api = api, room = room,orderId = orderId
             ),
             pagingSourceFactory = {
-                purchaseLineOrderDao.getAllMyOrdersLinesByOrderId(orderId)
+                purchaseOrderLineDao.getAllMyOrdersLinesByOrderId(orderId)
             }
         ).flow.map {
             it.map { article ->

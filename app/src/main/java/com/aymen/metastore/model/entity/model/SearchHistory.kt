@@ -7,6 +7,8 @@ data class SearchHistory (
     val  company : Company? = null,
     val article : ArticleCompany? = null,
     val user : User? = null,
+    val userRelation : ClientProviderRelation? = null,
+    val clientRelation : ClientProviderRelation? = null,
     val searchCategory : SearchCategory? = SearchCategory.OTHER,
     val createdDate : String? = "",
     val lastModifiedDate : String? = "",

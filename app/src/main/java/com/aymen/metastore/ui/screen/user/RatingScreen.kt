@@ -25,13 +25,12 @@ import com.aymen.metastore.ui.component.InputTextField
 import com.google.gson.Gson
 import android.net.Uri
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.User
-import com.aymen.store.dependencyInjection.BASE_URL
+import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.metastore.ui.component.ShowImage
 
 @Composable

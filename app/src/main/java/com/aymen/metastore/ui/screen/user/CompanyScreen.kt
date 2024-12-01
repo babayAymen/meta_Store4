@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -56,7 +55,7 @@ import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
-import com.aymen.store.dependencyInjection.BASE_URL
+import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
@@ -95,9 +94,7 @@ fun CompanyScreen(company: Company) {
         mutableStateOf(Category())
     }
     val context = LocalContext.current
-    val myCompany by remember {
-        mutableStateOf(Company())
-    }
+    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     DisposableEffect(key1 = Unit) {
         onDispose {
             ratingViewModel.rating = false

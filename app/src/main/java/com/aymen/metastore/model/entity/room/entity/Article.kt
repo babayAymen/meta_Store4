@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.room.entity
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aymen.store.model.Enum.CompanyCategory

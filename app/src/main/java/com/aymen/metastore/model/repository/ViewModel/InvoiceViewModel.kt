@@ -102,11 +102,11 @@ class InvoiceViewModel @Inject constructor(
         when(sharedViewModel.accountType){
             AccountType.COMPANY -> {
                 getAllMyInvoicesAsProvider()
-                getAllMyInvoicesAsClient()
+                getAllMyInvoicesAsClient(sharedViewModel.company.value.id!!)
             }
             AccountType.USER -> {
-                getAllMyInvoicesAsClient()
-                getAllMyInvoiceAsClientAndStatus(Status.INWAITING)
+                getAllMyInvoicesAsClient(sharedViewModel.user.value.id!!)
+                getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id!!)
             }
             AccountType.AYMEN -> TODO()
         }
@@ -128,36 +128,29 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
-    fun getAllMyInvoiceAsClientAndStatus(status : Status){
+    fun getAllMyInvoiceAsClientAndStatus(status : Status, id : Long){
         viewModelScope.launch(Dispatchers.IO) {
-            val id = when(sharedViewModel.accountType){
-                AccountType.USER -> sharedViewModel.user.value.id
-                AccountType.COMPANY -> sharedViewModel.company.value.id
-                AccountType.AYMEN -> sharedViewModel.user.value.id
-            }
-            useCases.getAllInvoicesAsClientAndStatus(id!!,status)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect{
-                    _allMyInvoiceNotAccepted.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                }
+                useCases.getAllInvoicesAsClientAndStatus(id, status)
+                    .distinctUntilChanged()
+                    .cachedIn(viewModelScope)
+                    .collect {
+                        _allMyInvoiceNotAccepted.value =
+                            it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                    }
         }
     }
 
-    fun getAllMyInvoicesAsClient(){
+    fun getAllMyInvoicesAsClient(id : Long){
         viewModelScope.launch(Dispatchers.IO) {
-            val id = when(sharedViewModel.accountType) {
-             AccountType.USER ->   sharedViewModel.user.value.id
-             AccountType.COMPANY ->   sharedViewModel.company.value.id
-             AccountType.AYMEN ->   sharedViewModel.user.value.id
-            }
-            useCases.getAllInvoicesAsClient(id!!, sharedViewModel.accountType)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect{
-                    _myInvoicesAsClient.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                }
-         }
+
+                useCases.getAllInvoicesAsClient(id, sharedViewModel.accountType)
+                    .distinctUntilChanged()
+                    .cachedIn(viewModelScope)
+                    .collect {
+                        _myInvoicesAsClient.value =
+                            it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                    }
+        }
     }
 
     fun getLastInvoiceCode(){

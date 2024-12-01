@@ -1,10 +1,19 @@
 package com.aymen.metastore.model.repository.ViewModel
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.pdf.PdfDocument
 import android.util.Log
+import android.view.View
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,6 +25,7 @@ import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
@@ -28,6 +38,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
+import java.io.IOException
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,11 +56,13 @@ class CompanyViewModel @Inject constructor(
     private val useCases: MetaUseCases
 ) : ViewModel() {
 
-    private var _myProviders : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
+    private var _myProviders: MutableStateFlow<PagingData<ClientProviderRelation>> =
+        MutableStateFlow(PagingData.empty())
     val myProviders: StateFlow<PagingData<ClientProviderRelation>> get() = _myProviders
 
-    private var _allCompanies : MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
-    val allCompanies : StateFlow<PagingData<SearchHistory>> get() = _allCompanies
+    private var _allCompanies: MutableStateFlow<PagingData<SearchHistory>> =
+        MutableStateFlow(PagingData.empty())
+    val allCompanies: StateFlow<PagingData<SearchHistory>> get() = _allCompanies
 
     var providerId by mutableLongStateOf(0)
     var parent by mutableStateOf(Company())
@@ -54,35 +72,36 @@ class CompanyViewModel @Inject constructor(
     init {
         getMyCompany()
         getMyCompany {
-            sharedViewModel.assignCompany( it ?: Company())
+            sharedViewModel.assignCompany(it ?: Company())
         }
     }
 
 
-    fun addCompany(company: String, file : File){
+    fun addCompany(company: String, file: File) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO){
-            repository.addCompany(company,file)
-            }
-        }
-    }
- fun updateCompany(company: String, file : File){
-     Log.e("aymenbabayupdate","c bon update company $company")
-        viewModelScope.launch {
-            withContext(Dispatchers.IO){
-            repository.updateCompany(company,file)
+            withContext(Dispatchers.IO) {
+                repository.addCompany(company, file)
             }
         }
     }
 
-
-    fun getMyParent(){
+    fun updateCompany(company: String, file: File) {
+        Log.e("aymenbabayupdate", "c bon update company $company")
         viewModelScope.launch {
-
+            withContext(Dispatchers.IO) {
+                repository.updateCompany(company, file)
             }
+        }
     }
 
-    fun getMyCompany(){
+
+    fun getMyParent() {
+        viewModelScope.launch {
+
+        }
+    }
+
+    fun getMyCompany() {
         viewModelScope.launch {
             withContext(Dispatchers.Main) {
                 try {
@@ -97,45 +116,82 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
-    fun getAllCompaniesContaining(search : String, searchType : SearchType,searchCategory : SearchCategory){
+    fun getAllCompaniesContaining(
+        search: String,
+        searchType: SearchType,
+        searchCategory: SearchCategory
+    ) {
+        val id = when(sharedViewModel.accountType){
+            AccountType.COMPANY -> sharedViewModel.company.value.id
+            AccountType.USER -> sharedViewModel.user.value.id
+            AccountType.AYMEN -> TODO()
+        }
         viewModelScope.launch {
-            useCases.getAllCompaniesContaining(search, searchType)
+            useCases.getAllCompaniesContaining(search, searchType,id!!)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
-                .collect{
+                .collect {
                     _allCompanies.value = it.map { company -> company.toSearchHistoryModel() }
                 }
         }
     }
 
-     fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
+    fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
         viewModelScope.launch {
-            withContext(Dispatchers.Main){
-            try {
-                companyDataStore.data
-                    .catch { exception ->
-                        Log.e("getTokenError", "Error getting token: ${exception.message}")
-                        onCompanyRetrieved(null)
-                    }
-                    .collect { company ->
-                        onCompanyRetrieved(company)
-                    }
-            } catch (e: Exception) {
-                Log.e("getTokenError", "Error getting token: ${e.message}")
-                onCompanyRetrieved(null)
-            }
+            withContext(Dispatchers.Main) {
+                try {
+                    companyDataStore.data
+                        .catch { exception ->
+                            Log.e("getTokenError", "Error getting token: ${exception.message}")
+                            onCompanyRetrieved(null)
+                        }
+                        .collect { company ->
+                            onCompanyRetrieved(company)
+                        }
+                } catch (e: Exception) {
+                    Log.e("getTokenError", "Error getting token: ${e.message}")
+                    onCompanyRetrieved(null)
+                }
             }
         }
     }
 
-    fun MakeAsPointSeller(status : Boolean, id : Long){
+    fun MakeAsPointSeller(status: Boolean, id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                repository.makeAsPointSeller(status,id)
-            }catch (ex : Exception){
+                repository.makeAsPointSeller(status, id)
+            } catch (ex: Exception) {
                 Log.e("getTokenError", "Error getting token: ${ex.message}")
             }
         }
     }
+
+    fun getBitmapFromURL(src: String, onRetreived : (Bitmap?) ->Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+             try {
+                val url = URL(src)
+                val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+                connection.doInput = true
+                connection.connect()
+                val input: InputStream = connection.inputStream
+                val r = BitmapFactory.decodeStream(input)
+                 onRetreived(r)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                onRetreived(null)
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 }

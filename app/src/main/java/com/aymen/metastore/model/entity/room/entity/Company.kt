@@ -21,7 +21,7 @@ import com.aymen.store.model.Enum.PrivacySetting
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
     ],
-    indices = [Index( "userId" ,unique = true), Index(value = ["parentCompanyId"], unique = true), Index(value = ["companyId"])]
+    indices = [Index( "userId" ), Index(value = ["parentCompanyId"]), Index(value = ["companyId"])]
 )
 data class Company(
 

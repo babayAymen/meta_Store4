@@ -34,7 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.aymen.store.dependencyInjection.BASE_URL
+import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.IconType
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.MessageViewModel

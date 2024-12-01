@@ -70,7 +70,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.dependencyInjection.BASE_URL
+import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
@@ -316,8 +316,8 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                                     })
                             }
                             DropdownMenuItem(text = { Text(text = "logout") }, onClick = {
-                                RouteController.navigateTo(Screen.SignInScreen)
                                 viewModel.updateScreen(IconType.HOME)
+                                RouteController.navigateTo(Screen.SignInScreen)
                                 sharedViewModel.logout()
                             })
                         }

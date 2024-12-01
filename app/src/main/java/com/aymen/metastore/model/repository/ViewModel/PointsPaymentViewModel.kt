@@ -16,6 +16,7 @@ import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +47,7 @@ class PointsPaymentViewModel @Inject constructor(
                 pointPaymentDto.amount = amount
                 pointPaymentDto.clientUser?.id = user.id
                 pointPaymentDto.clientCompany?.id = client.id
-//                repository.sendPoints(pointPaymentDto)
+                repository.sendPoints(pointPaymentDto.toPointPaymentDto())
             }catch (ex : Exception){
                 Log.e("sendPointsexeption",ex.message.toString())
             }
@@ -91,13 +92,16 @@ init {
 
     fun getAllMyPointsPaymentRecharge() {
         viewModelScope.launch {
-            useCases.getAllRechargeHistory(sharedViewModel.company.value.id!!)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect {
-                    _allMyPointsPaymentRecharge.value =
-                        it.map { pointPayment -> pointPayment.toPointsWithProvidersClientCompanyAndUser() }
-                }
+            val id = if(sharedViewModel.accountType == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
+            id?.let {
+                useCases.getAllRechargeHistory(it)
+                    .distinctUntilChanged()
+                    .cachedIn(viewModelScope)
+                    .collect {
+                        _allMyPointsPaymentRecharge.value =
+                            it.map { pointPayment -> pointPayment.toPointsWithProvidersClientCompanyAndUser() }
+                    }
+            }
         }
     }
 

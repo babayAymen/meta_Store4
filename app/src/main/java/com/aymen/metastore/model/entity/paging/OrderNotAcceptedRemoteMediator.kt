@@ -7,6 +7,8 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
+import com.aymen.metastore.model.entity.room.entity.SubCategory
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
 import com.aymen.metastore.model.entity.room.remoteKeys.OrderNotAcceptedKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
@@ -29,6 +31,8 @@ class OrderNotAcceptedRemoteMediator(
     private val userDao = room.userDao()
     private val articleDao = room.articleDao()
     private val purchaseOrderDao = room.purchaseOrderDao()
+    private val invoiceDao = room.invoiceDao()
+    private val purchaseOrderLineDao = room.purchaseOrderLineDao()
 
 
     override suspend fun initialize(): InitializeAction {
@@ -47,14 +51,14 @@ class OrderNotAcceptedRemoteMediator(
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     previousePage
                 }
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     nextePage
                 }
@@ -63,6 +67,8 @@ class OrderNotAcceptedRemoteMediator(
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
+            Log.e("response","response order ${response.size}")
+            response.forEach { Log.e("response","response order ${response.size} ${it.article}") }
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){
@@ -70,7 +76,7 @@ class OrderNotAcceptedRemoteMediator(
                     }
                     purchaseOrderDao.insertOrderNotAcceptedKeys(response.map { article ->
                         OrderNotAcceptedKeysEntity(
-                            id = article.id!!,
+                            id = article.purchaseorder?.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage
                         )
@@ -80,7 +86,7 @@ class OrderNotAcceptedRemoteMediator(
                     userDao.insertUser(response.map {user -> user.article?.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map { company -> company.article?.provider?.toCompany() })
                     categoryDao.insertCategory(response.map {category -> category.article?.category?.toCategory()!! })
-                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory()!! })
+                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory()?:SubCategory() })
                     articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle()!! })
                     articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(true)!! })
                     userDao.insertUser(response.map { user -> user.purchaseorder?.person?.toUser() })
@@ -88,12 +94,12 @@ class OrderNotAcceptedRemoteMediator(
                     userDao.insertUser(response.map { user -> user.purchaseorder?.client?.user?.toUser() })
                     companyDao.insertCompany(response.map { company -> company.purchaseorder?.company?.toCompany() })
                     companyDao.insertCompany(response.map { company -> company.purchaseorder?.client?.toCompany() })
-                    purchaseOrderDao.insertOrder(response.map { order -> order.purchaseorder?.toPurchaseOrder()!! })
-                    room.userDao().insertUser(response.map { invoice -> invoice.invoice?.person?.toUser()})
-                    room.userDao().insertUser(response.map { invoice -> invoice.invoice?.client?.user?.toUser()})
-                    room.companyDao().insertCompany(response.map { invoice -> invoice.invoice?.client?.toCompany()})
-                    room.invoiceDao().insertInvoice(response.map { invoice -> invoice.invoice?.toInvoice()?:com.aymen.metastore.model.entity.room.entity.Invoice()})
-
+                    purchaseOrderDao.insertOrder(response.map { order -> order.purchaseorder?.toPurchaseOrder()?:PurchaseOrder() })
+                    userDao.insertUser(response.map { invoice -> invoice.invoice?.person?.toUser()})
+                    userDao.insertUser(response.map { invoice -> invoice.invoice?.client?.user?.toUser()})
+                    companyDao.insertCompany(response.map { invoice -> invoice.invoice?.client?.toCompany()})
+                    invoiceDao.insertInvoice(response.map { invoice -> invoice.invoice?.toInvoice()?:com.aymen.metastore.model.entity.room.entity.Invoice()})
+                    purchaseOrderLineDao.insertOrderLine(response.map { line -> line.toPurchaseOrderLine() })
                 } catch (ex: Exception) {
                     Log.e("error", "articlecompany ${ex.message}")
                 }
@@ -101,6 +107,7 @@ class OrderNotAcceptedRemoteMediator(
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
+            Log.e("error", "articlecompany ${ex.message}")
             MediatorResult.Error(ex)
         }
     }
@@ -108,19 +115,22 @@ class OrderNotAcceptedRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PurchaseOrderWithCompanyAndUserOrClient>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.purchaseOrderId!!).prevPage }
+        val remoteKey = entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.purchaseOrderId!!) }
+        return remoteKey?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, PurchaseOrderWithCompanyAndUserOrClient>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.purchaseOrderId!!).nextPage }
+        val remoteKey = entity?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it.purchaseOrder.purchaseOrderId!!) }
+        return remoteKey?.nextPage
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PurchaseOrderWithCompanyAndUserOrClient>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.purchaseOrder?.purchaseOrderId?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it).nextPage }
+        val remoteKey = entity?.purchaseOrder?.purchaseOrderId?.let { purchaseOrderDao.getAllOrderNotAccepteRemoteKeys(it) }
+        return remoteKey?.nextPage
     }
 
     private suspend fun deleteCache(){

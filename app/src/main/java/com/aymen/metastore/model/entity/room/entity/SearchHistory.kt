@@ -20,6 +20,12 @@ import com.aymen.store.model.Enum.SearchCategory
         ForeignKey(entity = User::class, parentColumns = ["id"], childColumns = ["userId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
+        ForeignKey(entity = ClientProviderRelation::class, parentColumns = ["userId"], childColumns = ["userRelationId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE),
+        ForeignKey(entity = ClientProviderRelation::class, parentColumns = ["clientId"], childColumns = ["clientRelationId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE),
     ])
 data class SearchHistory(
 
@@ -31,6 +37,10 @@ data class SearchHistory(
 
     val userId : Long? = null,
 
+    val userRelationId : Long? = null,
+
+    val clientRelationId : Long? = null,
+
     val searchCategory : SearchCategory? = SearchCategory.OTHER,
 
     val createdDate : String? = "",
@@ -39,13 +49,17 @@ data class SearchHistory(
 ){
     fun toSearchHitoryModel(     company: com.aymen.metastore.model.entity.model.Company?,
                                  article: com.aymen.metastore.model.entity.model.ArticleCompany?,
-                                 user: com.aymen.metastore.model.entity.model.User?
+                                 user: com.aymen.metastore.model.entity.model.User?,
+                                 userRelation: com.aymen.metastore.model.entity.model.ClientProviderRelation?,
+                                 clientRelation : com.aymen.metastore.model.entity.model.ClientProviderRelation?
     ): SearchHistory {
         return SearchHistory(
             id = id,
             company = company,
             article = article,
             user = user,
+            userRelation = userRelation,
+            clientRelation = clientRelation,
             searchCategory = searchCategory,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate

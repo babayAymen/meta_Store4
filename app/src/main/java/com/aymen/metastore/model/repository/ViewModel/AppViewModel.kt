@@ -353,6 +353,7 @@ class AppViewModel @Inject constructor(
                     balance = blc
                 ).also {
                 sharedViewModel.assignCompany(currentCompany)
+                    Log.e("company","company $currentCompany")
                 }
             }
         }

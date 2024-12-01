@@ -107,7 +107,6 @@ fun submitShopping(newBalance: BigDecimal) {
 
 
     fun beforSendOrder(onFinish : (Boolean, Double) -> Unit){
-        if(delivery)
         when(accountType.value){
             AccountType.COMPANY -> if(cost < BigDecimal(30)){
                     onFinish(false, myCompany.value?.balance!!)
@@ -122,17 +121,13 @@ fun submitShopping(newBalance: BigDecimal) {
             AccountType.AYMEN -> TODO()
         }
     }
-    fun sendOrder(index : Int, myBalance : Double){
+    fun sendOrder(index : Int, myBalance : BigDecimal){
         viewModelScope.launch (Dispatchers.IO){
             if(orderArray.isNotEmpty() && index == -1){
                 try {
                     val response = repository.sendOrder(orderArray)
                     if(response.isSuccessful){
-                        val diff = BigDecimal(myBalance).subtract(cost)
-                        if(diff<BigDecimal(30)){
-                            val newBalance = BigDecimal(myBalance).subtract(BigDecimal(3))
-                            sharedViewModel.updateBalance(newBalance)
-                        }
+                            sharedViewModel.updateBalance(myBalance)
                         calculateCost()
                     }
                 }catch (ex : Exception){
@@ -217,12 +212,14 @@ fun submitShopping(newBalance: BigDecimal) {
     fun getAllMyOrdersNotAccepted() {
         viewModelScope.launch {
             val id = if(sharedViewModel.accountType == AccountType.COMPANY) sharedViewModel.company.value.id else sharedViewModel.user.value.id
+            id?.let {
             Log.e("getallorders","id : $id")
-          useCases.getAllMyOrdersNotAccepted(id?:0)
+          useCases.getAllMyOrdersNotAccepted(id)
               .distinctUntilChanged()
               .cachedIn(viewModelScope)
               .collect{
                   _allMyOrdersNotAccepted.value = it.map { line -> line.toPurchaseOrderWithCompanyAndUserOrClient() }
+            }
               }
         }
     }
@@ -234,6 +231,12 @@ fun submitShopping(newBalance: BigDecimal) {
                 try {
                     val order = repository.orderLineResponse(status,id,isAll)
                     if(order.isSuccessful){
+                        if(isAll) {
+                            room.purchaseOrderLineDao().deleteByPurchaseOrderId(id)
+                        }else{
+                            room.purchaseOrderDao().deletePurchaseOrderById(id)
+                        }
+                        room.purchaseOrderDao().deleteOrderNotAcceptedKeysById(id)
                         appViewModel.updateCompanyBalance(order.body()!!)
                     }
                 }catch (_ex : Exception){

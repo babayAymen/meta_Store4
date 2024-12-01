@@ -95,11 +95,14 @@ class CompanyRemoteMediator(
                     userDao.insertUser(response.map {user -> user.person?.toUser()})
                     userDao.insertUser(response.map {user -> user.client?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
+                    companyClientRelationDao.insertClientProviderRelation(response.map { relation -> relation.toClientProviderRelation() })
                     response.map { search ->
                         val entity = SearchHistory(
                             id = search.id,
                             userId = search.person?.id,
-                            companyId = search.client?.id
+                            companyId = search.client?.id,
+                            userRelationId = search.person?.id,
+                            clientRelationId = search.client?.id
                         )
                         searchHistoryDao.insertSearch(entity)
                     }

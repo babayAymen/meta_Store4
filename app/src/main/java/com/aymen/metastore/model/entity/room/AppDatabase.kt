@@ -66,6 +66,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.InCompleteRemoteKeysEnti
 import com.aymen.metastore.model.entity.room.remoteKeys.InventoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvitationRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InvoicesAsClientAndStatusRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.MessageRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotAcceptedRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotPayedRemoteKeysEntity
@@ -91,8 +92,8 @@ ConversationRemoteKeysEntity::class, InventoryRemoteKeysEntity::class, Invitatio
 ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRemoteKeysEntity::class, ClientRemoteKeysEntity::class, ProviderRemoteKeysEntity::class,
     OrderNotAcceptedKeysEntity::class, OrderLineKeysEntity::class, BuyHistoryRemoteKeysEntity::class, PayedRemoteKeysEntity::class, NotPayedRemoteKeysEntity::class, InCompleteRemoteKeysEntity::class,
 NotAcceptedRemoteKeysEntity::class, ProviderProfitHistoryRemoteKeysEntity::class, PointsPaymentPerDayRemoteKeysEntity::class, AllInvoiceRemoteKeysEntity::class,
-    PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class
-], version = 40, exportSchema = false)
+    PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class, InvoicesAsClientAndStatusRemoteKeysEntity::class
+], version = 46, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

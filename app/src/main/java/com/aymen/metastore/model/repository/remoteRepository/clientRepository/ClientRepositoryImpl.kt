@@ -89,7 +89,7 @@ class ClientRepositoryImpl  @Inject constructor(
             remoteMediator = CompanyRemoteMediator(
                 api = api, room = room, type = LoadType.RANDOM, searchType = null, libelle = null
             ),
-            pagingSourceFactory = { searchHistoryDao.getAllSearchHistories() }
+            pagingSourceFactory = { searchHistoryDao.getAllUserSearchHistories(search) }
         ).flow.map {
             it.map { article ->
                 article

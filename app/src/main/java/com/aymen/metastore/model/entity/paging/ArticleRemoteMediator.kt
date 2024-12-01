@@ -9,9 +9,6 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.room.remoteKeys.ArtRemoteKeysEntity
-import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
-import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
@@ -53,12 +50,10 @@ class ArticleRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllArticlesByCategor(companyId,currentPage, PAGE_SIZE)
-
+            val response = api.getAllArticlesByCategor(companyId,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
-
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){

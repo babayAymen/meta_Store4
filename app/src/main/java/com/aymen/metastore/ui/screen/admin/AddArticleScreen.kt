@@ -44,12 +44,14 @@ import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.DropDownCategory
 import com.aymen.metastore.ui.component.DropDownCompany
 import com.aymen.metastore.ui.component.DropDownSubCategory
 import com.aymen.metastore.ui.component.RadioButtons
 import com.aymen.metastore.ui.component.dropDownItems
 import com.aymen.metastore.ui.component.InputTextField
 import com.aymen.metastore.ui.component.resolveUriToFile
+import com.aymen.store.model.repository.ViewModel.ProviderViewModel
 import com.google.gson.Gson
 
 @Composable
@@ -66,6 +68,7 @@ fun AddArticleScreen(){
         val sharedViewModel : SharedViewModel = hiltViewModel()
         val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
         val articleViewModel : ArticleViewModel = hiltViewModel()
+        val providerViewModel : ProviderViewModel = hiltViewModel()
         val article = articleViewModel.article
         var image by remember {
             mutableStateOf<Uri?>(null)
@@ -131,7 +134,7 @@ fun AddArticleScreen(){
         var subCategory by remember {
             mutableStateOf(SubCategory())
         }
-        val providers = companyViewModel.myProviders.collectAsLazyPagingItems()
+        val providers = providerViewModel.providers.collectAsLazyPagingItems()
 
         LazyColumn(
             modifier = Modifier.fillMaxSize()
@@ -285,7 +288,6 @@ fun AddArticleScreen(){
                             }, onImage = {}, true
                         ) {
                         }
-                        if (article.id == null) {
                             Row {
                                 Checkbox(checked = isDiscounted,
                                     onCheckedChange = {
@@ -293,7 +295,6 @@ fun AddArticleScreen(){
                                     })
                                 Text(text = "does this article have abality to discount?")
                             }
-                        }
                     }
                 }
             }
@@ -325,7 +326,7 @@ fun AddArticleScreen(){
                 }
 
                 Row {
-//                    DropDownCategory(list = categories)
+                    DropDownCategory(pagingItems = categories)
                 }
 
                 Row {

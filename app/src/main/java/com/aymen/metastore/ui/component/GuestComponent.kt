@@ -299,7 +299,7 @@ fun CheckBoxComponent(value :String, onTextSelected : (String) -> Unit){
     }
 }
 @Composable
-fun CheckBoxComp(value :String,check : Boolean, state : (Boolean) -> Unit){
+fun CheckBoxComp(value :String, free : String?, pay : String?,check : Boolean, state : (Boolean) -> Unit){
     Row (
         modifier = Modifier
             .fillMaxWidth()
@@ -318,7 +318,11 @@ fun CheckBoxComp(value :String,check : Boolean, state : (Boolean) -> Unit){
 
         }
         )
+        Row {
         Text(text = value)
+            Text(text = free?:"", color = if(free == "free")Color.Green else Color.Red)
+            Text(text = pay?:"", color = if(pay == "NOT_FREE")Color.Red else Color.Red)
+        }
 
     }
 }

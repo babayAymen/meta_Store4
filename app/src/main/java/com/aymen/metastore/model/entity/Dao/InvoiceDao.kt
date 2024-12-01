@@ -10,6 +10,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.AllInvoiceRemoteKeysEnti
 import com.aymen.metastore.model.entity.room.remoteKeys.BuyHistoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InCompleteRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InvoicesAsClientAndStatusRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotAcceptedRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotPayedRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.PayedRemoteKeysEntity
@@ -69,6 +70,11 @@ interface InvoiceDao {
 
      @Upsert
      fun insertAllInvoiceKeys(keys : List<AllInvoiceRemoteKeysEntity>)
+
+     @Upsert
+     fun insertInvoicesAsClientAndStatusKeys(keys : List<InvoicesAsClientAndStatusRemoteKeysEntity>)
+
+
      @Query("SELECT * FROM invoice_remote_keys_table WHERE id = :id")
      suspend fun getInvoiceRemoteKey(id : Long) : InvoiceRemoteKeysEntity
 
@@ -89,6 +95,9 @@ interface InvoiceDao {
 
      @Query("SELECT * FROM all_invoice_remote_keys WHERE id = :id")
      suspend fun getAllInvoiceRemoteKey(id : Long) : AllInvoiceRemoteKeysEntity
+
+     @Query("SELECT * FROM INVOICE_AS_CLIENT_AND_STATUS_REMOTE_KEYS WHERE id = :id")
+     suspend fun getInvoiceAsClientAnStatusRemoteKey(id : Long) : InvoicesAsClientAndStatusRemoteKeysEntity
 
      @Query("Delete FROM all_invoice_remote_keys")
      suspend fun clearAllRemoteKeysTable()
@@ -123,6 +132,12 @@ interface InvoiceDao {
      @Query("DELETE FROM invoice WHERE status = :status")
      suspend fun clearAllBuyHistoryTableByStatus(status : Status)
 
+     @Query("DELETE FROM invoice WHERE status = :status AND personId = :id")
+     suspend fun clearAllInvoiceTableAsClientAnStatus(status : Status , id : Long)
+
+     @Query("DELETE FROM invoice_as_client_and_status_remote_keys")
+     suspend fun clearInvoicesAsClientAndStatusRemoteKeysTable()
+
      @Transaction
      @Query("SELECT * FROM invoice WHERE providerId = :companyId")
      fun getAllMyInvoiceAsProvider(companyId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
@@ -130,6 +145,10 @@ interface InvoiceDao {
      @Transaction
      @Query("SELECT * FROM invoice WHERE clientId = :clientId")
      fun getAllMyInvoiceAsClient(clientId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
+
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE personId = :clientId AND status = :status")
+     fun getAllMyInvoiceAsClientAndStatus(clientId : Long, status : Status): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
      @Query("SELECT * FROM invoice WHERE  personId = :clientId")

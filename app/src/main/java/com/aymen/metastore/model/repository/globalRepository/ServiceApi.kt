@@ -269,8 +269,11 @@ interface ServiceApi {
     @GET("werehouse/invoice/getMyInvoiceAsClient/{companyId}")
     suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
 
-    @GET("werehouse/invoice/get_by_status/{companyId}")
+    @GET("werehouse/invoice/get_by_status_as_provider/{companyId}")
     suspend fun getAllMyInvoicesAsProviderAndStatus(@Path("companyId") companyId : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+
+    @GET("werehouse/invoice/get_by_status_as_client/{id}")
+    suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
 
     @GET("werehouse/inventory/getbycompany/{companyId}")
     suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InventoryDto>

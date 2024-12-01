@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 class GetAllCompaniesContaining(private val repository: CompanyRepository) {
 
-    operator fun invoke(search : String, searchType: SearchType) : Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>{
-        return repository.getAllCompaniesContaining(search, searchType)
+    operator fun invoke(search : String, searchType: SearchType, myId : Long) : Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>{
+        return repository.getAllCompaniesContaining(search, searchType, myId)
     }
 }

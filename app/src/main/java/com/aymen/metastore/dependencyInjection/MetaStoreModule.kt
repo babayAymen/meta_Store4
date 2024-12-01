@@ -1,4 +1,4 @@
-package com.aymen.store.dependencyInjection
+package com.aymen.metastore.dependencyInjection
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -7,9 +7,6 @@ import androidx.datastore.core.DataStore
 import androidx.room.Room
 import com.aymen.metastore.companydtodatastore
 import com.aymen.metastore.datastore
-import com.aymen.metastore.dependencyInjection.AccountTypeInterceptor
-import com.aymen.metastore.dependencyInjection.CompanyDtoSerializer
-import com.aymen.metastore.dependencyInjection.UserDtoSerializer
 import com.aymen.metastore.model.Location.DefaultLocationClient
 import com.aymen.metastore.model.Location.LocationClient
 import com.aymen.metastore.model.entity.Dao.CompanyDao
@@ -96,6 +93,7 @@ import com.aymen.metastore.model.usecase.GetNotPaidInvoice
 import com.aymen.metastore.model.usecase.GetPaidInvoice
 import com.aymen.metastore.model.usecase.GetPurchaseOrderDetails
 import com.aymen.metastore.util.BarcodeScanner
+import com.aymen.store.dependencyInjection.TokenSerializer
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.providerRepository.ProviderRepository
@@ -122,8 +120,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
-const val BASE_URL = "http://192.168.1.4:8080/"
-//const val BASE_URL = "http://192.168.109.209:8080/"
+//const val BASE_URL = "http://192.168.1.4:8080/"
+const val BASE_URL = "http://192.168.109.209:8080/"
 private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module

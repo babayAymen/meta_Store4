@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.model
 
 import com.aymen.metastore.model.Enum.InvoiceType
+import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 
@@ -32,5 +33,13 @@ data class Company (
     val createdDate : String? = "",
     val lastModifiedDate : String? = "",
     val invoiceType : InvoiceType? = InvoiceType.NOT_SAVED
-
-)
+){
+    fun toCompanyDto():CompanyDto{
+        return CompanyDto(
+            id,
+            name,
+            code,
+            //...
+        )
+    }
+}

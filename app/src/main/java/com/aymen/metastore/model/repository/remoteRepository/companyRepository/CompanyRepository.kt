@@ -19,7 +19,7 @@ interface CompanyRepository {
 
     suspend fun getMeAsCompany(): Response<CompanyDto>
 
-     fun getAllCompaniesContaining(search : String, searchType: SearchType): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>
+     fun getAllCompaniesContaining(search : String, searchType: SearchType, myId : Long): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>
     fun getAllMyClientContaining(id : Long , clientName : String): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>
     suspend fun updateCompany(company: String , file : File)
 

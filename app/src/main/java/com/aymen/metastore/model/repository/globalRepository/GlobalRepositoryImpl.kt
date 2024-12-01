@@ -122,10 +122,12 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getMeAsCompany() = companyRepository.getMeAsCompany()
     override fun getAllCompaniesContaining(
         search: String,
-        searchType: SearchType
+        searchType: SearchType,
+        myId: Long
     ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         TODO("Not yet implemented")
     }
+
 
     override fun getAllMyClientContaining(
         id: Long,

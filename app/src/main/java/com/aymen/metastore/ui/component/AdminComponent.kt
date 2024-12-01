@@ -75,7 +75,7 @@ import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Inventory
 import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.SubCategory
-import com.aymen.store.dependencyInjection.BASE_URL
+import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.Status
@@ -198,14 +198,15 @@ fun dropDownItems(list: List<UnitArticle>):UnitArticle {
     return  itemSelected
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCategory(list: List<Category>) {
-    if (list.isNotEmpty()) {
-        val categoryViewModel : CategoryViewModel = viewModel()
+fun DropDownCategory(pagingItems: LazyPagingItems<Category>) {
+    val categoryViewModel: CategoryViewModel = viewModel()
+    if (pagingItems.itemCount != 0) {
         var itemSelected by remember {
-            mutableStateOf(list[0])
+            mutableStateOf(
+                pagingItems.peek(0) ?: Category()
+            )
         }
         categoryViewModel.category = itemSelected
         var isExpanded by remember {
@@ -224,7 +225,7 @@ fun DropDownCategory(list: List<Category>) {
                 ) {
                     TextField(
                         modifier = Modifier.menuAnchor(),
-                        value = itemSelected.libelle!!,
+                        value = itemSelected.libelle ?: "",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -232,17 +233,22 @@ fun DropDownCategory(list: List<Category>) {
 
                     ExposedDropdownMenu(
                         expanded = isExpanded,
-                        onDismissRequest = { isExpanded = false }) {
-                        list.forEachIndexed { index, text ->
-                            DropdownMenuItem(
-                                text = { Text(text.libelle!!) },
-                                onClick = {
-                                    itemSelected = list[index]
-                                    isExpanded = false
-                                    categoryViewModel.category = itemSelected
-                                },
-                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                            )
+                        onDismissRequest = { isExpanded = false }
+                    ) {
+                        for (index in 0 until pagingItems.itemCount) {
+                            val item =
+                                pagingItems.peek(index) // Avoids loading the item unnecessarily
+                            if (item != null) {
+                                DropdownMenuItem(
+                                    text = { Text(item.libelle ?: "Unknown") },
+                                    onClick = {
+                                        itemSelected = item
+                                        isExpanded = false
+                                        categoryViewModel.category = itemSelected
+                                    },
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                )
+                            }
                         }
                     }
                 }
@@ -253,13 +259,13 @@ fun DropDownCategory(list: List<Category>) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownSubCategory(list : LazyPagingItems<com.aymen.metastore.model.entity.model.SubCategory>, categoryId : Long, onSelected : (com.aymen.metastore.model.entity.model.SubCategory) -> Unit) {
+fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, onSelected : (SubCategory) -> Unit) {
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     var itemSelectedLibell by remember {
         mutableStateOf("select sub category")
     }
     var itemSelected by remember {
-        mutableStateOf(com.aymen.metastore.model.entity.model.SubCategory())
+        mutableStateOf(SubCategory())
     }
         val subCategoryList by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
     LaunchedEffect(categoryId) {
@@ -317,9 +323,10 @@ fun DropDownSubCategory(list : LazyPagingItems<com.aymen.metastore.model.entity.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>) {
-    val companyViewModel : CompanyViewModel = hiltViewModel()
+    val companyViewModel: CompanyViewModel = hiltViewModel()
+    if (list.itemCount != 0) {
         var itemSelected by remember {
-            mutableStateOf(ClientProviderRelation())
+            mutableStateOf(list.peek(0)?:ClientProviderRelation())
         }
         var isExpanded by remember {
             mutableStateOf(false)
@@ -337,7 +344,7 @@ fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>) {
                 ) {
                     TextField(
                         modifier = Modifier.menuAnchor(),
-                        value = itemSelected.provider?.name?:"",
+                        value = itemSelected.provider?.name ?: "",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -346,22 +353,25 @@ fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>) {
                     ExposedDropdownMenu(
                         expanded = isExpanded,
                         onDismissRequest = { isExpanded = false }) {
-                        for(index in 0 until  list.itemCount){
-                            val text = list[index]
+                        for (index in 0 until list.itemCount) {
+                            val relation = list.peek(index)
+                            if (relation != null){
                             DropdownMenuItem(
-                                text = { Text(text?.provider?.name!!) },
+                                text = { Text(relation.provider?.name!!) },
                                 onClick = {
-                                    itemSelected = text!!
+                                    itemSelected = relation
                                     isExpanded = false
-                                    companyViewModel.providerId = itemSelected.provider?.id?:0
+                                    companyViewModel.providerId = itemSelected.provider?.id ?: 0
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                             )
+                        }
                         }
                     }
                 }
             }
         }
+    }
 }
 
 
@@ -668,8 +678,7 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
                     modifier = Modifier.weight(1f)
                 ){
                     ShowImage(image = "${BASE_URL}werehouse/image/${article.image}/article/${
-                        article.category?.ordinal
-                    }" )
+                        article.category?.ordinal}" )
                 }
             }
             ButtonSubmit(labelValue = "add", color = Color.Green, enabled = true) {

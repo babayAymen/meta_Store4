@@ -56,26 +56,6 @@ class SharedViewModel @Inject constructor(
         _company.value.latitude = latitude
         _company.value.longitude = longitude
     }
-//    fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
-//        viewModelScope.launch {
-//            withContext(Dispatchers.Main){
-//                try {
-//                    companyDtoDataStore.data
-//                        .catch { exception ->
-//                            Log.e("getTokenError", "Error getting token: ${exception.message}")
-//                            onCompanyRetrieved(null)
-//                        }
-//                        .collect { company ->
-//                            onCompanyRetrieved(company)
-//                        }
-//
-//                } catch (e: Exception) {
-//                    Log.e("getTokenError", "Error getting token: ${e.message}")
-//                    onCompanyRetrieved(null)
-//                }
-//            }
-//        }
-//    }
 
     fun updateUserBalance(newBalance : Double){
         viewModelScope.launch {

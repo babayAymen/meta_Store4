@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -98,8 +97,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.itemContentType
-import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.SubType
@@ -107,7 +104,6 @@ import com.aymen.metastore.model.Location.GpsStatusReceiver
 import com.aymen.metastore.model.Location.LocationService
 import com.aymen.metastore.model.Location.hasLocationPermission
 import com.aymen.metastore.model.Location.isGpsEnabled
-import com.aymen.metastore.model.entity.model.Article
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Conversation
@@ -115,7 +111,7 @@ import com.aymen.metastore.model.entity.model.Invitation
 import com.aymen.metastore.model.entity.model.Message
 import com.aymen.metastore.model.entity.model.PaymentForProviders
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
-import com.aymen.store.dependencyInjection.BASE_URL
+import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
@@ -517,8 +513,6 @@ fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
 
 @Composable
 fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(Type) -> Unit) {
-    val clientViewModel : ClientViewModel = viewModel()
-    val appViewModel : AppViewModel = viewModel()
     val sharedViewModel : SharedViewModel = viewModel()
     var openDialog by remember {
         mutableStateOf(isOpen)
@@ -581,6 +575,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                 }
             }
             if (type != Type.OTHER) {
+                Log.e("type","type $type")
             }
         }
 
@@ -655,7 +650,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
 
 @Composable
 fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
-    val pointsPaymentViewModel : PointsPaymentViewModel = viewModel()
+    val pointsPaymentViewModel : PointsPaymentViewModel = hiltViewModel()
     var openDialog by remember {
         mutableStateOf(isOpen)
     }
@@ -806,8 +801,6 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 
 @Composable
 fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
-    val companyViewModel : CompanyViewModel = hiltViewModel()
-    val articleViewModel : ArticleViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val accountType = sharedViewModel.accountType
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
@@ -820,6 +813,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
     var openDialog by remember {
         mutableStateOf(isOpen)
     }
+
     var restBalance by remember {
         if (isCompany){
         mutableStateOf(myCompany.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP))
@@ -830,16 +824,24 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
     val gson = Gson()
 
     var showFeesDialog by remember { mutableStateOf(false) }
-    var balance by remember { mutableStateOf(0.0) }
+    var balance by remember { mutableDoubleStateOf(0.0) }
 
-    LaunchedEffect(key1 = shoppingViewModel.qte, key2 = accountType) {
+    var cost by remember {
+        mutableStateOf(BigDecimal(0.0))
+    }
+    LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
         isCompany = accountType == AccountType.COMPANY
         restBalance = if(isCompany){
+            balance = myCompany.balance!!
             myCompany.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.sellingPrice!!.toBigDecimal()
         }else {
+            balance = myUser.balance!!
             myUser.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.sellingPrice!!.toBigDecimal()
         }
+    cost = BigDecimal(balance).subtract(restBalance)
+        restBalance = if(shoppingViewModel.delivery && cost < BigDecimal(30) && shoppingViewModel.qte != 0.0) restBalance.subtract(BigDecimal(3)) else restBalance
     }
+
     if(label != ""){
     ButtonSubmit(labelValue = label, color = Color.Blue, enabled = true) {
         openDialog = true
@@ -917,7 +919,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                                     openDialog = false
                                     shoppingViewModel.randomArticle = article
                                     shoppingViewModel.submitShopping(restBalance)
-                                    val s = gson.toJson(shoppingViewModel.orderArray)
+                                     gson.toJson(shoppingViewModel.orderArray)
                                 }
                             }
                             Row(
@@ -931,16 +933,8 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                                 ) {
                                     shoppingViewModel.randomArticle = article
                                     shoppingViewModel.submitShopping(restBalance)
-                                    shoppingViewModel.beforSendOrder {isAccepted , balanc ->
-                                        if (isAccepted) {
-                                            openDialog = false
-                                            shoppingViewModel.sendOrder(-1, balanc)
-                                        } else {
-                                            balance = balanc
-                                           showFeesDialog = true
-                                        }
-                                    }
-
+                                        openDialog = false
+                                        shoppingViewModel.sendOrder(-1, restBalance)
                                 }
                             }
                         }
@@ -958,6 +952,8 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                         Row {
                             CheckBoxComp(
                                 value = "Delivery",
+                                free = if(cost>=BigDecimal(30))"free" else null,
+                                pay = if(cost<BigDecimal(30) && shoppingViewModel.delivery && shoppingViewModel.qte != 0.0)" 3dt" else null,
                                 shoppingViewModel.delivery
                             ) { isChecked ->
                                 shoppingViewModel.delivery = isChecked
@@ -967,7 +963,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                         ShowFeesDialog(isOpen = true){ submitfees ->
                             if(submitfees){
                                 openDialog = false
-                                shoppingViewModel.sendOrder(-1, balance)
+                                shoppingViewModel.sendOrder(-1, restBalance)
                             }else{
                                 showFeesDialog = false
                             }

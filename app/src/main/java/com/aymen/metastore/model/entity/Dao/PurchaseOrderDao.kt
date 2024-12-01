@@ -28,18 +28,16 @@ interface PurchaseOrderDao {
     @Query("SELECT * FROM order_not_accepted_keys_entity WHERE id = :id")
     suspend fun getAllOrderNotAccepteRemoteKeys(id : Long): OrderNotAcceptedKeysEntity
 
-    @Transaction
-    @Query("SELECT * FROM purchase_order WHERE (companyId = :id OR clientId = :id)  ORDER BY createdDate DESC")
-     suspend fun getAllMyOrdersAsCompany(id : Long) : List<PurchaseOrderWithCompanyAndUserOrClient>
-
 
     @Query("SELECT * FROM purchase_order ORDER BY purchaseOrderId DESC ")
     fun getAllMyOrdersNotAccepted(): PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
 
-    @Transaction
-    @Query("SELECT * FROM purchase_order WHERE userId = :id  ORDER BY createdDate DESC")
-     suspend fun getAllMyOrdersAsUser(id : Long) :  List<PurchaseOrderWithCompanyAndUserOrClient>
 
+     @Query("DELETE FROM purchase_order_line WHERE purchaseOrderId = :id")
+     suspend fun deletePurchaseOrderById(id : Long)
+
+     @Query("DELETE FROM order_not_accepted_keys_entity WHERE id = :id")
+     suspend fun deleteOrderNotAcceptedKeysById(id : Long)
 
 
 }

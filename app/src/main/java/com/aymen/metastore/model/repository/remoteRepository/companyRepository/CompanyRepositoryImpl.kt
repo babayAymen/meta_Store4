@@ -12,6 +12,7 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.repository.remoteRepository.companyRepository.CompanyRepository
@@ -68,13 +69,20 @@ class CompanyRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllCompaniesContaining(search: String, searchType: SearchType): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
+    override fun getAllCompaniesContaining(search: String, searchType: SearchType, myId : Long): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = CompanyRemoteMediator(
                 api = api, room = room,searchType = searchType, type = LoadType.CONTAINING, libelle = search, id = null
             ),
-            pagingSourceFactory = { searchHistoryDao.getAllSearchHistories()}
+            pagingSourceFactory = {
+                when(searchType){
+                    SearchType.OTHER -> searchHistoryDao.getAllCompaniesSearchHistories(search)
+                    SearchType.CLIENT -> searchHistoryDao.getAllCompaniesClientSearchHistories(search, myId)
+                    SearchType.PROVIDER -> searchHistoryDao.getAllCompaniesProviderSearchHistories(search, myId)
+                    SearchType.MY -> searchHistoryDao.getAllCompaniesSearchHistories(search)
+                }
+            }
         ).flow.map {
             it.map { article ->
                 article
