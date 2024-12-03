@@ -16,6 +16,7 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.ui.component.CheckLocation
 import com.aymen.store.model.Enum.CompanyCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.ext.realmSetOf
@@ -34,9 +35,12 @@ class SharedViewModel @Inject constructor(
     private val companyDtoDataStore: DataStore<Company>,
     private val userDtoDatastore : DataStore<User>,
     private val room : AppDatabase,
-    private  val context: Context
+    private  val context: Context,
+    private val accountTypeDataStore: DataStore<AccountType>
 ): ViewModel() {
 
+    private val _showCheckLocationDialog = MutableStateFlow(false)
+    val showCheckLocationDialog: StateFlow<Boolean> = _showCheckLocationDialog
 
     var accountType by mutableStateOf(AccountType.USER)
 
@@ -45,7 +49,11 @@ class SharedViewModel @Inject constructor(
 
     private val _company = MutableStateFlow(Company())
     val company: StateFlow<Company> = _company
-
+    init {
+        if((accountType == AccountType.COMPANY && company.value.id != null && company.value.id != 0L && company.value.latitude == 0.0) || (accountType == AccountType.USER && user.value.id != null && user.value.id != 0L && user.value.latitude == 0.0)){
+                _showCheckLocationDialog.value = true
+        }
+    }
     fun assignCompany(company : Company){
         _company.value = company
     }
@@ -91,8 +99,7 @@ class SharedViewModel @Inject constructor(
 
 
     fun changeAccountType(type : AccountType){
-        accountType = type
-            changeAccount()
+            changeAccount(type)
 
     }
 
@@ -175,17 +182,26 @@ class SharedViewModel @Inject constructor(
                         image = "",
                     )
                 }
-                accountType = AccountType.USER
+                accountTypeDataStore.updateData {
+                    AccountType.NULL
+                }
                 roomBlock()
                 restartApp()
             }
         }
     }
 
-    fun changeAccount(){
+    fun changeAccount(type : AccountType){
         viewModelScope.launch(Dispatchers.IO) {
+            try {
+                accountTypeDataStore.updateData {
+                    type
+                }
+            }catch (ex : Exception){
+
+            }
             roomBlock()
-           // restartApp()
+            restartApp()
         }
     }
 
@@ -201,7 +217,6 @@ class SharedViewModel @Inject constructor(
         context.startActivity(intent)
         Runtime.getRuntime().exit(0)
 
-        accountType = AccountType.USER
     }
 
 }

@@ -94,7 +94,7 @@ ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRem
     OrderNotAcceptedKeysEntity::class, OrderLineKeysEntity::class, BuyHistoryRemoteKeysEntity::class, PayedRemoteKeysEntity::class, NotPayedRemoteKeysEntity::class, InCompleteRemoteKeysEntity::class,
 NotAcceptedRemoteKeysEntity::class, ProviderProfitHistoryRemoteKeysEntity::class, PointsPaymentPerDayRemoteKeysEntity::class, AllInvoiceRemoteKeysEntity::class,
     PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class, InvoicesAsClientAndStatusRemoteKeysEntity::class
-], version = 50, exportSchema = false)
+], version = 52, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

@@ -101,7 +101,7 @@ fun CompanyScreen(company: Company) {
         }
     }
     LaunchedEffect(key1 = Unit) {
-        ratingViewModel.enabledToCommentCompany(companyId = company.id!!)
+        ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
     }
 
 
@@ -118,7 +118,7 @@ fun CompanyScreen(company: Company) {
             ) {
                 item {
                     Row {
-                        if (company.logo == "") {
+                        if (company.logo == "" || company.logo == null) {
                             val painter: Painter =
                                 painterResource(id = R.drawable.emptyprofile)
                             Image(
@@ -248,7 +248,7 @@ fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
                 .weight(1f)
                 .padding(end = 2.dp)
         ) {
-            AddTypeDialog(isOpen = false, company.id!!, true) {
+            AddTypeDialog(isOpen = false, company.id?:0, true) {
                 clientViewModel.sendClientRequest(company.id!!, it)
             }
         }

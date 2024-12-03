@@ -481,6 +481,7 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
         Dialog(
             onDismissRequest = {
                 openDialog = false
+                onSubmit(0.0)
             }
         ) {
             Surface(
@@ -537,6 +538,7 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                         ) {
                            ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
                                openDialog = false
+                               onSubmit(0.0)
                            }
                         }
                     }

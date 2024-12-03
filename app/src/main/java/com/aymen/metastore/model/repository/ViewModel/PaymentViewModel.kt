@@ -49,6 +49,7 @@ class PaymentViewModel @Inject constructor(
 
             }
             AccountType.AYMEN -> TODO()
+            AccountType.NULL -> TODO()
         }
     }
 

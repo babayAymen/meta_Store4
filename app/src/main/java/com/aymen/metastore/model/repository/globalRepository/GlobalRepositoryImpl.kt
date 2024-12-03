@@ -22,6 +22,7 @@ import com.aymen.metastore.model.entity.dto.ConversationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
@@ -107,7 +108,10 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override suspend fun getSubCategoryByCategory(id: Long,companyId : Long) = subCategoryRepository.getSubCategoryByCategory(id,companyId = companyId)
+    override fun getSubCategoryByCategory(id: Long): Flow<PagingData<SubCategory>> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun addSubCtagoryWithImage(sousCategory: String, file: File) = subCategoryRepository.addSubCtagoryWithImage(sousCategory,file)
     override suspend fun addSubCategoryWithoutImage(sousCategory: String) = subCategoryRepository.addSubCategoryWithoutImage(sousCategory)
     override fun getAllSubCategories(): Flow<PagingData<SubCategoryWithCategory>> {

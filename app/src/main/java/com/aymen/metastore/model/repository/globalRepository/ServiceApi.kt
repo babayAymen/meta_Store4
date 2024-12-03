@@ -235,6 +235,9 @@ interface ServiceApi {
     @GET("werehouse/subcategory/getbycompany/{companyId}")
     suspend fun getAllSubCategories(@Path("companyId") companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
 
+    @GET("werehouse/subcategory/getbycategory_id/{companyId}")
+    suspend fun getAllSubCategoriesByCategoryId(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
+
     @GET("werehouse/article/my_article/{id}")
     suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
 

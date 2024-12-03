@@ -56,14 +56,6 @@ class CompanyViewModel @Inject constructor(
     private val useCases: MetaUseCases
 ) : ViewModel() {
 
-    private var _myProviders: MutableStateFlow<PagingData<ClientProviderRelation>> =
-        MutableStateFlow(PagingData.empty())
-    val myProviders: StateFlow<PagingData<ClientProviderRelation>> get() = _myProviders
-
-    private var _allCompanies: MutableStateFlow<PagingData<SearchHistory>> =
-        MutableStateFlow(PagingData.empty())
-    val allCompanies: StateFlow<PagingData<SearchHistory>> get() = _allCompanies
-
     var providerId by mutableLongStateOf(0)
     var parent by mutableStateOf(Company())
     var myCompany by mutableStateOf(sharedViewModel.company.value)
@@ -116,25 +108,6 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
-    fun getAllCompaniesContaining(
-        search: String,
-        searchType: SearchType,
-        searchCategory: SearchCategory
-    ) {
-        val id = when(sharedViewModel.accountType){
-            AccountType.COMPANY -> sharedViewModel.company.value.id
-            AccountType.USER -> sharedViewModel.user.value.id
-            AccountType.AYMEN -> TODO()
-        }
-        viewModelScope.launch {
-            useCases.getAllCompaniesContaining(search, searchType,id!!)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect {
-                    _allCompanies.value = it.map { company -> company.toSearchHistoryModel() }
-                }
-        }
-    }
 
     fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
         viewModelScope.launch {

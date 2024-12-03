@@ -84,12 +84,13 @@ class ClientRemoteMediator(
                     companyClientRelationDao.insertClientProviderRelation(response.map { relation -> relation.toClientProviderRelation() })
 
                 } catch (ex: Exception) {
-                    Log.e("error", "$ex")
+                    Log.e("error", " client remote mediator $ex")
                 }
             }
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
+            Log.e("error", " client remote mediator $ex")
             MediatorResult.Error(ex)
         }
     }
@@ -112,7 +113,7 @@ class ClientRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-      //  companyClientRelationDao.clearAllClientTable(id)
+        companyClientRelationDao.clearAllClientTable(id)
         companyClientRelationDao.clearClientRemoteKeysTable()
     }
 }

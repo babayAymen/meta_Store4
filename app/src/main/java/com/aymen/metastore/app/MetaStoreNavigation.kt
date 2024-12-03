@@ -38,8 +38,8 @@ import com.aymen.metastore.ui.screen.user.UserScreen
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MetaStore (){
-    val companyViewModel : CompanyViewModel = hiltViewModel()
-    val appViewModel : AppViewModel = hiltViewModel()
+    val appViewModel  = hiltViewModel<AppViewModel>()
+    val companyViewModel = hiltViewModel<CompanyViewModel>()
     var isLoggedIn by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
          appViewModel.isLoggedIn{

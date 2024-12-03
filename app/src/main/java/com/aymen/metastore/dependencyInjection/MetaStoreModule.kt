@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.room.Room
+import com.aymen.metastore.accounttypedtodatastore
 import com.aymen.metastore.companydtodatastore
 import com.aymen.metastore.datastore
 import com.aymen.metastore.model.Location.DefaultLocationClient
@@ -86,6 +87,7 @@ import com.aymen.metastore.model.usecase.GetAllMyBuyHistory
 import com.aymen.metastore.model.usecase.GetAllMyOrdersNotAccepted
 import com.aymen.metastore.model.usecase.GetAllMyProfitsPerDay
 import com.aymen.metastore.model.usecase.GetAllSearchHistory
+import com.aymen.metastore.model.usecase.GetAllSubCategoryByCategoryId
 import com.aymen.metastore.model.usecase.GetInCompleteInvoice
 import com.aymen.metastore.model.usecase.GetMyHistoryProfitByDate
 import com.aymen.metastore.model.usecase.GetNotAcceptedInvoice
@@ -94,6 +96,7 @@ import com.aymen.metastore.model.usecase.GetPaidInvoice
 import com.aymen.metastore.model.usecase.GetPurchaseOrderDetails
 import com.aymen.metastore.util.BarcodeScanner
 import com.aymen.store.dependencyInjection.TokenSerializer
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.providerRepository.ProviderRepository
@@ -182,7 +185,8 @@ class MetaStoreModule {
             getInCompleteInvoice = GetInCompleteInvoice(repository = paymentRepository),
             getAllMyProfitsPerDay = GetAllMyProfitsPerDay(repository = pointPaymentRepository),
             getMyHistoryProfitByDate = GetMyHistoryProfitByDate(repository = pointPaymentRepository),
-            getAllSearchHistory = GetAllSearchHistory(repository = clientRepository)
+            getAllSearchHistory = GetAllSearchHistory(repository = clientRepository),
+            getAllSubCategoryByCategoryId = GetAllSubCategoryByCategoryId(repository = subCategoryRepository)
 
         )
     }
@@ -217,9 +221,10 @@ class MetaStoreModule {
                             room : AppDatabase,
                             sharedViewModel: SharedViewModel,
                             context: Context,
+                            accountTypeDataStore: DataStore<AccountType>
                             )
     : AppViewModel {
-        return AppViewModel(repository,dataStore, companyDataStore, userDataStore,room, sharedViewModel, context)
+        return AppViewModel(repository,dataStore, companyDataStore, userDataStore,room, sharedViewModel, context, accountTypeDataStore)
     }
 
     @Provides
@@ -278,9 +283,10 @@ class MetaStoreModule {
         companyDtoDataStore: DataStore<Company>,
         userDtoDataStore: DataStore<User>,
         room: AppDatabase,
-        context: Context
+        context: Context,
+        accountTypeDataStore: DataStore<AccountType>
                                ):SharedViewModel{
-        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context)
+        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context, accountTypeDataStore)
     }
 
     @Provides
@@ -560,6 +566,12 @@ class MetaStoreModule {
     @Singleton
     fun provideUserDtoDataStore(@ApplicationContext context: Context): DataStore<User>{
         return context.userdtodatastore
+    }
+
+    @Provides
+    @Singleton
+    fun provideAccountTypeDataStore(@ApplicationContext context: Context): DataStore<AccountType>{
+        return context.accounttypedtodatastore
     }
 
     @Provides

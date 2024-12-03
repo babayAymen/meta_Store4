@@ -49,7 +49,8 @@ class AppViewModel @Inject constructor(
     private val userDatastore: DataStore<User>,
     private val room : AppDatabase,
     private val sharedViewModel: SharedViewModel,
-    private val context: Context
+    private val context: Context,
+    private val accountTypeDataStore: DataStore<AccountType>
 ) : ViewModel(){
 
     private val client = OkHttpClient()
@@ -57,8 +58,8 @@ class AppViewModel @Inject constructor(
     private val _messages = MutableStateFlow<List<String>>(emptyList())
     val messages = _messages.asStateFlow()
 
-    val _user = MutableStateFlow(User())
-    val user: StateFlow<User> = _user
+    private var _user = MutableStateFlow(User())
+    val user: StateFlow<User> get() = _user
 
     private val _currentScreen = mutableStateOf(IconType.HOME)
     val currentScreen: State<IconType> get() = _currentScreen
@@ -75,6 +76,10 @@ class AppViewModel @Inject constructor(
         location.observeForever { newLocation ->
             logLocationChange(newLocation)
         }
+    }
+
+    fun assignUser(user: User){
+        _user.value = user
     }
     private fun logLocationChange(newLocation: Pair<Double, Double>) {
         val (latitude, longitude) = newLocation
@@ -111,7 +116,32 @@ class AppViewModel @Inject constructor(
         }
     }
     init {
-      block()
+        viewModelScope.launch {
+          accountTypeDataStore.data.collect{item ->
+              Log.e("accounttype","account : $item")
+              if(item == AccountType.NULL){
+                  block()
+              }else{
+                  authsize = 2
+                  sharedViewModel.accountType = item
+                  when(item){
+                      AccountType.COMPANY -> {
+                          companyDataStore.data.collect{
+                              sharedViewModel.assignCompany(it)
+                          }
+                      }
+                      AccountType.USER -> {
+                          userDatastore.data.collect{
+                              sharedViewModel.assignUser(it)
+                          }
+                      }
+                      AccountType.AYMEN -> TODO()
+                      AccountType.NULL -> TODO()
+                  }
+              }
+          }
+      }
+
     }
 
      fun block(){
@@ -167,7 +197,7 @@ class AppViewModel @Inject constructor(
         }
     }
 
-     fun userRole(){
+     private fun userRole(){
         viewModelScope.launch(Dispatchers.IO) {
             getToken {
                 if (it != null) {
@@ -181,8 +211,10 @@ class AppViewModel @Inject constructor(
                             RoleEnum.ADMIN->{
                                  if (authsize == 1){
                                      sharedViewModel.accountType = AccountType.COMPANY
+                                     storeAccountType(AccountType.COMPANY)
                                 }else{
                                      sharedViewModel.accountType = AccountType.USER
+                                     storeAccountType(AccountType.USER)
                                 }
                             userRole = isUser
                                 getMyUserDetails()
@@ -210,7 +242,7 @@ class AppViewModel @Inject constructor(
             }
         }
     }
-     fun getToken(onTokenRetrieved: (String?) -> Unit) {
+     private fun getToken(onTokenRetrieved: (String?) -> Unit) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
@@ -230,6 +262,18 @@ class AppViewModel @Inject constructor(
                     Log.e("getTokenError", "Error getting token get token fun in app view model: ${e.message}")
                     onTokenRetrieved(null)
                 }
+            }
+        }
+    }
+
+    private fun storeAccountType(accountType : AccountType){
+        viewModelScope.launch (Dispatchers.IO){
+            try {
+                accountTypeDataStore.updateData {
+                    accountType
+                }
+            }catch (ex : Exception){
+                Log.e("errorStoreAccount","error is : $ex")
             }
         }
     }
@@ -386,66 +430,5 @@ class AppViewModel @Inject constructor(
     }
 
 
-//    fun logout(context: Context){
-//        viewModelScope.launch {
-//            withContext(Dispatchers.IO){
-//                dataStore.updateData {
-//                    it.copy(token = "")
-//                }
-//                companyDataStore.updateData {
-//                    Company().copy(
-//                        id = 0,
-//                        name = "",
-//                        code = "",
-//                        matfisc = "",
-//                        address = "",
-//                        phone = "",
-//                        bankaccountnumber = "",
-//                        email = "",
-//                        capital = "",
-//                        logo = "",
-//                        workForce = 0,
-//                        rate = 0.0,
-//                        raters = 0,
-//                        category = CompanyCategory.DAIRY,
-//                        user = User()
-//                    )
-//                }
-//                userDatastore.updateData {
-//                    User().copy(
-//                        id = 0,
-//                        username = "",
-//                        address = "",
-//                        phone = "",
-//                        balance = 0.0,
-//                        image = "",
-//                    )
-//                }
-//                sharedViewModel.accountType = AccountType.USER
-//               roomBlock()
-//                restartApp(context)
-//            }
-//        }
-//    }
-//
-//    fun changeAccount(context: Context){
-//        viewModelScope.launch(Dispatchers.IO) {
-//            roomBlock()
-//            realmSetOf(context)
-//        }
-//    }
-//
-//    private fun roomBlock(){
-//        room.clearAllTables()
-//    }
-//    private fun restartApp(context: Context){
-//        val intent = Intent(context,MainActivity::class.java).apply {
-//            flags =
-//                Intent.FLAG_ACTIVITY_NEW_TASK or
-//                        Intent.FLAG_ACTIVITY_CLEAR_TASK
-//        }
-//        context.startActivity(intent)
-//        Runtime.getRuntime().exit(0)
-//    }
 
 }

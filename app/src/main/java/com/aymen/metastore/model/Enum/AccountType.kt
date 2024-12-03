@@ -5,6 +5,8 @@ enum class AccountType {
 
     USER,
 
-    AYMEN
+    AYMEN,
+
+    NULL
 
 }

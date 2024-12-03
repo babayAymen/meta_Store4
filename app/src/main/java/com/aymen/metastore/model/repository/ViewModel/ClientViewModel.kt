@@ -34,17 +34,12 @@ class ClientViewModel @Inject constructor(
     private  val sharedViewModel: SharedViewModel,
     private val useCases: MetaUseCases
 ): ViewModel() {
-    private var _histories: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
-    val histories: StateFlow<PagingData<SearchHistory>> get() = _histories
 
     private val _myClients: MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val myClients: StateFlow<PagingData<ClientProviderRelation>> = _myClients
 
     private val _myClientsContaining: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
     val myClientsContaining: StateFlow<PagingData<SearchHistory>> = _myClientsContaining
-
-    private val _searchPersons: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
-    var searchPersons: StateFlow<PagingData<SearchHistory>> = _searchPersons
 
     val company: StateFlow<Company?> = sharedViewModel.company
     val user: StateFlow<User?> = sharedViewModel.user
@@ -77,20 +72,6 @@ class ClientViewModel @Inject constructor(
         }
     }
 
-    fun getAllPersonContaining(
-        personName: String,
-        searchType: SearchType,
-        searchCategory: SearchCategory
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            useCases.getAllPersonContaining(personName, searchType, searchCategory)// هذه سبب الخرب
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect {
-                    _searchPersons.value = it.map { relation -> relation.toSearchHistoryModel() }
-                }
-        }
-    }
         fun addClient(client: String, file: File) {
             viewModelScope.launch {
                 try {
@@ -123,29 +104,7 @@ class ClientViewModel @Inject constructor(
             }
         }
 
-        fun saveHitory(category: SearchCategory, id: Long) {
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    repository.saveHistory(category, id)
-                }
-            }
-        }
 
-        fun getAllSearchHistory() {
-            val id = when(sharedViewModel.accountType){
-                AccountType.USER -> user.value?.id
-                AccountType.COMPANY -> company.value?.id
-                AccountType.AYMEN -> TODO()
-            }
-            viewModelScope.launch {
-                    useCases.getAllSearchHistory(id!!)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _histories.value = it.map { search -> search.toSearchHistoryModel() }
-                        }
-            }
-        }
 
 
 

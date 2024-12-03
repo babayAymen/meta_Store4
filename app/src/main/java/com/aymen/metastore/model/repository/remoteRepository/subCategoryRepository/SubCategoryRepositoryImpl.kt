@@ -6,6 +6,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.Enum.LoadType
+import com.aymen.metastore.model.entity.model.SubCategory
+import com.aymen.metastore.model.entity.paging.SubCategoryPagingSource
 import com.aymen.metastore.model.entity.paging.SubCategoryRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
@@ -29,7 +31,19 @@ class SubCategoryRepositoryImpl  @Inject constructor(
 
         private val subCategoryDao = room.subCategoryDao()
 
-    override suspend fun getSubCategoryByCategory(id : Long, companyId : Long) =  api.getAllSubCategoryByCategory(id, companyId = companyId)
+    override fun getSubCategoryByCategory(id : Long):Flow<PagingData<SubCategory>>{
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE, // Number of items per page
+                enablePlaceholders = false // Disable placeholders for unloaded pages
+            ),
+            pagingSourceFactory = {
+                SubCategoryPagingSource(api, sharedViewModel, id)
+            }
+        ).flow
+    }
+
+
     override suspend fun addSubCtagoryWithImage(sousCategory: String, file: File) {
         api.addSubCategoryWithImage(sousCategory,
             file = MultipartBody.Part

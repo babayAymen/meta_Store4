@@ -82,7 +82,7 @@ fun ArticleScreen() {
                     .fillMaxWidth()
             ){
                 ButtonSubmit(labelValue = "Add New", color = Color.Green, enabled = true) {
-                    appViewModel.updateShow("add article")
+                    appViewModel.updateShow("ADD_ARTICLE")
                 }
             }
             Row (
@@ -122,7 +122,7 @@ fun ArticleScreen() {
                                 },
                                 onUpdate = {item ->
                                     articleViewModel.assignarticleCompany(item)
-                                    appViewModel.updateShow("add article for company")
+                                    appViewModel.updateShow("ADD_ARTICLE_FOR_COMPANY")
 
                                 }
                             ) { article ->
@@ -133,8 +133,13 @@ fun ArticleScreen() {
                                     addQuantity = true
                                 }
                                 if (addQuantity) {
-                                    addQuantityDailog(article, true) {
-                                        articleViewModel.addQuantityArticle(it, article.id!!)
+                                    addQuantityDailog(article, addQuantity) {quantity ->
+                                        if(quantity != 0.0) {
+                                            articleViewModel.addQuantityArticle(
+                                                quantity,
+                                                article.id!!
+                                            )
+                                        }
                                         addQuantity = false
                                         articleIndex = -1
                                     }

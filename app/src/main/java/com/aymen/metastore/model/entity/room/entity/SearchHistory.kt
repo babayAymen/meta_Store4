@@ -20,10 +20,10 @@ import com.aymen.store.model.Enum.SearchCategory
         ForeignKey(entity = User::class, parentColumns = ["id"], childColumns = ["userId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
-        ForeignKey(entity = ClientProviderRelation::class, parentColumns = ["userId"], childColumns = ["userRelationId"],
+        ForeignKey(entity = ClientProviderRelation::class, parentColumns = ["id"], childColumns = ["userRelationId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
-        ForeignKey(entity = ClientProviderRelation::class, parentColumns = ["clientId"], childColumns = ["clientRelationId"],
+        ForeignKey(entity = ClientProviderRelation::class, parentColumns = ["id"], childColumns = ["clientRelationId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
     ])

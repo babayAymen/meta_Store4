@@ -48,6 +48,17 @@ class SubCategoryViewModel @Inject constructor(
         }
     }
 
+    fun getAllSubCategoriesByCategoryId(categoryId : Long){
+        viewModelScope.launch {
+            useCases.getAllSubCategoryByCategoryId(categoryId)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _allSubCategories.value = it.map { subcategory -> subcategory }
+                }
+        }
+    }
+
     fun addSubCategoryWithImage(sousCategory : String, file : File){
         viewModelScope.launch {
             withContext(Dispatchers.IO){

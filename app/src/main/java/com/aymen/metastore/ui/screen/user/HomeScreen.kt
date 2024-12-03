@@ -111,9 +111,9 @@ fun HomeScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
+    val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val messageViewModel : MessageViewModel = hiltViewModel()
-    val appViewModel : AppViewModel = hiltViewModel()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val type = sharedViewModel.accountType
@@ -121,17 +121,10 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val randomArticles = articleViewModel.randomArticles.collectAsLazyPagingItems()
     LaunchedEffect(key1 = type) {
-        articleViewModel.fetchRandomArticlesForHomePage(CompanyCategory.NULL)
+      //  articleViewModel.fetchRandomArticlesForHomePage(CompanyCategory.NULL)
     }
-    var triggerLocationCheck by remember { mutableStateOf(false) }
+    val triggerLocationCheck by sharedViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
 
-    LaunchedEffect(key1 = type, key2 = user, key3 = company) { //, key2 = user, key3 = company should be exist
-        Log.e("homelaunche","c bpon")
-        Log.e("homelaunche","type : $type companyId : ${company.id} company latitude : ${company.latitude} user id : ${user.id} user latitude : ${user.latitude}")
-    if((type == AccountType.COMPANY && company.id != null && company.id != 0L && company.latitude == 0.0) || (type == AccountType.USER && user.id != null && user.id != 0L && user.latitude == 0.0)){
-        triggerLocationCheck = true
-    }
-    }
     if(triggerLocationCheck) {
         CheckLocation(type, user, company, context)
     }
@@ -253,10 +246,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         }
                         if (isCompany) {
                             Row {
-
-                            if (company.logo != null) {
+                            if (company.logo != null ) {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${company.logo}/company/${user.id}",
+                                    image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}",
                                     35.dp
                                 )
                             } else {
@@ -266,7 +258,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             }
                         } else {
                             Row {
-                            if (user.image != null) {
+                            if (user.image != null && user.image != "") {
                                 ShowImage(
                                     image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}",
                                     35.dp
@@ -493,8 +485,10 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                 "profit" -> {
                     viewModel.updateShow("payment")
                 }
+                "ADD_ARTICLE" ->{
+                    viewModel.updateShow("article")
+                }
                 else -> {
-
                     viewModel.updateShow("dash")
                 }
 

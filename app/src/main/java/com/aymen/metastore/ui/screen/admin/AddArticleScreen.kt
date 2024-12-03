@@ -82,9 +82,10 @@ fun AddArticleScreen(){
         val categories = categoryViewModel.categories.collectAsLazyPagingItems()
 
         LaunchedEffect(categoryViewModel.category) {
-
+                Log.e("category","category has changed")
+            subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryViewModel.category.id?:0)
         }
-        val subcategories = subCategoryViewModel.subCategories.collectAsLazyPagingItems()
+        val subcategories = subCategoryViewModel.allSubCategories.collectAsLazyPagingItems()
         val context = LocalContext.current
         var articleCompany = ArticleCompany()
 
@@ -92,17 +93,29 @@ fun AddArticleScreen(){
         var tva by remember {
             mutableDoubleStateOf(0.0)
         }
+        var qte by remember {
+            mutableDoubleStateOf(0.0)
+        }
         var quantity by remember {
+            mutableStateOf("")
+        }
+        var minQte by remember {
             mutableDoubleStateOf(0.0)
         }
         var minQuantity by remember {
-            mutableDoubleStateOf(0.0)
+            mutableStateOf("")
         }
         var cost by remember {
             mutableDoubleStateOf(0.0)
         }
+        var costFieald by remember {
+            mutableStateOf("")
+        }
         var sellingPrice by remember {
             mutableDoubleStateOf(0.0)
+        }
+        var sellingPriceFieald by remember {
+            mutableStateOf("")
         }
         var label by remember {
             mutableStateOf("")
@@ -132,11 +145,11 @@ fun AddArticleScreen(){
             val articlee = articleViewModel.articleCompany.collectAsStateWithLifecycle()
             Log.e("articleCompany","from view model : $articlee")
             articleCompany = articlee.value!!
-            quantity = articlee.value?.quantity?:0.0
-            minQuantity = articlee.value?.minQuantity?:0.0
-            cost = articlee.value?.cost?:0.0
-            sellingPrice = articlee.value?.sellingPrice?:0.0
+            minQuantity = if(articlee.value?.unit == UnitArticle.U)(articlee.value?.minQuantity?:0.0).toInt().toString() else (articlee.value?.minQuantity?:0.0).toString()
+            costFieald = (articlee.value?.cost?:0.0).toString()
+            sellingPriceFieald = (articlee.value?.sellingPrice?:0.0).toString()
             unitItem = articlee.value?.unit?:UnitArticle.U
+            quantity = if(articlee.value?.unit == UnitArticle.U)(articlee.value?.quantity?:0.0).toInt().toString() else (articlee.value?.quantity?:0.0).toString()
             privacy = articlee.value?.isVisible?:PrivacySetting.PUBLIC
             subCategory = articlee.value?.subCategory?:SubCategory()
         }
@@ -236,7 +249,7 @@ fun AddArticleScreen(){
                             .weight(1f)
                     ) {
                         InputTextField(
-                            labelValue = if (quantity == 0.0) "" else quantity.toString(),
+                            labelValue = quantity,
                             label = "quantity",
                             singleLine = true,
                             maxLine = 1,
@@ -245,13 +258,33 @@ fun AddArticleScreen(){
                                 imeAction = ImeAction.Next
                             ),
                             onValueChange = {
-                                quantity = it.toDouble()
+                                if (unitItem == UnitArticle.U) {
+                                    // Restrict input to integers
+                                    if (it.matches(Regex("^[0-9]*$"))) {
+                                        quantity = it
+                                        qte = it.toDoubleOrNull() ?: 0.0
+                                    }
+                                } else {
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        quantity = normalizedInput
+
+                                        qte = if (normalizedInput.endsWith(".")) {
+                                            normalizedInput.let { inp ->
+                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                            }
+                                        } else {
+                                            normalizedInput.toDoubleOrNull() ?: 0.0
+                                        }
+                                    }
+                                }
+
                             }, onImage = {}, true
                         ) {
 
                         }
                         InputTextField(
-                            labelValue = if (minQuantity == 0.0) "" else minQuantity.toString(),
+                            labelValue = minQuantity,
                             label = "minQuantity",
                             singleLine = true,
                             maxLine = 1,
@@ -260,13 +293,31 @@ fun AddArticleScreen(){
                                 imeAction = ImeAction.Next
                             ),
                             onValueChange = {
-                                minQuantity = it.toDouble()
+                                if (unitItem == UnitArticle.U) {
+                                    // Restrict input to integers
+                                    if (it.matches(Regex("^[0-9]*$"))) {
+                                        minQuantity = it
+                                        minQte = it.toDoubleOrNull() ?: 0.0
+                                    }
+                                } else {
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        minQuantity = normalizedInput
+                                        minQte = if (normalizedInput.endsWith(".")) {
+                                            normalizedInput.let { inp ->
+                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                            }
+                                        } else {
+                                            normalizedInput.toDoubleOrNull() ?: 0.0
+                                        }
+                                    }
+                                }
                             }, onImage = {}, true
                         ) {
 
                         }
                         InputTextField(
-                            labelValue = if (cost == 0.0) "" else cost.toString(),
+                            labelValue = costFieald,
                             label = "cost",
                             singleLine = true,
                             maxLine = 1,
@@ -275,13 +326,23 @@ fun AddArticleScreen(){
                                 imeAction = ImeAction.Next
                             ),
                             onValueChange = {
-                                cost = it.toDouble()
+                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                    val normalizedInput = it.replace(',', '.')
+                                    costFieald = normalizedInput
+                                    cost = if (normalizedInput.endsWith(".")) {
+                                        normalizedInput.let { inp ->
+                                            if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                        }
+                                    } else {
+                                        normalizedInput.toDoubleOrNull() ?: 0.0
+                                    }
+                                }
                             }, onImage = {}, true
                         ) {
 
                         }
                         InputTextField(
-                            labelValue = if (sellingPrice == 0.0) "" else sellingPrice.toString(),
+                            labelValue = sellingPriceFieald,
                             label = "selling price",
                             singleLine = true,
                             maxLine = 1,
@@ -290,10 +351,21 @@ fun AddArticleScreen(){
                                 imeAction = ImeAction.Next
                             ),
                             onValueChange = {
-                                sellingPrice = it.toDouble()
+                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                    val normalizedInput = it.replace(',', '.')
+                                    sellingPriceFieald = normalizedInput
+                                    sellingPrice = if (normalizedInput.endsWith(".")) {
+                                        normalizedInput.let { inp ->
+                                            if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                        }
+                                    } else {
+                                        normalizedInput.toDoubleOrNull() ?: 0.0
+                                    }
+                                }
                             }, onImage = {}, true
                         ) {
                         }
+                        if(false){
                             Row {
                                 Checkbox(checked = isDiscounted,
                                     onCheckedChange = {
@@ -301,6 +373,7 @@ fun AddArticleScreen(){
                                     })
                                 Text(text = "does this article have abality to discount?")
                             }
+                        }
                     }
                 }
             }
@@ -380,13 +453,13 @@ fun AddArticleScreen(){
                     ) {
 
                         ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true) {
-                            articleCompany.quantity = quantity
-                            articleCompany.minQuantity = minQuantity
+                            articleCompany.quantity = qte
+                            articleCompany.minQuantity = minQte
                             articleCompany.cost = cost
                             articleCompany.sellingPrice = sellingPrice
-                            articleCompany.category?.id = categoryViewModel.category.id
-                            articleCompany.subCategory?.id = subCategory.id
-                            articleCompany.provider?.id = sharedViewModel.company.value.id
+                            articleCompany.category = categoryViewModel.category
+                            articleCompany.subCategory = subCategory
+                            articleCompany.provider = sharedViewModel.company.value
                             articleCompany.unit = unitItem
                             articleCompany.isVisible = privacy
                             val photo = resolveUriToFile(image, context)
@@ -403,9 +476,9 @@ fun AddArticleScreen(){
                                     )
                                 }
                             }else{
-                                Log.e("articleCompany","article company : $articleCompany")
                                 articleViewModel.updateArticle(articleCompany)
                             }
+                                Log.e("articleCompany","article company : $articleCompany")
                         }
                     }
 

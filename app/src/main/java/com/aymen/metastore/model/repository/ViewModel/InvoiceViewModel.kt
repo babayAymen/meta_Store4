@@ -182,6 +182,7 @@ class InvoiceViewModel @Inject constructor(
                 getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id!!)
             }
             AccountType.AYMEN -> TODO()
+            AccountType.NULL -> TODO()
         }
     }
 //

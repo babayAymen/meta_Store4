@@ -120,6 +120,7 @@ fun submitShopping(newBalance: BigDecimal) {
                 onFinish(true, myCompany.value?.balance!!)
             }
             AccountType.AYMEN -> TODO()
+            AccountType.NULL -> TODO()
         }
     }
     fun sendOrder(index : Int, myBalance : BigDecimal){
@@ -145,6 +146,7 @@ fun submitShopping(newBalance: BigDecimal) {
                             Toast.makeText(context, "3dt", Toast.LENGTH_SHORT).show()
                         }
                         AccountType.AYMEN -> TODO()
+                        AccountType.NULL -> TODO()
                     }
                 val newOrderArray = orderArray.toMutableList()
                 newOrderArray.retainAll { newOrderArray.indexOf(it) == index }

@@ -196,7 +196,6 @@ fun SearchField(label : String, labelValue : String, value : (String) -> Unit, c
         keyboardActions = KeyboardActions(
             onSearch = {
                 clickAction()
-                Log.e("aymenbabaysearch","click action")
             }
         ),
         value = labelValue,
@@ -883,7 +882,6 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                             ),
                             onValueChange = {
                                 if (article.unit == UnitArticle.U) {
-                                    // Restrict input to integers
                                     if (it.matches(Regex("^[0-9]*$"))) {
                                         shoppingViewModel.rawInput = it
                                         shoppingViewModel.qte = it.toDoubleOrNull() ?: 0.0

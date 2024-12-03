@@ -34,6 +34,7 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.SearchViewModel
 import com.aymen.metastore.ui.component.ArticleCardForSearch
 import com.aymen.metastore.ui.component.CompanyCard
 import com.aymen.metastore.ui.component.SearchField
@@ -44,11 +45,10 @@ import com.aymen.store.ui.navigation.Screen
 @Composable
 fun SearchScreen(modifier: Modifier = Modifier) {
     val companyViewModel : CompanyViewModel = hiltViewModel()
-    val clientViewModel : ClientViewModel = hiltViewModel()
     val articleViewModel  : ArticleViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
-    val sharedViewModel : SharedViewModel = hiltViewModel()
-    val histories = clientViewModel.histories.collectAsLazyPagingItems()
+    val searchViewModel : SearchViewModel = hiltViewModel()
+    val histories = searchViewModel.histories.collectAsLazyPagingItems()
     var show by remember {
         mutableStateOf(false)
     }
@@ -66,52 +66,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
     }
     val role = appViewModel.userRole
 
-    val com =  companyViewModel.allCompanies.collectAsLazyPagingItems()
-    val cli = clientViewModel.searchPersons.collectAsLazyPagingItems()
-    val companySearch by articleViewModel.companyComment.collectAsStateWithLifecycle()
-    val userSearch by articleViewModel.userComment.collectAsStateWithLifecycle()
-    val client = clientViewModel.myClients.collectAsLazyPagingItems()
 
-    val art = articleViewModel.article
-    val articleCompany = articleViewModel.articleCompany
-    LaunchedEffect(key1 = Unit) {
-        clientViewModel.getAllSearchHistory()
-    }
-    LaunchedEffect(key1 = searchCategory) {
-        searchType = SearchType.OTHER
-    }
-    LaunchedEffect( key1 = searchCategory, key2 = searchOption, key3 = searchType) {
-
-        when(searchCategory){
-            SearchCategory.COMPANY -> {
-                when(searchType){
-                    SearchType.OTHER ->{
-                        Log.e("searchscreen","type company other")
-                        companyViewModel.getAllCompaniesContaining(searchText,searchType,searchCategory)
-                    }
-                    SearchType.MY ->{
-                        Log.e("searchscreen","type company my")
-                        // والله لا تعرف كيفاه تمشي
-                    }
-                    else ->{
-                        Log.e("searchscreen","type company else")
-                        companyViewModel.getAllCompaniesContaining(searchText,searchType,searchCategory)
-                    }
-                }
-            }
-            SearchCategory.USER -> {
-                Log.e("searchscreen","type user")
-                        clientViewModel.getAllPersonContaining(searchText,searchType,searchCategory)
-            }
-            SearchCategory.ARTICLE-> {
-                Log.e("searchscreen","type article")
-                        articleViewModel.getAllMyArticleContaining(searchText,searchType)
-            }
-            else ->{
-
-            }
-        }
-    }
     Surface {
         Column {
             Row {
@@ -119,6 +74,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                 show = isShow
                 searchText = isText
                 searchOption = !isSearch
+                searchViewModel.search(searchType,searchCategory,searchText)
             }
             }
             Row {
@@ -127,16 +83,31 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                             item {
                                 SearchItem(searchCategory) {
                                     searchCategory = it
+                                    if(searchText != "") {
+                                        searchViewModel.search(
+                                            searchType,
+                                            searchCategory,
+                                            searchText
+                                        )
+                                    }
                                 }
                                 if (role != RoleEnum.USER) {
 
-                                    SearchTypeItem(appViewModel, searchType, searchCategory) {
+                                    SearchTypeItem( searchType, searchCategory) {
                                         searchType = it
+                                        if(searchText != "") {
+                                            searchViewModel.search(
+                                                searchType,
+                                                searchCategory,
+                                                searchText
+                                            )
+                                        }
                                     }
                                 }
 
                                 when (searchCategory) {
                                     SearchCategory.COMPANY -> {
+                                        val com =  searchViewModel.allCompanies.collectAsLazyPagingItems()
                                         for (index in 0 until com.itemCount) {
                                             val company = com[index]
                                             if(company != null){
@@ -146,10 +117,9 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                         company.company!!
                                                     ) {
                                                         companyViewModel.myCompany = company.company
-                                                        articleViewModel.companyId =
-                                                            company.company.id!!
+//                                                        articleViewModel.companyId = company.company.id!!
                                                         RouteController.navigateTo(Screen.CompanyScreen)
-                                                        clientViewModel.saveHitory(
+                                                        searchViewModel.saveHitory(
                                                             searchCategory,
                                                             company.id!!
                                                         )
@@ -161,10 +131,9 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                         company.company!!
                                                     ) {
                                                         companyViewModel.myCompany = company.company
-                                                        articleViewModel.companyId =
-                                                            company.company.id!!
+//                                                        articleViewModel.companyId = company.company.id!!
                                                         RouteController.navigateTo(Screen.CompanyScreen)
-                                                        clientViewModel.saveHitory(
+                                                        searchViewModel.saveHitory(
                                                             searchCategory,
                                                             company.company.id!!
                                                         )
@@ -176,14 +145,14 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                     }
 
                                     SearchCategory.USER -> {
+                                        val cli = searchViewModel.searchPersons.collectAsLazyPagingItems()
                                         for (index in 0 until cli.itemCount) {
                                             val user = cli[index]
                                             if (user != null) {
-                                                Log.e("userrrr", "user search ${user.user}")
                                                 UserCard(user.user!!, appViewModel) {
-                                                    appViewModel._user.value = user.user
+                                                    appViewModel.assignUser(user.user)
                                                     RouteController.navigateTo(Screen.UserScreen)
-                                                    clientViewModel.saveHitory(
+                                                    searchViewModel.saveHitory(
                                                         searchCategory,
                                                         user.user.id!!
                                                     )
@@ -194,14 +163,14 @@ fun SearchScreen(modifier: Modifier = Modifier) {
 
                                     SearchCategory.ARTICLE -> {
                                         val art =
-                                            articleViewModel.searchArticles.collectAsLazyPagingItems()
+                                            searchViewModel.searchArticles.collectAsLazyPagingItems()
                                         for (index in 0 until art.itemCount) {
                                             val article = art[index]
                                             ArticleCardForSearch(article!!) {
                                                 companyViewModel.myCompany = article.company!!
-//                                                    articleViewModel.articleCompany = article a determine
+                                                    articleViewModel.assignArticleCompany(article)
                                                 RouteController.navigateTo(Screen.ArticleDetailScreen)
-                                                clientViewModel.saveHitory(
+                                                searchViewModel.saveHitory(
                                                     searchCategory,
                                                     article.id!!
                                                 )
@@ -221,14 +190,13 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                     Column {
                                         when (history?.searchCategory) {
                                             SearchCategory.COMPANY -> {
-                                                Log.e("search","company ${history.company}")
                                                 CompanyCard(
                                                     history.company!!
                                                 ) {
-                                                    companyViewModel.myCompany = companySearch
+                                                    companyViewModel.myCompany = history.company
                                                     articleViewModel.companyId = history.company.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
-                                                    clientViewModel.saveHitory(
+                                                    searchViewModel.saveHitory(
                                                         searchCategory,
                                                         history.id!!
                                                     )
@@ -237,9 +205,9 @@ fun SearchScreen(modifier: Modifier = Modifier) {
 
                                             SearchCategory.USER -> {
                                                 UserCard(history.user!!, appViewModel) {
-                                                    appViewModel._user.value = history.user
+                                                    appViewModel.assignUser(history.user)
                                                     RouteController.navigateTo(Screen.UserScreen)
-                                                    clientViewModel.saveHitory(
+                                                    searchViewModel.saveHitory(
                                                         searchCategory,
                                                         history.user.id!!
                                                     )
@@ -250,10 +218,10 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 ArticleCardForSearch(
                                                     history.article!!
                                                 ) {
-                                                    companyViewModel.myCompany = companySearch
-                                                    articleViewModel.articleCompany = articleCompany
+                                                    companyViewModel.myCompany = history.article.company!!
+                                                    articleViewModel.assignArticleCompany( history.article)
                                                     RouteController.navigateTo(Screen.ArticleDetailScreen)
-                                                    clientViewModel.saveHitory(
+                                                    searchViewModel.saveHitory(
                                                         searchCategory,
                                                         history.id!!
                                                     )
@@ -316,7 +284,7 @@ fun SearchItem(item : SearchCategory,onClick : (SearchCategory) -> Unit) {
 }
 
 @Composable
-fun SearchTypeItem(appViewModel : AppViewModel, item : SearchType, searchCategory: SearchCategory, onClick : (SearchType) -> Unit) {
+fun SearchTypeItem( item : SearchType, searchCategory: SearchCategory, onClick : (SearchType) -> Unit) {
     LazyRow(Modifier.fillMaxWidth()) {
         items(SearchType.entries){
             if(searchCategory == SearchCategory.COMPANY && (it == SearchType.CLIENT || it == SearchType.PROVIDER || it == SearchType.OTHER)){

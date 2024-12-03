@@ -49,7 +49,8 @@ val articles = articleViewModel.articles.collectAsLazyPagingItems()
                         articleViewModel.article = article
                     }
                     if (add) {
-                        appViewModel.updateShow("add article for company")
+                        articleViewModel.upDate = false
+                        appViewModel.updateShow("ADD_ARTICLE_FOR_COMPANY")
                     }
                 }
             }
