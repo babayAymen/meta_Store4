@@ -107,7 +107,7 @@ class CategoryRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        categoryDao.clearAllCategoryTable()
+     //   categoryDao.clearAllCategoryTable()
         categoryDao.clearAllRemoteKeysTable()
     }
 }

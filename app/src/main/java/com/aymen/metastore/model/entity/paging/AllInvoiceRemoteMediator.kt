@@ -114,7 +114,7 @@ class AllInvoiceRemoteMediator(
 
 
     private suspend fun deleteCache(){
-        invoiceDao.clearAllTableAsProvider(id)
+      //  invoiceDao.clearAllTableAsProvider(id)
         invoiceDao.clearAllRemoteKeysTable()
     }
 }

@@ -54,7 +54,10 @@ fun ProviderScreen() {
                                onDelete = {
                                    Log.e("aymenbabatdelete", "delete $provider")
                                },
-                               appViewModel = appViewModel
+                               onUpdate = {
+                                   Log.e("aymenbabatdelete", "delete")
+
+                               }
                            ) { prvd ->
                                ProviderCard(
                                    prvd,

@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import androidx.room.Transaction
 import com.aymen.metastore.model.entity.model.Article
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Company
@@ -39,7 +40,8 @@ class ArticleViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val sharedViewModel : SharedViewModel,
     private val room : AppDatabase,
-    private val useCases: MetaUseCases
+    private val useCases: MetaUseCases,
+    private val appViewModel: AppViewModel
 )
     : ViewModel() {
 
@@ -73,11 +75,15 @@ class ArticleViewModel @Inject constructor(
     var article by mutableStateOf(Article())
     var allComments by mutableStateOf(emptyList<Comment>())
     var myComment by mutableStateOf("")
-
+    var upDate by mutableStateOf(false)
     init {
-        viewModelScope.launch {
+
             fetchRandomArticlesForHomePage(categoryName = CompanyCategory.DAIRY)
-        }
+//        if(sharedViewModel.accountType == AccountType.COMPANY) {
+//            sharedViewModel.company.value.id?.let {
+//            fetchAllMyArticlesApi(it)
+//            }
+//        }
     }
 
      fun fetchAllMyArticlesApi(companyId: Long) {
@@ -114,13 +120,17 @@ class ArticleViewModel @Inject constructor(
         fun addQuantityArticle(quantity: Double, articleId: Long) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                   repository.addQuantityArticle(quantity, articleId)
+                  repository.addQuantityArticle(quantity, articleId)
                 } catch (ex: Exception) {
                     Log.e("addQuantityArticle", "exception is : ${ex.message}")
                 }
             }
         }
 
+    fun assignarticleCompany(item : ArticleCompany){
+        _articleCompany.value = item
+        upDate = true
+    }
         fun getAllMyArticleContaining(articleLibel: String, searchType: SearchType) {
             viewModelScope.launch {
                 useCases.getAllMyArticleContaining(articleLibel, searchType, company.value?.id!!)
@@ -168,6 +178,19 @@ class ArticleViewModel @Inject constructor(
                 )
             }
         }
+
+    val articleCompanyDao = room.articleCompanyDao()
+
+    fun updateArticle(article : ArticleCompany){
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repository.updateArticle(article.toArticleCompanyDto())
+            if(response.isSuccessful){
+
+                appViewModel.updateShow("article")
+            }
+
+        }
+    }
 
         fun makeItAsFav(article: ArticleCompany) {
             viewModelScope.launch {

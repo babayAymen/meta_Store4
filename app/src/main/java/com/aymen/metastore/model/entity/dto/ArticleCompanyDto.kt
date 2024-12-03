@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
+import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
 
@@ -60,6 +61,26 @@ data class ArticleCompanyDto(
             sellingPrice = sellingPrice,
             isFav = isFav,
             article = article?.toArticleModel(),
+            isEnabledToComment = isEnabledToComment,
+            likeNumber = likeNumber
+        )
+    }
+    fun toRandomArticleCompany():RandomArticle{
+        return RandomArticle(
+            id,
+            unit,
+            cost,
+            quantity,
+            minQuantity,
+            sharedPoint,
+            categoryId = category?.id,
+            subCategoryId = subCategory?.id,
+            providerId = provider?.id,
+            companyId = company?.id,
+            isVisible = isVisible,
+            sellingPrice = sellingPrice,
+            isFav = isFav,
+            articleId = article?.id,
             isEnabledToComment = isEnabledToComment,
             likeNumber = likeNumber
         )

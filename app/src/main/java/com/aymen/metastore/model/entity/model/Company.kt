@@ -36,10 +36,33 @@ data class Company (
 ){
     fun toCompanyDto():CompanyDto{
         return CompanyDto(
-            id,
-            name,
-            code,
-            //...
+            id = id,
+            name = name,
+            code = code,
+            matfisc = matfisc,
+            address = address,
+            phone = phone,
+            bankaccountnumber = bankaccountnumber,
+            email = email,
+            capital = capital,
+            logo = logo,
+            workForce = workForce,
+            virtual = virtual,
+            rate = rate,
+            raters = raters,
+            user = user?.toUserDto(),
+            parentCompany = parentCompany?.toCompanyDto(),
+            category = category,
+            balance = balance,
+            isPointsSeller = isPointsSeller,
+            metaSeller = metaSeller,
+            longitude = longitude,
+            latitude = latitude,
+            isVisible = isVisible,
+            createdDate = createdDate,
+            lastModifiedDate = lastModifiedDate,
+            invoiceType = invoiceType
+
         )
     }
 }

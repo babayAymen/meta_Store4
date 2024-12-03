@@ -18,7 +18,8 @@ import com.aymen.store.model.repository.globalRepository.ServiceApi
 class NotAcceptedRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val id : Long
+    private val id : Long,
+    private val isProvider : Boolean
 ): RemoteMediator<Int, InvoiceWithClientPersonProvider>() {
 
     private val invoiceDao = room.invoiceDao()
@@ -56,7 +57,8 @@ class NotAcceptedRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllBuyHistoryByStatus(id, Status.INWAITING,currentPage, state.config.pageSize)
+            val response = if(isProvider)api.getAllBuyHistoryByStatus(id, Status.INWAITING,currentPage, state.config.pageSize)
+            else api.getAllMyInvoicesNotAccepted(id,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1

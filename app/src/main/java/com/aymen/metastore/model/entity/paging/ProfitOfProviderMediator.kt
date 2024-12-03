@@ -97,7 +97,7 @@ class ProfitOfProviderMediator(
                     purchaseOrderDao.insertOrder(response.map { order -> order.purchaseOrderLine?.purchaseorder?.toPurchaseOrder()!! })
                     categoryDao.insertCategory(response.map { cat -> cat.purchaseOrderLine?.article?.category?.toCategory()!! })
                     subCategoryDao.insertSubCategory(response.map { cat -> cat.purchaseOrderLine?.article?.subCategory?.toSubCategory()!! })
-                    articleDao.insertArticle(response.map { article -> article.purchaseOrderLine?.article?.article?.toArticle()!! })
+                    articleDao.insertArticle(response.map { article -> article.purchaseOrderLine?.article?.article?.toArticle(isMy = true)!! })
                     articleCompanyDao.insertArticle(response.map { article -> article.purchaseOrderLine?.article?.toArticleCompany(false)!! })
                     invoiceDao.insertInvoice(response.map { invoice -> invoice.purchaseOrderLine?.invoice?.toInvoice()!! })
                     purchaseOrderLineDao.insertOrderLine(response.map { line -> line.purchaseOrderLine?.toPurchaseOrderLine()!! })

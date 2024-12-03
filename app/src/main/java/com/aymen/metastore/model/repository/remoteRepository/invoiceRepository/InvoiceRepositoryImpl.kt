@@ -97,7 +97,13 @@ class InvoiceRepositoryImpl @Inject constructor(
                                         ) = api.addInvoice(commandLineDtos,clientId,invoiceCode,discount,
         clientTYpe, invoiceMode)
 
-    override suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status) = api.getAllMyInvoicesNotAccepted(id , status)
+    override suspend fun getAllMyInvoicesAsClientAndStatus(
+        id: Long,
+        status: Status
+    ): Response<List<InvoiceDto>> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = api.acceptInvoice(invoiceId , status)
     override suspend fun getAllMyPaymentNotAccepted(companyId: Long): Response<List<InvoiceDto>> {
         TODO("Not yet implemented")

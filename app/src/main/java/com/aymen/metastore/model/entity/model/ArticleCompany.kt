@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.entity.model
 
+import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
 
@@ -22,4 +23,27 @@ data class ArticleCompany (
     var article : Article? = null,
     var isEnabledToComment : Boolean? = false,
     val likeNumber : Long? = null,
-)
+) {
+    fun toArticleCompanyDto(): ArticleCompanyDto {
+        return ArticleCompanyDto(
+            id = id,
+            unit = unit,
+            cost = cost,
+            quantity = quantity,
+            minQuantity = minQuantity,
+            sharedPoint = sharedPoint,
+            margin = margin,
+            category = category?.toCategoryDto(),
+            subCategory = subCategory?.toSubCategoryDto(),
+            provider = provider?.toCompanyDto(),
+            company = company?.toCompanyDto(),
+            isVisible = isVisible,
+            sellingPrice = sellingPrice,
+            isFav = isFav,
+            article = article?.toArticleDto(),
+            isEnabledToComment = isEnabledToComment,
+            likeNumber = likeNumber
+
+        )
+    }
+}

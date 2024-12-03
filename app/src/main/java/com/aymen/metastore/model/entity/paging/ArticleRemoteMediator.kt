@@ -67,7 +67,7 @@ class ArticleRemoteMediator(
                         )
                     })
 
-                    articleDao.insertArticle(response.map {article -> article.toArticle() })
+                    articleDao.insertArticle(response.map {article -> article.toArticle(isMy = false) })
 
                 } catch (ex: Exception) {
                     Log.e("errorinvoice", "article ${ex.message}")
@@ -103,7 +103,7 @@ class ArticleRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        articleDao.clearAllArticle()
+      //  articleDao.clearAllArticle()
         articleDao.clearAllArticleRemoteKeys()
     }
 }

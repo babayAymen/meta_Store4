@@ -8,10 +8,12 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
+import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleContainingRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.store.model.Enum.CompanyCategory
 import kotlinx.coroutines.flow.Flow
 
@@ -21,9 +23,27 @@ interface ArticleCompanyDao {
     @Upsert
     suspend fun insertArticle(article: List<ArticleCompany>)
 
+    @Upsert
+    suspend fun insertSigleArticle(article: ArticleCompany)
+
+    @Upsert
+    suspend fun insertSingleKey(key : ArticleRemoteKeysEntity)
+
+    @Query("UPDATE article_company SET quantity = quantity + :quantity WHERE id = :articleId")
+    suspend fun upDateQuantity(articleId : Long, quantity: Double)
+
+    @Query("DELETE FROM article_company WHERE id = :id")
+    suspend fun clearArticleById(id : Long)
+
+    @Query("DELETE FROM article_remote_keys_table WHERE id = :id")
+    suspend fun clearRemoteKeyById(id : Long)
+
+    @Upsert
+    suspend fun insertRandomArticle(article: List<RandomArticle>)
+
     @Transaction
-    @Query("SELECT * FROM article_company WHERE isRandom = 1 ")
-     fun getRandomArticles(): PagingSource<Int,ArticleWithArticleCompany>
+    @Query("SELECT * FROM random_article_company  ")
+     fun getRandomArticles(): PagingSource<Int, RandomArticleChild>
 
     @Transaction
     @Query("SELECT ac.* FROM article_company AS ac JOIN article AS a ON ac.articleId = a.id WHERE isRandom = 1 AND a.category = :categoryName")
@@ -53,16 +73,6 @@ interface ArticleCompanyDao {
     @Query("UPDATE article_company SET isFav = :isFave WHERE id = :articleId")
     suspend fun chageIsFav(articleId : Long , isFave : Boolean)
 
-    @Transaction
-    @Query(" SELECT ac.* FROM article_company AS ac JOIN company AS c ON ac.companyId = c.companyId WHERE c.category = :category")
-    suspend fun getArticlesByCompanyCategory(category: CompanyCategory): List<ArticleWithArticleCompany>
-
-    @Query("SELECT * FROM article_company WHERE categoryId = :categoryId AND companyId = :companyId")
-    suspend fun getAllArticlesByCategoryIdAndCompanyId(categoryId : Long , companyId : Long) : List<ArticleCompany>
-
-    @Query("SELECT * FROM article_company WHERE subCategoryId = :subCategoryId AND companyId = :companyId")
-    suspend fun getAllArticlesBySubCategoryIdAndCompanyId(subCategoryId : Long , companyId : Long) : List<ArticleCompany>
-
 
     @Query("SELECT * FROM article_company WHERE id = :articleId")
     suspend fun getArticleCompanyById(articleId : Long) : ArticleCompany
@@ -84,6 +94,9 @@ interface ArticleCompanyDao {
 
     @Query("DELETE FROM article_company WHERE isRandom = 1")
     suspend fun clearAllArticleCompanyTable()
+
+    @Query("DELETE FROM random_article_company")
+    suspend fun clearAllRandomArticleCompanyTable()
 
     @Query("DELETE FROM article_containing_remote_keys")
     suspend fun clearAllArticleContainingRemoteKeysTable()

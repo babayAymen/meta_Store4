@@ -82,7 +82,6 @@ fun DashBoardScreen() {
             }
         }
         "add article" -> {
-//            AddArticleScreen()
             ArticlesScreenForCompanyByCategory()
         }
         "add article for company" -> {

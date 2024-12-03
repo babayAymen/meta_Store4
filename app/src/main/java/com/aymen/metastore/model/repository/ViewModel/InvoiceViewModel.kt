@@ -74,6 +74,23 @@ class InvoiceViewModel @Inject constructor(
     val company by mutableStateOf(sharedViewModel.company.value)
     var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
 
+
+//
+//    private val _myAllBuyHistory : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+//    val myAllBuyHistory: StateFlow<PagingData<Invoice>> get() = _myAllBuyHistory
+
+    private val _inComplete : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val inComplete: StateFlow<PagingData<Invoice>> get() = _inComplete
+
+    private val _paid : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val paid: StateFlow<PagingData<Invoice>> get() = _paid
+
+    private val _notPaid : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val notPaid: StateFlow<PagingData<Invoice>> get() = _notPaid
+
+    private val _notAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val notAccepted: StateFlow<PagingData<Invoice>> get() = _notAccepted
+
     fun startScan(onScan : (ArticleCompany?) ->Unit){
         viewModelScope.launch(Dispatchers.Main) {
             barcodeScanner.startScan().toString().also {
@@ -98,35 +115,87 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
+
+    fun getAllMyPaymentFromInvoicee(status : PaymentStatus, isProvider : Boolean){
+        viewModelScope.launch{
+            when(status){
+                PaymentStatus.NOT_PAID -> {
+                    useCases.getNotPaidInvoice(company.id!!, isProvider)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _notPaid.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                        }
+
+                }
+                PaymentStatus.PAID -> {
+                    useCases.getPaidInvoice(company.id!!,isProvider)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _paid.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                        }
+
+                }
+                PaymentStatus.INCOMPLETE -> {
+                    useCases.getInCompleteInvoice(company.id!!,isProvider)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _inComplete.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                        }
+
+                }
+
+                PaymentStatus.ALL -> {
+                    useCases.getAllInvoices(company.id!!)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _myInvoicesAsProvider.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                        }
+                }
+            }
+
+        }
+    }
+
+    fun getAllMyPaymentNotAccepted(isProvider : Boolean){
+        viewModelScope.launch {
+            useCases.getNotAcceptedInvoice(company.id!!,isProvider)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _notAccepted.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                }
+        }
+    }
     init {
         when(sharedViewModel.accountType){
             AccountType.COMPANY -> {
-                getAllMyInvoicesAsProvider()
-                getAllMyInvoicesAsClient(sharedViewModel.company.value.id!!)
+               // getAllMyInvoicesAsProvider()
+                getAllMyPaymentFromInvoicee(PaymentStatus.ALL, true)
+                getAllMyInvoicesAsClient(sharedViewModel.company.value.id!!, PaymentStatus.ALL)
             }
             AccountType.USER -> {
-                getAllMyInvoicesAsClient(sharedViewModel.user.value.id!!)
+                getAllMyInvoicesAsClient(sharedViewModel.user.value.id!!, PaymentStatus.ALL)
                 getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id!!)
             }
             AccountType.AYMEN -> TODO()
         }
     }
+//
+//    fun getAllMyInvoicesAsProvider(){
+//        viewModelScope.launch {
+//            useCases.getAllInvoices(sharedViewModel.company.value.id!!)
+//                .distinctUntilChanged()
+//                .cachedIn(viewModelScope)
+//                .collect{
+//                    _myInvoicesAsProvider.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+//                }
+//        }
+//    }
 
-    fun getAllMyInvoicesAsProvider(){
-        viewModelScope.launch {
-            useCases.getAllInvoices(sharedViewModel.company.value.id!!)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect{
-                    _myInvoicesAsProvider.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                }
-        }
-    }
-
-    fun getAllMyInvoicesAsProviderAndPaymentStatus(status : PaymentStatus){
-        viewModelScope.launch (Dispatchers.IO) {
-        }
-    }
 
     fun getAllMyInvoiceAsClientAndStatus(status : Status, id : Long){
         viewModelScope.launch(Dispatchers.IO) {
@@ -140,16 +209,23 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
-    fun getAllMyInvoicesAsClient(id : Long){
+    fun getAllMyInvoicesAsClient(id : Long, paymentStatus : PaymentStatus){
         viewModelScope.launch(Dispatchers.IO) {
-
-                useCases.getAllInvoicesAsClient(id, sharedViewModel.accountType)
-                    .distinctUntilChanged()
-                    .cachedIn(viewModelScope)
-                    .collect {
-                        _myInvoicesAsClient.value =
-                            it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                when(paymentStatus){
+                    PaymentStatus.NOT_PAID -> TODO()
+                    PaymentStatus.PAID -> TODO()
+                    PaymentStatus.INCOMPLETE -> TODO()
+                    PaymentStatus.ALL -> {
+                        useCases.getAllInvoicesAsClient(id, sharedViewModel.accountType)
+                            .distinctUntilChanged()
+                            .cachedIn(viewModelScope)
+                            .collect {
+                                _myInvoicesAsClient.value =
+                                    it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                            }
                     }
+                }
+
         }
     }
 

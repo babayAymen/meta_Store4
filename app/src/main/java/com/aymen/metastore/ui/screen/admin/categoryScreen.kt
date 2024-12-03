@@ -63,7 +63,10 @@ fun CategoryScreen() {
                         SwipeToDeleteContainer(
                             item = category,
                             onDelete = { /* handle delete action */ },
-                            appViewModel = appViewModel
+                            onUpdate = {
+                                Log.e("aymenbabatdelete", "delete")
+
+                            }
                         ) { categoryItem ->
                             CategoryCardForAdmin(
                                 category = categoryItem,

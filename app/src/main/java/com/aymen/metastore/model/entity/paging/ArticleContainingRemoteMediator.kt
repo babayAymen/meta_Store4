@@ -80,7 +80,7 @@ class ArticleContainingRemoteMediator(
                     companyDao.insertCompany(response.map { company -> company.provider?.toCompany()!! })
                     categoryDao.insertCategory(response.map {category -> category.category?.toCategory()!! })
                     subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
-                    articleDao.insertArticle(response.map {article -> article.article?.toArticle()!! })
+                    articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = false)!! })
                         articleCompanyDao.insertArticle(response.map { it.toArticleCompany(true) })
 
                 } catch (ex: Exception) {

@@ -6,7 +6,7 @@ import com.aymen.store.model.repository.remoteRepository.paymentRepository.Payme
 import kotlinx.coroutines.flow.Flow
 
 class GetNotAcceptedInvoice (private val repository: PaymentRepository) {
-    operator fun invoke(id : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>> {
-        return repository.getNotAcceptedInvoice(id)
+    operator fun invoke(id : Long, isProvider : Boolean) : Flow<PagingData<InvoiceWithClientPersonProvider>> {
+        return repository.getNotAcceptedInvoice(id, isProvider)
     }
 }

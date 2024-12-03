@@ -140,8 +140,6 @@ interface ServiceApi {
                            @Path("clientType") clientType : AccountType,
                            @Path("invoiceMode") invoiceMode: InvoiceMode
                            ):Response<Void>
-    @GET("werehouse/invoice/get_all_my_invoices_not_accepted/{id}/{status}")
-    suspend fun getAllMyInvoicesNotAccepted(@Path("id") id : Long ,@Path("status") status: Status):Response<List<InvoiceDto>>
     @GET("werehouse/invoice/response/{invoiceId}/{status}")
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
     @GET("werehouse/commandline/getcommandline/{invoiceId}")
@@ -189,7 +187,9 @@ interface ServiceApi {
     @GET("werehouse/article/get_comments/{articleId}")
     suspend fun getComments(@Path("articleId") articleId : Long):Response<List<CommentDto>>
     @GET("werehouse/article/{articleId}/{quantity}")
-    suspend fun addQuantityArticle(@Path("quantity") quantity : Double, @Path("articleId") articleId : Long ): Response<Void>
+    suspend fun addQuantityArticle(@Path("quantity") quantity : Double, @Path("articleId") articleId : Long ): Response<ArticleCompanyDto>
+    @PUT("werehouse/article/update")
+    suspend fun updateArticle(@Body article : ArticleCompanyDto) : Response<ArticleCompanyDto>
     @POST("werehouse/point/")
     suspend fun sendPoints(@Body pointsPayment: PointsPaymentDto):Response<Void>
     @POST("api/auth/refresh")
@@ -312,13 +312,20 @@ interface ServiceApi {
     suspend fun getAllBuyHistory(@Path("id")id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
 
     @GET("werehouse/invoice/get_by_payment_paid_status/{id}")
-    suspend fun getAllBuyHistoryByPaidStatus(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+    suspend fun getAllBuyHistoryByPaidStatusAsProvider(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+
+    @GET("werehouse/invoice/get_by_payment_paid_status_as_client/{id}")
+    suspend fun getAllBuyHistoryByPaidStatusAsClient(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
 
     @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_client/{id}")
     suspend fun getAllBuyHistoryByStatusAsClient(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
 
     @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_provider/{id}")
     suspend fun getAllBuyHistoryByStatus(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+
+    @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_client/{id}")
+    suspend fun getAllMyInvoicesNotAccepted(@Path("id") id : Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
+
 
     @GET("werehouse/point/get_all_my_payment/{id}")
     suspend fun getAllProvidersProfit(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PaymentForProvidersDto>

@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.admin
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.aymen.metastore.model.entity.model.ArticleCompany
@@ -77,23 +79,15 @@ fun AddArticleScreen(){
             contract = ActivityResultContracts.PickVisualMedia(),
             onResult = {uri -> image = uri }
         )
-        LaunchedEffect(Unit){
-//            categoryViewModel.getAllCategoryByCompany(0)
-//            companyViewModel.getAllMyProvider()
-        }
         val categories = categoryViewModel.categories.collectAsLazyPagingItems()
 
         LaunchedEffect(categoryViewModel.category) {
-//            categoryViewModel.category.id?.let { subCategoryViewModel.insertsubcategory(it) }
-//            categoryViewModel.category.id?.let {
-//                subCategoryViewModel.getAllSubCtaegoriesByCategory(
-//                    it,sharedViewModel.company.value.id!!
-//                )
-//            }
+
         }
         val subcategories = subCategoryViewModel.subCategories.collectAsLazyPagingItems()
         val context = LocalContext.current
-        val articleCompany = ArticleCompany()
+        var articleCompany = ArticleCompany()
+
         val gson = Gson()
         var tva by remember {
             mutableDoubleStateOf(0.0)
@@ -134,6 +128,18 @@ fun AddArticleScreen(){
         var subCategory by remember {
             mutableStateOf(SubCategory())
         }
+        if(articleViewModel.upDate){
+            val articlee = articleViewModel.articleCompany.collectAsStateWithLifecycle()
+            Log.e("articleCompany","from view model : $articlee")
+            articleCompany = articlee.value!!
+            quantity = articlee.value?.quantity?:0.0
+            minQuantity = articlee.value?.minQuantity?:0.0
+            cost = articlee.value?.cost?:0.0
+            sellingPrice = articlee.value?.sellingPrice?:0.0
+            unitItem = articlee.value?.unit?:UnitArticle.U
+            privacy = articlee.value?.isVisible?:PrivacySetting.PUBLIC
+            subCategory = articlee.value?.subCategory?:SubCategory()
+        }
         val providers = providerViewModel.providers.collectAsLazyPagingItems()
 
         LazyColumn(
@@ -144,7 +150,7 @@ fun AddArticleScreen(){
                     modifier = Modifier.fillMaxSize()
                 ) {
 
-                    if (article.id == null) {
+                    if (false) {
                         Column(
                             modifier = Modifier
                                 .padding(2.dp)
@@ -341,7 +347,7 @@ fun AddArticleScreen(){
                 Row {
                     DropDownCompany(list = providers)
                 }
-                if(article.id == null) {
+                if(false) {
                 ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
                     singlePhotoPickerLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -387,12 +393,19 @@ fun AddArticleScreen(){
                             val articleJsonString = gson.toJson(articleCompany)
                             val projsonstring = gson.toJson(companyViewModel.myCompany)
                             val arstring = articleJsonString+projsonstring
-                            if (articleJsonString.isNotEmpty() && photo != null && article.id != null) {
+                            if(!articleViewModel.upDate) {
+                                if (articleJsonString.isNotEmpty() && photo != null && article.id != null) {
 //                                articleViewModel.addArticle(articleCompany,articleJsonString, photo)
-                            } else {
-                                articleViewModel.addArticleWithoutImage(articleCompany,articleJsonString)
+                                } else {
+                                    articleViewModel.addArticleWithoutImage(
+                                        articleCompany,
+                                        articleJsonString
+                                    )
+                                }
+                            }else{
+                                Log.e("articleCompany","article company : $articleCompany")
+                                articleViewModel.updateArticle(articleCompany)
                             }
-                            appViewModel.updateShow("article")
                         }
                     }
 

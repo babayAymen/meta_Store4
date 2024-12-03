@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.admin
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -36,8 +38,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.dependencyInjection.BASE_URL
@@ -46,6 +50,7 @@ import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ArticleCardForAdmin
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.LodingShape
 import com.aymen.metastore.ui.component.addQuantityDailog
 import kotlinx.coroutines.delay
 
@@ -55,11 +60,9 @@ fun ArticleScreen() {
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val sharedViewModel = hiltViewModel<SharedViewModel>()
     val adminArticles = articleViewModel.adminArticles.collectAsLazyPagingItems()
+    val context = LocalContext.current
     LaunchedEffect(key1 = Unit) {
         sharedViewModel.company.value.id?.let { articleViewModel.fetchAllMyArticlesApi(it) }
-    }
-    var isSelected by remember {
-        mutableStateOf(false)
     }
     var articleIndex by remember {
         mutableIntStateOf(-1)
@@ -87,30 +90,52 @@ fun ArticleScreen() {
                     .fillMaxWidth()
             ){
                 LazyColumn {
+                    adminArticles.loadState.apply {
+                        if (refresh is LoadState.Loading) {
+                            item {
+                                LodingShape()
+                            }
+                        }
+                        if (refresh is LoadState.Error) {
+                            item {
+                                Toast.makeText(context,
+                                    (refresh as LoadState.Error).error.localizedMessage, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                     items(
                        count =  adminArticles.itemCount,
                         key = adminArticles.itemKey{ it.id!! },
                     ){ index ->
                         val articleCompany = adminArticles[index]
-                        Log.e("article","article : $articleCompany")
+                        var addQuantity by remember {
+                            mutableStateOf(false)
+                        }
+                        var update by remember {
+                            mutableStateOf(false)
+                        }
                         if(articleCompany != null) {
                             SwipeToDeleteContainer(
                                 articleCompany,
                                 onDelete = {
                                     Log.e("aymenbabatdelete", "delete")
                                 },
-                                appViewModel = appViewModel,
+                                onUpdate = {item ->
+                                    articleViewModel.assignarticleCompany(item)
+                                    appViewModel.updateShow("add article for company")
+
+                                }
                             ) { article ->
                                 ArticleCardForAdmin(
                                     articleCompany,
-                                    image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.company?.category!!.ordinal}"
+                                    image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.article?.category!!.ordinal}"
                                 ) {
-                                    isSelected = true
+                                    addQuantity = true
                                 }
-                                if (isSelected) {
+                                if (addQuantity) {
                                     addQuantityDailog(article, true) {
                                         articleViewModel.addQuantityArticle(it, article.id!!)
-                                        isSelected = false
+                                        addQuantity = false
                                         articleIndex = -1
                                     }
                                 }
@@ -129,9 +154,11 @@ fun ArticleScreen() {
 fun DeleteArticle(
     swipeDismissState : SwipeToDismissBoxState
 ) {
-    val color = if(swipeDismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart){
-        Color.Red
-    }else Color.Transparent
+    val color = when(swipeDismissState.dismissDirection){
+        SwipeToDismissBoxValue.EndToStart ->Color.Red
+        SwipeToDismissBoxValue.StartToEnd -> Color.Green
+        SwipeToDismissBoxValue.Settled -> Color.Transparent
+    }
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -139,7 +166,7 @@ fun DeleteArticle(
         .padding(16.dp),
         contentAlignment = Alignment.CenterEnd
     ){
-        Icon(imageVector = Icons.Default.Delete
+        Icon(imageVector = if(swipeDismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart)Icons.Default.Delete else Icons.Filled.Update
             , contentDescription = null,
             tint = Color.White
         )
@@ -151,8 +178,8 @@ fun DeleteArticle(
 fun <T> SwipeToDeleteContainer(
     item : T,
     onDelete: (T) -> Unit,
+    onUpdate: (T) -> Unit,
     animationDuration: Int = 500,
-    appViewModel: AppViewModel,
     content : @Composable (T) -> Unit
 ){
     var isRemoved by remember {
@@ -164,32 +191,29 @@ fun <T> SwipeToDeleteContainer(
     val state = rememberSwipeToDismissBoxState(
         confirmValueChange = {value ->
             if(value == SwipeToDismissBoxValue.EndToStart){
-//                isRemoved = true
                 showDialog = true
+
             }
-            if(value == SwipeToDismissBoxValue.StartToEnd ) {
-            // Swipe from start to end - add article
-            appViewModel.updateShow("add article")
-            false // No need to show confirmation, directly add the article
-        }else{
+            if(value == SwipeToDismissBoxValue.StartToEnd){
+                onUpdate(item)
+            false
+        }
+            else{
                 false
             }
         }
     )
-
     LaunchedEffect(key1 = isRemoved) {
         if(isRemoved){
             delay(animationDuration.toLong())
         }
     }
-
     AnimatedVisibility(visible = !isRemoved,
         exit = shrinkVertically (
             animationSpec = tween(durationMillis = animationDuration),
             shrinkTowards = Alignment.Top
         ) + fadeOut()
     ) {
-
         SwipeToDismissBox(
             state = state,
             backgroundContent = { DeleteArticle(swipeDismissState = state) },
@@ -218,7 +242,7 @@ fun ShowConfirmDialog( onConfirm: (Boolean) -> Unit) {
     AlertDialog(
         onDismissRequest = { showDialog = false },
         title = { Text(text = "Confirm Deletion") },
-        text = { Text(text = "Are you sure you want to delete this item?") },
+        text = { Text(text = "Are you sure to delete this item?") },
         confirmButton = {
             Button(
                 onClick = {
@@ -246,77 +270,6 @@ fun ShowConfirmDialog( onConfirm: (Boolean) -> Unit) {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UpdateArticle(
-    swipeDismissState : SwipeToDismissBoxState
-) {
-    val color = if(swipeDismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd){
-        Color.Green
-    }else Color.Transparent
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(color)
-        .padding(16.dp),
-        contentAlignment = Alignment.CenterEnd
-    ){
-        Icon(imageVector = Icons.Default.Update
-            , contentDescription = null,
-            tint = Color.White
-        )
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun <T> SwipeToUpdateContainer(
-    item : T,
-    appViewModel: AppViewModel,
-    animationDuration: Int = 500,
-    content : @Composable (T) -> Unit
-){
-    var isUpdated by remember {
-        mutableStateOf(false)
-    }
-
-
-
-    val state = rememberSwipeToDismissBoxState(
-        confirmValueChange = {value ->
-            if(value == SwipeToDismissBoxValue.StartToEnd){
-                isUpdated = true
-                true
-            }else{
-                false
-            }
-
-        }
-    )
-
-    LaunchedEffect(key1 = isUpdated) {
-        if(isUpdated){
-            delay(animationDuration.toLong())
-        }
-    }
-
-    if(isUpdated){
-       appViewModel.updateShow("add article")
-    }
-    AnimatedVisibility(visible = !isUpdated,
-        exit = shrinkVertically (
-            animationSpec = tween(durationMillis = animationDuration),
-            shrinkTowards = Alignment.Top
-        ) + fadeOut()
-    ) {
-
-        SwipeToDismissBox(
-            state = state,
-            backgroundContent = { UpdateArticle(swipeDismissState = state) },
-            enableDismissFromEndToStart = true,
-            content = {content(item)}
-        )
-    }
-}
 
 

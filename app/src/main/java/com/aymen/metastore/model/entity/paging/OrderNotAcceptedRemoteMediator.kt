@@ -87,7 +87,7 @@ class OrderNotAcceptedRemoteMediator(
                     companyDao.insertCompany(response.map { company -> company.article?.provider?.toCompany() })
                     categoryDao.insertCategory(response.map {category -> category.article?.category?.toCategory()!! })
                     subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory()?:SubCategory() })
-                    articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle()!! })
+                    articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true)!! })
                     articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(true)!! })
                     userDao.insertUser(response.map { user -> user.purchaseorder?.person?.toUser() })
                     userDao.insertUser(response.map { user -> user.purchaseorder?.company?.user?.toUser() })

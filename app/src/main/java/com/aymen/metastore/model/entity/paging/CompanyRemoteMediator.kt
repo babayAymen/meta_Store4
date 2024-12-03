@@ -139,7 +139,7 @@ class CompanyRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        searchHistoryDao.clearAllSearchHistoryTable()
+      //  searchHistoryDao.clearAllSearchHistoryTable()
         searchHistoryDao.clearAllSearchHistoryRemoteKeysTable()
     }
 }

@@ -112,7 +112,7 @@ class ClientRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        companyClientRelationDao.clearAllClientTable(id)
+      //  companyClientRelationDao.clearAllClientTable(id)
         companyClientRelationDao.clearClientRemoteKeysTable()
     }
 }

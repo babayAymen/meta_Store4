@@ -38,11 +38,6 @@ class PaymentViewModel @Inject constructor(
   private val _paymentsEspeceByDate : MutableStateFlow<PagingData<PaymentForProviders>> = MutableStateFlow(PagingData.empty())
     val paymentsEspeceByDate: StateFlow<PagingData<PaymentForProviders>> get() = _paymentsEspeceByDate
 
-    private val _myAllBuyHistory : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val myAllBuyHistory: StateFlow<PagingData<Invoice>> get() = _myAllBuyHistory
-
-    private val _inComplete : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val inComplete: StateFlow<PagingData<Invoice>> get() = _inComplete
 
     init {
         when(sharedViewModel.accountType){
@@ -51,7 +46,6 @@ class PaymentViewModel @Inject constructor(
             }
             AccountType.COMPANY -> {
                 getAllMyPaymentsEspece(sharedViewModel.company.value.id!!)
-                getAllMyPaymentFromInvoicee(PaymentStatus.ALL)
 
             }
             AccountType.AYMEN -> TODO()
@@ -81,60 +75,6 @@ class PaymentViewModel @Inject constructor(
         }
     }
 
-    fun getAllMyPaymentFromInvoicee(status : PaymentStatus){
-        viewModelScope.launch{
-            when(status){
-                PaymentStatus.NOT_PAID -> {
-                    useCases.getNotPaidInvoice(company.id!!)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _myAllBuyHistory.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-
-                }
-                PaymentStatus.PAID -> {
-                    useCases.getPaidInvoice(company.id!!)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _myAllBuyHistory.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-
-                }
-                PaymentStatus.INCOMPLETE -> {
-                    useCases.getInCompleteInvoice(company.id!!)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _inComplete.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-
-                }
-
-                PaymentStatus.ALL -> {
-                    useCases.getAllInvoices(company.id!!)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _myAllBuyHistory.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-                }
-            }
-
-        }
-    }
-
-    fun getAllMyPaymentNotAccepted(){
-        viewModelScope.launch {
-            useCases.getNotAcceptedInvoice(company.id!!)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect{
-                    _myAllBuyHistory.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                }
-        }
-    }
 
 //    @Transaction
 //    suspend fun insertPayment(payment : PaymentForProvidersDto){

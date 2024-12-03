@@ -81,7 +81,7 @@ class AllSearchRemoteMediator(
                             companyDao.insertCompany(response.filter { article -> article.article != null}.map{article -> article.article?.company?.toCompany()})
                             categoryDao.insertCategory(response.filter { article -> article.article != null}.map { article -> article.article?.category?.toCategory()!! })
                             subCategoryDao.insertSubCategory(response.filter { article -> article.article != null}.map { article -> article.article?.subCategory?.toSubCategory()!! })
-                            articleDao.insertArticle(response.filter { article -> article.article != null}.map { article -> article.article?.article?.toArticle()!! })
+                            articleDao.insertArticle(response.filter { article -> article.article != null}.map { article -> article.article?.article?.toArticle(isMy = true)!! })
                             articleCompanyDao.insertArticle(response.filter { article -> article.article != null}.map { article -> article.article?.toArticleCompany(true)!! })
                             userDao.insertUser(response.filter { article -> article.company != null}.map { company -> company.user?.toUser()})
                             companyDao.insertCompany(response.filter { article -> article.company != null}.map { company -> company.company?.toCompany() })

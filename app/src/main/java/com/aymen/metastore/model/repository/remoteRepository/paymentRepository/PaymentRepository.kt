@@ -9,8 +9,8 @@ import retrofit2.Response
 interface PaymentRepository {
     suspend fun getAllMyPaymentsEspeceByDate(date : String,findate : String):Response<List<PaymentForProvidersDto>>
     fun getAllMyBuyHistory(id : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
-    fun getPaidInvoice(id : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
-    fun getNotPaidInvoice(id : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
-    fun getInCompleteInvoice(id : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
-    fun getNotAcceptedInvoice(id : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
+    fun getPaidInvoice(id : Long, isProvider : Boolean) : Flow<PagingData<InvoiceWithClientPersonProvider>>
+    fun getNotPaidInvoice(id : Long, isProvider : Boolean) : Flow<PagingData<InvoiceWithClientPersonProvider>>
+    fun getInCompleteInvoice(id : Long, isProvider : Boolean) : Flow<PagingData<InvoiceWithClientPersonProvider>>
+    fun getNotAcceptedInvoice(id : Long, isProvider : Boolean) : Flow<PagingData<InvoiceWithClientPersonProvider>>
 }

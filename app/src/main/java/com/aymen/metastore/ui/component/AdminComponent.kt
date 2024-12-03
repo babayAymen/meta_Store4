@@ -445,6 +445,7 @@ fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: ()
                     NormalText(value = article.unit.toString(), aligne = TextAlign.Start)
                     NormalText(value = article.article?.tva.toString(), aligne = TextAlign.Start)
                     NormalText(value = article.sellingPrice.toString(), aligne = TextAlign.Start)
+                    NormalText(value = article.quantity.toString(), aligne = TextAlign.Start)
                     NormalText(value = article.minQuantity.toString(), aligne = TextAlign.Start)
                     article.article?.barcode?.let { NormalText(value = it, aligne = TextAlign.Start) }
                     article.article?.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
@@ -670,7 +671,7 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
                  modifier = Modifier.weight(2f)
              ) {
 
-            NormalText(value = article.libelle, aligne = TextAlign.Start)
+            NormalText(value = article.libelle?:"", aligne = TextAlign.Start)
             NormalText(value = article.tva.toString(), aligne = TextAlign.Start)
             article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
              }

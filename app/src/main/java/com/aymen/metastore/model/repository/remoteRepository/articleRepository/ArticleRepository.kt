@@ -7,6 +7,7 @@ import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.util.Resource
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
@@ -20,7 +21,7 @@ interface ArticleRepository {
     suspend fun getRandomArticlesBySubCategory(subcategoryId : Long , companyId: Long) : Response<List<ArticleCompanyDto>>
 
      fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>
-     fun getRandomArticles(categoryName : CompanyCategory): Flow<PagingData<ArticleWithArticleCompany>>
+     fun getRandomArticles(categoryName : CompanyCategory): Flow<PagingData<RandomArticleChild>>
      fun getArticleDetails(id : Long) : Flow<Resource<ArticleCompany>>
      fun getAllMyArticleContaining(libelle : String, searchType: SearchType, companyId : Long) : Flow<PagingData<ArticleWithArticleCompany>>
      fun getAllArticlesByCategor(companyId : Long, companyCategory: CompanyCategory): Flow<PagingData<Article>>
@@ -35,5 +36,6 @@ interface ArticleRepository {
     suspend fun likeAnArticle(articleId : Long, isFav : Boolean) : Response<Void>
     suspend fun sendComment(comment : String, articleId : Long) : Response<Void>
     suspend fun getComments(articleId : Long) : Response<List<CommentDto>>
-    suspend fun addQuantityArticle(quantity : Double, articleId : Long) : Response<Void>
+    suspend fun addQuantityArticle(quantity : Double, articleId : Long) : Response<ArticleCompanyDto>
+    suspend fun updateArticle(article : ArticleCompanyDto) : Response<ArticleCompanyDto>
 }

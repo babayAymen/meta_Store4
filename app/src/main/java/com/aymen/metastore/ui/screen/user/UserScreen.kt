@@ -1,5 +1,6 @@
 package com.aymen.metastore.ui.screen.user
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -67,6 +68,7 @@ fun UserScreen() {
         mutableStateOf(company.isPointsSeller)
     }
     val user by appViewModel.user.collectAsStateWithLifecycle()
+    Log.e("userrrr","user : $user")
     var rating by remember {
         mutableStateOf(false)
     }
@@ -109,11 +111,10 @@ fun UserScreen() {
                 Row(
                     modifier = Modifier.padding(2.dp)
                 ) {
-                    userDetails(
+                    UserDetails(
                         messageViewModel,
                         appViewModel,
                         clientViewModel,
-                        companyViewModel,
                         ratingViewModel,
                         user,
                         isPointSeller!!
@@ -142,7 +143,7 @@ fun UserScreen() {
 }
 
 @Composable
-fun userDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
+fun UserDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel, clientViewModel: ClientViewModel,
                 ratingViewModel : RatingViewModel, user: User, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     Row {
         Row(

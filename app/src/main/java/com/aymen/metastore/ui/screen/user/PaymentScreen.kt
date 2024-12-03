@@ -36,6 +36,7 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.model.repository.ViewModel.PaymentViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
@@ -47,6 +48,7 @@ import com.aymen.metastore.ui.screen.admin.SwipeToDeleteContainer
 @Composable
 fun PaymentScreen() {
     val appViewModel: AppViewModel = hiltViewModel()
+    val invoiceViewModel: InvoiceViewModel = hiltViewModel()
     val paymentViewModel: PaymentViewModel = hiltViewModel()
     val pointPaymentViewModel: PointsPaymentViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
@@ -143,7 +145,7 @@ fun PaymentScreen() {
             }
             when (show) {
                 "payment" -> PaymentView(appViewModel, pointPaymentViewModel)
-                "buyhistory" -> BuyView(appViewModel, paymentViewModel)
+                "buyhistory" -> BuyView(appViewModel, invoiceViewModel)
                 "profit" -> if (type == AccountType.COMPANY && company.metaSeller == true) {
                         ProfitView(pointPaymentViewModel, paymentViewModel, appViewModel)
                     }
@@ -168,7 +170,10 @@ fun PaymentView( appViewModel: AppViewModel, pointPaymentViewModel : PointsPayme
                     onDelete = {
                         Log.e("aymenbabatdelete", "delete")
                     },
-                    appViewModel = appViewModel
+                    onUpdate = {
+                        Log.e("aymenbabatdelete", "delete")
+
+                    }
                 ) { pointPay ->
                     Text(text = pointPay.provider?.name + " has sent " + pointPay.amount + " points for " + if (pointPay.clientUser?.username != null) pointPay.clientUser?.username else pointPay.clientCompany?.name)
                 }
@@ -178,8 +183,7 @@ fun PaymentView( appViewModel: AppViewModel, pointPaymentViewModel : PointsPayme
 }
 
 @Composable
-fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
-    val myAllInvoices = paymentViewModel.myAllBuyHistory.collectAsLazyPagingItems()
+fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
     val view by appViewModel.view
     var paidInabled by remember {
         mutableStateOf(false)
@@ -248,7 +252,7 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
                     enabled = allHistoryInabled
                 ) {
                     appViewModel.updateView("allHistory")
-                    paymentViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.ALL)
+                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.ALL, true)
                 }
             }
             Row(
@@ -260,7 +264,7 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
                     enabled = paidInabled
                 ) {
                     appViewModel.updateView("payed")
-                    paymentViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.PAID)
+                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.PAID, true)
                 }
             }
             Row(
@@ -272,7 +276,7 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
                     enabled = inCompleteInabled
                 ) {
                     appViewModel.updateView("incomplete")
-                    paymentViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.INCOMPLETE)
+                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.INCOMPLETE, true)
                 }
             }
             Row(
@@ -284,7 +288,7 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
                     enabled = notPaidInabled
                 ) {
                     appViewModel.updateView("notpayed")
-                    paymentViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.NOT_PAID)
+                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.NOT_PAID, true)
                 }
             }
             Row(
@@ -296,13 +300,13 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
                     enabled = notAcceptedInabled
                 ) {
                     appViewModel.updateView("notaccepted")
-                    paymentViewModel.getAllMyPaymentNotAccepted()
+                    invoiceViewModel.getAllMyPaymentNotAccepted(true)
                 }
             }
         }
         when (view) {
             "allHistory" -> {
-                val myAllInvoice = paymentViewModel.myAllBuyHistory.collectAsLazyPagingItems()
+                val myAllInvoice = invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -326,13 +330,14 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
             }
 
             "payed" -> {
+                val paid = invoiceViewModel.paid.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(count = myAllInvoices.itemCount,
-                        key = myAllInvoices.itemKey { it.id!! }
+                    items(count = paid.itemCount,
+                        key = paid.itemKey { it.id!! }
                     ) { index ->
-                        val invoice = myAllInvoices[index]
+                        val invoice = paid[index]
                         if (invoice != null) {
                             Row {
                                 Text(text = invoice.code.toString())
@@ -348,7 +353,7 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
             }
 
             "incomplete" -> {
-                val inComplete = paymentViewModel.inComplete.collectAsLazyPagingItems()
+                val inComplete = invoiceViewModel.inComplete.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -373,13 +378,14 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
             }
 
             "notpayed" -> {
+                val notPaid = invoiceViewModel.notPaid.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(count = myAllInvoices.itemCount,
-                        key = myAllInvoices.itemKey { it.id!! }
+                    items(count = notPaid.itemCount,
+                        key = notPaid.itemKey { it.id!! }
                     ) { index ->
-                        val invoice = myAllInvoices[index]
+                        val invoice = notPaid[index]
                         if (invoice != null) {
                             Row {
                                 Text(text = invoice.code.toString())
@@ -397,13 +403,14 @@ fun BuyView( appViewModel: AppViewModel, paymentViewModel : PaymentViewModel) {
             }
 
             "notaccepted" -> {
+                val notAccepted = invoiceViewModel.notAccepted.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(count = myAllInvoices.itemCount,
-                        key = myAllInvoices.itemKey { it.id!! }
+                    items(count = notAccepted.itemCount,
+                        key = notAccepted.itemKey { it.id!! }
                     ) { index ->
-                        val invoice = myAllInvoices[index]
+                        val invoice = notAccepted[index]
                         if (invoice != null) {
                             Row {
                                 Text(text = invoice.code.toString())
@@ -584,7 +591,10 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                                     onDelete = {
                                         Log.e("aymenbabatdelete", "delete")
                                     },
-                                    appViewModel = appViewModel
+                                    onUpdate = {
+                                        Log.e("aymenbabatdelete", "delete")
+
+                                    }
                                 ) { buy ->
                                     BuyHistoryCard(buy)
                                 }
@@ -608,7 +618,10 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                                     onDelete = {
                                         Log.e("aymenbabatdelete", "delete")
                                     },
-                                    appViewModel = appViewModel
+                                    onUpdate = {
+                                        Log.e("aymenbabatdelete", "delete")
+
+                                    }
                                 ) { buy ->
                                     BuyHistoryCard(buy)
                                 }

@@ -16,7 +16,8 @@ import com.aymen.store.model.repository.globalRepository.ServiceApi
 class PayedRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val id :Long
+    private val id :Long,
+    private val isProvider : Boolean
 ) : RemoteMediator<Int, InvoiceWithClientPersonProvider>(){
 
     private val invoiceDao = room.invoiceDao()
@@ -54,7 +55,8 @@ class PayedRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllBuyHistoryByPaidStatus(id,PaymentStatus.PAID,currentPage, state.config.pageSize)
+            val response = if(isProvider)api.getAllBuyHistoryByPaidStatusAsProvider(id,PaymentStatus.PAID,currentPage, state.config.pageSize)
+            else api.getAllBuyHistoryByPaidStatusAsClient(id,PaymentStatus.PAID,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1

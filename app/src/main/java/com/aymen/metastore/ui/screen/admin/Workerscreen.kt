@@ -48,7 +48,10 @@ fun WorkerScreen() {
                             onDelete = {
                                 Log.e("aymenbabatdelete","delete")
                             },
-                            appViewModel = appViewModel,
+                            onUpdate = {
+                                Log.e("aymenbabatdelete", "delete")
+
+                            }
                         ){
                             //WorkerCard(it)
                         }

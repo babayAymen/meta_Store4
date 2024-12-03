@@ -21,7 +21,7 @@ interface ArticleDao {
     @Query("SELECT * FROM art_remote_keys_entity WHERE id = :id")
     suspend fun getArticleRemoteKey(id : Long) : ArtRemoteKeysEntity
 
-    @Query("SELECT * FROM article WHERE category = :companyCategory")
+    @Query("SELECT * FROM article WHERE category = :companyCategory AND isMy = 0")
     fun getArticlesForCompanyByCompanyCategory( companyCategory: CompanyCategory) : PagingSource<Int,Article>
 
     @Query("DELETE FROM art_remote_keys_entity")

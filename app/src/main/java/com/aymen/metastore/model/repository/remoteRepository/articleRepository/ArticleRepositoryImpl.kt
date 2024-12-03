@@ -1,10 +1,13 @@
 package com.aymen.metastore.model.repository.remoteRepository.articleRepository
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import androidx.room.Transaction
+import androidx.room.withTransaction
 import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
@@ -16,6 +19,7 @@ import com.aymen.metastore.model.entity.paging.ArticleRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.Resource
@@ -24,8 +28,10 @@ import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.repository.remoteRepository.articleRepository.ArticleRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Response
@@ -47,7 +53,7 @@ class ArticleRepositoryImpl @Inject constructor
     private val articleDao = room.articleDao()
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getRandomArticles(categoryName : CompanyCategory) :Flow<PagingData<ArticleWithArticleCompany>>{
+    override fun getRandomArticles(categoryName : CompanyCategory) :Flow<PagingData<RandomArticleChild>>{
             return Pager(
     config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 0),
     remoteMediator = ArticleCompanyRandomMediator(
@@ -146,7 +152,35 @@ class ArticleRepositoryImpl @Inject constructor
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = api.likeAnArticle(articleId,isFav)
     override suspend fun sendComment(comment: String, articleId: Long) = api.sendComment(comment, articleId)
     override suspend fun getComments(articleId: Long): Response<List<CommentDto>> = api.getComments(articleId)
-    override suspend fun addQuantityArticle(quantity: Double, articleId: Long) = api.addQuantityArticle(quantity, articleId)
+    override suspend fun addQuantityArticle(quantity: Double, articleId: Long): Response<ArticleCompanyDto> {
+        try {
+            articleCompanyDao.upDateQuantity(articleId, quantity)
+        }catch (ex : Exception){
+            Log.e("addQuantityArticle", "exception is : ${ex.message}")
+        }
+    val response = api.addQuantityArticle(quantity, articleId)
+        if(response.isSuccessful){
+            response.body()?.let {
+                articleCompanyDao.insertSigleArticle( it.toArticleCompany(false))
+            }
+
+        }
+        return response
+    }
+    override suspend fun updateArticle(article: ArticleCompanyDto): Response<ArticleCompanyDto> {
+        try {
+            articleCompanyDao.insertSigleArticle(article.toArticleCompany(false))
+        } catch (e: Exception) {
+            Log.e("articleCompany", "Error saving article: ${e.message}")
+        }
+        val response = api.updateArticle(article)
+        if(response.isSuccessful){
+            response.body()?.let { updatedArticle ->
+                articleCompanyDao.insertSigleArticle(updatedArticle.toArticleCompany(false))
+            }
+        }
+        return response
+    }
 
     private suspend fun insert(articleDetails : List<ArticleCompanyDto>){
         userDao.insertUser(articleDetails.map {user -> user.company?.user?.toUser()!!})
@@ -155,7 +189,7 @@ class ArticleRepositoryImpl @Inject constructor
         companyDao.insertCompany(articleDetails.map { company -> company.provider?.toCompany()!! })
         categoryDao.insertCategory(articleDetails.map {category -> category.category?.toCategory()!! })
         subCategoryDao.insertSubCategory(articleDetails.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
-        articleDao.insertArticle(articleDetails.map {article -> article.article?.toArticle()!! })
+        articleDao.insertArticle(articleDetails.map {article -> article.article?.toArticle(isMy = true)!! })
         articleCompanyDao.insertArticle(articleDetails.map {dto ->
             dto.toArticleCompany(false) })
     }

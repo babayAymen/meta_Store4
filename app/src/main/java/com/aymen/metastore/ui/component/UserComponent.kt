@@ -97,6 +97,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.SubType
@@ -124,6 +125,7 @@ import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
+import com.aymen.store.model.Enum.UnitArticle
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
@@ -358,10 +360,9 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>, isEnabled : Bo
     val companyViewModel: CompanyViewModel = hiltViewModel()
     Row {
         LazyColumn {
-            items(article.itemCount
-//                count = article.itemCount,
-//                key = article.itemKey { article -> article.id!! },
-//                contentType = { article.itemContentType { "articles" } }
+            items(
+                count = article.itemCount,
+                key = article.itemKey { article -> article.id!! },
                 ) { index : Int ->
                 val art: ArticleCompany? = article[index]
                 art?.let {
@@ -800,7 +801,7 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 }
 
 @Composable
-fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
+fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val accountType = sharedViewModel.accountType
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
@@ -831,15 +832,18 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
     }
     LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
         isCompany = accountType == AccountType.COMPANY
-        restBalance = if(isCompany){
+        restBalance = if (isCompany) {
             balance = myCompany.balance!!
-            myCompany.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.sellingPrice!!.toBigDecimal()
-        }else {
+            myCompany.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
+        } else {
             balance = myUser.balance!!
-            myUser.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal() * article.sellingPrice!!.toBigDecimal()
+            myUser.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
         }
-    cost = BigDecimal(balance).subtract(restBalance)
-        restBalance = if(shoppingViewModel.delivery && cost < BigDecimal(30) && shoppingViewModel.qte != 0.0) restBalance.subtract(BigDecimal(3)) else restBalance
+        cost = BigDecimal(balance).subtract(restBalance)
+        restBalance =
+            if (shoppingViewModel.delivery && cost < BigDecimal(30) && shoppingViewModel.qte != 0.0) restBalance.subtract(
+                BigDecimal(3)
+            ) else restBalance
     }
 
     if(label != ""){
@@ -869,7 +873,7 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                     }
                     Row {
                         InputTextField(
-                            labelValue = if(shoppingViewModel.qte == 0.0) "" else shoppingViewModel.qte.toString(),
+                            labelValue = shoppingViewModel.rawInput,
                             label = "Quantity",
                             singleLine = true,
                             maxLine = 1,
@@ -878,8 +882,26 @@ fun ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sho
                                 imeAction = ImeAction.Next
                             ),
                             onValueChange = {
-                                if(it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))){
-                                    shoppingViewModel.qte = it.toDouble()
+                                if (article.unit == UnitArticle.U) {
+                                    // Restrict input to integers
+                                    if (it.matches(Regex("^[0-9]*$"))) {
+                                        shoppingViewModel.rawInput = it
+                                        shoppingViewModel.qte = it.toDoubleOrNull() ?: 0.0
+                                    }
+                                } else {
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        shoppingViewModel.rawInput = normalizedInput
+
+                                        if (normalizedInput.endsWith(".")) {
+                                            shoppingViewModel.qte = normalizedInput.let { inp ->
+                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                            }
+                                        } else {
+                                            shoppingViewModel.qte =
+                                                normalizedInput.toDoubleOrNull() ?: 0.0
+                                        }
+                                    }
                                 }
                             }
                             , onImage = {}
@@ -1268,7 +1290,7 @@ fun OrderShow(order: PurchaseOrderLine) {
                 }
                 .weight(0.9f)
         ) {
-            order.article?.article?.let { Text(text = it.libelle) }
+            order.article?.article?.let { Text(text = it.libelle?:"") }
             Text(text = order.quantity.toString())
             order.comment?.let { Text(text = it) }
             if (showDialog) {

@@ -44,6 +44,7 @@ class ShoppingViewModel @Inject constructor(
     private val useCases: MetaUseCases
 ): ViewModel() {
 
+    var rawInput by mutableStateOf("")
     var qte by mutableDoubleStateOf(0.0)
     var comment by mutableStateOf("")
     var order by mutableStateOf(PurchaseOrderLine())

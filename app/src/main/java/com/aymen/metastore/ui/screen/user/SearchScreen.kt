@@ -142,7 +142,6 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                             if(company != null){
                                             when (searchType) {
                                                 SearchType.OTHER -> {
-                                                    Log.e("companycard","category $searchCategory company $company company ${company.company}")
                                                     CompanyCard(
                                                         company.company!!
                                                     ) {
@@ -180,6 +179,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                         for (index in 0 until cli.itemCount) {
                                             val user = cli[index]
                                             if (user != null) {
+                                                Log.e("userrrr", "user search ${user.user}")
                                                 UserCard(user.user!!, appViewModel) {
                                                     appViewModel._user.value = user.user
                                                     RouteController.navigateTo(Screen.UserScreen)
@@ -237,7 +237,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
 
                                             SearchCategory.USER -> {
                                                 UserCard(history.user!!, appViewModel) {
-                                                    appViewModel._user.value = userSearch
+                                                    appViewModel._user.value = history.user
                                                     RouteController.navigateTo(Screen.UserScreen)
                                                     clientViewModel.saveHitory(
                                                         searchCategory,

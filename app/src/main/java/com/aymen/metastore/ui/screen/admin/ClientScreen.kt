@@ -59,7 +59,10 @@ fun ClientScreen() {
                             onDelete = {
                                 Log.e("aymenbabatdelete", "delete")
                             },
-                            appViewModel = appViewModel,
+                            onUpdate = {
+                                Log.e("aymenbabatdelete", "delete")
+
+                            }
                         ) { client ->
                             ClientCard(
                                 client,

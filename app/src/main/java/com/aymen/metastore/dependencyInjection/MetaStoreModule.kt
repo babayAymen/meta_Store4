@@ -120,8 +120,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
-//const val BASE_URL = "http://192.168.1.4:8080/"
-const val BASE_URL = "http://192.168.109.209:8080/"
+const val BASE_URL = "http://192.168.1.4:8080/"
+//const val BASE_URL = "http://192.168.109.209:8080/"
 private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module
@@ -230,8 +230,9 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providArticleViewModel(repository: GlobalRepository, sharedViewModel: SharedViewModel, room : AppDatabase, useCases: MetaUseCases): ArticleViewModel {
-        return ArticleViewModel(repository,sharedViewModel, room,useCases)
+    fun providArticleViewModel(repository: GlobalRepository, sharedViewModel: SharedViewModel, room : AppDatabase, useCases: MetaUseCases,
+                               appViewModel: AppViewModel): ArticleViewModel {
+        return ArticleViewModel(repository,sharedViewModel, room,useCases, appViewModel)
     }
 
     @Provides

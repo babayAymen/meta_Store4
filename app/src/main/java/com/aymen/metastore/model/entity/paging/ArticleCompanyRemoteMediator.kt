@@ -78,7 +78,7 @@ class ArticleCompanyRemoteMediator(
                     companyDao.insertCompany(response.map { company -> company.provider?.toCompany()!! })
                     categoryDao.insertCategory(response.map {category -> category.category?.toCategory()!! })
                     subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
-                    articleDao.insertArticle(response.map {article -> article.article?.toArticle()!! })
+                    articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true)!! })
                     articleCompanyDao.insertArticle(response.map { it.toArticleCompany(false) })
 
                 } catch (ex: Exception) {
@@ -111,7 +111,7 @@ class ArticleCompanyRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        articleCompanyDao.clearAllArticleCompanyTable()
+     //   articleCompanyDao.clearAllArticleCompanyTable()
         articleCompanyDao.clearAllRemoteKeysTable()
     }
 }

@@ -83,7 +83,7 @@ class InventoryRemoteMediator(
 
                     userDao.insertUser(response.map {user -> user.company?.user?.toUser()!!})
                     companyDao.insertCompany(response.map {company -> company.company?.toCompany()!!})
-                    articleDao.insertArticle(response.map { article -> article.article?.article?.toArticle()!! })
+                    articleDao.insertArticle(response.map { article -> article.article?.article?.toArticle(isMy = true)!! })
                     categoryDao.insertCategory(response.map { category -> category.article?.category?.toCategory()?:Category() })
                     subCategoryDao.insertSubCategory(response.map { subCategory -> subCategory.article?.subCategory?.toSubCategory()?:SubCategory() })
                     articleCompanyDao.insertArticle(response.map { article -> article.article?.toArticleCompany(false)!! })

@@ -54,7 +54,10 @@ fun SubCategoryScreen() {
                         onDelete = {
 
                         },
-                        appViewModel = appViewModel
+                        onUpdate = {
+                            Log.e("aymenbabatdelete", "delete")
+
+                        }
                     ) { subCategory ->
                         SubCategoryCardForAdmin(
                             subCategory = subCategory,

@@ -24,7 +24,6 @@ import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.ConversationWithUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
@@ -36,6 +35,7 @@ import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
+import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
@@ -95,6 +95,8 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun sendComment(comment: String, articleId: Long) = articleRepository.sendComment(comment,articleId)
     override suspend fun getComments(articleId: Long) = articleRepository.getComments(articleId)
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long) = articleRepository.addQuantityArticle(quantity, articleId)
+    override suspend fun updateArticle(article: ArticleCompanyDto) = articleRepository.updateArticle(article)
+
     override suspend fun deleteArticle(id: String): Response<Void> {
         TODO("Not yet implemented")
     }
@@ -176,19 +178,22 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getPaidInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getPaidInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         TODO("Not yet implemented")
     }
 
-    override fun getNotPaidInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getNotPaidInvoice(
+        id: Long,
+        isProvider: Boolean
+    ): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         TODO("Not yet implemented")
     }
 
-    override fun getInCompleteInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getInCompleteInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         TODO("Not yet implemented")
     }
 
-    override fun getNotAcceptedInvoice(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getNotAcceptedInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         TODO("Not yet implemented")
     }
 
@@ -306,7 +311,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getRandomArticles(categoryName: CompanyCategory): Flow<PagingData<ArticleWithArticleCompany>> {
+    override fun getRandomArticles(categoryName: CompanyCategory): Flow<PagingData<RandomArticleChild>> {
         TODO("Not yet implemented")
     }
 

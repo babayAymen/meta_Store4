@@ -394,7 +394,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
 //                                        }
 //                                ) {
                                     ArticleItem(article = article!!) { art ->
-                                        articleLibel = art.article!!.libelle
+                                        articleLibel = art.article!!.libelle?:""
                                         expanded = false
                                         invoiceViewModel.article = art
                                         onSelcetArticle(true)
@@ -412,7 +412,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
                                 ) {index ->
                                     val article = articles[index]
                                     ArticleItem(article = article!!) { art ->
-                                        articleLibel = art.article!!.libelle
+                                        articleLibel = art.article!!.libelle?:""
                                         expanded = false
                                         invoiceViewModel.article = art
                                         onSelcetArticle(true)
@@ -452,7 +452,7 @@ fun ArticleItem(
             .padding(10.dp)
     ){
 
-        Text(text = article.article!!.libelle, fontSize = 16.sp)
+        Text(text = article.article!!.libelle?:"", fontSize = 16.sp)
 
     }
 }

@@ -47,7 +47,10 @@ fun OrderScreen() {
                             onDelete = {
                                 Log.e("aymenbabatdelete","delete")
                             },
-                            appViewModel = appViewModel,
+                            onUpdate = {
+                                Log.e("aymenbabatdelete", "delete")
+
+                            }
                         ){
                             //OrderCard(it)
                         }

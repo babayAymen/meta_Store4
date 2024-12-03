@@ -110,7 +110,7 @@ class SubCategoryRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        subCategoryDao.clearAllSubCategoryTable()
+     //   subCategoryDao.clearAllSubCategoryTable()
         subCategoryDao.clearAllRemoteKeysTable()
     }
 }
