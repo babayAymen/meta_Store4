@@ -23,6 +23,7 @@ interface SearchHistoryDao {
     @Transaction
     @Query("SELECT * FROM search_history")
      fun getAllSearchHistories(): PagingSource<Int ,SearchHistoryWithClientOrProviderOrUserOrArticle>
+
     @Transaction
     @Query("SELECT s.*, u.* FROM search_history AS s JOIN user AS u ON s.userId = u.id WHERE u.username LIKE '%' || :search || '%'")
      fun getAllUserSearchHistories(search : String): PagingSource<Int ,SearchHistoryWithClientOrProviderOrUserOrArticle>

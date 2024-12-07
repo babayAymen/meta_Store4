@@ -15,6 +15,7 @@ import com.aymen.metastore.model.entity.paging.SubCategoryRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -49,9 +50,9 @@ class CategoryRepositoryImpl  @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllCategory(): Flow<PagingData<Category>> {
+    override fun getAllCategory(companyId : Long): Flow<PagingData<Category>> {
        return Pager(
-           config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 2),
+           config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
            remoteMediator = CategoryRemoteMediator(
                api = api, room = room,id = sharedViewModel.company.value.id
            ),

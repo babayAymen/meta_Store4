@@ -15,7 +15,7 @@ class AccountTypeInterceptor(
 
         // Fetch the latest AccountType from the ViewModel
         val currentAccountType = runBlocking(Dispatchers.Main) {
-            sharedViewModel.accountType
+            sharedViewModel.accountType.value
         }
 
         // Add the Account-Type header

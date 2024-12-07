@@ -7,6 +7,8 @@ import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
@@ -17,7 +19,7 @@ import java.io.File
 interface ClientRepository {
 
     fun getAllMyClient(companyId : Long) : Flow<PagingData<CompanyWithCompanyOrUser>>
-    fun getAllClientUserContaining(search : String, searchType: SearchType, searchCategory: SearchCategory):Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>
+    fun getAllClientUserContaining(companyId: Long, searchType: SearchType,search : String):Flow<PagingData<UserDto>>
 
 
     suspend fun addClient(client: String, file : File)

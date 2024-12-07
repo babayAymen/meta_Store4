@@ -70,7 +70,7 @@ fun CategoryScreen() {
                         ) { categoryItem ->
                             CategoryCardForAdmin(
                                 category = categoryItem,
-                                image = "${BASE_URL}werehouse/image/${if (category.image?.isNotEmpty() == true) category.image else ""}/category/${user.id}"
+                                image = "${BASE_URL}werehouse/image/${if (category.image?.isNotEmpty() == true) category.image else ""}/category/${category.company?.user?.id}"
                             )
                         }
                     } else {

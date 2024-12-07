@@ -62,7 +62,7 @@ fun SubCategoryScreen() {
                         SubCategoryCardForAdmin(
                             subCategory = subCategory,
                             image = "${BASE_URL}werehouse/image/" + (subCategory.image
-                                ?: "") + "/subcategory/${user.id}",
+                                ?: "") + "/subcategory/${subCategory.company?.user?.id}",
                             subCategory.category!!
                         )
                     }

@@ -48,9 +48,9 @@ data class ClientProviderRelation(
 
     val advance: Double? = null,
 
-    val createdDate : String = "",
+    val createdDate : String? = "",
 
-    val lastModifiedDate : String = "",
+    val lastModifiedDate : String? = "",
 ){
     fun toClientProviderRelation(person: User?,
                                  client : Company?,

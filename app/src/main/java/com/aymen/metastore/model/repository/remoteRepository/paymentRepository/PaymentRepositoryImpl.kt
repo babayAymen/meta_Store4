@@ -61,7 +61,14 @@ class PaymentRepositoryImpl @Inject constructor(
                 api = api, room = room, id = id, isProvider = isProvider
             ),
             pagingSourceFactory = {
-                invoiceDao.getAllMyBuyHistoryFromPaidInvoice(paid = PaymentStatus.PAID)
+                if(isProvider) {
+                    invoiceDao.getAllMyBuyHistoryFromPaidInvoiceAsProvider(id = id, paid = PaymentStatus.PAID)
+                }else {
+                    invoiceDao.getAllMyBuyHistoryFromPaidInvoiceAsClient(
+                        id = id,
+                        paid = PaymentStatus.PAID
+                    )
+                }
             }
         ).flow.map {
             it.map { article ->
@@ -78,7 +85,11 @@ class PaymentRepositoryImpl @Inject constructor(
                 api = api, room = room, id = id, isProvider = isProvider
             ),
             pagingSourceFactory = {
-                invoiceDao.getAllMyBuyHistoryFromNotPaidInvoice(paid = PaymentStatus.NOT_PAID)
+                if(isProvider) {
+                    invoiceDao.getAllMyBuyHistoryFromPaidInvoiceAsProvider(id = id, paid = PaymentStatus.NOT_PAID)
+                }else{
+                    invoiceDao.getAllMyBuyHistoryFromPaidInvoiceAsClient(id = id, paid = PaymentStatus.NOT_PAID)
+                }
             }
         ).flow.map {
             it.map { article ->
@@ -95,7 +106,11 @@ class PaymentRepositoryImpl @Inject constructor(
                 api = api, room = room, id = id, isProvider = isProvider
             ),
             pagingSourceFactory = {
-                invoiceDao.getAllMyBuyHistoryFromIncompleteInvoice(paid = PaymentStatus.INCOMPLETE)
+                if(isProvider) {
+                    invoiceDao.getAllMyBuyHistoryFromIncompleteInvoice(id = id, paid = PaymentStatus.INCOMPLETE)
+                }else{
+                    invoiceDao.getAllMyBuyHistoryFromIncompleteInvoiceAsClient(id = id, paid = PaymentStatus.INCOMPLETE)
+                }
             }
         ).flow.map {
             it.map { article ->

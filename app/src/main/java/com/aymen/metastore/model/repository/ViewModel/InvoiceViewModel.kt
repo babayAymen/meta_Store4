@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.repository.ViewModel
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -8,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
@@ -31,6 +33,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,17 +53,17 @@ class InvoiceViewModel @Inject constructor(
     private val _myInvoicesAsClient : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val myInvoicesAsClient: StateFlow<PagingData<Invoice>> get() = _myInvoicesAsClient
 
-    private val _ordersLine : MutableStateFlow<PurchaseOrderLine> = MutableStateFlow(PurchaseOrderLine())
-    val ordersLine: StateFlow<PurchaseOrderLine> get() = _ordersLine
+    private val _ordersLine : MutableStateFlow<PagingData<PurchaseOrderLine>> = MutableStateFlow(PagingData.empty())
+    val ordersLine: StateFlow<PagingData<PurchaseOrderLine>> get() = _ordersLine
 
 
     private val _allMyInvoiceNotAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val allMyInvoiceNotAccepted: StateFlow<PagingData<Invoice>> get() = _allMyInvoiceNotAccepted
+//
+//    val _ordersLineArray : MutableStateFlow<List<PurchaseOrderLine>> = MutableStateFlow(emptyList())
+//    val ordersLineArray: StateFlow<List<PurchaseOrderLine>> = _ordersLineArray
 
-    val _ordersLineArray : MutableStateFlow<List<PurchaseOrderLine>> = MutableStateFlow(emptyList())
-    val ordersLineArray: StateFlow<List<PurchaseOrderLine>> = _ordersLineArray
-
-    var invoice : Invoice = Invoice()
+    var invoice by mutableStateOf(Invoice())
 
     var lastInvoiceCode by mutableLongStateOf(0)
     var clientCompany by mutableStateOf(Company())
@@ -73,11 +76,6 @@ class InvoiceViewModel @Inject constructor(
     var discount by mutableDoubleStateOf(0.0)
     val company by mutableStateOf(sharedViewModel.company.value)
     var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
-
-
-//
-//    private val _myAllBuyHistory : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-//    val myAllBuyHistory: StateFlow<PagingData<Invoice>> get() = _myAllBuyHistory
 
     private val _inComplete : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val inComplete: StateFlow<PagingData<Invoice>> get() = _inComplete
@@ -107,15 +105,9 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
-
-    fun testClientContaing(){
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = room.clientProviderRelationDao().testClientContaing()
-            Log.e("aymenbabay","response from room ${response.size}")
-        }
+    fun remiseOrderLineToZero(){
+        _ordersLine.value = PagingData.empty()
     }
-
-
     fun getAllMyPaymentFromInvoicee(status : PaymentStatus, isProvider : Boolean){
         viewModelScope.launch{
             when(status){
@@ -171,35 +163,27 @@ class InvoiceViewModel @Inject constructor(
         }
     }
     init {
-        when(sharedViewModel.accountType){
+        viewModelScope.launch {
+        sharedViewModel.accountType.collect {type ->
+        when(type){
             AccountType.COMPANY -> {
-               // getAllMyInvoicesAsProvider()
                 getAllMyPaymentFromInvoicee(PaymentStatus.ALL, true)
-                getAllMyInvoicesAsClient(sharedViewModel.company.value.id!!, PaymentStatus.ALL)
+                getAllMyInvoicesAsClient()
             }
             AccountType.USER -> {
-                getAllMyInvoicesAsClient(sharedViewModel.user.value.id!!, PaymentStatus.ALL)
+                Log.e("accounttype", "type in viewmodel $type")
+                getAllMyInvoicesAsClient()
                 getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id!!)
             }
             AccountType.AYMEN -> TODO()
-            AccountType.NULL -> TODO()
+            AccountType.NULL -> {}
+        }
+        }
         }
     }
-//
-//    fun getAllMyInvoicesAsProvider(){
-//        viewModelScope.launch {
-//            useCases.getAllInvoices(sharedViewModel.company.value.id!!)
-//                .distinctUntilChanged()
-//                .cachedIn(viewModelScope)
-//                .collect{
-//                    _myInvoicesAsProvider.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-//                }
-//        }
-//    }
-
 
     fun getAllMyInvoiceAsClientAndStatus(status : Status, id : Long){
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
                 useCases.getAllInvoicesAsClientAndStatus(id, status)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
@@ -210,23 +194,16 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
-    fun getAllMyInvoicesAsClient(id : Long, paymentStatus : PaymentStatus){
-        viewModelScope.launch(Dispatchers.IO) {
-                when(paymentStatus){
-                    PaymentStatus.NOT_PAID -> TODO()
-                    PaymentStatus.PAID -> TODO()
-                    PaymentStatus.INCOMPLETE -> TODO()
-                    PaymentStatus.ALL -> {
-                        useCases.getAllInvoicesAsClient(id, sharedViewModel.accountType)
-                            .distinctUntilChanged()
-                            .cachedIn(viewModelScope)
-                            .collect {
-                                _myInvoicesAsClient.value =
-                                    it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                            }
-                    }
+    fun getAllMyInvoicesAsClient() {
+        viewModelScope.launch {
+            val id =  if(sharedViewModel.accountType.value == AccountType.USER)sharedViewModel.user.value.id else sharedViewModel.company.value.id
+            useCases.getAllInvoicesAsClient(id!!, sharedViewModel.accountType.value)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect {
+                    _myInvoicesAsClient.value =
+                        it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
                 }
-
         }
     }
 
@@ -264,8 +241,14 @@ class InvoiceViewModel @Inject constructor(
 
 
     fun getAllOrdersLineByInvoiceId(){
-        viewModelScope.launch (Dispatchers.IO){
-
+        viewModelScope.launch{
+            Log.e("getAllOrdersLineByInvoiceId", "begin in viewmodel")
+            useCases.getAllOrdersLineByInvoiceId(sharedViewModel.company.value.id!! ,invoice.id!!)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _ordersLine.value = it
+                }
         }
     }
 

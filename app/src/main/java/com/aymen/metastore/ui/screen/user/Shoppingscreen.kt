@@ -65,10 +65,13 @@ fun ShoppingScreen() {
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
-    val myInvoicesAccepted = if(sharedViewModel.accountType == AccountType.USER)invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()else null
-    val invoicesNotAccepted = if(sharedViewModel.accountType == AccountType.USER)invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()else null
     val allMyOrdersNotAccepted = shoppingViewModel.allMyOrdersNotAccepted.collectAsLazyPagingItems()
-
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    val myInvoicesAccepted = if(accountType == AccountType.USER)invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()else null
+    val invoicesNotAccepted = if(accountType == AccountType.USER)invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()else null
+LaunchedEffect(key1 = accountType) {
+    Log.e("accounttype","acount type : $accountType from shopping screen")
+}
     var order by remember {
         mutableStateOf(PurchaseOrder())
     }
@@ -197,7 +200,7 @@ fun ShoppingScreen() {
                     ) {
                         LazyColumn {
 
-                            if(sharedViewModel.accountType == AccountType.USER) {
+                            if(accountType == AccountType.USER) {
                                 items(count = invoicesNotAccepted?.itemCount!!,
                                     key = invoicesNotAccepted.itemKey{it.id!!}
                                     ) { index ->
@@ -255,7 +258,7 @@ fun ShoppingScreen() {
                         modifier = Modifier.fillMaxWidth()
                     ){
                         LazyColumn {
-                            if(sharedViewModel.accountType == AccountType.USER) {
+                            if(accountType == AccountType.USER) {
                                 items(count = myInvoicesAccepted?.itemCount!!,
                                     key = myInvoicesAccepted.itemKey { it.id!! }) { index ->
                                     val invoice = myInvoicesAccepted[index]

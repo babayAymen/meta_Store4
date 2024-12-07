@@ -36,6 +36,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.PrivacySetting
@@ -80,12 +82,19 @@ fun AddArticleScreen(){
             onResult = {uri -> image = uri }
         )
         val categories = categoryViewModel.categories.collectAsLazyPagingItems()
+        var category by remember {
+            mutableStateOf(Category())
+        }
+        LaunchedEffect(key1 = category) {
+            subCategoryViewModel.getAllSubCategoriesByCategoryId(category.id?:0)
+        }
 
-        LaunchedEffect(categoryViewModel.category) {
-                Log.e("category","category has changed")
-            subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryViewModel.category.id?:0)
+
+        var subCategory by remember {
+            mutableStateOf(SubCategory())
         }
         val subcategories = subCategoryViewModel.allSubCategories.collectAsLazyPagingItems()
+
         val context = LocalContext.current
         var articleCompany = ArticleCompany()
 
@@ -138,8 +147,10 @@ fun AddArticleScreen(){
         var isDiscounted by remember {
             mutableStateOf(false)
         }
-        var subCategory by remember {
-            mutableStateOf(SubCategory())
+
+
+        var provider by remember {
+            mutableStateOf(Company())
         }
         if(articleViewModel.upDate){
             val articlee = articleViewModel.articleCompany.collectAsStateWithLifecycle()
@@ -405,20 +416,24 @@ fun AddArticleScreen(){
                 }
 
                 Row {
-                    DropDownCategory(pagingItems = categories)
+                    DropDownCategory(pagingItems = categories){
+                        category = it
+                    }
                 }
 
                 Row {
-                    categoryViewModel.category.id?.let { it1 ->
+
                         DropDownSubCategory(list = subcategories,
-                            it1
+                            category.id?:0
                         ){
                             subCategory = it
                         }
-                    }
+
                 }
                 Row {
-                    DropDownCompany(list = providers)
+                    DropDownCompany(list = providers){
+                        provider = it
+                    }
                 }
                 if(false) {
                 ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
@@ -457,9 +472,9 @@ fun AddArticleScreen(){
                             articleCompany.minQuantity = minQte
                             articleCompany.cost = cost
                             articleCompany.sellingPrice = sellingPrice
-                            articleCompany.category = categoryViewModel.category
+                            articleCompany.category = category
                             articleCompany.subCategory = subCategory
-                            articleCompany.provider = sharedViewModel.company.value
+                            articleCompany.provider = provider
                             articleCompany.unit = unitItem
                             articleCompany.isVisible = privacy
                             val photo = resolveUriToFile(image, context)

@@ -6,13 +6,14 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.Enum.LoadType
+import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.paging.AllCompaniesContainingPagingSource
 import com.aymen.metastore.model.entity.paging.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.ProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
-import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.repository.remoteRepository.companyRepository.CompanyRepository
@@ -68,26 +69,16 @@ class CompanyRepositoryImpl @Inject constructor(
     override suspend fun getMeAsCompany() = api.getMeAsCompany()
 
 
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getAllCompaniesContaining(search: String, searchType: SearchType, myId : Long): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
-        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-            remoteMediator = CompanyRemoteMediator(
-                api = api, room = room,searchType = searchType, type = LoadType.CONTAINING, libelle = search, id = null
+    override fun getAllCompaniesContaining(search: String, searchType: SearchType, myId: Long): Flow<PagingData<CompanyDto>> {
+        return  Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE, // Number of items per page
+                enablePlaceholders = false // Disable placeholders for unloaded pages
             ),
             pagingSourceFactory = {
-                when(searchType){
-                    SearchType.OTHER -> searchHistoryDao.getAllCompaniesSearchHistories(search)
-                    SearchType.CLIENT -> searchHistoryDao.getAllCompaniesClientSearchHistories(search, myId)
-                    SearchType.PROVIDER -> searchHistoryDao.getAllCompaniesProviderSearchHistories(search, myId)
-                    SearchType.MY -> searchHistoryDao.getAllCompaniesSearchHistories(search)
-                }
+                AllCompaniesContainingPagingSource(api,myId,search, searchType)
             }
-        ).flow.map {
-            it.map { article ->
-                article
-            }
-        }
+        ).flow
     }
 
     @OptIn(ExperimentalPagingApi::class)
@@ -98,7 +89,7 @@ class CompanyRepositoryImpl @Inject constructor(
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
             remoteMediator = CompanyRemoteMediator(
-                api = api, room = room,  searchType = SearchType.MY, type = LoadType.RANDOM, libelle = clientName, id = id
+                api = api, room = room, libelle = clientName, id = id
             ),
             pagingSourceFactory = {
                 searchHistoryDao.getAllSearchHistories()

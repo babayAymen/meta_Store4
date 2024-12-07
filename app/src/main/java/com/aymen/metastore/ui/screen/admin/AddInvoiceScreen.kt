@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.admin
 
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -42,15 +43,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.dependencyInjection.BASE_URL
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.ui.component.ArticleDialog
@@ -78,7 +84,6 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val clientUser = invoiceViewModel.clientUser
     val clientType = invoiceViewModel.clientType
     val isLoading = invoiceViewModel.isLoading
-    val invoice = Invoice()
     val currentDateTime = LocalDateTime.now()
     val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) // HH:mm:ss
     LaunchedEffect(key1 = Unit) {
@@ -112,9 +117,16 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     }
 
     val commandsLine = invoiceViewModel.commandLineDtos
-    val ordersLine by invoiceViewModel.ordersLineArray.collectAsStateWithLifecycle()
+
+    val ordersLine = invoiceViewModel.ordersLine.collectAsLazyPagingItems()
+    val invoice = if(invoiceViewModel.invoice.type == InvoiceDetailsType.ORDER_LINE) ordersLine.itemSnapshotList.items.firstOrNull()?.invoice else Invoice()
+
     DisposableEffect(key1 = Unit) {
         onDispose {
+            invoiceViewModel.clientCompany = Company()
+            invoiceViewModel.clientUser = User()
+            invoiceViewModel.remiseOrderLineToZero()
+            invoiceViewModel.invoice = Invoice()
             invoiceViewModel.commandLineDtos = emptyList()
             invoiceViewModel.discount = 0.0
             tottva = BigDecimal.ZERO
@@ -122,7 +134,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
             totgen = BigDecimal.ZERO
         }
     }
-    LaunchedEffect(key1 = commandsLine, key2 = ordersLine,key3 = invoiceViewModel.discount) {
+    LaunchedEffect(key1 = commandsLine, key2 = ordersLine.itemCount,key3 = invoiceViewModel.discount) {
          tottva = BigDecimal.ZERO
          totprice = BigDecimal.ZERO
          totgen = BigDecimal.ZERO
@@ -133,13 +145,16 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
             totgen = totprice.add(tottva)
         }
 
-        ordersLine.forEach {
-            val tvaInvoice = it.invoice?.tot_tva_invoice ?: 0.0
-            val priceArticleTot = it.invoice?.prix_article_tot ?: 0.0
-
-            tottva = tottva.add(BigDecimal(tvaInvoice))
-            totprice = totprice.add(BigDecimal(priceArticleTot))
-            totgen = totprice.add(tottva)
+        for(i in 0 until ordersLine.itemCount){
+            val orderLine = ordersLine[i]
+            Log.e("orderLine","order line : ${orderLine?.invoice}")
+            if(orderLine != null) {
+                val tvaInvoice = orderLine.invoice?.tot_tva_invoice ?: 0.0
+                val priceArticleTot = orderLine.invoice?.prix_article_tot ?: 0.0
+                tottva = tottva.add(BigDecimal(tvaInvoice))
+                totprice = totprice.add(BigDecimal(priceArticleTot))
+                totgen = totprice.add(tottva)
+            }
         }
 
         val discount = BigDecimal(invoiceViewModel.discount).divide(BigDecimal(100))
@@ -489,9 +504,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = invoice.provider?.name!!)
-                                invoice.provider.phone?.let { Text(text = it) }
-                                invoice.provider.address?.let { Text(text = it) }
+                                Text(text = invoice?.provider?.name!!)
+                                invoice?.provider.phone?.let { Text(text = it) }
+                                invoice?.provider.address?.let { Text(text = it) }
                             }
                         }
                         Row(
@@ -501,10 +516,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${invoice.provider?.logo}/company/${invoice.provider?.user?.id}"
+                                    image = "${BASE_URL}werehouse/image/${invoice?.provider?.logo}/company/${invoice?.provider?.user?.id}"
                                 )
-                                Text(text = invoice.provider?.email ?: "")
-                                invoice.provider?.matfisc?.let { Text(text = it) }
+                                Text(text = invoice?.provider?.email ?: "")
+                                invoice?.provider?.matfisc?.let { Text(text = it) }
                             }
                         }
                     }
@@ -514,11 +529,11 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                             .wrapContentWidth(Alignment.CenterHorizontally)
                     ) {
                         Column {
-                            Text(text = invoice.code.toString(),
+                            Text(text = invoice?.code.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally))
-                            Text(text = "invoice date: ${invoice.createdDate}",
+                            Text(text = "invoice date: ${invoice?.createdDate}",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally))
@@ -572,20 +587,20 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                        showClientDialog = false
                                    }
                                }
-                               invoice.client?.let {
+                               invoice?.client?.let {
                                    Text(text = it.name)
                                    invoiceViewModel.clientCompany = it
                                    invoiceViewModel.clientType = AccountType.COMPANY
                                }
-                               invoice.person?.let {
+                               invoice?.person?.let {
                                    Text(text = it.username!!)
                                    invoiceViewModel.clientUser = it
                                    invoiceViewModel.clientType = AccountType.USER
                                }
-                               invoice.client?.phone?.let { Text(text = it) }
-                               invoice.person?.phone?.let { Text(text = it) }
-                               invoice.person?.address?.let { Text(text = it) }
-                               invoice.client?.address?.let { Text(text = it) }
+                               invoice?.client?.phone?.let { Text(text = it) }
+                               invoice?.person?.phone?.let { Text(text = it) }
+                               invoice?.person?.address?.let { Text(text = it) }
+                               invoice?.client?.address?.let { Text(text = it) }
                            }
                        }
                         Row {
@@ -790,16 +805,14 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     invoiceViewModel.getAllOrdersLineByInvoiceId()
                 }
             }
-            if (isLoading) {
-                LodingShape()
-            }else {
+
                 Column {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = invoice.provider?.name!!)
-                                invoice.provider?.phone?.let { Text(text = it) }
-                                invoice.provider?.address?.let { Text(text = it) }
+                                Text(text = invoice?.provider?.name?:"")
+                                invoice?.provider?.phone?.let { Text(text = it) }
+                                invoice?.provider?.address?.let { Text(text = it) }
                             }
                         }
                         Row(
@@ -809,10 +822,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${invoice.provider?.logo}/company/${invoice.provider?.user?.id}"
+                                    image = "${BASE_URL}werehouse/image/${invoice?.provider?.logo}/company/${invoice?.provider?.user?.id}"
                                 )
-                                Text(text = invoice.provider?.email ?: "")
-                                invoice.provider?.matfisc?.let { Text(text = it) }
+                                Text(text = invoice?.provider?.email ?: "")
+                                invoice?.provider?.matfisc?.let { Text(text = it) }
                             }
                         }
                     }
@@ -823,21 +836,21 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     ) {
                         Column {
                             Text(
-                                text = invoice.code.toString(),
+                                text = invoice?.code.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
                             Text(
-                                text = "invoice date: ${invoice.createdDate}",
+                                text = "invoice date: ${invoice?.createdDate}",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
-                            if(invoice.status == Status.INWAITING){
-                                if(invoice.provider?.id != myCompany.id){
+                            if(invoice?.status == Status.INWAITING){
+                                if(invoice?.provider?.id != myCompany.id){
                             ButtonSubmit(labelValue = "Accept", color = Color.Green, enabled = true) {
-                                invoiceViewModel.accepteInvoice(invoice.id!! , Status.ACCEPTED)
+                                invoiceViewModel.accepteInvoice(invoice?.id!! , Status.ACCEPTED)
                             }
                                 }else{
                                     Text("waiting for accept")
@@ -848,20 +861,20 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row {
                             Column {
-                                invoice.client?.let {
+                                invoice?.client?.let {
                                     Text(text = it.name)
                                     invoiceViewModel.clientCompany = it
                                     invoiceViewModel.clientType = AccountType.COMPANY
                                 }
-                                invoice.person?.let {
+                                invoice?.person?.let {
                                     Text(text = it.username!!)
                                     invoiceViewModel.clientUser = it
                                     invoiceViewModel.clientType = AccountType.USER
                                 }
-                                invoice.client?.phone?.let { Text(text = it) }
-                                invoice.person?.phone?.let { Text(text = it) }
-                                invoice.person?.address?.let { Text(text = it) }
-                                invoice.client?.address?.let { Text(text = it) }
+                                invoice?.client?.phone?.let { Text(text = it) }
+                                invoice?.person?.phone?.let { Text(text = it) }
+                                invoice?.person?.address?.let { Text(text = it) }
+                                invoice?.client?.address?.let { Text(text = it) }
                             }
                         }
                         Row {
@@ -871,7 +884,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         }
                     }
                 }
-                if (commandsLine.isNotEmpty() || ordersLine.isNotEmpty()) {
+                if (commandsLine.isNotEmpty() || ordersLine.itemCount !=0) {
 
                     Column {
                         LazyRow {
@@ -1013,8 +1026,12 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         }
                                     }
                                     LazyColumn {
-                                        itemsIndexed(ordersLine){index , order ->
-                                            invoiceViewModel.discount = order.invoice?.discount?:0.0
+                                        items(count = ordersLine.itemCount,
+                                            key = ordersLine.itemKey { it.id!! }) { index ->
+                                            val order = ordersLine[index]
+                                            if(order != null){
+                                            invoiceViewModel.discount =
+                                                order.invoice?.discount ?: 0.0
                                             Row(
                                                 modifier = Modifier
                                                     .padding(3.dp)
@@ -1088,6 +1105,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                             }
                                         }
                                     }
+                                    }
                                 }
                             }
                         }
@@ -1122,7 +1140,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         }
                     }
                 }
-            }
+
         }
     }
 }

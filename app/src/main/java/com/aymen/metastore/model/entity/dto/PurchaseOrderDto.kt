@@ -22,4 +22,15 @@ data class PurchaseOrderDto(
             orderNumber = orderNumber
         )
     }
+
+    fun toPurchaseOrderModel() : com.aymen.metastore.model.entity.model.PurchaseOrder{
+        return com.aymen.metastore.model.entity.model.PurchaseOrder(
+            id = id,
+            company = company?.toCompanyModel(),
+            client = client?.toCompanyModel(),
+            person = person?.toUserModel(),
+            createdDate = createdDate,
+            orderNumber = orderNumber
+        )
+    }
 }

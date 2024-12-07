@@ -132,20 +132,19 @@ interface ServiceApi {
     suspend fun getAllMyWorker(@Path("companyId") companyId: Long): Response<List<WorkerDto>>
     @GET("werehouse/invoice/getlastinvoice")
     suspend fun getLastInvoiceCode():Response<Long>
-    @POST("werehouse/commandline/save/{invoiceCode}/{clientId}/{discount}/{clientType}/{invoiceMode}")
+    @POST("werehouse/commandline/save/{clientId}")
     suspend fun addInvoice(@Body commandLineDtos : List<CommandLine>,
                            @Path("clientId") clientId : Long,
-                           @Path("invoiceCode") invoiceCode : Long,
-                           @Path("discount") discount : Double,
-                           @Path("clientType") clientType : AccountType,
-                           @Path("invoiceMode") invoiceMode: InvoiceMode
+                           @Query("invoiceCode") invoiceCode : Long,
+                           @Query("discount") discount : Double,
+                           @Query("clientType") clientType : AccountType,
+                           @Query("invoiceMode") invoiceMode: InvoiceMode,
+                           @Query("type") type: String
                            ):Response<Void>
     @GET("werehouse/invoice/response/{invoiceId}/{status}")
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
     @GET("werehouse/commandline/getcommandline/{invoiceId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("invoiceId") invoiceId : Long):Response<List<CommandLineDto>>
-    @GET("werehouse/client/get_all_my_containing/{clientName}/{companyId}")
-    suspend fun getAllMyClientContaining(@Path("clientName") clientName : String, @Path("companyId") companyId: Long):Response<List<ClientProviderRelationDto>>
     @GET("werehouse/message/getconversation/{id}/{type}")
     suspend fun getConversationByCaleeId(@Path("id") id : Long,@Path("type") type : MessageType): Response<ConversationDto>
     @POST("werehouse/message/send")
@@ -158,8 +157,8 @@ interface ServiceApi {
     suspend fun orderLineResponse(@Path("id") id : Long, @Path("status") status : Status, @Path("isall") isAll: Boolean):Response<Double>
     @GET("werehouse/order/get_all_my_lines/{companyId}")
     suspend fun getAllMyOrdersLine(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderLineDto>>
-    @GET("werehouse/order/get_all_by_invoice/{invoiceId}")
-    suspend fun getAllOrdersLineByInvoiceId(@Path("invoiceId") invoiceId: Long):Response<List<PurchaseOrderLineDto>>
+//    @GET("werehouse/order/get_all_by_invoice/{invoiceId}")
+//    suspend fun getAllOrdersLineByInvoiceId(@Path("invoiceId") invoiceId: Long):Response<List<PurchaseOrderLineDto>>
     @GET("werehouse/order/get_all_my_orders/{companyId}")
     suspend fun getAllMyOrder(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderDto>>
     @GET("werehouse/order/get_lines/{orderId}")
@@ -245,8 +244,8 @@ interface ServiceApi {
     suspend fun getPurchaqseOrderDetails(@Path("id") orderId: Long) : List<PurchaseOrderLineDto>
 
 
-    @GET("werehouse/article/search/{search}/{searchType}")
-    suspend fun getAllMyArticleContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
+    @GET("werehouse/article/search/{id}")
+    suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
 
     @GET("werehouse/category/get/{companyId}")
     suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CategoryDto>
@@ -254,8 +253,9 @@ interface ServiceApi {
     @GET("werehouse/client/get_all_my/{companyId}")
     suspend fun getAllMyClient(@Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
 
-    @GET("werehouse/client/get_all_my_client_containing/{companyId}")
-    suspend fun getAllMyClientsContaining(@Path("companyId") companyId: Long,@Query("searchType")searchType : SearchType, @Query("search") libelle : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+    @GET("werehouse/client/get_all_client_person_containing/{companyId}")
+    suspend fun getAllClientsPersonContaining(@Path("companyId") companyId: Long,@Query("searchType")searchType : SearchType, @Query("search") libelle : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<UserDto>
+
 
     @GET("werehouse/message/get_conversation")
     suspend fun getAllMyConversations(@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ConversationDto>
@@ -294,7 +294,7 @@ interface ServiceApi {
     suspend fun getAllMyPaymentNotAccepted(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
 
     @GET("werehouse/company/get_companies_containing/{id}")
-    suspend fun getAllCompaniesContaining(@Path("id") id : Long, @Query("search") search : String, @Query("searchType") searchType : SearchType ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ClientProviderRelationDto>
+    suspend fun getAllCompaniesContaining(@Path("id") id : Long, @Query("search") search : String, @Query("searchType") searchType : SearchType ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CompanyDto>
 
     @GET("werehouse/article/get_articles_by_category/{id}")
     suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleDto>
@@ -342,8 +342,13 @@ interface ServiceApi {
     @GET("werehouse/search/get_search_history/{id}")
     suspend fun getAllHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SearchHistoryDto>
 
+    @GET("werehouse/order/get_purchaseorder_line_by_invoice_id/{companyId}")
+    suspend fun getAllMyOrdersLinesByInvoiceId(@Path("companyId") companyId : Long , @Query("invoiceId") invoiceId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
 
+    @GET("werehouse/client/get_all_my_client_containing/{companyId}")
+    suspend fun getAllMyClientContaining(@Query("clientName") clientName : String, @Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
 
-
+    @GET("werehouse/article/get_company_article_by_company_id/{companyId}")
+    suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<ArticleCompanyDto>
 
 }

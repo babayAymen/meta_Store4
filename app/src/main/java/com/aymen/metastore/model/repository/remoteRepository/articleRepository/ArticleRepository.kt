@@ -23,9 +23,10 @@ interface ArticleRepository {
      fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>
      fun getRandomArticles(categoryName : CompanyCategory): Flow<PagingData<RandomArticleChild>>
      fun getArticleDetails(id : Long) : Flow<Resource<ArticleCompany>>
-     fun getAllMyArticleContaining(libelle : String, searchType: SearchType, companyId : Long) : Flow<PagingData<ArticleWithArticleCompany>>
+     fun getAllMyArticleContaining(libelle : String, searchType: SearchType, companyId : Long) : Flow<PagingData<ArticleCompanyDto>>
      fun getAllArticlesByCategor(companyId : Long, companyCategory: CompanyCategory): Flow<PagingData<Article>>
     suspend fun getArticleByBarcode(bareCode : String) : Response<ArticleCompanyDto>
+    fun getAllCompanyArticles(companyId : Long) : Flow<PagingData<ArticleWithArticleCompany>>
 
     suspend fun deleteArticle(id: String): Response<Void>
 

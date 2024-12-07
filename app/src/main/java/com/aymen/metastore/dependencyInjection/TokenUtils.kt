@@ -10,6 +10,7 @@ object TokenUtils {
         val jwt = JWT(token)
         val authList = jwt.getClaim("Authorization").asList(Map::class.java)
         authSize(authList.size)
+        Log.e("aymenbabayrole", "authority admin ${authList.size}")
         authList?.forEach { auth ->
             when (val authority = auth["authority"]) {
 //                    "USER" ->{
@@ -33,6 +34,7 @@ object TokenUtils {
                     userRole(RoleEnum.WORKER)
                 }
                 else ->{
+                    Log.e("aymenbabayrole", "authority user $authority")
                     userRole(RoleEnum.USER)
                 }
             }

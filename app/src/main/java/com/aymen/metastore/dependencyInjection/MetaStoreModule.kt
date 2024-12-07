@@ -86,6 +86,7 @@ import com.aymen.metastore.model.repository.remoteRepository.orderRepository.Ord
 import com.aymen.metastore.model.usecase.GetAllMyBuyHistory
 import com.aymen.metastore.model.usecase.GetAllMyOrdersNotAccepted
 import com.aymen.metastore.model.usecase.GetAllMyProfitsPerDay
+import com.aymen.metastore.model.usecase.GetAllOrdersLineByInvoiceId
 import com.aymen.metastore.model.usecase.GetAllSearchHistory
 import com.aymen.metastore.model.usecase.GetAllSubCategoryByCategoryId
 import com.aymen.metastore.model.usecase.GetInCompleteInvoice
@@ -104,7 +105,9 @@ import com.aymen.store.model.repository.remoteRepository.providerRepository.Prov
 import com.aymen.store.model.repository.remoteRepository.signInRepository.SignInRepository
 import com.aymen.store.model.repository.remoteRepository.signInRepository.SignInRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepository
-import com.aymen.store.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepositoryImpl
+import com.aymen.metastore.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepositoryImpl
+import com.aymen.metastore.model.usecase.GetAllCompanyArticles
+import com.aymen.metastore.model.usecase.GetAllSubCategoriesByCompanyId
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepository
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepositoryImpl
@@ -121,6 +124,7 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.Executors
 import javax.inject.Singleton
 
 const val BASE_URL = "http://192.168.1.4:8080/"
@@ -139,9 +143,9 @@ class MetaStoreModule {
             AppDatabase::class.java,
             DATABASE_NAME
         ).fallbackToDestructiveMigration()
-//            .setQueryCallback({ sqlQuery, bindArgs ->
-//            Log.d("RoomQuery", "SQL: $sqlQuery, Args: $bindArgs")
-//        }, Executors.newSingleThreadExecutor())
+            .setQueryCallback({ sqlQuery, bindArgs ->
+            Log.d("RoomQuery", "SQL: $sqlQuery, Args: $bindArgs")
+        }, Executors.newSingleThreadExecutor())
             .build()
 
     }
@@ -186,7 +190,10 @@ class MetaStoreModule {
             getAllMyProfitsPerDay = GetAllMyProfitsPerDay(repository = pointPaymentRepository),
             getMyHistoryProfitByDate = GetMyHistoryProfitByDate(repository = pointPaymentRepository),
             getAllSearchHistory = GetAllSearchHistory(repository = clientRepository),
-            getAllSubCategoryByCategoryId = GetAllSubCategoryByCategoryId(repository = subCategoryRepository)
+            getAllSubCategoryByCategoryId = GetAllSubCategoryByCategoryId(repository = subCategoryRepository),
+            getAllOrdersLineByInvoiceId = GetAllOrdersLineByInvoiceId(repository = orderRepository),
+            getAllCompanyArticles = GetAllCompanyArticles(repository = articleRepository),
+            getAllSubCategoriesByCompanyId = GetAllSubCategoriesByCompanyId(repository = subCategoryRepository)
 
         )
     }
@@ -218,13 +225,12 @@ class MetaStoreModule {
                             dataStore: DataStore<AuthenticationResponse>,
                             companyDataStore : DataStore<Company>,
                             userDataStore: DataStore<User>,
-                            room : AppDatabase,
                             sharedViewModel: SharedViewModel,
                             context: Context,
                             accountTypeDataStore: DataStore<AccountType>
                             )
     : AppViewModel {
-        return AppViewModel(repository,dataStore, companyDataStore, userDataStore,room, sharedViewModel, context, accountTypeDataStore)
+        return AppViewModel(repository,dataStore, companyDataStore, userDataStore, sharedViewModel, context, accountTypeDataStore)
     }
 
     @Provides
@@ -243,8 +249,9 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideShoppingViewModel(repository: GlobalRepository, room: AppDatabase, sharedViewModel: SharedViewModel, appViewModel: AppViewModel,
-                                 context : Context, useCases: MetaUseCases):ShoppingViewModel{
-        return ShoppingViewModel(repository,room, sharedViewModel, appViewModel, context,useCases)
+                                 context : Context, useCases: MetaUseCases, accountTypeDataStore: DataStore<AccountType>,companyDataStore: DataStore<Company>,
+                                 userDtoDataStore: DataStore<User>):ShoppingViewModel{
+        return ShoppingViewModel(repository,room, sharedViewModel, appViewModel, context,useCases, accountTypeDataStore,companyDataStore,userDtoDataStore)
     }
 
     @Provides

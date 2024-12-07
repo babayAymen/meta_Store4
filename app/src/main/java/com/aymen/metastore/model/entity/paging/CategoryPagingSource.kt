@@ -16,7 +16,7 @@ class CategoryPagingSource(private val api : ServiceApi, private val sharedViewM
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CategoryDto> {
         val currentPage = params.key ?: 0
-        val id = if(sharedViewModel.accountType == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
+        val id = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
         val response = api.getPagingCategoryByCompany(companyId = id!! ,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
         return try {

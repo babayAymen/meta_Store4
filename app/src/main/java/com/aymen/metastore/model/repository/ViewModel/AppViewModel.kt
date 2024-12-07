@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
@@ -14,6 +15,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.aymen.metastore.MainActivity
 import com.aymen.metastore.model.Location.LocationService
 import com.aymen.metastore.model.entity.model.Company
@@ -24,8 +28,12 @@ import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
+import com.aymen.store.ui.navigation.RouteController
+import com.aymen.store.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.ext.realmSetOf
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +41,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -47,7 +56,6 @@ class AppViewModel @Inject constructor(
     private val dataStore: DataStore<AuthenticationResponse>,
     private val companyDataStore: DataStore<Company>,
     private val userDatastore: DataStore<User>,
-    private val room : AppDatabase,
     private val sharedViewModel: SharedViewModel,
     private val context: Context,
     private val accountTypeDataStore: DataStore<AccountType>
@@ -67,16 +75,18 @@ class AppViewModel @Inject constructor(
     val historySelected: State<IconType> get() = _historySelected
 
     var userRole by mutableStateOf(RoleEnum.USER)
-    var authsize by mutableStateOf(1)
+    var authsize by mutableIntStateOf(1)
 
     private val _location = MutableLiveData<Pair<Double, Double>>()
     val location: LiveData<Pair<Double, Double>> get() = _location
     init {
+
         // Observing changes to the location LiveData
         location.observeForever { newLocation ->
             logLocationChange(newLocation)
         }
     }
+
 
     fun assignUser(user: User){
         _user.value = user
@@ -90,7 +100,7 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val response = repository.updateLocations(latitude, longitude)
-                sharedViewModel.assignCordination(latitude, longitude)
+                assignCordination(latitude, longitude)
                 if(response.isSuccessful) {
                     Toast.makeText(context, "you can turn off GPS service", Toast.LENGTH_LONG)
                         .show()
@@ -104,6 +114,33 @@ class AppViewModel @Inject constructor(
     fun updateLocation(location: Pair<Double, Double>) {
         _location.postValue(location)
     }
+
+    private fun assignCordination(latitude : Double, logitude : Double){
+        viewModelScope.launch {
+        accountTypeDataStore.data.collect { item ->
+            when (item) {
+                AccountType.COMPANY -> companyDataStore.updateData { company ->
+                    company.copy(
+                        latitude = latitude,
+                        longitude = logitude
+                    )
+                }
+                AccountType.USER -> userDatastore.updateData { user ->
+                    user.copy(
+                        latitude = latitude,
+                        longitude = logitude
+                    )
+                }
+                AccountType.AYMEN -> {}
+                AccountType.NULL -> {}
+            }
+        }
+        }
+    }
+
+    private val _showCheckLocationDialog = MutableStateFlow(false)
+    val showCheckLocationDialog: StateFlow<Boolean> = _showCheckLocationDialog
+
 
     fun updateScreen(newValue: IconType) {
         _historySelected.value = currentScreen.value
@@ -123,20 +160,28 @@ class AppViewModel @Inject constructor(
                   block()
               }else{
                   authsize = 2
-                  sharedViewModel.accountType = item
+                  sharedViewModel.assignAccountType( item)
                   when(item){
                       AccountType.COMPANY -> {
                           companyDataStore.data.collect{
                               sharedViewModel.assignCompany(it)
+                              if(it.longitude == 0.0 || it.latitude == 0.0 ){
+                                  Log.e("gpstest","company : ${it.latitude} ${it.longitude}")
+                                  _showCheckLocationDialog.value = true
+                              }
                           }
                       }
                       AccountType.USER -> {
                           userDatastore.data.collect{
                               sharedViewModel.assignUser(it)
+                              if(it.longitude == 0.0 || it.latitude == 0.0 ){
+                                  Log.e("gpstest","user $it : ${it.latitude} ${it.longitude}")
+                                  _showCheckLocationDialog.value = true
+                              }
                           }
                       }
-                      AccountType.AYMEN -> TODO()
-                      AccountType.NULL -> TODO()
+                      AccountType.AYMEN -> {}
+                      AccountType.NULL -> {}
                   }
               }
           }
@@ -145,7 +190,15 @@ class AppViewModel @Inject constructor(
     }
 
      fun block(){
+        userRole()
          viewModelScope.launch {
+             launch {
+
+                 accountTypeDataStore.data.collect{preferences ->
+                     val i = preferences // Here you can access the data from the datastore
+                     Log.e("initappviewmodel", "c bon account type $i")
+                 }
+             }
     launch {
 
         userDatastore.data.collect { preferences ->
@@ -163,8 +216,6 @@ class AppViewModel @Inject constructor(
     }
 
         }
-        getMyUserDetails()
-        userRole()
     }
 
     private val _show = mutableStateOf("dash")
@@ -182,7 +233,7 @@ class AppViewModel @Inject constructor(
 
 
 
-    fun getMyUserDetails() {
+    private fun getMyUserDetails() {
         viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val response = repository.getMyUserDetails()
@@ -197,41 +248,47 @@ class AppViewModel @Inject constructor(
         }
     }
 
-     private fun userRole(){
-        viewModelScope.launch(Dispatchers.IO) {
-            getToken {
-                if (it != null) {
-                    TokenUtils.isUser(it,
-                        authSize = {
-                            authSize ->
-                           authsize = authSize
-                        })
-                    {isUser ->
-                        when(isUser){
-                            RoleEnum.ADMIN->{
-                                 if (authsize == 1){
-                                     sharedViewModel.accountType = AccountType.COMPANY
+     private fun userRole() {
+         Log.e("userRole", "Calling userRole function")
+         viewModelScope.launch{
+             getToken {
+                 if (it != null) {
+                     TokenUtils.isUser(it,
+                         authSize = { authSize ->
+                             authsize = authSize
+                         })
+                     { isUser ->
+                         Log.e("userRole", "isUser: $isUser")
+                         when (isUser) {
+                             RoleEnum.ADMIN -> {
+                                 if (authsize == 1) {
+                                     Log.e("initappviewmodel","from storing company account")
+                                     sharedViewModel.assignAccountType(AccountType.COMPANY)
                                      storeAccountType(AccountType.COMPANY)
-                                }else{
-                                     sharedViewModel.accountType = AccountType.USER
+                                 } else {
+                                     Log.e("initappviewmodel","from storing user account")
+                                     sharedViewModel.assignAccountType(AccountType.USER)
                                      storeAccountType(AccountType.USER)
-                                }
-                            userRole = isUser
-                                getMyUserDetails()
-                            getMyCompany()
-                            }
-                           else ->{
-                            userRole = isUser
-                               getMyUserDetails()
+                                 }
+                                 getMyCompany()
+                             }
+                             RoleEnum.USER ->{
+                                 sharedViewModel.assignAccountType(AccountType.USER)
+                                 storeAccountType(AccountType.USER)
+                                 getMyUserDetails()
+                             }
+                             else -> {
+                            //     storeAccountType(AccountType.WORKER)
+                                 getMyUserDetails()
+                             }
+                         }
 
-
-                        }
-                    }
-                }
-            }
-            }
-        }
-    }
+                         userRole = isUser
+                     }
+                 }
+             }
+         }
+     }
 
     fun isLoggedIn(isLogged : (Boolean) -> Unit){
         getToken {
@@ -272,6 +329,7 @@ class AppViewModel @Inject constructor(
                 accountTypeDataStore.updateData {
                     accountType
                 }
+                Log.e("storeAccount","account type : $accountType")
             }catch (ex : Exception){
                 Log.e("errorStoreAccount","error is : $ex")
             }
@@ -283,7 +341,7 @@ class AppViewModel @Inject constructor(
             Log.e("storeUser", "storeUser image: ${user.image}")
             try {
                 userDatastore.updateData{
-                    User().copy(
+                    User(
                         id = user.id,
                         username = user.username,
                         address = user.address,
@@ -293,6 +351,8 @@ class AppViewModel @Inject constructor(
                         rate = user.rate,
                         rater = user.rater,
                         balance = user.balance,
+                        longitude = user.longitude,
+                        latitude = user.latitude
                     )
                 }
             } catch (e: Exception) {
@@ -307,10 +367,10 @@ class AppViewModel @Inject constructor(
             try {
                 val response = repository.getMeAsCompany()
                 if(response.isSuccessful){
-                    storeCompany(response.body()!!.toCompanyModel())
-                    Log.e("getmyuserdetails", "Error storing token store user fun in app view model:")
-
+                    val company = response.body()!!.toCompanyModel()
+                    storeCompany(company)
                     sharedViewModel.assignCompany( response.body()!!.toCompanyModel())
+                    storeUser(company.user!!)
                 }
             }catch (ex : Exception){
                 Log.e("exeptions","error is : $ex")
@@ -322,7 +382,7 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 companyDataStore.updateData{
-                    Company().copy(
+                    Company(
                         id = company.id,
                         name = company.name,
                         code = company.code,
@@ -380,9 +440,10 @@ class AppViewModel @Inject constructor(
                 userDatastore.updateData { currentUser ->
                     currentUser.copy (
                         image = newName
-                    ).also {
-                        sharedViewModel.assignUser( currentUser)
-                    }
+                    )
+//                        .also {
+//                        sharedViewModel.assignUser( currentUser)
+//                    }
                 }
             } catch (e: Exception) {
                 Log.e("storeCompanyError", "Error storing company name: ${e.message}")
@@ -395,10 +456,11 @@ class AppViewModel @Inject constructor(
             companyDataStore.updateData { currentCompany ->
                 currentCompany.copy (
                     balance = blc
-                ).also {
-                sharedViewModel.assignCompany(currentCompany)
-                    Log.e("company","company $currentCompany")
-                }
+                )
+//                    .also {
+//                sharedViewModel.assignCompany(currentCompany)
+//                    Log.e("company","company $currentCompany")
+//                }
             }
         }
     }
@@ -409,7 +471,7 @@ class AppViewModel @Inject constructor(
             try {
                 val response = repository.updateImage(file)
                 if(response.isSuccessful){
-                    when(sharedViewModel.accountType){
+                    when(sharedViewModel.accountType.value){
                         AccountType.COMPANY ->{
 
                             updateCompanyName(file.name){

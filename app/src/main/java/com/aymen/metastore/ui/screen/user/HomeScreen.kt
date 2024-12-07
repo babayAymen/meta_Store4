@@ -53,6 +53,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,8 +66,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
@@ -113,17 +117,14 @@ fun HomeScreen() {
 fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
-    val messageViewModel : MessageViewModel = hiltViewModel()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
-    val type = sharedViewModel.accountType
+    val type by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val currentScreen by appViewModel.currentScreen
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val randomArticles = articleViewModel.randomArticles.collectAsLazyPagingItems()
-    LaunchedEffect(key1 = type) {
-      //  articleViewModel.fetchRandomArticlesForHomePage(CompanyCategory.NULL)
-    }
-    val triggerLocationCheck by sharedViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
+
+    val triggerLocationCheck by appViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
 
     if(triggerLocationCheck) {
         CheckLocation(type, user, company, context)
@@ -182,7 +183,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     val selectedIcon by viewModel.currentScreen
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
-    val accountType = sharedViewModel.accountType
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val userRole = viewModel.userRole
     val historySelected by viewModel.historySelected
     var isPopupVisible by remember {
@@ -196,9 +197,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     LaunchedEffect(key1 = userRole) {
         isAdmin = userRole == RoleEnum.ADMIN
     }
-    var isCompany by remember { mutableStateOf(sharedViewModel.accountType == AccountType.COMPANY) }
+    var isCompany by remember { mutableStateOf(sharedViewModel.accountType.value == AccountType.COMPANY) }
     LaunchedEffect(sharedViewModel.accountType, company, user) {
-        isCompany = sharedViewModel.accountType == AccountType.COMPANY
+        isCompany = sharedViewModel.accountType.value == AccountType.COMPANY
 }
 
     val balance = if (isCompany) {
@@ -246,7 +247,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         }
                         if (isCompany) {
                             Row {
-                            if (company.logo != null ) {
+                            if (company.logo != null && company.logo != "" ) {
                                 ShowImage(
                                     image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}",
                                     35.dp
@@ -290,6 +291,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         DropdownMenu(
                             expanded = isPopupVisible,
                             onDismissRequest = { isPopupVisible = false }) {
+                            Log.e("userRole", "isadmin: $isAdmin  authsize ${viewModel.authsize}")
                             if (!isAdmin && viewModel.authsize == 1) {
                                 DropdownMenuItem(
                                     text = { Text(text = "add company") },

@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -39,20 +40,17 @@ class SharedViewModel @Inject constructor(
     private val accountTypeDataStore: DataStore<AccountType>
 ): ViewModel() {
 
-    private val _showCheckLocationDialog = MutableStateFlow(false)
-    val showCheckLocationDialog: StateFlow<Boolean> = _showCheckLocationDialog
+    private var _accountType = MutableStateFlow(AccountType.NULL)
+    val accountType: StateFlow<AccountType> get() = _accountType
 
-    var accountType by mutableStateOf(AccountType.USER)
+    private var _user = MutableStateFlow(User())
+    val user: StateFlow<User> get() = _user
 
-    private val _user = MutableStateFlow(User())
-    val user: StateFlow<User> = _user
+    private var _company = MutableStateFlow(Company())
+    val company: StateFlow<Company> get() = _company
 
-    private val _company = MutableStateFlow(Company())
-    val company: StateFlow<Company> = _company
-    init {
-        if((accountType == AccountType.COMPANY && company.value.id != null && company.value.id != 0L && company.value.latitude == 0.0) || (accountType == AccountType.USER && user.value.id != null && user.value.id != 0L && user.value.latitude == 0.0)){
-                _showCheckLocationDialog.value = true
-        }
+    fun assignAccountType(accountType: AccountType){
+        _accountType.value = accountType
     }
     fun assignCompany(company : Company){
         _company.value = company
@@ -60,9 +58,26 @@ class SharedViewModel @Inject constructor(
     fun assignUser(user : User){
         _user.value = user
     }
-    fun assignCordination(latitude : Double , longitude : Double){
-        _company.value.latitude = latitude
-        _company.value.longitude = longitude
+
+    init {
+        viewModelScope.launch {
+            accountTypeDataStore.data.collect {
+
+                Log.e("SharedViewModel", "AccountType updated to: $it")
+                _accountType.value = it
+            }
+            launch {
+
+                companyDtoDataStore.data.collect {
+                    Log.e("SharedViewModel", "company updated to: $it")
+                    _company.value = it
+                }
+            }
+            userDtoDatastore.data.collect{
+                _user.value = it
+            }
+
+        }
     }
 
     fun updateUserBalance(newBalance : Double){
@@ -71,9 +86,10 @@ class SharedViewModel @Inject constructor(
                 userDtoDatastore.updateData { currentUser ->
                     currentUser.copy(
                         balance = newBalance
-                    ).also{
-                        _user.value = currentUser
-                    }
+                    )
+//                        .also{
+//                        _user.value = currentUser
+//                    }
                 }
             }catch (ex : Exception){
                 Log.e("updateUserBalance","exception :${ex.message}")
@@ -87,8 +103,10 @@ class SharedViewModel @Inject constructor(
                 companyDtoDataStore.updateData { currentCompany ->
                     currentCompany.copy (
                         balance = newBalance
-                        ).also{
-                        _company.value = currentCompany
+                        )
+                        .also{
+                            Log.e("currentcompany","company : $currentCompany")
+//                        _company.value = currentCompany
                     }
                 }
             }catch (ex : Exception){
@@ -104,20 +122,20 @@ class SharedViewModel @Inject constructor(
     }
 
     fun updateBalance(balancee : BigDecimal){
-        if(accountType == AccountType.USER){
+        if(accountType.value == AccountType.USER){
             updateUserBalance(balancee.toDouble())
         }
-        if(accountType == AccountType.COMPANY){
+        if(accountType.value == AccountType.COMPANY){
             updateCompanyBalance(balancee.toDouble())
         }
     }
 
     fun returnThePrevioseBalance(newBalance : BigDecimal){
-        if(accountType == AccountType.USER){
+        if(accountType.value == AccountType.USER){
             val balancee = BigDecimal(_user.value.balance!!) + newBalance
             updateUserBalance(balancee.toDouble())
         }
-        if(accountType == AccountType.COMPANY){
+        if(accountType.value == AccountType.COMPANY){
             val balancee = BigDecimal(_company.value.balance!!) + newBalance
             updateCompanyBalance(balancee.toDouble())
         }
@@ -169,7 +187,9 @@ class SharedViewModel @Inject constructor(
                         rate = 0.0,
                         raters = 0,
                         category = CompanyCategory.DAIRY,
-                        user = User()
+                        user = User(),
+                        longitude = 0.0,
+                        latitude = 0.0
                     )
                 }
                 userDtoDatastore.updateData {
@@ -180,6 +200,8 @@ class SharedViewModel @Inject constructor(
                         phone = "",
                         balance = 0.0,
                         image = "",
+                        longitude = 0.0,
+                        latitude = 0.0
                     )
                 }
                 accountTypeDataStore.updateData {

@@ -5,7 +5,6 @@ import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
-import com.aymen.metastore.util.Resource
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 
@@ -23,6 +22,6 @@ interface OrderRepository {
 
     suspend fun getAllMyOrders(companyId : Long):Response<List<PurchaseOrderLineDto>>
 
-    suspend fun getAllOrdersLineByInvoiceId(invoiceId : Long): Response<List<PurchaseOrderLineDto>>
+     fun getAllOrdersLineByInvoiceId(companyId : Long ,invoiceId : Long): Flow<PagingData<PurchaseOrderLine>>
 
 }

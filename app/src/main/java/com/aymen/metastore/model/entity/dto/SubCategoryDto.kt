@@ -8,7 +8,7 @@ data class SubCategoryDto(
     var libelle : String? = null,
     var code : String? = null,
     val image : String? = null,
-    val category : CategoryDto? = null,
+    var category : CategoryDto? = null,
     val company : CompanyDto? = null
 ){
     fun toSubCategory() : SubCategory {

@@ -29,7 +29,6 @@ class SignInViewModel @Inject constructor(
                 try {
                     val token = repository.SignIn(authenticationRequest)
                     if (token.isSuccessful) {
-                        appViewModel.block()
                         storeToken(token.body()!!)
                         onSignInSuccess(true)
                     } else {

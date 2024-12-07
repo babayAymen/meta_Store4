@@ -374,12 +374,12 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>, isEnabled : Bo
                                 modifier = Modifier
                                     .weight(0.8f)
                                     .clickable {
-                                        companyViewModel.myCompany = art.provider!!
-                                        articleViewModel.companyId = it.provider?.id!!
+                                        companyViewModel.myCompany = art.company!!
+                                        articleViewModel.companyId = it.company?.id!!
                                         RouteController.navigateTo(Screen.CompanyScreen)
                                     }
                             ) {
-                                if (art.company?.logo != null) {
+                                if (art.company?.logo != null ) {
                                     ShowImage(
                                         image = "${BASE_URL}werehouse/image/${art.company?.logo}/company/${art.company?.user?.id}",
                                         30.dp
@@ -526,7 +526,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
     var selected by remember {
         mutableStateOf(false)
     }
-    val accountType = sharedViewModel.accountType
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = selected) {
         if(accountType == AccountType.USER) {
             if(isCompany){
@@ -802,7 +802,7 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 @Composable
 fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
     val sharedViewModel : SharedViewModel = hiltViewModel()
-    val accountType = sharedViewModel.accountType
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -1314,7 +1314,7 @@ fun InvetationCard(invetation : Invitation,onClicked: (Status) -> Unit) {
     var companyId by remember {
         mutableLongStateOf(0)
     }
-    val role = sharedViewModel.accountType
+    val role by sharedViewModel.accountType.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         companyViewModel.getMyCompany {
@@ -2550,120 +2550,199 @@ fun LocationServiceDialog(
 }
 
 @Composable
-fun CheckLocation(type : AccountType, user : User?, company : com.aymen.metastore.model.entity.model.Company, context: Context) {
-    var isLocationGranted by remember {
-        mutableStateOf(false)
-    }
-    var isGpsEnabled by remember {
-        mutableStateOf(context.isGpsEnabled())
-    }
-    var dialogGps by remember {
-        mutableStateOf(false)
-    }
-    var dialogLocation by remember {
-        mutableStateOf(false)
-    }
-    val isLocationPermissed by remember {
-        mutableStateOf(context.hasLocationPermission())
-    }
-    if(isGpsEnabled && isLocationPermissed){
-        Intent(context, LocationService::class.java).apply {
-            action = LocationService.ACTION_START
-            context.startService(this)
-        }
-    }
-    else {
-        val launcherLocation = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestPermission(),
-            onResult = { isGranted ->
-                if (isGranted) {
-                    if (!isGpsEnabled && (type == AccountType.USER && user?.id != null && user.latitude == 0.0) || (type == AccountType.COMPANY && company.id != null && company.latitude == 0.0)) {
-                        dialogLocation = false
-                        isLocationGranted = true
-                        dialogGps = true
-                    }
-                }
-            })
-        val lifecycleOwner = LocalLifecycleOwner.current
-        LaunchedEffect(lifecycleOwner) {
-            lifecycleOwner.lifecycle.addObserver(object : LifecycleEventObserver {
-                override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-                    if (event == Lifecycle.Event.ON_RESUME) {
-                        // Check if location permission has been granted
-                        if (context.hasLocationPermission() && !context.isGpsEnabled() && (type == AccountType.COMPANY && company.id != null && company.latitude == 0.0) || (type == AccountType.USER && user != null && user.latitude == 0.0)) {
-                            dialogGps = true
-                        }
-                    }
-                }
-            })
-        }
-        val locationSettingsLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.StartActivityForResult()
-        ) {
-            isGpsEnabled =
-                context.isGpsEnabled() // After returning from the location settings, check if GPS is enabled
-            if (isGpsEnabled) {
-                dialogGps =
-                    false        // GPS is enabled, you can dismiss the dialog or take other actions
-            } else {
-            }
-        }  // GPS is still not enabled, you might want to show a message
-        val gpsStatusReceiver = remember {
-            GpsStatusReceiver { isEnabled ->
-                isGpsEnabled = isEnabled
-                if (isEnabled) {
-                    // GPS is enabled, you can dismiss the dialog or take other actions
-                    dialogGps = false
-                }
-            }
-        }
-        if (dialogLocation) {
-            if ((type == AccountType.COMPANY && company.id != null && company.latitude == 0.0) || (type == AccountType.USER && user?.id != null && user.latitude == 0.0)) {
-                PermissionSettingsDialog {
-                    dialogLocation = false
-                }
-            }
-        }
-        if (dialogGps && !isGpsEnabled) {
-            LocationServiceDialog(onDismiss = { dialogGps = false }) {
-                locationSettingsLauncher.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-            }
-        }
-        DisposableEffect(Unit) {
-            val intentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
-            context.registerReceiver(gpsStatusReceiver, intentFilter)
+fun CheckLocation(type: AccountType, user: User?, company: Company, context: Context) {
+    var isGpsEnabled by remember { mutableStateOf(context.isGpsEnabled()) }
+    var dialogGps by remember { mutableStateOf(false) }
+    var dialogLocation by remember { mutableStateOf(false) }
+    var isLocationGranted by remember { mutableStateOf(context.hasLocationPermission()) }
 
-            onDispose {
-                context.unregisterReceiver(gpsStatusReceiver)
-            }
+    // Handle location permission launcher
+    val launcherLocation = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        isLocationGranted = isGranted
+        if (isGranted && !isGpsEnabled) {
+            dialogGps = true
         }
-        //location launche effect begin
-        var launchTrigger by remember {
-            mutableStateOf(false)
-        }
-        LaunchedEffect(key1 = isGpsEnabled, key2 = type) {
-            launchTrigger = !launchTrigger
-        }
-        LaunchedEffect(key1 = user, key2 = company, key3 = launchTrigger) {
-            if ((type == AccountType.USER && user != null && user.latitude == 0.0) || (type == AccountType.COMPANY && company.id != null && company.latitude == 0.0)) {
+    }
 
+    // Handle GPS settings launcher
+    val locationSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        isGpsEnabled = context.isGpsEnabled()
+        if (isGpsEnabled) {
+            dialogGps = false
+        }
+    }
+
+    // Register GPS status changes dynamically
+    val gpsStatusReceiver = remember {
+        GpsStatusReceiver { isEnabled ->
+            isGpsEnabled = isEnabled
+            if (isEnabled) {
+                dialogGps = false
+                // Start location service if necessary
                 if (isLocationGranted) {
-                    if (isGpsEnabled) {
-                        Intent(context, LocationService::class.java).apply {
-                            action = LocationService.ACTION_START
-                            context.startService(this)
-                        }
-                    } else {
-                        dialogGps = true
+                    Intent(context, LocationService::class.java).apply {
+                        action = LocationService.ACTION_START
+                        context.startService(this)
+                    }
+                }
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        val intentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
+        context.registerReceiver(gpsStatusReceiver, intentFilter)
+
+        onDispose {
+            context.unregisterReceiver(gpsStatusReceiver)
+        }
+    }
+
+    // Handle location permission and GPS dialogs
+    if (dialogLocation) {
+        PermissionSettingsDialog {
+            dialogLocation = false
+        }
+    }
+
+    if (dialogGps && !isGpsEnabled) {
+        LocationServiceDialog(onDismiss = { dialogGps = false }) {
+            locationSettingsLauncher.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        }
+    }
+
+    // Initial check for location permissions and GPS
+    LaunchedEffect(isGpsEnabled, isLocationGranted) {
+        if ((type == AccountType.USER && user?.latitude == 0.0) ||
+            (type == AccountType.COMPANY && company.latitude == 0.0)) {
+            if (isLocationGranted) {
+                if (isGpsEnabled) {
+                    Intent(context, LocationService::class.java).apply {
+                        action = LocationService.ACTION_START
+                        context.startService(this)
                     }
                 } else {
-                    launcherLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                    launcherLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    dialogLocation = true
+                    dialogGps = true
                 }
+            } else {
+                launcherLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                dialogLocation = true
             }
         }
     }
 }
+
+
+//@Composable
+//fun CheckLocation(type : AccountType, user : User?, company : Company, context: Context) {
+//    var isGpsEnabled by remember { mutableStateOf(context.isGpsEnabled()) }
+//    var dialogGps by remember { mutableStateOf(false) }
+//    var dialogLocation by remember { mutableStateOf(false) }
+//    var isLocationGranted by remember { mutableStateOf(false) }
+//
+//    val isLocationPermissed by remember { mutableStateOf(context.hasLocationPermission()) }
+//    if(isGpsEnabled && isLocationPermissed){
+//        Intent(context, LocationService::class.java).apply {
+//            action = LocationService.ACTION_START
+//            context.startService(this)
+//        }
+//    }
+//    else {
+//        val launcherLocation = rememberLauncherForActivityResult(
+//            contract = ActivityResultContracts.RequestPermission(),
+//            onResult = { isGranted ->
+//                if (isGranted) {
+//                    if (!isGpsEnabled && (type == AccountType.USER && user?.id != null && user.latitude == 0.0) || (type == AccountType.COMPANY && company.id != null && company.latitude == 0.0)) {
+//                        dialogLocation = false
+//                        isLocationGranted = true
+//                        dialogGps = true
+//                    }
+//                }
+//            })
+//        val lifecycleOwner = LocalLifecycleOwner.current
+//        LaunchedEffect(lifecycleOwner) {
+//            lifecycleOwner.lifecycle.addObserver(object : LifecycleEventObserver {
+//                override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+//                    if (event == Lifecycle.Event.ON_RESUME) {
+//                        // Check if location permission has been granted
+//                        if (context.hasLocationPermission() && !context.isGpsEnabled() && (type == AccountType.COMPANY && company.id != null && company.latitude == 0.0) || (type == AccountType.USER && user != null && user.latitude == 0.0)) {
+//                            dialogGps = true
+//                        }
+//                    }
+//                }
+//            })
+//        }
+//        val locationSettingsLauncher = rememberLauncherForActivityResult(
+//            contract = ActivityResultContracts.StartActivityForResult()
+//        ) {
+//            isGpsEnabled =
+//                context.isGpsEnabled() // After returning from the location settings, check if GPS is enabled
+//            if (isGpsEnabled) {
+//                dialogGps =
+//                    false        // GPS is enabled, you can dismiss the dialog or take other actions
+//            } else {
+//            }
+//        }  // GPS is still not enabled, you might want to show a message
+//        val gpsStatusReceiver = remember {
+//            GpsStatusReceiver { isEnabled ->
+//                isGpsEnabled = isEnabled
+//                if (isEnabled) {
+//                    // GPS is enabled, you can dismiss the dialog or take other actions
+//                    dialogGps = false
+//                }
+//            }
+//        }
+//        if (dialogLocation) {
+//            if ((type == AccountType.COMPANY && company.id != null && company.latitude == 0.0) || (type == AccountType.USER && user?.id != null && user.latitude == 0.0)) {
+//                PermissionSettingsDialog {
+//                    dialogLocation = false
+//                }
+//            }
+//        }
+//        if (dialogGps && !isGpsEnabled) {
+//            LocationServiceDialog(onDismiss = { dialogGps = false }) {
+//                locationSettingsLauncher.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+//            }
+//        }
+//        DisposableEffect(Unit) {
+//            val intentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
+//            context.registerReceiver(gpsStatusReceiver, intentFilter)
+//
+//            onDispose {
+//                context.unregisterReceiver(gpsStatusReceiver)
+//            }
+//        }
+//        //location launche effect begin
+//        var launchTrigger by remember {
+//            mutableStateOf(false)
+//        }
+//        LaunchedEffect(key1 = isGpsEnabled, key2 = type) {
+//            launchTrigger = !launchTrigger
+//        }
+//        LaunchedEffect(key1 = user, key2 = company, key3 = launchTrigger) {
+//            if ((type == AccountType.USER && user != null && user.latitude == 0.0) || (type == AccountType.COMPANY && company.id != null && company.latitude == 0.0)) {
+//
+//                if (isLocationGranted) {
+//                    if (isGpsEnabled) {
+//                        Intent(context, LocationService::class.java).apply {
+//                            action = LocationService.ACTION_START
+//                            context.startService(this)
+//                        }
+//                    } else {
+//                        dialogGps = true
+//                    }
+//                } else {
+//                    launcherLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+//                    launcherLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+//                    dialogLocation = true
+//                }
+//            }
+//        }
+//    }
+//}
 
 

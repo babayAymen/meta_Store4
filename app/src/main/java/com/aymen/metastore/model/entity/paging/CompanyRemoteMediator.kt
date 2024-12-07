@@ -21,13 +21,9 @@ import com.aymen.store.model.repository.globalRepository.ServiceApi
 class CompanyRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val type : com.aymen.metastore.model.Enum.LoadType,
-    private val id : Long? = null,
-    private val searchType : SearchType?,
-    private val libelle : String?
+    private val id : Long,
+    private val libelle : String
 ): RemoteMediator<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>() {
-
-
     private val companyDao = room.companyDao()
     private val userDao = room.userDao()
     private val companyClientRelationDao = room.clientProviderRelationDao()
@@ -36,8 +32,6 @@ class CompanyRemoteMediator(
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH
     }
-
-
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>
@@ -47,11 +41,10 @@ class CompanyRemoteMediator(
                 LoadType.REFRESH -> {
                     getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
                 }
-
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     previousePage
                 }
@@ -59,22 +52,14 @@ class CompanyRemoteMediator(
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = true
+                        endOfPaginationReached = false
                     )
                     nextePage
                 }
             }
-            val response = when(type){
-                com.aymen.metastore.model.Enum.LoadType.RANDOM -> {
-                    api.getAllMyClientsContaining(id!!,searchType!!, libelle!!,currentPage, PAGE_SIZE)
-                }
-                com.aymen.metastore.model.Enum.LoadType.ADMIN -> {
-                    api.getAllMyClientsContaining(id!!,searchType!!, libelle!!,currentPage, PAGE_SIZE)
-                }
-                com.aymen.metastore.model.Enum.LoadType.CONTAINING -> {
-                    api.getAllCompaniesContaining(id!!, libelle!! , searchType!!,page = currentPage, pageSize = PAGE_SIZE)
-                }
-            }
+            val response = api.getAllMyClientContaining(libelle, id  , currentPage , state.config.pageSize)
+            Log.e("errorcompanymediator","response size : ${response.size}")
+
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -108,12 +93,13 @@ class CompanyRemoteMediator(
                     }
 
                 } catch (ex: Exception) {
-                    Log.e("error", ex.message.toString())
+                    Log.e("errorcompanymediator", ex.toString())
                 }
             }
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
+            Log.e("errorcompanymediator", ex.toString())
             MediatorResult.Error(ex)
         }
     }
@@ -139,7 +125,7 @@ class CompanyRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-      //  searchHistoryDao.clearAllSearchHistoryTable()
+        //  searchHistoryDao.clearAllSearchHistoryTable()
         searchHistoryDao.clearAllSearchHistoryRemoteKeysTable()
     }
 }

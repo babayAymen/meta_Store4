@@ -20,7 +20,7 @@ class ArticleCompanyPagingSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ArticleCompany> {
         val currentPage = params.key ?: 0
-        val id = if(sharedViewModel.accountType == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
+        val id = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
         val response = when(loadType){
             LoadType.RANDOM -> api.getRandomArticles(offset = currentPage, pageSize = PAGE_SIZE)
             LoadType.ADMIN -> api.getAll(companyId = id!! ,offset = currentPage, pageSize = PAGE_SIZE)

@@ -6,7 +6,6 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.Enum.LoadType
-import com.aymen.metastore.model.entity.paging.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvitationRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorkerOrCompany

@@ -200,15 +200,16 @@ fun dropDownItems(list: List<UnitArticle>):UnitArticle {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCategory(pagingItems: LazyPagingItems<Category>) {
-    val categoryViewModel: CategoryViewModel = viewModel()
+fun DropDownCategory(pagingItems: LazyPagingItems<Category>, onSelected: (Category) -> Unit) {
+    val categoryViewModel: CategoryViewModel = hiltViewModel()
     if (pagingItems.itemCount != 0) {
         var itemSelected by remember {
             mutableStateOf(
-                pagingItems.peek(0) ?: Category()
+                pagingItems.peek(0)!!
             )
         }
-        categoryViewModel.category = itemSelected
+        onSelected(itemSelected)
+     //   categoryViewModel.category = itemSelected
         var isExpanded by remember {
             mutableStateOf(false)
         }
@@ -242,6 +243,7 @@ fun DropDownCategory(pagingItems: LazyPagingItems<Category>) {
                                 DropdownMenuItem(
                                     text = { Text(item.libelle ?: "Unknown") },
                                     onClick = {
+                                        onSelected(item)
                                         itemSelected = item
                                         isExpanded = false
                                         categoryViewModel.category = itemSelected
@@ -260,6 +262,7 @@ fun DropDownCategory(pagingItems: LazyPagingItems<Category>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, onSelected : (SubCategory) -> Unit) {
+
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     var itemSelectedLibell by remember {
         mutableStateOf("select sub category")
@@ -267,13 +270,12 @@ fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, 
     var itemSelected by remember {
         mutableStateOf(SubCategory())
     }
-        val subCategoryList by subCategoryViewModel.subCategories.collectAsStateWithLifecycle()
-    LaunchedEffect(categoryId) {
-        subCategoryList.let {
-        it.map { itemSelectedLibell = it.libelle!! }
-            onSelected(itemSelected)
-        }
-
+    if(list.itemCount != 0){
+        itemSelected = list.peek(0)!!
+        itemSelectedLibell = itemSelected.libelle?:""
+    }else{
+        itemSelected = SubCategory()
+        itemSelectedLibell = "select sub category"
     }
     var isExpanded by remember {
         mutableStateOf(false)
@@ -302,16 +304,18 @@ fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, 
                     onDismissRequest = { isExpanded = false }
                 ) {
                     list.itemSnapshotList.items.forEach { subCategory ->
-                        DropdownMenuItem(
-                            text = { Text(subCategory.libelle!!) },
-                            onClick = {
-                                itemSelectedLibell = subCategory.libelle!!
-                                isExpanded = false
-                                subCategoryViewModel.subCategoryId = subCategory.id!!
-                                onSelected(subCategory)
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
+                        if (subCategory.category?.id == categoryId) {
+                            DropdownMenuItem(
+                                text = { Text(subCategory.libelle!!) },
+                                onClick = {
+                                    itemSelectedLibell = subCategory.libelle!!
+                                    isExpanded = false
+                                    subCategoryViewModel.subCategoryId = subCategory.id!!
+                                    onSelected(subCategory)
+                                },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                            )
+                        }
                     }
                 }
             }
@@ -322,7 +326,7 @@ fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>) {
+fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>, onSelected: (Company) -> Unit) {
     val companyViewModel: CompanyViewModel = hiltViewModel()
     if (list.itemCount != 0) {
         var itemSelected by remember {
@@ -359,6 +363,7 @@ fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>) {
                             DropdownMenuItem(
                                 text = { Text(relation.provider?.name!!) },
                                 onClick = {
+                                    onSelected(relation.provider!!)
                                     itemSelected = relation
                                     isExpanded = false
                                     companyViewModel.providerId = itemSelected.provider?.id ?: 0

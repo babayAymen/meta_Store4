@@ -35,5 +35,7 @@ data class MetaUseCases(
     val getMyHistoryProfitByDate : GetMyHistoryProfitByDate,
     val getAllSearchHistory : GetAllSearchHistory,
     val getAllSubCategoryByCategoryId: GetAllSubCategoryByCategoryId,
-
+    val getAllOrdersLineByInvoiceId : GetAllOrdersLineByInvoiceId,
+    val getAllCompanyArticles : GetAllCompanyArticles,
+    val getAllSubCategoriesByCompanyId : GetAllSubCategoriesByCompanyId,
 )

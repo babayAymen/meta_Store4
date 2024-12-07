@@ -53,7 +53,7 @@ fun PaymentScreen() {
     val pointPaymentViewModel: PointsPaymentViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val context = LocalContext.current
-    val type = sharedViewModel.accountType
+    val type by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val show by appViewModel.show
     var rechargeInabled by remember {

@@ -48,4 +48,26 @@ data class InvoiceDto(
 
         )
     }
+
+    fun toInvoiceModel() : com.aymen.metastore.model.entity.model.Invoice{
+        return com.aymen.metastore.model.entity.model.Invoice(
+            id = id,
+            code = code,
+            tot_tva_invoice = tot_tva_invoice,
+            prix_invoice_tot = prix_invoice_tot,
+            prix_article_tot = prix_article_tot,
+            discount = discount,
+            status = status,
+            paid = paid,
+            type = type,
+            rest = rest,
+            person = person?.toUserModel(),
+            client = client?.toCompanyModel(),
+            provider = provider?.toCompanyModel(),
+            createdDate = createdDate,
+            lastModifiedDate = lastModifiedDate,
+            lastModifiedBy = lastModifiedBy,
+            createdBy = createdBy
+        )
+    }
 }

@@ -12,16 +12,19 @@ import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.paging.AllArticlesContainingPagingSource
+import com.aymen.metastore.model.entity.paging.AllPersonContainingPagingSource
 import com.aymen.metastore.model.entity.paging.ArticleCompanyRandomMediator
 import com.aymen.metastore.model.entity.paging.ArticleCompanyRemoteMediator
-import com.aymen.metastore.model.entity.paging.ArticleContainingRemoteMediator
 import com.aymen.metastore.model.entity.paging.ArticleRemoteMediator
+import com.aymen.metastore.model.entity.paging.CompanyArticleRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.metastore.util.Resource
 import com.aymen.metastore.util.networkBoundResource
 import com.aymen.store.model.Enum.CompanyCategory
@@ -55,7 +58,7 @@ class ArticleRepositoryImpl @Inject constructor
     @OptIn(ExperimentalPagingApi::class)
     override fun getRandomArticles(categoryName : CompanyCategory) :Flow<PagingData<RandomArticleChild>>{
             return Pager(
-    config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 0),
+    config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
     remoteMediator = ArticleCompanyRandomMediator(
     api = api, room = room
     ),
@@ -72,7 +75,7 @@ class ArticleRepositoryImpl @Inject constructor
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>{
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = ArticleCompanyRemoteMediator(
                 api = api, room = room, id = companyId
             ),
@@ -84,24 +87,21 @@ class ArticleRepositoryImpl @Inject constructor
         }
     }
 
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyArticleContaining(libelle: String, searchType: SearchType, companyId : Long): Flow<PagingData<ArticleWithArticleCompany>> {
+    override fun getAllMyArticleContaining(libelle: String, searchType: SearchType, companyId : Long): Flow<PagingData<ArticleCompanyDto>> {
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
-            remoteMediator = ArticleContainingRemoteMediator(
-                api = api, room = room,search = libelle, searchType = searchType
+            config = PagingConfig(
+                pageSize = PAGE_SIZE, // Number of items per page
+                enablePlaceholders = false // Disable placeholders for unloaded pages
             ),
-            pagingSourceFactory = { articleCompanyDao.getAllMyArticleContaining(libelle,companyId)}
-        ).flow.map {
-            it.map { article ->
-                article
+            pagingSourceFactory = {
+                AllArticlesContainingPagingSource(api, libelle, searchType,companyId)
             }
-        }
+        ).flow
     }
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllArticlesByCategor(companyId : Long, companyCategory : CompanyCategory) :Flow<PagingData<Article>>{
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 2),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = ArticleRemoteMediator(
                 api = api, room = room,  companyId = companyId
             ),
@@ -114,6 +114,20 @@ class ArticleRepositoryImpl @Inject constructor
     }
 
     override suspend fun getArticleByBarcode(bareCode: String) = api.getArticleByBarcode(barCode = bareCode)
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getAllCompanyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>> {
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = CompanyArticleRemoteMediator(
+                api = api, room = room,  companyId = companyId
+            ),
+            pagingSourceFactory = { articleCompanyDao.getAllMyArticles(companyId = companyId)}
+        ).flow.map {
+            it.map { article ->
+                article
+            }
+        }
+    }
 
     override fun getArticleDetails(id: Long): Flow<Resource<ArticleCompany>> {
         return networkBoundResource(
@@ -158,7 +172,7 @@ class ArticleRepositoryImpl @Inject constructor
         }catch (ex : Exception){
             Log.e("addQuantityArticle", "exception is : ${ex.message}")
         }
-    val response = api.addQuantityArticle(quantity, articleId)
+        val response = api.addQuantityArticle(quantity, articleId)
         if(response.isSuccessful){
             response.body()?.let {
                 articleCompanyDao.insertSigleArticle( it.toArticleCompany(false))

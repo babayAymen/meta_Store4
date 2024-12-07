@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.entity.dto
 
+import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.PurchaseOrderLine
 import com.aymen.store.model.Enum.Status
 
@@ -29,6 +30,22 @@ data class PurchaseOrderLineDto(
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
             invoiceId = invoice?.id
+        )
+    }
+
+    fun toPurchaseOrderLineModel() : com.aymen.metastore.model.entity.model.PurchaseOrderLine{
+        return com.aymen.metastore.model.entity.model.PurchaseOrderLine(
+
+            id = id,
+            article = article?.toArticleCompanyModel(),
+            quantity = quantity,
+            comment = comment,
+            status = status,
+            delivery = delivery,
+            purchaseorder = purchaseorder?.toPurchaseOrderModel(),
+            createdDate = createdDate,
+            lastModifiedDate = lastModifiedDate,
+            invoice = invoice?.toInvoiceModel()
         )
     }
 }

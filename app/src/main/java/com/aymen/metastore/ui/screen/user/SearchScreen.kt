@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,20 +23,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
-import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.SearchViewModel
 import com.aymen.metastore.ui.component.ArticleCardForSearch
 import com.aymen.metastore.ui.component.CompanyCard
 import com.aymen.metastore.ui.component.SearchField
 import com.aymen.metastore.ui.component.UserCard
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 
@@ -48,6 +44,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
     val articleViewModel  : ArticleViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val searchViewModel : SearchViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     val histories = searchViewModel.histories.collectAsLazyPagingItems()
     var show by remember {
         mutableStateOf(false)
@@ -64,7 +61,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
     var searchOption by remember {
         mutableStateOf(false)
     }
-    val role = appViewModel.userRole
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
 
 
     Surface {
@@ -91,7 +88,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                         )
                                     }
                                 }
-                                if (role != RoleEnum.USER) {
+                                if (accountType != AccountType.USER) {
 
                                     SearchTypeItem( searchType, searchCategory) {
                                         searchType = it
@@ -107,40 +104,24 @@ fun SearchScreen(modifier: Modifier = Modifier) {
 
                                 when (searchCategory) {
                                     SearchCategory.COMPANY -> {
-                                        val com =  searchViewModel.allCompanies.collectAsLazyPagingItems()
+                                        val com =
+                                            searchViewModel.searchCompanies.collectAsLazyPagingItems()
                                         for (index in 0 until com.itemCount) {
                                             val company = com[index]
-                                            if(company != null){
-                                            when (searchType) {
-                                                SearchType.OTHER -> {
-                                                    CompanyCard(
-                                                        company.company!!
-                                                    ) {
-                                                        companyViewModel.myCompany = company.company
+                                            if (company != null) {
+                                                CompanyCard(
+                                                    company
+                                                ) {
+                                                    companyViewModel.myCompany =
+                                                        company
 //                                                        articleViewModel.companyId = company.company.id!!
-                                                        RouteController.navigateTo(Screen.CompanyScreen)
-                                                        searchViewModel.saveHitory(
-                                                            searchCategory,
-                                                            company.id!!
-                                                        )
-                                                    }
-                                                }
-
-                                                else -> {
-                                                    CompanyCard(
-                                                        company.company!!
-                                                    ) {
-                                                        companyViewModel.myCompany = company.company
-//                                                        articleViewModel.companyId = company.company.id!!
-                                                        RouteController.navigateTo(Screen.CompanyScreen)
-                                                        searchViewModel.saveHitory(
-                                                            searchCategory,
-                                                            company.company.id!!
-                                                        )
-                                                    }
+                                                    RouteController.navigateTo(Screen.CompanyScreen)
+                                                    searchViewModel.saveHitory(
+                                                        searchCategory,
+                                                        company.id!!
+                                                    )
                                                 }
                                             }
-                                        }
                                         }
                                     }
 
@@ -149,12 +130,12 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                         for (index in 0 until cli.itemCount) {
                                             val user = cli[index]
                                             if (user != null) {
-                                                UserCard(user.user!!, appViewModel) {
-                                                    appViewModel.assignUser(user.user)
+                                                UserCard(user, appViewModel) {
+                                                    appViewModel.assignUser(user)
                                                     RouteController.navigateTo(Screen.UserScreen)
                                                     searchViewModel.saveHitory(
                                                         searchCategory,
-                                                        user.user.id!!
+                                                        user.id!!
                                                     )
                                                 }
                                             }
@@ -162,18 +143,19 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                     }
 
                                     SearchCategory.ARTICLE -> {
-                                        val art =
-                                            searchViewModel.searchArticles.collectAsLazyPagingItems()
+                                        val art = searchViewModel.searchArticles.collectAsLazyPagingItems()
                                         for (index in 0 until art.itemCount) {
                                             val article = art[index]
-                                            ArticleCardForSearch(article!!) {
+                                            if(article != null){
+                                            ArticleCardForSearch(article) {
                                                 companyViewModel.myCompany = article.company!!
-                                                    articleViewModel.assignArticleCompany(article)
+                                                articleViewModel.assignArticleCompany(article)
                                                 RouteController.navigateTo(Screen.ArticleDetailScreen)
                                                 searchViewModel.saveHitory(
                                                     searchCategory,
                                                     article.id!!
                                                 )
+                                            }
                                             }
                                         }
                                     }

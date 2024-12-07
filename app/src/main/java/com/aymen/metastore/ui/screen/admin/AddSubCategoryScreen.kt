@@ -26,13 +26,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
+import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.DropDownCategory
 import com.aymen.metastore.ui.component.InputTextField
 import com.aymen.metastore.ui.component.resolveUriToFile
 import com.google.gson.Gson
@@ -45,16 +48,17 @@ fun AddSubCategoryScreen() {
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
-    LaunchedEffect(key1 = true) {
-//        categoryViewModel.getAllCategoryByCompany(sharedViewModel.company.value.id!!)
-    }
-    val categories by categoryViewModel.categories.collectAsStateWithLifecycle()
+
+    val categories = categoryViewModel.categories.collectAsLazyPagingItems()
     val subCategory = SubCategoryDto()
     var libelle by remember {
         mutableStateOf("")
     }
     var code by remember {
         mutableStateOf("")
+    }
+    var category by remember {
+        mutableStateOf(Category())
     }
     var image by remember {
         mutableStateOf<Uri?>(null)
@@ -105,7 +109,9 @@ fun AddSubCategoryScreen() {
 
             }
             Row {
-//                DropDownCategory(list = categories )
+                DropDownCategory(categories ){
+                    category = it
+                }
             }
             ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
                 singlePhotoPickerLauncher.launch(
@@ -140,7 +146,7 @@ fun AddSubCategoryScreen() {
                     ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true){
                         subCategory.libelle = libelle
                         subCategory.code = code
-                        subCategory.category?.id = categoryViewModel.category.id
+                        subCategory.category = category.toCategoryDto()
 
                         val photo =  resolveUriToFile(image, context)
                         val subCategoryJsonString = gson.toJson(subCategory)

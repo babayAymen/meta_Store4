@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.repository.remoteRepository.orderRepository
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -9,10 +10,14 @@ import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.paging.OrderLineDetailsRemoteMediator
 import com.aymen.metastore.model.entity.paging.OrderNotAcceptedRemoteMediator
+import com.aymen.metastore.model.entity.paging.PurchaseOrderLinesByInvoiceIdPagingSource
+import com.aymen.metastore.model.entity.paging.SubCategoryPagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.Resource
+import com.aymen.metastore.util.networkBoundResource
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.flow.Flow
@@ -65,7 +70,20 @@ class OrderRepositoryImpl @Inject constructor(
     override suspend fun getAllMyOrdersLinesByOrderId(orderId : Long) = api.getAllMyOrdersLineByOrderId(orderId = orderId)
     override suspend fun sendOrder(orderList: List<PurchaseOrderLine>) = api.sendOrder(orderList)
     override suspend fun getAllMyOrders(companyId : Long) = api.getAllMyOrdersLine(companyId)
-    override suspend fun getAllOrdersLineByInvoiceId(invoiceId: Long) = api.getAllOrdersLineByInvoiceId(invoiceId = invoiceId)
+
+    override fun getAllOrdersLineByInvoiceId(companyId : Long ,invoiceId: Long) : Flow<PagingData<PurchaseOrderLine>>{
+
+        Log.e("getAllOrdersLineByInvoiceId", "begin in repo impl")
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE, // Number of items per page
+                enablePlaceholders = false // Disable placeholders for unloaded pages
+            ),
+            pagingSourceFactory = {
+                PurchaseOrderLinesByInvoiceIdPagingSource(api, companyId, invoiceId)
+            }
+        ).flow
+    }
 
     suspend fun insert(response : List<PurchaseOrderLineDto>){
 

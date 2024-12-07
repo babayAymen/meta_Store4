@@ -60,7 +60,6 @@ fun UserScreen() {
     val appViewModel: AppViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val messageViewModel : MessageViewModel = hiltViewModel()
-    val companyViewModel : CompanyViewModel = hiltViewModel()
     val ratingViewModel : RatingViewModel = hiltViewModel()
     val clientViewModel : ClientViewModel = hiltViewModel()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
@@ -82,7 +81,7 @@ fun UserScreen() {
     ) {
             Column {
                 Row {
-                    if (user.image == "") {
+                    if (user.image == "" || user.image == null) {
                         val painter: Painter = painterResource(id = R.drawable.emptyprofile)
                         Image(
                             painter = painter,
@@ -98,11 +97,11 @@ fun UserScreen() {
                             ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
                         }
                     }
-                    Icon(
-                        imageVector = Icons.Default.Verified,
-                        contentDescription = "verification account",
-                        tint = Color.Green
-                    )
+//                    Icon(
+//                        imageVector = Icons.Default.Verified,
+//                        contentDescription = "verification account",
+//                        tint = Color.Green
+//                    )
                     if (user.id != null) {
                         Text(text = user.username!!)
                     }

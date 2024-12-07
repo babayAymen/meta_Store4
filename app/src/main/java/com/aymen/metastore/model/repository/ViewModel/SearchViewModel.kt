@@ -7,7 +7,9 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SearchHistory
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.SearchCategory
@@ -32,14 +34,13 @@ class SearchViewModel @Inject constructor(
     private var _histories: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
     val histories: StateFlow<PagingData<SearchHistory>> get() = _histories
 
-    private var _allCompanies: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
-    val allCompanies: StateFlow<PagingData<SearchHistory>> get() = _allCompanies
+    private val _searchCompanies: MutableStateFlow<PagingData<Company>> = MutableStateFlow(PagingData.empty())
+    val searchCompanies: StateFlow<PagingData<Company>> get() = _searchCompanies
 
-    private var _searchPersons: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
-    val searchPersons: StateFlow<PagingData<SearchHistory>> get() = _searchPersons
+    private val _searchPersons: MutableStateFlow<PagingData<User>> = MutableStateFlow(PagingData.empty())
+    val searchPersons: StateFlow<PagingData<User>> get() = _searchPersons
 
-    private var _searchArticles : MutableStateFlow<PagingData<ArticleCompany>> = MutableStateFlow(
-        PagingData.empty())
+    private var _searchArticles : MutableStateFlow<PagingData<ArticleCompany>> = MutableStateFlow(PagingData.empty())
     val searchArticles : StateFlow<PagingData<ArticleCompany>> get() = _searchArticles
 
     init {
@@ -47,7 +48,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun getAllSearchHistory() {
-        val id = when(sharedViewModel.accountType){
+        val id = when(sharedViewModel.accountType.value){
             AccountType.USER -> sharedViewModel.user.value.id
             AccountType.COMPANY -> sharedViewModel.company.value.id
             AccountType.AYMEN -> TODO()
@@ -84,7 +85,7 @@ class SearchViewModel @Inject constructor(
             }
             SearchCategory.USER -> {
                 Log.e("searchscreen","type user")
-                getAllPersonContaining(searchText,searchType,searchCategory)
+                getAllPersonContaining(searchText,searchType)
             }
             SearchCategory.ARTICLE-> {
                 Log.e("searchscreen","type article")
@@ -101,7 +102,7 @@ class SearchViewModel @Inject constructor(
         searchType: SearchType,
         searchCategory: SearchCategory
     ) {
-        val id = when(sharedViewModel.accountType){
+        val id = when(sharedViewModel.accountType.value){
             AccountType.COMPANY -> sharedViewModel.company.value.id
             AccountType.USER -> sharedViewModel.user.value.id
             AccountType.AYMEN -> TODO()
@@ -112,7 +113,7 @@ class SearchViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
-                    _allCompanies.value = it.map { company -> company.toSearchHistoryModel() }
+                    _searchCompanies.value = it.map { company -> company.toCompanyModel() }
                 }
         }
     }
@@ -120,14 +121,23 @@ class SearchViewModel @Inject constructor(
     fun getAllPersonContaining(
         personName: String,
         searchType: SearchType,
-        searchCategory: SearchCategory
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            useCases.getAllPersonContaining(personName, searchType, searchCategory)// هذه سبب الخرب
+        viewModelScope.launch {
+            val id = when(sharedViewModel.accountType.value){
+                AccountType.USER -> sharedViewModel.user.value.id
+                AccountType.COMPANY -> sharedViewModel.company.value.id
+                AccountType.AYMEN -> TODO()
+                AccountType.NULL -> TODO()
+            }
+            Log.e("searchscreen","search person call")
+            useCases.getAllPersonContaining(id!!,personName, searchType)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
-                    _searchPersons.value = it.map { relation -> relation.toSearchHistoryModel() }
+                    _searchPersons.value = it.map { user -> user.toUserModel() }
+                    Log.e("searchscreen","search person")
+                    it.map {r ->
+                        Log.e("searchscreen","search person $r")}
                 }
         }
     }
@@ -138,7 +148,7 @@ class SearchViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
-                    _searchArticles.value = it.map {article -> article.toArticleRelation() }
+                    _searchArticles.value = it.map {article -> article.toArticleCompanyModel() }
                 }
         }
     }

@@ -159,14 +159,25 @@ interface InvoiceDao {
      fun getAllMyBuyHistory(): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE paid = :paid")
-     fun getAllMyBuyHistoryFromPaidInvoice(paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+     @Query("SELECT * FROM invoice WHERE paid = :paid AND providerId = :id")
+     fun getAllMyBuyHistoryFromPaidInvoiceAsProvider(id : Long, paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE paid = :paid AND clientId = :id")
+     fun getAllMyBuyHistoryFromPaidInvoiceAsClient(id : Long, paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+
      @Transaction
      @Query("SELECT * FROM invoice WHERE paid = :paid")
      fun getAllMyBuyHistoryFromNotPaidInvoice(paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+
      @Transaction
-     @Query("SELECT * FROM invoice WHERE paid = :paid")
-     fun getAllMyBuyHistoryFromIncompleteInvoice(paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+     @Query("SELECT * FROM invoice WHERE paid = :paid AND providerId = :id")
+     fun getAllMyBuyHistoryFromIncompleteInvoice(id : Long, paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE paid = :paid AND clientId = :id")
+     fun getAllMyBuyHistoryFromIncompleteInvoiceAsClient(id : Long , paid : PaymentStatus) : PagingSource<Int, InvoiceWithClientPersonProvider>
+
+
      @Transaction
      @Query("SELECT * FROM invoice WHERE status = :status")
      fun getAllMyBuyHistoryFromNotAcceptedInvoice(status : Status) : PagingSource<Int, InvoiceWithClientPersonProvider>

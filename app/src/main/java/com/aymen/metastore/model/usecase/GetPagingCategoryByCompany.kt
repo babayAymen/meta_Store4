@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 class GetPagingCategoryByCompany(private val repository: CategoryRepository) {
 
-    operator fun invoke(): Flow<PagingData<Category>>{
-        return repository.getAllCategory()
+    operator fun invoke(companyId : Long): Flow<PagingData<Category>>{
+        return repository.getAllCategory(companyId)
 
     }
 }

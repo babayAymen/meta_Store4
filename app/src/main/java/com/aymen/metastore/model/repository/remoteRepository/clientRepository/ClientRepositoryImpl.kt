@@ -6,12 +6,12 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.aymen.metastore.model.Enum.LoadType
+import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
+import com.aymen.metastore.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.paging.AllPersonContainingPagingSource
 import com.aymen.metastore.model.entity.paging.AllSearchRemoteMediator
 import com.aymen.metastore.model.entity.paging.ClientRemoteMediator
-import com.aymen.metastore.model.entity.paging.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyClient
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import retrofit2.Response
 import java.io.File
 import javax.inject.Inject
 
@@ -68,7 +69,13 @@ class ClientRepositoryImpl  @Inject constructor(
         }
     }
     override suspend fun addClientWithoutImage(client: String) = api.addClientWithoutImage(client)
-    override suspend fun getAllMyClientContaining(clientName: String, companyId : Long) = api.getAllMyClientContaining(clientName = clientName, companyId = companyId)
+    override suspend fun getAllMyClientContaining(
+        clientName: String,
+        companyId: Long
+    ): Response<List<ClientProviderRelationDto>> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun sendClientRequest(id: Long, type: Type) = api.sendClientRequest(id,type)
 
     override suspend fun getAllClientContaining(
@@ -78,23 +85,21 @@ class ClientRepositoryImpl  @Inject constructor(
     ) = api.getAllClientContaining(search, searchType,searchCategory)
 
 
-    @OptIn(ExperimentalPagingApi::class)
     override fun getAllClientUserContaining(
-        search: String,
+        companyId: Long,
         searchType: SearchType,
-        searchCategory: SearchCategory
-    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
+        search: String,
+    ): Flow<PagingData<UserDto>> {
+        Log.e("getAllPersonContaining","search call ")
         return  Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-            remoteMediator = CompanyRemoteMediator(
-                api = api, room = room, type = LoadType.RANDOM, searchType = null, libelle = null
+            config = PagingConfig(
+                pageSize = PAGE_SIZE, // Number of items per page
+                enablePlaceholders = false // Disable placeholders for unloaded pages
             ),
-            pagingSourceFactory = { searchHistoryDao.getAllUserSearchHistories(search) }
-        ).flow.map {
-            it.map { article ->
-                article
+            pagingSourceFactory = {
+                AllPersonContainingPagingSource(api,companyId, searchType,search)
             }
-        }
+        ).flow
     }
 
 

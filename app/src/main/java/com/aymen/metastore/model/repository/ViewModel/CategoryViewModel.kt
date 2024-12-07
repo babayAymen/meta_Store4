@@ -39,6 +39,11 @@ class CategoryViewModel @Inject constructor (
 
     private val _categories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
     val categories : StateFlow<PagingData<Category>> get() = _categories
+
+    private val _companyCategories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
+    val companyCategories : StateFlow<PagingData<Category>> get() = _companyCategories
+
+
     var category by mutableStateOf(Category())
 
     val company: StateFlow<Company?> = sharedViewModel.company
@@ -46,7 +51,7 @@ class CategoryViewModel @Inject constructor (
 
 init {
     viewModelScope.launch {
-        useCases.getPagingCategoryByCompany()
+        useCases.getPagingCategoryByCompany(sharedViewModel.company.value.id?:0)
             .distinctUntilChanged()
             .cachedIn(viewModelScope)
             .collect { _categories.value = it.map { category -> category } }
@@ -71,4 +76,12 @@ init {
         }
     }
 
+    fun getCategoryByCompany(companyId : Long){
+        viewModelScope.launch {
+            useCases.getPagingCategoryByCompany(companyId)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect { _companyCategories.value = it.map { category -> category } }
+        }
+    }
 }

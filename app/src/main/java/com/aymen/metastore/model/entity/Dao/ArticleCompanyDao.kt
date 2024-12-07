@@ -7,11 +7,13 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import com.aymen.metastore.model.entity.paging.CompanyArticleRemoteMediator
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleContainingRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.CompanyArticleRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.store.model.Enum.CompanyCategory
@@ -28,6 +30,9 @@ interface ArticleCompanyDao {
 
     @Upsert
     suspend fun insertSingleKey(key : ArticleRemoteKeysEntity)
+
+    @Upsert
+    suspend fun insertCompanyArticleKeys(keys : List<CompanyArticleRemoteKeysEntity>)
 
     @Query("UPDATE article_company SET quantity = quantity + :quantity WHERE id = :articleId")
     suspend fun upDateQuantity(articleId : Long, quantity: Double)
@@ -101,6 +106,12 @@ interface ArticleCompanyDao {
     @Query("DELETE FROM article_containing_remote_keys")
     suspend fun clearAllArticleContainingRemoteKeysTable()
 
+    @Query("DELETE FROM article_company WHERE companyId = :companyId")
+    suspend fun clearAllCompanyArticleTableById(companyId : Long)
+
+    @Query("DELETE FROM company_article_remote_keys")
+    suspend fun clearAllCompanyArticleRemoteKeysTable()
+
     @Upsert
     suspend fun insertKeys(articleRemoteKeysEntity: List<ArticleRemoteKeysEntity>)
 
@@ -110,6 +121,8 @@ interface ArticleCompanyDao {
     @Upsert
     suspend fun insertArticleContainingKeys(keys : List<ArticleContainingRemoteKeysEntity>)
 
+    @Query("SELECT * FROM company_article_remote_keys WHERE id = :id")
+    suspend fun getCompanyArticleRemoteKey(id : Long) : CompanyArticleRemoteKeysEntity
 
 
 

@@ -15,5 +15,5 @@ interface CategoryRepository {
     suspend fun addCategoryApiWithImage(category : String, file : File)
     suspend fun addCategoryApiWithoutImeg(category:String)
 
-    fun getAllCategory(): Flow<PagingData<Category>>
+    fun getAllCategory(companyId : Long): Flow<PagingData<Category>>
 }

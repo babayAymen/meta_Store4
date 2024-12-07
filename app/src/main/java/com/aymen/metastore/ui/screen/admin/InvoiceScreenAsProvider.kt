@@ -108,7 +108,14 @@ fun InvoiceScreenAsProvider() {
                                     enabled = true
                                 ) {
                                     appViewModel.updateView("ALL")
-                                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.ALL,asProvider)
+                                    if(asProvider) {
+                                        invoiceViewModel.getAllMyPaymentFromInvoicee(
+                                            PaymentStatus.ALL,
+                                            asProvider
+                                        )
+                                    }else{
+                                        invoiceViewModel.getAllMyInvoicesAsClient()
+                                    }
                                 }
                             }
                             Row(

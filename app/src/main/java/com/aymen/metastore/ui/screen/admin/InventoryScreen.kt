@@ -17,12 +17,12 @@ import com.aymen.metastore.ui.component.InventoryCard
 @Composable
 fun InventoryScreen() {
     val inventoryViewModel : InventoryViewModel = hiltViewModel()
-    val inventories = inventoryViewModel.inventories.collectAsLazyPagingItems()
     Surface(
         modifier = Modifier
             .fillMaxSize()
             .padding(2.dp)
     ) {
+        val inventories = inventoryViewModel.inventories.collectAsLazyPagingItems()
         LazyColumn {
             items(
                 count = inventories.itemCount,

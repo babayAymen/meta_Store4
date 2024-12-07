@@ -182,18 +182,9 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                             ) { index: Int ->
                                 val client = clients[index]
                                 if (client != null) {
-//                                client.filter {
-//                                    val clientName = client?.person?.username?.lowercase()
-//                                        ?: client?.client?.name?.lowercase()
-//                                    val query = clientname.lowercase()
-//                                    // Safely check if client name contains the query
-//                                    (clientName?.contains(query)
-//                                        ?: clientName?.contains("others")) == true
-//                                }.sortedBy {
-//                                    client?.client?.name ?: client?.person?.username
-//                                }
                                 client.company?.let { clt ->
                                     ClientItem(client = clt) { selectedClient ->
+                                        Log.e("aymenbabayclient","company name = ${selectedClient}")
                                         clientname = selectedClient.name
                                         invoiceViewModel.clientCompany = selectedClient
                                         invoiceViewModel.clientType = AccountType.COMPANY
@@ -203,6 +194,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                 }
                                 client.user?.let { clt ->
                                     ClientUserItem(client = clt) { selectedClient ->
+                                        Log.e("aymenbabayclient","user name = ${selectedClient}")
                                         clientname = selectedClient.username!!
                                         invoiceViewModel.clientUser = selectedClient
                                         invoiceViewModel.clientType = AccountType.USER

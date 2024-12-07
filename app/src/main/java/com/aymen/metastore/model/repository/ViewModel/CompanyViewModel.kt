@@ -94,18 +94,18 @@ class CompanyViewModel @Inject constructor(
     }
 
     fun getMyCompany() {
-        viewModelScope.launch {
-            withContext(Dispatchers.Main) {
-                try {
-                    val response = repository.getMeAsCompany()
-                    if (response.isSuccessful) {
-                        appViewModel.storeCompany(response.body()?.toCompanyModel()!!)
-                    }
-                } catch (ex: Exception) {
-                    Log.e("aymenbabaycompany", "c bon error ${ex.message}")
-                }
-            }
-        }
+//        viewModelScope.launch {
+//            withContext(Dispatchers.Main) {
+//                try {
+//                    val response = repository.getMeAsCompany()
+//                    if (response.isSuccessful) {
+//                        appViewModel.storeCompany(response.body()?.toCompanyModel()!!)
+//                    }
+//                } catch (ex: Exception) {
+//                    Log.e("aymenbabaycompany", "c bon error ${ex.message}")
+//                }
+//            }
+//        }
     }
 
 

@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -41,7 +42,11 @@ class ShoppingViewModel @Inject constructor(
     private val sharedViewModel: SharedViewModel,
     private val appViewModel: AppViewModel,
     private val context : Context,
-    private val useCases: MetaUseCases
+    private val useCases: MetaUseCases,
+    private val accountTyp: DataStore<AccountType>,
+    private val company: DataStore<Company>,
+    private val user: DataStore<User>,
+
 ): ViewModel() {
 
     var rawInput by mutableStateOf("")
@@ -53,14 +58,14 @@ class ShoppingViewModel @Inject constructor(
 
     var delivery by mutableStateOf(false)
     var randomArticle by mutableStateOf(ArticleCompany())
-    // StateFlow properties that will update reactively
-    private val _myCompany = MutableStateFlow(sharedViewModel.company.value)
-    val myCompany: StateFlow<Company?> = _myCompany
 
-    private val _myUser = MutableStateFlow(sharedViewModel.user.value)
-    val myUser: StateFlow<User?> = _myUser
+    private var _myCompany = MutableStateFlow(Company())
+    val myCompany: StateFlow<Company?> get() = _myCompany
 
-    private val _accountType = MutableStateFlow(sharedViewModel.accountType)
+    private var _myUser = MutableStateFlow(User())
+    val myUser: StateFlow<User?> get() = _myUser
+
+    private val _accountType = MutableStateFlow(AccountType.USER)
     val accountType: StateFlow<AccountType> = _accountType
 
     private val _allMyOrdersLineDetails : MutableStateFlow<PagingData<PurchaseOrderLine>> = MutableStateFlow(PagingData.empty())
@@ -69,15 +74,29 @@ class ShoppingViewModel @Inject constructor(
     private val _allMyOrdersNotAccepted : MutableStateFlow<PagingData<PurchaseOrder>> = MutableStateFlow(PagingData.empty())
     val allMyOrdersNotAccepted: StateFlow<PagingData<PurchaseOrder>> get() = _allMyOrdersNotAccepted
 
-    private val _allMyOrders = MutableStateFlow<List<PurchaseOrder>>(emptyList())
-    val allMyOrders: StateFlow<List<PurchaseOrder>> = _allMyOrders
-
 
     var Order by mutableStateOf(PurchaseOrder())
     var cost by mutableStateOf(BigDecimal.ZERO)
 
 init {
-    getAllMyOrdersNotAccepted()
+    viewModelScope.launch {
+    accountTyp.data.collect { type ->
+        _accountType.value = type
+        when(type){
+            AccountType.COMPANY -> company.data.collect{
+                getAllMyOrdersNotAccepted(it.id?:0)
+                _myCompany.value = it
+            }
+            AccountType.USER -> user.data.collect{
+                getAllMyOrdersNotAccepted(it.id!!)
+                _myUser.value = it
+            }
+            AccountType.AYMEN -> TODO()
+            AccountType.NULL -> {}
+        }
+        Log.e("azerty","fun call")
+    }
+    }
 }
     fun removeOrderById(index: Int) {
         orderArray = orderArray.toMutableList().also {
@@ -161,19 +180,6 @@ fun submitShopping(newBalance: BigDecimal) {
         }
     }
 
-//
-//    fun mapOrderArrayToDto(orderArray : List<PurchaseOrderLineWithPurchaseOrderOrInvoice>):List<PurchaseOrderLineDto>{
-//        val dtoArray = emptyList<PurchaseOrderLineDto>().toMutableList()
-//        orderArray.forEach {
-//            val line = PurchaseOrderLineDto()
-//            line.article = mapRoomArticleToArticleDto(it.article?.articleCompany!!)
-//            line.quantity = it.purchaseOrderLine.quantity
-//            line.delivery = it.purchaseOrderLine.delivery
-//            line.comment = it.purchaseOrderLine.comment
-//             dtoArray += line
-//        }
-//        return dtoArray
-//    }
 
     fun remiseAZero(){
         delivery = false
@@ -212,18 +218,18 @@ fun submitShopping(newBalance: BigDecimal) {
 
 
 
-    fun getAllMyOrdersNotAccepted() {
+    fun getAllMyOrdersNotAccepted(id : Long) {
         viewModelScope.launch {
-            val id = if(sharedViewModel.accountType == AccountType.COMPANY) sharedViewModel.company.value.id else sharedViewModel.user.value.id
-            id?.let {
-            Log.e("getallorders","id : $id")
-          useCases.getAllMyOrdersNotAccepted(id)
-              .distinctUntilChanged()
-              .cachedIn(viewModelScope)
-              .collect{
-                  _allMyOrdersNotAccepted.value = it.map { line -> line.toPurchaseOrderWithCompanyAndUserOrClient() }
-            }
-              }
+
+            Log.e("aymenbabayOrder","orderLineResponse exption: $id")
+
+                useCases.getAllMyOrdersNotAccepted(id)
+                    .distinctUntilChanged()
+                    .cachedIn(viewModelScope)
+                    .collect{
+                        _allMyOrdersNotAccepted.value = it.map { line -> line.toPurchaseOrderWithCompanyAndUserOrClient() }
+                    }
+
         }
     }
 
@@ -241,6 +247,7 @@ fun submitShopping(newBalance: BigDecimal) {
                         }
                         room.purchaseOrderDao().deleteOrderNotAcceptedKeysById(id)
                         appViewModel.updateCompanyBalance(order.body()!!)
+                        appViewModel.updateShow("order")
                     }
                 }catch (_ex : Exception){
                     Log.e("aymenbabayOrder","orderLineResponse exption: $_ex")

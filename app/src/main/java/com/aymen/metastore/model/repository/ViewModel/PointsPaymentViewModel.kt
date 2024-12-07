@@ -92,7 +92,7 @@ init {
 
     fun getAllMyPointsPaymentRecharge() {
         viewModelScope.launch {
-            val id = if(sharedViewModel.accountType == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
+            val id = if(sharedViewModel.accountType.value == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
             id?.let {
                 useCases.getAllRechargeHistory(it)
                     .distinctUntilChanged()

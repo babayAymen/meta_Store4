@@ -76,7 +76,7 @@ fun ArticleDetailsScreen() {
     }
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentArticle(company.id!!)
-        if (sharedViewModel.accountType == AccountType.COMPANY) {
+        if (sharedViewModel.accountType.value == AccountType.COMPANY) {
             myCompany = sharedViewModel.company.value
         }
     }

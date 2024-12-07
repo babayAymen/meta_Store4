@@ -18,8 +18,10 @@ import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
 import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
+import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.dto.ConversationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.model.SubCategory
@@ -61,6 +63,7 @@ import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 import java.io.File
 import javax.inject.Inject
+
 
 class GlobalRepositoryImpl  @Inject constructor
     (
@@ -104,7 +107,7 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun addCategoryApiWithImage(category: String, file: File) = categoryRepository.addCategoryApiWithImage(category, file)
     override suspend fun addCategoryApiWithoutImeg(category: String) = categoryRepository.addCategoryApiWithoutImeg(category)
-    override fun getAllCategory(): Flow<PagingData<Category>> {
+    override fun getAllCategory(companyId: Long): Flow<PagingData<Category>> {
         TODO("Not yet implemented")
     }
 
@@ -114,7 +117,11 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun addSubCtagoryWithImage(sousCategory: String, file: File) = subCategoryRepository.addSubCtagoryWithImage(sousCategory,file)
     override suspend fun addSubCategoryWithoutImage(sousCategory: String) = subCategoryRepository.addSubCategoryWithoutImage(sousCategory)
-    override fun getAllSubCategories(): Flow<PagingData<SubCategoryWithCategory>> {
+    override fun getAllSubCategories(companyId: Long): Flow<PagingData<SubCategoryWithCategory>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllSubCategoriesByCompanyId(companyId: Long): Flow<PagingData<SubCategoryWithCategory>> {
         TODO("Not yet implemented")
     }
 
@@ -130,7 +137,7 @@ class GlobalRepositoryImpl  @Inject constructor
         search: String,
         searchType: SearchType,
         myId: Long
-    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
+    ): Flow<PagingData<CompanyDto>> {
         TODO("Not yet implemented")
     }
 
@@ -150,13 +157,16 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override fun getAllMyClient(companyId: Long): Flow<PagingData<CompanyWithCompanyOrUser>> = clientRepository.getAllMyClient(
         companyId = companyId)
+
     override fun getAllClientUserContaining(
-        search: String,
+        companyId: Long,
         searchType: SearchType,
-        searchCategory: SearchCategory
-    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
+        search: String
+    ): Flow<PagingData<UserDto>> {
         TODO("Not yet implemented")
     }
+
+
 
     override suspend fun addClient(client: String, file: File) = clientRepository.addClient(client, file)
     override suspend fun addClientWithoutImage(client: String) = clientRepository.addClientWithoutImage(client)
@@ -258,7 +268,13 @@ class GlobalRepositoryImpl  @Inject constructor
     }
 
     override suspend fun getAllMyOrders(companyId: Long) = orderRepository.getAllMyOrders(companyId)
-    override suspend fun getAllOrdersLineByInvoiceId(invoiceId: Long) = orderRepository.getAllOrdersLineByInvoiceId(invoiceId)
+    override fun getAllOrdersLineByInvoiceId(
+        companyId: Long,
+        invoiceId: Long
+    ): Flow<PagingData<PurchaseOrderLine>> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun RequestResponse(status :Status ,id: Long) = invetationRepository.RequestResponse(status,id)
     override suspend fun cancelInvitation(id: Long) = invetationRepository.cancelInvitation(id)
 
@@ -327,7 +343,7 @@ class GlobalRepositoryImpl  @Inject constructor
         libelle: String,
         searchType: SearchType,
         companyId: Long
-    ): Flow<PagingData<ArticleWithArticleCompany>> {
+    ): Flow<PagingData<ArticleCompanyDto>> {
         TODO("Not yet implemented")
     }
 
@@ -339,5 +355,8 @@ class GlobalRepositoryImpl  @Inject constructor
     }
 
     override suspend fun getArticleByBarcode(bareCode: String) = articleRepository.getArticleByBarcode(bareCode)
+    override fun getAllCompanyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>> {
+        TODO("Not yet implemented")
+    }
 
 }

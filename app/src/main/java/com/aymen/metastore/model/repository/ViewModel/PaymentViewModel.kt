@@ -40,7 +40,7 @@ class PaymentViewModel @Inject constructor(
 
 
     init {
-        when(sharedViewModel.accountType){
+        when(sharedViewModel.accountType.value){
             AccountType.USER -> {
                 getAllMyPaymentsEspece(sharedViewModel.user.value.id!!)
             }

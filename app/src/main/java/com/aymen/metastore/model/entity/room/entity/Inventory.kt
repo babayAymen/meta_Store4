@@ -7,7 +7,11 @@ import com.aymen.metastore.model.entity.model.Inventory
 
 @Entity(tableName = "inventory",
     foreignKeys = [
-        ForeignKey(entity = Article::class, parentColumns = ["id"], childColumns = ["articleId"]),
+        ForeignKey(entity = ArticleCompany::class,
+            parentColumns = ["id"],
+            childColumns = ["articleId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE),
         ForeignKey(
             entity = Company::class,
             parentColumns = ["companyId"],

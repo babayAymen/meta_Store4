@@ -92,10 +92,10 @@ class InvoiceRepositoryImpl @Inject constructor(
     override suspend fun addInvoice(
         commandLineDtos: List<CommandLine>,
         clientId: Long, invoiceCode: Long,
-        discount: Double, clientTYpe: AccountType,
-        invoiceMode: InvoiceMode
-                                        ) = api.addInvoice(commandLineDtos,clientId,invoiceCode,discount,
-        clientTYpe, invoiceMode)
+        discount: Double, clientType: AccountType,
+        invoiceMode: InvoiceMode,
+        ) = api.addInvoice(commandLineDtos,clientId,invoiceCode,discount,
+        clientType, invoiceMode,type = "pdf-save-client")
 
     override suspend fun getAllMyInvoicesAsClientAndStatus(
         id: Long,

@@ -81,13 +81,13 @@ class MessageViewModel @Inject constructor(
     }
 
     fun accountTypeBlock(){
-        if(receiverAccountType == AccountType.COMPANY && sharedViewModel.accountType == AccountType.COMPANY){
+        if(receiverAccountType == AccountType.COMPANY && sharedViewModel.accountType.value == AccountType.COMPANY){
             messageType = MessageType.COMPANY_SEND_COMPANY
         }
-        if(receiverAccountType == AccountType.USER && sharedViewModel.accountType == AccountType.USER){
+        if(receiverAccountType == AccountType.USER && sharedViewModel.accountType.value == AccountType.USER){
             messageType = MessageType.USER_SEND_USER
         }
-        if(receiverAccountType == AccountType.USER && sharedViewModel.accountType == AccountType.COMPANY){
+        if(receiverAccountType == AccountType.USER && sharedViewModel.accountType.value == AccountType.COMPANY){
             messageType = MessageType.COMPANY_SEND_USER
         }
     }

@@ -20,13 +20,13 @@ interface SubCategoryDao {
     @Query("SELECT * FROM sub_category_remote_keys_table WHERE id = :id")
     suspend fun getSubCategoryRemoteKey(id : Long) : SubCategoryRemoteKeysEntity
 
-    @Query("select * from subcategory_werehouse")
-     fun getAllSubCategories() : PagingSource<Int, SubCategoryWithCategory>
+    @Query("select * from subcategory_werehouse WHERE companyId = :companyId")
+     fun getAllSubCategories(companyId  :Long) : PagingSource<Int, SubCategoryWithCategory>
 
     @Query("DELETE FROM sub_category_remote_keys_table")
     suspend fun clearAllRemoteKeysTable()
 
-    @Query("DELETE FROM subcategory_werehouse")
-    suspend fun clearAllSubCategoryTable()
+    @Query("DELETE FROM subcategory_werehouse WHERE companyId = :id")
+    suspend fun clearAllSubCategoryTable(id : Long)
 
 }

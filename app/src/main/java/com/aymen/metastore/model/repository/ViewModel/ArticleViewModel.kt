@@ -51,6 +51,9 @@ class ArticleViewModel @Inject constructor(
     private val _adminArticles : MutableStateFlow<PagingData<ArticleCompany>> = MutableStateFlow(PagingData.empty())
     var adminArticles : StateFlow<PagingData<ArticleCompany>> = _adminArticles
 
+    private val _companyArticles : MutableStateFlow<PagingData<ArticleCompany>> = MutableStateFlow(PagingData.empty())
+    var companyArticles : StateFlow<PagingData<ArticleCompany>> = _companyArticles
+
 //    private val _articlesByArticleId = MutableStateFlow<Map<Long, Article>>(emptyMap())
 //    val articlesByArticleId: StateFlow<Map<Long, Article>> = _articlesByArticleId
 
@@ -137,7 +140,7 @@ class ArticleViewModel @Inject constructor(
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect {
-                        _searchArticles.value = it.map {article -> article.toArticleRelation() }
+                        _searchArticles.value = it.map {article -> article.toArticleCompanyModel() }
                 }
             }
         }
@@ -149,7 +152,7 @@ class ArticleViewModel @Inject constructor(
     }
 
         fun getRandomArticlesByCategory(categoryId: Long, companyId: Long) {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch {
 
             }
         }
@@ -222,6 +225,17 @@ class ArticleViewModel @Inject constructor(
                 .cachedIn(viewModelScope)
                 .collect {
                     _articles.value = it.map { article -> article.toArticle() }
+                }
+        }
+    }
+
+    fun getAllCompanyArticles(companyId : Long){
+        viewModelScope.launch {
+            useCases.getAllCompanyArticles(companyId)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                   _companyArticles.value = it.map { article -> article.toArticleRelation() }
                 }
         }
     }

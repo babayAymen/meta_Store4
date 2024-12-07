@@ -8,6 +8,6 @@ data class ClientProviderRelation(
     val mvt: Double? = null,
     val credit: Double? = null,
     val advance: Double? = null,
-    val createdDate : String = "",
-    val lastModifiedDate : String = "",
+    val createdDate : String? = "",
+    val lastModifiedDate : String? = "",
 )

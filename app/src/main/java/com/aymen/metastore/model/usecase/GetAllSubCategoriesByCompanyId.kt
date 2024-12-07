@@ -5,8 +5,9 @@ import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.store.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepository
 import kotlinx.coroutines.flow.Flow
 
-class GetPagingSubCategoryByCompany(private val repository: SubCategoryRepository) {
-    operator fun invoke(companyId : Long): Flow<PagingData<SubCategoryWithCategory>> {
-        return repository.getAllSubCategories(companyId)
+class GetAllSubCategoriesByCompanyId(private val repository : SubCategoryRepository) {
+    operator fun invoke(companyId : Long) : Flow<PagingData<SubCategoryWithCategory>>{
+        return repository.getAllSubCategoriesByCompanyId(companyId)
+
     }
 }

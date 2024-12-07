@@ -87,11 +87,14 @@ fun CompanyScreen(company: Company) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
-    val categories = categoryViewModel.categories.collectAsLazyPagingItems()
-    val subCategories = subCategoryViewModel.subCategories.collectAsLazyPagingItems()
-    val randomArticles = articleViewModel.adminArticles.collectAsLazyPagingItems()
+    val subCategories = subCategoryViewModel.companySubCategories.collectAsLazyPagingItems()
+    val categories = categoryViewModel.companyCategories.collectAsLazyPagingItems()
+    val randomArticles = articleViewModel.companyArticles.collectAsLazyPagingItems()
     var category by remember {
         mutableStateOf(Category())
+    }
+    if(subCategories.itemCount != 0) {
+        category = subCategories.peek(0)?.category ?: Category()
     }
     val context = LocalContext.current
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
@@ -101,7 +104,9 @@ fun CompanyScreen(company: Company) {
         }
     }
     LaunchedEffect(key1 = Unit) {
+        articleViewModel.getAllCompanyArticles(companyId = company.id?:0)
         ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
+        categoryViewModel.getCategoryByCompany(companyId = company.id?:0)
     }
 
 
@@ -168,13 +173,14 @@ fun CompanyScreen(company: Company) {
 
                         Column {
                             ScreenByCompanyCategory(categories) { categ ->
+                                subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryId = categ.id?:0)
                                 category = categ
                                 articleViewModel.getRandomArticlesByCategory(
                                     categ.id!!,
                                     categ.company?.id!!
                                 )
                             }
-                            ScreenByCompanySubCategory(items = subCategories) { categ ->
+                            ScreenByCompanySubCategory(items = subCategories, category = category) { categ ->
                                 articleViewModel.getRandomArticlesBySubCategory(
                                     categ.id!!,
                                     categ.company?.id!!
@@ -182,13 +188,17 @@ fun CompanyScreen(company: Company) {
                             }
                         }
                 }
-                items(randomArticles.itemCount) {index ->
+                items(
+                    count = randomArticles.itemCount,
+                    key = randomArticles.itemKey{it.id!!}
+                ) {index ->
                     val article = randomArticles[index]
-                    ArticleCardForSearch( article!!) {
+                    if(article != null){
+                    ArticleCardForSearch( article) {
                         companyViewModel.myCompany = article.company!!
 //                        articleViewModel.articleCompany = article  a determine
                         RouteController.navigateTo(Screen.ArticleDetailScreen)
-
+                    }
                     }
                     }
                 }
@@ -367,56 +377,30 @@ fun ScreenByCompanyCategory(
     }
 }
 
-
-//@Composable
-//fun ScreenByCompanyCategory(items : LazyPagingItems<CategoryDto>, onCategorySelected : (CategoryDto) -> Unit) {
-//    var selectedCateg by remember {
-//        mutableStateOf(CategoryDto())
-//    }
-//    LazyRow {
-//        items(items.itemKey { it.id }){ categ ->
-//            Spacer(modifier = Modifier.size(6.dp))
-//            Card(onClick = {
-//                selectedCateg = items[categ]!!
-//                onCategorySelected(selectedCateg)
-//            },
-//                modifier = Modifier
-//                    .height(30.dp),
-//                colors = CardDefaults.cardColors(
-//                    containerColor = if (selectedCateg == items[categ]!!) Color.Yellow else Color.Transparent // Set color conditionally
-//                )
-//            )
-//            {
-//                Text(text = items[categ]!!.libelle!!,
-//                    color = Color.Red)
-//            }
-//            Spacer(modifier = Modifier.size(6.dp))
-//        }
-//    }
-//}
-
 @Composable
-fun ScreenByCompanySubCategory(items : LazyPagingItems<SubCategory>, onSubCategorySelected : (SubCategory) -> Unit) {
+fun ScreenByCompanySubCategory(items : LazyPagingItems<SubCategory>, category : Category , onSubCategorySelected : (SubCategory) -> Unit) {
     var subcateg by remember {
         mutableStateOf(SubCategory())
     }
     LazyRow {
-        items(items.itemCount){ index ->
+        items(items.itemCount) { index ->
             val categ = items[index]
-            Card(onClick = {
-                subcateg = categ!!
-                onSubCategorySelected(categ)
-                Log.e("screenbycateg",categ.libelle!!)
-            },
-                modifier = Modifier
-                    .height(30.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (subcateg == categ) Color.Yellow else Color.Transparent // Set color conditionally
+            if (categ != null && categ.category == category){
+                Card(
+                    onClick = {
+                        subcateg = categ
+                        onSubCategorySelected(categ)
+                    },
+                    modifier = Modifier
+                        .height(30.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (subcateg == categ) Color.Yellow else Color.Transparent // Set color conditionally
+                    )
                 )
-            )
-            {
-                Text(text = categ?.libelle!!)
-            }
+                {
+                    Text(text = categ.libelle!!)
+                }
+        }
         }
     }
 }
