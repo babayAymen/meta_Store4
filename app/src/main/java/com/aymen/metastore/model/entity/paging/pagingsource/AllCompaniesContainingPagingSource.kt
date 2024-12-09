@@ -1,4 +1,4 @@
-package com.aymen.metastore.model.entity.paging
+package com.aymen.metastore.model.entity.paging.pagingsource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState

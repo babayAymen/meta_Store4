@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -45,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.model.ArticleCompany
@@ -70,7 +72,7 @@ import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@RequiresApi(Build.VERSION_CODES.O)
+//@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val context = LocalContext.current
@@ -827,6 +829,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
+                                Text(text = stringResource(id = R.string.hello))
                                 Text(text = invoice?.provider?.name?:"")
                                 invoice?.provider?.phone?.let { Text(text = it) }
                                 invoice?.provider?.address?.let { Text(text = it) }

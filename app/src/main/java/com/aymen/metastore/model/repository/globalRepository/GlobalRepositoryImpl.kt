@@ -16,6 +16,7 @@ import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
+import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
@@ -168,6 +169,14 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
+    override fun getMyClientForAutocompleteClient(
+        companyId: Long,
+        clientName: String
+    ): Flow<PagingData<ClientProviderRelationDto>> {
+        TODO("Not yet implemented")
+    }
+
+ 
 
 
     override suspend fun addClient(client: String, file: File) = clientRepository.addClient(client, file)

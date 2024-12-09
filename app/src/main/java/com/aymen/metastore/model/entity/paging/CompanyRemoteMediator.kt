@@ -57,7 +57,7 @@ class CompanyRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllMyClientContaining(libelle, id  , currentPage , state.config.pageSize)
+            val response = api.getAllMyClientContaining(id, SearchType.OTHER ,libelle , currentPage , state.config.pageSize)
             Log.e("errorcompanymediator","response size : ${response.size}")
 
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize

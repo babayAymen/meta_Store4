@@ -1,6 +1,5 @@
 package com.aymen.metastore.model.repository.remoteRepository.invoiceRepository
 
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -10,7 +9,7 @@ import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
-import com.aymen.metastore.model.entity.paging.AllInvoiceRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.AllInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.CommandLineByInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceAsClientAndStatusRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceRemoteMediator

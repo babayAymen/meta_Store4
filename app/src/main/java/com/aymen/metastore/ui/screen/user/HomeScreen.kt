@@ -73,6 +73,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.aymen.metastore.LanguageSwither
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
@@ -95,7 +96,7 @@ import com.aymen.metastore.ui.screen.admin.DashBoardScreen
 import com.aymen.store.ui.screen.user.NotificationScreen
 import java.math.RoundingMode
 
-@RequiresApi(Build.VERSION_CODES.O)
+//@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
@@ -111,6 +112,7 @@ fun HomeScreen() {
 
 
 
+//@RequiresApi(Build.VERSION_CODES.O)
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -309,6 +311,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                                         viewModel.updateScreen(IconType.HOME)
                                     })
                             }
+                            LanguageSwither()
                             DropdownMenuItem(text = { Text(text = "logout") }, onClick = {
                                 viewModel.updateScreen(IconType.HOME)
                                 RouteController.navigateTo(Screen.SignInScreen)

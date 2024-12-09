@@ -9,7 +9,7 @@ import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
-import com.aymen.metastore.model.entity.paging.AllArticlesContainingPagingSource
+import com.aymen.metastore.model.entity.paging.pagingsource.AllArticlesContainingPagingSource
 import com.aymen.metastore.model.entity.paging.ArticleCompanyRandomMediator
 import com.aymen.metastore.model.entity.paging.ArticleCompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.ArticleRemoteMediator

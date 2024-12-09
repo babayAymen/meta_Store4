@@ -30,7 +30,7 @@ import com.aymen.metastore.ui.screen.user.PaymentScreen
 import com.aymen.metastore.ui.screen.user.ShoppingScreen
 import com.aymen.store.ui.screen.admin.AddSubCategoryScreen
 
-@RequiresApi(Build.VERSION_CODES.O)
+//@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DashBoardScreen() {
     val viewModel : AppViewModel = hiltViewModel()

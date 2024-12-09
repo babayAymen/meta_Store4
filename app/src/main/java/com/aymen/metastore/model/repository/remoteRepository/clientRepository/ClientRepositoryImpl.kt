@@ -11,6 +11,7 @@ import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.paging.AllPersonContainingPagingSource
 import com.aymen.metastore.model.entity.paging.AllSearchRemoteMediator
 import com.aymen.metastore.model.entity.paging.ClientRemoteMediator
+import com.aymen.metastore.model.entity.paging.pagingsource.GetAllMyClientContainingForAutocompletePagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
@@ -98,6 +99,21 @@ class ClientRepositoryImpl  @Inject constructor(
             ),
             pagingSourceFactory = {
                 AllPersonContainingPagingSource(api,companyId, searchType,search)
+            }
+        ).flow
+    }
+
+    override fun getMyClientForAutocompleteClient(
+        companyId: Long,
+        clientName: String
+    ) : Flow<PagingData<ClientProviderRelationDto>>{
+        Log.e("getAllMyClientContaining","reached to repo impl")
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE, // Number of items per page
+                enablePlaceholders = false // Disable placeholders for unloaded pages
+            ),
+            pagingSourceFactory = { GetAllMyClientContainingForAutocompletePagingSource(api,companyId, clientName)
             }
         ).flow
     }

@@ -41,6 +41,9 @@ class ClientViewModel @Inject constructor(
     private val _myClientsContaining: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
     val myClientsContaining: StateFlow<PagingData<SearchHistory>> = _myClientsContaining
 
+    private val _myClientsContainingForAutocomplete: MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
+    val myClientsContainingForAutocomplete: StateFlow<PagingData<ClientProviderRelation>> = _myClientsContainingForAutocomplete
+
     val company: StateFlow<Company?> = sharedViewModel.company
     val user: StateFlow<User?> = sharedViewModel.user
     init {
@@ -68,6 +71,18 @@ class ClientViewModel @Inject constructor(
                 .cachedIn(viewModelScope)
                 .collect {
                     _myClientsContaining.value = it.map { relation -> relation.toSearchHistoryModel() }
+                }
+        }
+    }
+
+    fun getMyClientForAutocompleteClient(clientName : String){
+        viewModelScope.launch {
+            Log.e("getAllMyClientContaining","called ${sharedViewModel.company.value.id}")
+            useCases.getMyClientForAutocompleteClient(sharedViewModel.company.value.id!!,clientName)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                   _myClientsContainingForAutocomplete.value = it.map { relation -> relation.toClientProviderRelationModel() }
                 }
         }
     }

@@ -78,7 +78,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
         focusRequester.requestFocus()
     }
 
-    val clients = clientViewModel.myClientsContaining.collectAsLazyPagingItems()
+    val clients = clientViewModel.myClientsContainingForAutocomplete.collectAsLazyPagingItems()
 
     var clientname by remember {
         mutableStateOf("")
@@ -136,7 +136,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                         clientname = it
                         expanded = true
                         if (it.isNotEmpty()) {
-                            clientViewModel.getAllMyClientContaining(it)
+                            clientViewModel.getMyClientForAutocompleteClient(it)
                         }
                     },
                     colors = TextFieldDefaults.colors(
@@ -182,7 +182,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                             ) { index: Int ->
                                 val client = clients[index]
                                 if (client != null) {
-                                client.company?.let { clt ->
+                                client.client?.let { clt ->
                                     ClientItem(client = clt) { selectedClient ->
                                         Log.e("aymenbabayclient","company name = ${selectedClient}")
                                         clientname = selectedClient.name
@@ -192,7 +192,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                         expanded = false
                                     }
                                 }
-                                client.user?.let { clt ->
+                                client.person?.let { clt ->
                                     ClientUserItem(client = clt) { selectedClient ->
                                         Log.e("aymenbabayclient","user name = ${selectedClient}")
                                         clientname = selectedClient.username!!

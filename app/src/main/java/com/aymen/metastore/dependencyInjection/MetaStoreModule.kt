@@ -111,6 +111,7 @@ import com.aymen.metastore.model.usecase.GetAllCommandLineByInvoiceId
 import com.aymen.metastore.model.usecase.GetAllCompanyArticles
 import com.aymen.metastore.model.usecase.GetAllSubCategoriesByCompanyId
 import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCategory
+import com.aymen.metastore.model.usecase.GetMyClientForAutocompleteClient
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepository
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepositoryImpl
@@ -198,7 +199,8 @@ class MetaStoreModule {
             getAllCompanyArticles = GetAllCompanyArticles(repository = articleRepository),
             getAllSubCategoriesByCompanyId = GetAllSubCategoriesByCompanyId(repository = subCategoryRepository),
             getArticlesByCompanyAndCategoryOrSubCategory = GetArticlesByCompanyAndCategoryOrSubCategory(repository = articleRepository),
-            getAllCommandLineByInvoiceId = GetAllCommandLineByInvoiceId(repository = invoiceRepository)
+            getAllCommandLineByInvoiceId = GetAllCommandLineByInvoiceId(repository = invoiceRepository),
+            getMyClientForAutocompleteClient = GetMyClientForAutocompleteClient(repository = clientRepository)
 
         )
     }

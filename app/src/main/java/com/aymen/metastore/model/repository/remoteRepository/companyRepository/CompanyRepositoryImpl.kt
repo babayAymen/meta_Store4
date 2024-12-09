@@ -5,9 +5,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.CompanyDto
-import com.aymen.metastore.model.entity.paging.AllCompaniesContainingPagingSource
+import com.aymen.metastore.model.entity.paging.pagingsource.AllCompaniesContainingPagingSource
 import com.aymen.metastore.model.entity.paging.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.ProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase

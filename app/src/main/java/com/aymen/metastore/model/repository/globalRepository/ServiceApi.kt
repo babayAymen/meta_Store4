@@ -345,7 +345,7 @@ interface ServiceApi {
     suspend fun getAllMyOrdersLinesByInvoiceId(@Path("companyId") companyId : Long , @Query("invoiceId") invoiceId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
 
     @GET("werehouse/client/get_all_my_client_containing/{companyId}")
-    suspend fun getAllMyClientContaining(@Query("clientName") clientName : String, @Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+    suspend fun getAllMyClientContaining( @Path("companyId") companyId: Long,@Query("searchType") searchType : SearchType,@Query("search") clientName : String,  @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
 
     @GET("werehouse/article/get_company_article_by_company_id/{companyId}")
     suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<ArticleCompanyDto>
@@ -355,7 +355,6 @@ interface ServiceApi {
 
      @GET("werehouse/commandline/get_command_line/{companyId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("companyId") companyId : Long, @Query("invoiceId") invoiceId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<CommandLineDto>
-
 
 
 
