@@ -43,7 +43,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
@@ -63,7 +62,6 @@ import com.aymen.metastore.ui.component.ArticleDialog
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ClientDialog
 import com.aymen.metastore.ui.component.DiscountTextField
-import com.aymen.metastore.ui.component.LodingShape
 import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.ui.component.ShowPaymentDailog
 import com.aymen.metastore.ui.component.ShowQuantityDailog
@@ -83,12 +81,13 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val clientCompany = invoiceViewModel.clientCompany
     val clientUser = invoiceViewModel.clientUser
     val clientType = invoiceViewModel.clientType
-    val isLoading = invoiceViewModel.isLoading
     val currentDateTime = LocalDateTime.now()
     val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) // HH:mm:ss
     LaunchedEffect(key1 = Unit) {
         if (invoiceMode == InvoiceMode.CREATE) {
         invoiceViewModel.getLastInvoiceCode()
+        }else{
+            invoiceViewModel.getInvoiceDetails()
         }
     }
     var totgen by remember {
@@ -116,45 +115,50 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
         mutableStateOf(ArticleCompany())
     }
 
-    val commandsLine = invoiceViewModel.commandLineDtos
+    val commandsLine by invoiceViewModel.commandLine.collectAsStateWithLifecycle()
 
-    val ordersLine = invoiceViewModel.ordersLine.collectAsLazyPagingItems()
-    val invoice = if(invoiceViewModel.invoice.type == InvoiceDetailsType.ORDER_LINE) ordersLine.itemSnapshotList.items.firstOrNull()?.invoice else Invoice()
-
+    val ordersLineInvoice = invoiceViewModel.ordersLine.collectAsLazyPagingItems()
+    val commandLineInvoice = invoiceViewModel.commandLineInvoice.collectAsLazyPagingItems()
+    val invoice = if(invoiceViewModel.invoice.type == InvoiceDetailsType.ORDER_LINE) ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
+        else
+        commandLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
     DisposableEffect(key1 = Unit) {
         onDispose {
-            invoiceViewModel.clientCompany = Company()
-            invoiceViewModel.clientUser = User()
             invoiceViewModel.remiseOrderLineToZero()
-            invoiceViewModel.invoice = Invoice()
-            invoiceViewModel.commandLineDtos = emptyList()
-            invoiceViewModel.discount = 0.0
             tottva = BigDecimal.ZERO
             totprice = BigDecimal.ZERO
             totgen = BigDecimal.ZERO
         }
     }
-    LaunchedEffect(key1 = commandsLine, key2 = ordersLine.itemCount,key3 = invoiceViewModel.discount) {
+    LaunchedEffect(key1 = ordersLineInvoice.itemCount, key2 = commandLineInvoice.itemCount) {
+        for(i in 0 until commandLineInvoice.itemCount){
+            val commandLine = commandLineInvoice[i]
+            if(commandLine != null){
+            invoiceViewModel.addCommandLine(commandLine)
+            }
+        }
+        for(i in 0 until ordersLineInvoice.itemCount){
+            val orderLine = ordersLineInvoice[i]
+            if(orderLine != null) {
+                val tvaInvoice = invoice?.tot_tva_invoice ?: 0.0
+                val priceArticleTot = invoice?.prix_article_tot ?: 0.0
+                tottva = tottva.add(BigDecimal(tvaInvoice))
+                totprice = totprice.add(BigDecimal(priceArticleTot))
+                totgen = totprice.add(tottva)
+                totprice = totprice.setScale(2, RoundingMode.HALF_UP)
+                tottva = tottva.setScale(2, RoundingMode.HALF_UP)
+                totgen = totgen.setScale(2, RoundingMode.HALF_UP)
+            }
+        }
+    }
+    LaunchedEffect(key1 = commandsLine,key2 = invoiceViewModel.discount) {
          tottva = BigDecimal.ZERO
          totprice = BigDecimal.ZERO
          totgen = BigDecimal.ZERO
-
         commandsLine.forEach {
             tottva = tottva.add(BigDecimal(it.totTva ?: 0.0))
             totprice = totprice.add(BigDecimal(it.prixArticleTot))
             totgen = totprice.add(tottva)
-        }
-
-        for(i in 0 until ordersLine.itemCount){
-            val orderLine = ordersLine[i]
-            Log.e("orderLine","order line : ${orderLine?.invoice}")
-            if(orderLine != null) {
-                val tvaInvoice = orderLine.invoice?.tot_tva_invoice ?: 0.0
-                val priceArticleTot = orderLine.invoice?.prix_article_tot ?: 0.0
-                tottva = tottva.add(BigDecimal(tvaInvoice))
-                totprice = totprice.add(BigDecimal(priceArticleTot))
-                totgen = totprice.add(tottva)
-            }
         }
 
         val discount = BigDecimal(invoiceViewModel.discount).divide(BigDecimal(100))
@@ -275,7 +279,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 val invoicee = Invoice().copy()
                                     invoicee.rest = mony.toDouble()
                                     invoicee.paid = paid
-                                for (x in invoiceViewModel.commandLineDtos){
+                                for (x in commandsLine){
                                     x.invoice = invoicee
                                 }
                                 invoiceViewModel.addInvoice()
@@ -494,19 +498,14 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     }
     }
         InvoiceMode.UPDATE -> {
-        LaunchedEffect(key1 = Unit) {
-            invoiceViewModel.getAllCommandLineByInvoiceId()
-        }
-            if (isLoading) {
-                LodingShape()
-            }else{
+            if(invoice != null) {
                 Column {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = invoice?.provider?.name!!)
-                                invoice?.provider.phone?.let { Text(text = it) }
-                                invoice?.provider.address?.let { Text(text = it) }
+                                Text(text = invoice.provider?.name!!)
+                                invoice.provider.phone?.let { Text(text = it) }
+                                invoice.provider.address?.let { Text(text = it) }
                             }
                         }
                         Row(
@@ -516,10 +515,10 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${invoice?.provider?.logo}/company/${invoice?.provider?.user?.id}"
+                                    image = "${BASE_URL}werehouse/image/${invoice.provider?.logo}/company/${invoice.provider?.user?.id}"
                                 )
-                                Text(text = invoice?.provider?.email ?: "")
-                                invoice?.provider?.matfisc?.let { Text(text = it) }
+                                Text(text = invoice.provider?.email ?: "")
+                                invoice.provider?.matfisc?.let { Text(text = it) }
                             }
                         }
                     }
@@ -529,18 +528,23 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                             .wrapContentWidth(Alignment.CenterHorizontally)
                     ) {
                         Column {
-                            Text(text = invoice?.code.toString(),
+                            Text(
+                                text = invoice.code.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally))
-                            Text(text = "invoice date: ${invoice?.createdDate}",
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                            )
+                            Text(
+                                text = "invoice date: ${invoice.createdDate}",
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally))
-                            Row (
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                            )
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally)) {
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                            ) {
                                 ArticleDialog(update = false, openDialo = false) {
                                     showArticleDialog = false
                                 }
@@ -554,55 +558,75 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         contentDescription = "Favorite"
                                     )
                                 }
-                                if(showPaymentDailog){
-                                    ShowPaymentDailog(totgen,openDailog = true){mony, payed ->
-                                        invoiceViewModel.commandLineDtos[0].invoice?.rest = mony.toDouble()
-                                        if(payed) {
-                                            invoiceViewModel.commandLineDtos[0].invoice?.paid = PaymentStatus.PAID
-                                        }else{
-                                            if(mony != BigDecimal.ZERO){
-                                                invoiceViewModel.commandLineDtos[0].invoice?.paid = PaymentStatus.INCOMPLETE
-                                            }else {
-                                                invoiceViewModel.commandLineDtos[0].invoice?.paid =
+                                IconButton(
+                                    onClick = {
+                                        invoiceViewModel.startScan {
+                                            if(it == null){
+                                                Toast.makeText(context, "this barcode not found", Toast.LENGTH_SHORT).show()
+                                            }else{
+                                                article = it
+                                                isShowQuantityDailog = true
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.AddToHomeScreen,
+                                        contentDescription = "Favorite"
+                                    )
+                                }
+                                if (showPaymentDailog) {
+                                    ShowPaymentDailog(totgen, openDailog = true) { mony, payed ->
+                                        commandsLine[0].invoice?.rest =
+                                            mony.toDouble()
+                                        if (payed) {
+                                            commandsLine[0].invoice?.paid =
+                                                PaymentStatus.PAID
+                                        } else {
+                                            if (mony != BigDecimal.ZERO) {
+                                                commandsLine[0].invoice?.paid =
+                                                    PaymentStatus.INCOMPLETE
+                                            } else {
+                                                commandsLine[0].invoice?.paid =
                                                     PaymentStatus.NOT_PAID
                                             }
                                         }
-                                    invoiceViewModel.addInvoice()
+                                        invoiceViewModel.addInvoice()
                                         appViewModel.updateShow("invoice")
                                     }
                                 }
                             }
                         }
                     }
-                    Row{
-                       Row {
-                           Column(
-                               modifier = Modifier
-                                   .clickable {
-                                       showClientDialog = true
-                                   }
-                           ) {
-                               if (showClientDialog) {
-                                   ClientDialog(update = false, openDialoge = true) {
-                                       showClientDialog = false
-                                   }
-                               }
-                               invoice?.client?.let {
-                                   Text(text = it.name)
-                                   invoiceViewModel.clientCompany = it
-                                   invoiceViewModel.clientType = AccountType.COMPANY
-                               }
-                               invoice?.person?.let {
-                                   Text(text = it.username!!)
-                                   invoiceViewModel.clientUser = it
-                                   invoiceViewModel.clientType = AccountType.USER
-                               }
-                               invoice?.client?.phone?.let { Text(text = it) }
-                               invoice?.person?.phone?.let { Text(text = it) }
-                               invoice?.person?.address?.let { Text(text = it) }
-                               invoice?.client?.address?.let { Text(text = it) }
-                           }
-                       }
+                    Row {
+                        Row {
+                            Column(
+                                modifier = Modifier
+                                    .clickable {
+                                        showClientDialog = true
+                                    }
+                            ) {
+                                if (showClientDialog) {
+                                    ClientDialog(update = false, openDialoge = true) {
+                                        showClientDialog = false
+                                    }
+                                }
+                                invoice.client?.let {
+                                    Text(text = it.name)
+                                    invoiceViewModel.clientCompany = it
+                                    invoiceViewModel.clientType = AccountType.COMPANY
+                                }
+                                invoice.person?.let {
+                                    Text(text = it.username!!)
+                                    invoiceViewModel.clientUser = it
+                                    invoiceViewModel.clientType = AccountType.USER
+                                }
+                                invoice.client?.phone?.let { Text(text = it) }
+                                invoice.person?.phone?.let { Text(text = it) }
+                                invoice.person?.address?.let { Text(text = it) }
+                                invoice.client?.address?.let { Text(text = it) }
+                            }
+                        }
                         Row {
                             Column {
 
@@ -610,6 +634,8 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         }
                     }
                 }
+            }
+
                 if(commandsLine.isNotEmpty()) {
                     Column {
                         LazyRow {
@@ -677,7 +703,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         )
                                     }
                                     LazyColumn {
-                                        itemsIndexed(invoiceViewModel.commandLineDtos) { index, commandLine ->
+                                        itemsIndexed(commandsLine) { index, commandLine ->
                                             Row(
                                                 modifier = Modifier
                                                     .padding(3.dp)
@@ -690,7 +716,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                 if (showArticleDialog && index == articleIndex) {
                                                     invoiceViewModel.article = commandLine.article!!
                                                     invoiceViewModel.commandLineDto = commandLine
-                                                    ArticleDialog(update = true , openDialo = true) {
+                                                    ArticleDialog(update = true, openDialo = true) {
                                                         showArticleDialog = false
                                                     }
                                                 }
@@ -795,17 +821,8 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         }
                     }
                 }
-            }
         }
         InvoiceMode.VERIFY ->{
-            LaunchedEffect(key1 = Unit) {
-                if(invoiceViewModel.invoice.type == InvoiceDetailsType.COMMAND_LINE){
-                    invoiceViewModel.getAllCommandLineByInvoiceId()
-                }else{
-                    invoiceViewModel.getAllOrdersLineByInvoiceId()
-                }
-            }
-
                 Column {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
@@ -848,9 +865,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
                             if(invoice?.status == Status.INWAITING){
-                                if(invoice?.provider?.id != myCompany.id){
+                                if(invoice.provider?.id != myCompany.id){
                             ButtonSubmit(labelValue = "Accept", color = Color.Green, enabled = true) {
-                                invoiceViewModel.accepteInvoice(invoice?.id!! , Status.ACCEPTED)
+                                invoiceViewModel.accepteInvoice(invoice.id!! , Status.ACCEPTED)
                             }
                                 }else{
                                     Text("waiting for accept")
@@ -884,7 +901,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         }
                     }
                 }
-                if (commandsLine.isNotEmpty() || ordersLine.itemCount !=0) {
+                if (commandsLine.isNotEmpty() || ordersLineInvoice.itemCount !=0) {
 
                     Column {
                         LazyRow {
@@ -1026,9 +1043,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         }
                                     }
                                     LazyColumn {
-                                        items(count = ordersLine.itemCount,
-                                            key = ordersLine.itemKey { it.id!! }) { index ->
-                                            val order = ordersLine[index]
+                                        items(count = ordersLineInvoice.itemCount,
+                                            key = ordersLineInvoice.itemKey { it.id!! }) { index ->
+                                            val order = ordersLineInvoice[index]
                                             if(order != null){
                                             invoiceViewModel.discount =
                                                 order.invoice?.discount ?: 0.0

@@ -8,5 +8,8 @@ import javax.inject.Inject
 class CommandLineRepositoryImpl @Inject constructor(
     private val api : ServiceApi
 ) : CommandLineRepository {
-    override suspend fun getAllCommandLinesByInvoiceId(invoiceId: Long): Response<List<CommandLineDto>> = api.getAllCommandLinesByInvoiceId(invoiceId)
+    override suspend fun getAllCommandLinesByInvoiceId(invoiceId: Long): Response<List<CommandLineDto>> {
+        TODO("Not yet implemented")
+    }
+
 }

@@ -806,7 +806,6 @@ fun ParentCard(parent: Company) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
-val context = LocalContext.current
     Column(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -818,6 +817,7 @@ val context = LocalContext.current
                     invoiceViewModel.invoice = invoice
                     invoiceViewModel.discount = invoice.discount
                     invoiceViewModel.invoiceMode = InvoiceMode.UPDATE
+                    invoiceViewModel.invoiceType = invoice.type!!
                     if (invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.status == Status.ACCEPTED || !asProvider) {
                         invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
                     }
@@ -951,6 +951,7 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
         quantity = invoiceViewModel.commandLineDto.quantity
         discount = invoiceViewModel.commandLineDto.discount?:0.0
     }
+    val commandsLine by invoiceViewModel.commandLine.collectAsStateWithLifecycle()
     IconButton(onClick = { openDialog = true }) {
         Icon(Icons.Default.Add, contentDescription = "Favorite")
     }
@@ -1018,14 +1019,14 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                                     command.discount = discount
                                     command.article = invoiceViewModel.article
                                 if(update) {
-                                    invoiceViewModel.commandLineDtos -= invoiceViewModel.commandLineDto
+                                    invoiceViewModel.substructCommandsLine()
                                 }
                                     command.totTva =
                                         quantity * command.article?.article?.tva!! * invoiceViewModel.article.sellingPrice!! / 100
                                     command.prixArticleTot =
                                         quantity * command.article?.sellingPrice!!*(1-command.discount!!/100)
                                     command.invoice?.code = invoiceViewModel.lastInvoiceCode
-                                    invoiceViewModel.commandLineDtos += command
+                                invoiceViewModel.addCommandLine(command)
                                     invoiceViewModel.commandLineDto = CommandLine()
                                     invoiceViewModel.article = ArticleCompany()
                                     quantity = 0.0
@@ -1156,6 +1157,7 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
     var isEnabled by remember {
         mutableStateOf(false)
     }
+    val commandsLine by invoiceViewModel.commandLine.collectAsStateWithLifecycle()
     if(openDialog){
         Dialog(
             onDismissRequest = {
@@ -1220,12 +1222,12 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                                 command.discount = discount
                                 command.article = article
                                 if(update) {
-                                    invoiceViewModel.commandLineDtos -= invoiceViewModel.commandLineDto
+                                    invoiceViewModel.substructCommandsLine()
                                 }
                                 command.totTva = qte * article.article?.tva!! * article.sellingPrice!! / 100
                                 command.prixArticleTot = qte * article.sellingPrice!!*(1-command.discount!!/100)
                                 command.invoice?.code = invoiceViewModel.lastInvoiceCode
-                                invoiceViewModel.commandLineDtos += command
+                                invoiceViewModel.addCommandLine(command)
                                 invoiceViewModel.commandLineDto = CommandLine()
                                 qte = 0.0
                                 discount = 0.0

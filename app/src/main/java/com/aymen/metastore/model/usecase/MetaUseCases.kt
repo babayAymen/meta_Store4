@@ -38,4 +38,6 @@ data class MetaUseCases(
     val getAllOrdersLineByInvoiceId : GetAllOrdersLineByInvoiceId,
     val getAllCompanyArticles : GetAllCompanyArticles,
     val getAllSubCategoriesByCompanyId : GetAllSubCategoriesByCompanyId,
+    val getArticlesByCompanyAndCategoryOrSubCategory : GetArticlesByCompanyAndCategoryOrSubCategory,
+    val getAllCommandLineByInvoiceId : GetAllCommandLineByInvoiceId
 )

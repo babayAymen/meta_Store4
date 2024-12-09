@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +44,7 @@ import com.aymen.metastore.ui.component.InvoiceCard
 fun InvoiceScreenAsProvider() {
     val appViewModel: AppViewModel = hiltViewModel()
     val invoiceViewModel: InvoiceViewModel = hiltViewModel()
+    val listState = invoiceViewModel.listState
     val context = LocalContext.current
     var asProvider by remember {
         mutableStateOf(true)
@@ -108,14 +111,14 @@ fun InvoiceScreenAsProvider() {
                                     enabled = true
                                 ) {
                                     appViewModel.updateView("ALL")
-                                    if(asProvider) {
-                                        invoiceViewModel.getAllMyPaymentFromInvoicee(
-                                            PaymentStatus.ALL,
-                                            asProvider
-                                        )
-                                    }else{
-                                        invoiceViewModel.getAllMyInvoicesAsClient()
-                                    }
+//                                    if(asProvider) {
+//                                        invoiceViewModel.getAllMyPaymentFromInvoicee(
+//                                            PaymentStatus.ALL,
+//                                            asProvider
+//                                        )
+//                                    }else{
+//                                        invoiceViewModel.getAllMyInvoicesAsClient()
+//                                    }
                                 }
                             }
                             Row(
@@ -173,7 +176,7 @@ fun InvoiceScreenAsProvider() {
                     when(view){
                         "ALL" ->{
                             val invoicesAsProvider = invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
-                            LazyColumn(
+                            LazyColumn(state = listState,
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 items(count = invoicesAsProvider.itemCount,

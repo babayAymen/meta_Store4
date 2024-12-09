@@ -35,7 +35,7 @@ class ProviderViewModel @Inject constructor(
     private val sharedViewModel: SharedViewModel
 ) :ViewModel(){
 
-    private var _providers : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
+    private val _providers : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val providers : StateFlow<PagingData<ClientProviderRelation>> get() = _providers
 
     val companyId by mutableLongStateOf(0)

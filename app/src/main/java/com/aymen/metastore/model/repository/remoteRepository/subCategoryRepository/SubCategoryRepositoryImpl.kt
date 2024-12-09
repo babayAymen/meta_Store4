@@ -34,14 +34,14 @@ class SubCategoryRepositoryImpl  @Inject constructor(
 
         private val subCategoryDao = room.subCategoryDao()
 
-    override fun getSubCategoryByCategory(id : Long):Flow<PagingData<SubCategory>>{
+    override fun getSubCategoryByCategory(id : Long, companyId : Long):Flow<PagingData<SubCategory>>{
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE, // Number of items per page
                 enablePlaceholders = false // Disable placeholders for unloaded pages
             ),
             pagingSourceFactory = {
-                SubCategoryPagingSource(api, sharedViewModel, id)
+                SubCategoryPagingSource(api, id, companyId)
             }
         ).flow
     }

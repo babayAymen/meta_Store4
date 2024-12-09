@@ -98,14 +98,14 @@ dependencies {
     implementation (libs.play.services.location)
 
     // pagination
-//    implementation ( libs.androidx.paging.compose )
+implementation("androidx.paging:paging-compose:3.3.4")
+implementation("androidx.paging:paging-runtime:3.3.4")
     implementation (libs.androidx.room.paging)
-    implementation ( libs.kotlinx.coroutines.core)
+//    implementation ( libs.kotlinx.coroutines.core)
+//    implementation(libs.androidx.paging.runtime.ktx)
+//    implementation(libs.androidx.paging.compose)
 
-    implementation(libs.androidx.paging.runtime.ktx)
-    implementation(libs.androidx.paging.compose)
-
-    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    implementation(libs.play.services.code.scanner)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.2")
 
 

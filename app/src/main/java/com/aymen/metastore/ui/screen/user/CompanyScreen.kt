@@ -46,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -101,6 +102,7 @@ fun CompanyScreen(company: Company) {
     DisposableEffect(key1 = Unit) {
         onDispose {
             ratingViewModel.rating = false
+            subCategoryViewModel.deleteSubCategories()
         }
     }
     LaunchedEffect(key1 = Unit) {
@@ -173,12 +175,13 @@ fun CompanyScreen(company: Company) {
 
                         Column {
                             ScreenByCompanyCategory(categories) { categ ->
-                                subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryId = categ.id?:0)
                                 category = categ
                                 articleViewModel.getRandomArticlesByCategory(
                                     categ.id!!,
-                                    categ.company?.id!!
+                                    categ.company?.id!!,
+                                    0
                                 )
+                                subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryId = categ.id?:0, companyId = categ.company.id?:0)
                             }
                             ScreenByCompanySubCategory(items = subCategories, category = category) { categ ->
                                 articleViewModel.getRandomArticlesBySubCategory(

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,12 +22,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -66,7 +69,6 @@ fun PaymentScreen() {
         mutableStateOf(true)
     }
     LaunchedEffect(key1 = show) {
-        Toast.makeText(context, show, Toast.LENGTH_SHORT).show()
         when (show) {
             "payment" -> {
                 rechargeInabled = false
@@ -328,7 +330,6 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     }
                 }
             }
-
             "payed" -> {
                 val paid = invoiceViewModel.paid.collectAsLazyPagingItems()
                 LazyColumn(
@@ -433,8 +434,10 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
 @Composable
 fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel: PaymentViewModel, appViewModel: AppViewModel) {
 
-    val paymentsEspece = pointPaymentViewModel.allMyPointsPaymentForProviders.collectAsLazyPagingItems()
+
     val myProfit by pointPaymentViewModel.myProfits.collectAsStateWithLifecycle()
+
+
     var beginDate by remember {
         mutableStateOf("")
     }
@@ -457,6 +460,7 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
     var sumProfitInabled by remember {
         mutableStateOf(false)
     }
+
     when (view) {
         "all_histories_payment_for_provider" -> {
             allHistoryInabled = false
@@ -496,6 +500,17 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
             sumProfitInabled = false
         }
     }
+    val listState = rememberLazyListState()
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                Log.e("LazyColumn", "Current position: Index = $index, Offset = $offset")
+            }
+    }
+
+
+    val paymentsEspece = pointPaymentViewModel.allMyPointsPaymentForProviders.collectAsLazyPagingItems()
+
     Column {
         Row {
             Row(
@@ -578,30 +593,59 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
         ){
             when (view) {
                 "all_histories_payment_for_provider" -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(count = paymentsEspece.itemCount,
-                            key = paymentsEspece.itemKey { it.id!! }
-                        ) { index: Int ->
-                            val payment = paymentsEspece[index]
-                            if (payment != null) {
-                                SwipeToDeleteContainer(
-                                    payment,
-                                    onDelete = {
-                                        Log.e("aymenbabatdelete", "delete")
-                                    },
-                                    onUpdate = {
-                                        Log.e("aymenbabatdelete", "delete")
 
+                            LazyColumn(state = listState,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Log.e("PagingState", "Load state: ${paymentsEspece.loadState}")
+                                items(count = paymentsEspece.itemCount,
+                                    key = { index ->
+                                        val item = paymentsEspece[index]
+                                        Log.e("itemkeylazycolumn", "Item key: ${item?.id}")
+                                        item?.id ?: index // Fallback to index if ID is null
                                     }
-                                ) { buy ->
-                                    BuyHistoryCard(buy)
+                                ) { index: Int ->
+                                    val payment = paymentsEspece[index]
+                                    if (payment != null) {
+                                        SwipeToDeleteContainer(
+                                            payment,
+                                            onDelete = {
+                                                Log.e("aymenbabatdelete", "delete")
+                                            },
+                                            onUpdate = {
+                                                Log.e("aymenbabatdelete", "delete")
+
+                                            }
+                                        ) { buy ->
+                                            BuyHistoryCard(buy)
+                                        }
+                                    }
+                                }
+
+                                paymentsEspece.apply {
+                                    when{
+                                        loadState.refresh is LoadState.Loading -> {
+                                            Log.e("aymenbabatdelete", "loading")
+                                        }
+                                        loadState.refresh is LoadState.Error -> {
+                                            Log.e("aymenbabatdelete", "error")
+                                        }
+                                        loadState.append is LoadState.Loading ->{
+                                            Log.e("aymenbabatdelete", "apped")
+                                        }
+                                    }
                                 }
                             }
+
+                    LaunchedEffect(listState) {
+                        snapshotFlow { listState.firstVisibleItemIndex }.collect{firstItem ->
+                            val totitem = paymentsEspece.itemCount
+                            val pref = 5
+                            if(totitem - firstItem <= pref){Log.e("lazypagingitem","near at end "  )}
                         }
                     }
                 }
+
                 "all_histories_payment_for_provider_by_date" ->{
                     val allMyProfitsPerDay = paymentViewModel.paymentsEspeceByDate.collectAsLazyPagingItems()
                     LazyColumn(

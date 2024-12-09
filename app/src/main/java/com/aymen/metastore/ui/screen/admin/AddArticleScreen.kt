@@ -86,7 +86,7 @@ fun AddArticleScreen(){
             mutableStateOf(Category())
         }
         LaunchedEffect(key1 = category) {
-            subCategoryViewModel.getAllSubCategoriesByCategoryId(category.id?:0)
+            subCategoryViewModel.getAllSubCategoriesByCategoryId(category.id?:0, sharedViewModel.company.value.id?:0)
         }
 
 

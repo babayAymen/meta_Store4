@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.repository.remoteRepository.invoiceRepository
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -10,11 +11,12 @@ import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.paging.AllInvoiceRemoteMediator
+import com.aymen.metastore.model.entity.paging.CommandLineByInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceAsClientAndStatusRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
-import com.aymen.metastore.model.repository.remoteRepository.invoiceRepository.InvoiceRepository
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.AccountType
@@ -25,14 +27,15 @@ import kotlinx.coroutines.flow.map
 import retrofit2.Response
 import javax.inject.Inject
 
+@OptIn(ExperimentalPagingApi::class)
 class InvoiceRepositoryImpl @Inject constructor(
     private val api: ServiceApi,
     private val room : AppDatabase
 ) : InvoiceRepository {
 
     private val invoiceDao = room.invoiceDao()
+    private val commandLineDao = room.commandLineDao()
 
-    @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyInvoicesAsProvider(companyId : Long) :Flow<PagingData<InvoiceWithClientPersonProvider>>{
        return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -47,7 +50,6 @@ class InvoiceRepositoryImpl @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalPagingApi::class)
     override fun getAllInvoicesAsClient(clientId: Long, accountType : AccountType): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -68,7 +70,6 @@ class InvoiceRepositoryImpl @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalPagingApi::class)
     override fun getAllInvoicesAsClientAndStatus(
         clientId: Long,
         status: Status
@@ -86,8 +87,27 @@ class InvoiceRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getAllCommandLineByInvoiceId(
+        companyId: Long,
+        invoiceId: Long
+    ): Flow<PagingData<CommandLineWithInvoiceAndArticle>> {
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = CommandLineByInvoiceRemoteMediator(
+                api = api , room = room , companyId = companyId , invoiceId = invoiceId
+            ),
+            pagingSourceFactory = {
+                commandLineDao.getAllCommandsLineByInvoiceId(invoiceId)
+            }
+        ).flow.map {
+            it.map { article ->
+                article
+            }
+        }
+    }
 
-//    override suspend fun getAllMyInvoicesAsClient(companyId : Long) = api.getAllMyInvoicesAsClient(companyId = companyId)
+
+    //    override suspend fun getAllMyInvoicesAsClient(companyId : Long) = api.getAllMyInvoicesAsClient(companyId = companyId)
     override suspend fun getLastInvoiceCode() = api.getLastInvoiceCode()
     override suspend fun addInvoice(
         commandLineDtos: List<CommandLine>,

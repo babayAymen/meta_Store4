@@ -47,7 +47,6 @@ fun ProviderScreen() {
                        count = providers.itemCount,
                        key = providers.itemKey { it.id!! }) { index ->
                        val provider = providers[index]
-                       Log.e("clienttest","provider : $provider")
                        if (provider != null) {
                            SwipeToDeleteContainer(
                                provider,
@@ -61,11 +60,8 @@ fun ProviderScreen() {
                            ) { prvd ->
                                ProviderCard(
                                    prvd,
-                                   image = "${BASE_URL}werehouse/image/${provider.provider?.logo}/company/" + if (provider.provider?.virtual == true) {
-                                       provider.client?.id
-                                   } else {
-                                       provider.provider?.user?.id
-                                   }
+                                   image = "${BASE_URL}werehouse/image/${provider.provider?.logo}/company/" + if (provider.provider?.virtual == true) provider.client?.user?.id else provider.provider?.user?.id
+
                                )
                            }
 

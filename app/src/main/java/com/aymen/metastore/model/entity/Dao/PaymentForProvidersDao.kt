@@ -3,6 +3,7 @@ package com.aymen.metastore.model.entity.Dao
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.aymen.metastore.model.entity.room.entity.PaymentForProviders
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentForProviderRemoteKeysEntity
@@ -30,6 +31,7 @@ interface PaymentForProvidersDao {
     @Query("SELECT * FROM provider_profit_history_remote_keys WHERE id = :id")
     suspend fun getProvidersProfitHistoryRemoteKey(id : Long) : ProviderProfitHistoryRemoteKeysEntity
 
+    @Transaction
     @Query("SELECT * FROM payment_for_providers WHERE lastModifiedDate BETWEEN :beginDate AND :finalDate")
      fun getAllMyPaymentsEspeceByDate( beginDate: String, finalDate: String) : PagingSource<Int, PaymentForProvidersWithCommandLine>
 
@@ -42,13 +44,14 @@ interface PaymentForProvidersDao {
     @Query("DELETE FROM payment_for_providers")
     suspend fun clearAllProvidersProfitHistoryTable()
 
-    @Query("DELETE FROM payment_for_providers")
+    @Query("DELETE FROM points_payment")
     suspend fun clearPointsPayment()
 
 
     @Query("SELECT * FROM payment_for_providers WHERE createdDate BETWEEN :date AND :finDate")
     suspend fun getMyPaymentByDate(date: String , finDate : String): List<PaymentForProvidersWithCommandLine>
 
+    @Transaction
     @Query("SELECT * from payment_for_providers")
     fun getAllMyPaymentsEspece(): PagingSource<Int, PaymentForProvidersWithCommandLine>
 

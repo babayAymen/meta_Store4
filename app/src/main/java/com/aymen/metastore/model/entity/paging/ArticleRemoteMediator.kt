@@ -37,7 +37,7 @@ class ArticleRemoteMediator(
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     previousePage
                 }
@@ -45,7 +45,7 @@ class ArticleRemoteMediator(
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     nextePage
                 }
@@ -103,7 +103,7 @@ class ArticleRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-      //  articleDao.clearAllArticle()
+        articleDao.clearAllArticle()
         articleDao.clearAllArticleRemoteKeys()
     }
 }

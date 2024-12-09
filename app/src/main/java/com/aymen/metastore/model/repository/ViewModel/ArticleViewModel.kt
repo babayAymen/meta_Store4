@@ -151,9 +151,14 @@ class ArticleViewModel @Inject constructor(
         _articleCompany.value = art
     }
 
-        fun getRandomArticlesByCategory(categoryId: Long, companyId: Long) {
+        fun getRandomArticlesByCategory(categoryId: Long, companyId: Long, subCategoryId: Long) {
             viewModelScope.launch {
-
+                useCases.getArticlesByCompanyAndCategoryOrSubCategory(companyId, categoryId, subCategoryId)
+                    .distinctUntilChanged()
+                    .cachedIn(viewModelScope)
+                    .collect{
+                        _companyArticles.value = it.map { article -> article.toArticleCompanyModel() }
+                    }
             }
         }
 

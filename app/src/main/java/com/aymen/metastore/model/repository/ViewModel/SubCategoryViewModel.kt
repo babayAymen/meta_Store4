@@ -12,6 +12,7 @@ import androidx.paging.map
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,7 @@ import javax.inject.Inject
 class SubCategoryViewModel @Inject constructor(
     private val repository : GlobalRepository,
     private val room : AppDatabase,
-     sharedViewModel: SharedViewModel,
+    private val sharedViewModel: SharedViewModel,
     private val useCases: MetaUseCases
 ) : ViewModel() {
 
@@ -44,7 +45,6 @@ class SubCategoryViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            Log.e("subcategoryviewModel","call getAllSubCategoriesByCompanyId1")
             useCases.getPagingSubCategoryByCompany(sharedViewModel.company.value.id?:0)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
@@ -53,14 +53,19 @@ class SubCategoryViewModel @Inject constructor(
         }
     }
 
-    fun getAllSubCategoriesByCategoryId(categoryId : Long){
+    fun deleteSubCategories(){
+        _companySubCategories.value = PagingData.empty()
+    }
+
+    fun getAllSubCategoriesByCategoryId(categoryId : Long, companyId : Long){
         viewModelScope.launch {
-            useCases.getAllSubCategoryByCategoryId(categoryId)
+            Log.e("affetcsubcategory","category from view model id $categoryId and company is $companyId")
+            useCases.getAllSubCategoryByCategoryId(categoryId, companyId)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _allSubCategories.value = it.map { subcategory -> subcategory }
-                    _companySubCategories.value = it.map { subcategory -> subcategory }
+                    _allSubCategories.value = it
+                    _companySubCategories.value = it
                 }
         }
     }

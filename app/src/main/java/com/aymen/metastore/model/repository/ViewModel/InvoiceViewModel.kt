@@ -1,20 +1,18 @@
 package com.aymen.metastore.model.repository.ViewModel
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import androidx.room.Transaction
+import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.CommandLine
@@ -33,7 +31,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,6 +44,8 @@ class InvoiceViewModel @Inject constructor(
     private val barcodeScanner: BarcodeScanner
 ) : ViewModel(){
 
+    val listState = LazyListState()
+
     private val _myInvoicesAsProvider : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val myInvoicesAsProvider : StateFlow<PagingData<Invoice>> get() = _myInvoicesAsProvider
 
@@ -55,6 +54,9 @@ class InvoiceViewModel @Inject constructor(
 
     private val _ordersLine : MutableStateFlow<PagingData<PurchaseOrderLine>> = MutableStateFlow(PagingData.empty())
     val ordersLine: StateFlow<PagingData<PurchaseOrderLine>> get() = _ordersLine
+
+    private val _commandLineInvoice : MutableStateFlow<PagingData<CommandLine>> = MutableStateFlow(PagingData.empty())
+    val commandLineInvoice: StateFlow<PagingData<CommandLine>> get() = _commandLineInvoice
 
 
     private val _allMyInvoiceNotAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
@@ -71,11 +73,13 @@ class InvoiceViewModel @Inject constructor(
     var clientType by mutableStateOf(AccountType.USER)
     var article by mutableStateOf(ArticleCompany())
     var commandLineDto by mutableStateOf(CommandLine())
-    var commandLineDtos by  mutableStateOf(emptyList<CommandLine>())
+    private val _commandLineDtos :  MutableStateFlow<List<CommandLine>> = MutableStateFlow(emptyList())
+    val commandLine : StateFlow<List<CommandLine>> get() = _commandLineDtos
     var isLoading by  mutableStateOf(true)
     var discount by mutableDoubleStateOf(0.0)
     val company by mutableStateOf(sharedViewModel.company.value)
     var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
+    var invoiceType by mutableStateOf(InvoiceDetailsType.ORDER_LINE)
 
     private val _inComplete : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val inComplete: StateFlow<PagingData<Invoice>> get() = _inComplete
@@ -88,6 +92,14 @@ class InvoiceViewModel @Inject constructor(
 
     private val _notAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val notAccepted: StateFlow<PagingData<Invoice>> get() = _notAccepted
+
+    fun substructCommandsLine(){
+        _commandLineDtos.value = _commandLineDtos.value.minus(commandLineDto)
+    }
+
+    fun addCommandLine(commandLine: CommandLine){
+        _commandLineDtos.value = _commandLineDtos.value.plus(commandLine)
+    }
 
     fun startScan(onScan : (ArticleCompany?) ->Unit){
         viewModelScope.launch(Dispatchers.Main) {
@@ -107,6 +119,13 @@ class InvoiceViewModel @Inject constructor(
 
     fun remiseOrderLineToZero(){
         _ordersLine.value = PagingData.empty()
+        _commandLineInvoice.value = PagingData.empty()
+        _ordersLine.value = PagingData.empty()
+        clientCompany = Company()
+        clientUser = User()
+        invoice = Invoice()
+        _commandLineDtos.value = emptyList()
+        discount = 0.0
     }
     fun getAllMyPaymentFromInvoicee(status : PaymentStatus, isProvider : Boolean){
         viewModelScope.launch{
@@ -206,7 +225,6 @@ class InvoiceViewModel @Inject constructor(
                 }
         }
     }
-
     fun getLastInvoiceCode(){
         viewModelScope.launch (Dispatchers.IO){
             try {
@@ -218,39 +236,43 @@ class InvoiceViewModel @Inject constructor(
                 Log.e("aymenabaylastinvoice","error is : $ex")
             }
             }
-
     }
-
     fun addInvoice(){
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 (clientCompany.id?:clientUser.id)?.let {
-                    repository.addInvoice(commandLineDtos = commandLineDtos, clientId = it, invoiceCode = lastInvoiceCode, discount = discount, clientType =  clientType, invoiceMode = invoiceMode) }
+                    repository.addInvoice(commandLineDtos = commandLine.value, clientId = it, invoiceCode = lastInvoiceCode, discount = discount, clientType =  clientType, invoiceMode = invoiceMode) }
             }catch (ex : Exception){
                 Log.e("aymenbabayerror","error is : $ex")
                 }
             }
 
     }
-
-    fun getAllCommandLineByInvoiceId(){
-        viewModelScope.launch (Dispatchers.IO){
-
-        }
-    }
-
-
-    fun getAllOrdersLineByInvoiceId(){
+    fun getInvoiceDetails(){
+        val id = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
         viewModelScope.launch{
-            Log.e("getAllOrdersLineByInvoiceId", "begin in viewmodel")
-            useCases.getAllOrdersLineByInvoiceId(sharedViewModel.company.value.id!! ,invoice.id!!)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect{
-                    _ordersLine.value = it
+            when(invoiceType){
+                InvoiceDetailsType.COMMAND_LINE -> {
+                    useCases.getAllCommandLineByInvoiceId(id!!, invoice.id!!)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _commandLineInvoice.value = it.map { line ->  line.toCommandLineModel() }
+                        }
                 }
+                InvoiceDetailsType.ORDER_LINE -> {
+                    useCases.getAllOrdersLineByInvoiceId(id!! ,invoice.id!!)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _ordersLine.value = it
+                        }
+                }
+            }
+
         }
     }
+
 
     fun accepteInvoice(invoiceId : Long , status : Status){
         viewModelScope.launch (Dispatchers.IO){

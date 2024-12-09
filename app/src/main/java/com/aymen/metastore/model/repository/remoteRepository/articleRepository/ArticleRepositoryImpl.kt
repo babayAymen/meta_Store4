@@ -6,18 +6,15 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import androidx.room.Transaction
-import androidx.room.withTransaction
-import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.paging.AllArticlesContainingPagingSource
-import com.aymen.metastore.model.entity.paging.AllPersonContainingPagingSource
 import com.aymen.metastore.model.entity.paging.ArticleCompanyRandomMediator
 import com.aymen.metastore.model.entity.paging.ArticleCompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.ArticleRemoteMediator
 import com.aymen.metastore.model.entity.paging.CompanyArticleRemoteMediator
+import com.aymen.metastore.model.entity.paging.CompanyArticlesByCategoryOrSubCategoryPagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
@@ -31,10 +28,8 @@ import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.repository.remoteRepository.articleRepository.ArticleRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Response
@@ -127,6 +122,22 @@ class ArticleRepositoryImpl @Inject constructor
                 article
             }
         }
+    }
+
+    override fun getArticlesByCompanyAndCategoryOrSubCategory(
+        companyId: Long,
+        categoryId: Long,
+        subcategoryId: Long
+    ): Flow<PagingData<ArticleCompanyDto>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE, // Number of items per page
+                enablePlaceholders = false // Disable placeholders for unloaded pages
+            ),
+            pagingSourceFactory = {
+                CompanyArticlesByCategoryOrSubCategoryPagingSource(api, companyId, categoryId,subcategoryId)
+            }
+        ).flow
     }
 
     override fun getArticleDetails(id: Long): Flow<Resource<ArticleCompany>> {

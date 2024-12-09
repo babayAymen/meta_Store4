@@ -2,7 +2,6 @@ package com.aymen.store.model.repository.remoteRepository.articleRepository
 
 import androidx.paging.PagingData
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
-import com.aymen.metastore.model.entity.dto.ArticleDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.Article
@@ -27,7 +26,7 @@ interface ArticleRepository {
      fun getAllArticlesByCategor(companyId : Long, companyCategory: CompanyCategory): Flow<PagingData<Article>>
     suspend fun getArticleByBarcode(bareCode : String) : Response<ArticleCompanyDto>
     fun getAllCompanyArticles(companyId : Long) : Flow<PagingData<ArticleWithArticleCompany>>
-
+    fun getArticlesByCompanyAndCategoryOrSubCategory(companyId : Long , categoryId: Long, subcategoryId: Long) : Flow<PagingData<ArticleCompanyDto>>
     suspend fun deleteArticle(id: String): Response<Void>
 
     suspend fun addArticle(article:String, file : File):Response<Void>

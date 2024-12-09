@@ -1,5 +1,6 @@
 package com.aymen.store.model.repository.remoteRepository.categoryRepository
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -51,13 +52,15 @@ class CategoryRepositoryImpl  @Inject constructor(
 
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllCategory(companyId : Long): Flow<PagingData<Category>> {
+
+        Log.e("affectcompany","company iod  impl : ${companyId}")
        return Pager(
            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
            remoteMediator = CategoryRemoteMediator(
-               api = api, room = room,id = sharedViewModel.company.value.id
+               api = api, room = room,id = companyId
            ),
            pagingSourceFactory = {
-               categoryDao.getAllCategoriesByCompanyId(sharedViewModel.company.value.id!!)
+               categoryDao.getAllCategoriesByCompanyId(companyId)
            }
        ).flow.map {
            it.map { article ->

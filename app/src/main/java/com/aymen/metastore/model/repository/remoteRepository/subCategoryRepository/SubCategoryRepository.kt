@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import java.io.File
 
 interface SubCategoryRepository {
-     fun getSubCategoryByCategory(id : Long): Flow<PagingData<SubCategory>>
+     fun getSubCategoryByCategory(id : Long, companyId : Long): Flow<PagingData<SubCategory>>
     suspend fun addSubCtagoryWithImage(sousCategory : String, file : File)
     suspend fun addSubCategoryWithoutImage(sousCategory : String)
       fun getAllSubCategories(companyId : Long): Flow<PagingData<SubCategoryWithCategory>>

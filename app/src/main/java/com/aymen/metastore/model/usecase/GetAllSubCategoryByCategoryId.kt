@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 class GetAllSubCategoryByCategoryId(private val repository: SubCategoryRepository) {
 
-    operator fun invoke(categoryId : Long) : Flow<PagingData<SubCategory>>{
-        return repository.getSubCategoryByCategory(categoryId)
+    operator fun invoke(categoryId : Long, companyId : Long) : Flow<PagingData<SubCategory>>{
+        return repository.getSubCategoryByCategory(categoryId, companyId)
     }
 }

@@ -72,8 +72,6 @@ class OrderRepositoryImpl @Inject constructor(
     override suspend fun getAllMyOrders(companyId : Long) = api.getAllMyOrdersLine(companyId)
 
     override fun getAllOrdersLineByInvoiceId(companyId : Long ,invoiceId: Long) : Flow<PagingData<PurchaseOrderLine>>{
-
-        Log.e("getAllOrdersLineByInvoiceId", "begin in repo impl")
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE, // Number of items per page

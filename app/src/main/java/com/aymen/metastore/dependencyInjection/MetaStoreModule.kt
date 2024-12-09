@@ -28,6 +28,7 @@ import com.aymen.metastore.model.usecase.GetPagingSubCategoryByCompany
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.metastore.userdtodatastore
 import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
@@ -106,8 +107,10 @@ import com.aymen.store.model.repository.remoteRepository.signInRepository.SignIn
 import com.aymen.store.model.repository.remoteRepository.signInRepository.SignInRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepository
 import com.aymen.metastore.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepositoryImpl
+import com.aymen.metastore.model.usecase.GetAllCommandLineByInvoiceId
 import com.aymen.metastore.model.usecase.GetAllCompanyArticles
 import com.aymen.metastore.model.usecase.GetAllSubCategoriesByCompanyId
+import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCategory
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepository
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepositoryImpl
@@ -127,7 +130,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.Executors
 import javax.inject.Singleton
 
-const val BASE_URL = "http://192.168.1.4:8080/"
+const val BASE_URL = "http://192.168.1.5:8080/"
 //const val BASE_URL = "http://192.168.109.209:8080/"
 private const val DATABASE_NAME = "meta_stoèère_data_base"
 
@@ -193,7 +196,9 @@ class MetaStoreModule {
             getAllSubCategoryByCategoryId = GetAllSubCategoryByCategoryId(repository = subCategoryRepository),
             getAllOrdersLineByInvoiceId = GetAllOrdersLineByInvoiceId(repository = orderRepository),
             getAllCompanyArticles = GetAllCompanyArticles(repository = articleRepository),
-            getAllSubCategoriesByCompanyId = GetAllSubCategoriesByCompanyId(repository = subCategoryRepository)
+            getAllSubCategoriesByCompanyId = GetAllSubCategoriesByCompanyId(repository = subCategoryRepository),
+            getArticlesByCompanyAndCategoryOrSubCategory = GetArticlesByCompanyAndCategoryOrSubCategory(repository = articleRepository),
+            getAllCommandLineByInvoiceId = GetAllCommandLineByInvoiceId(repository = invoiceRepository)
 
         )
     }

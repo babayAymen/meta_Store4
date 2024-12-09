@@ -84,12 +84,13 @@ class ProviderRemoteMediator(
                     companyClientRelationDao.insertClientProviderRelation(response.map { relation -> relation.toClientProviderRelation() })
 
                 } catch (ex: Exception) {
-                    Log.e("error", "$ex")
+                    Log.e("errorprovider", "$ex")
                 }
             }
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
+            Log.e("errorprovider", "$ex")
             MediatorResult.Error(ex)
         }
     }

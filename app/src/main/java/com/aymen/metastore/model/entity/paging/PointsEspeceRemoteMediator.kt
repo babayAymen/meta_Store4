@@ -61,7 +61,7 @@ class PointsEspeceRemoteMediator(
                 }
             }
             val response = api.getAllProvidersProfit(id,currentPage, state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
+            val endOfPaginationReached = response.empty
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
@@ -70,35 +70,35 @@ class PointsEspeceRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    paymentForProvidersDao.insertKeys(response.map { article ->
+                    paymentForProvidersDao.insertKeys(response.content.map { article ->
                         PointsPaymentForProviderRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage
                         )
                     })
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.purchaseorder?.company?.user?.toUser()})
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.purchaseorder?.person?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.purchaseOrderLine?.purchaseorder?.company?.toCompany()})
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.purchaseorder?.client?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.purchaseOrderLine?.purchaseorder?.client?.toCompany()})
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.invoice?.person?.toUser()})
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.invoice?.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.purchaseOrderLine?.invoice?.provider?.toCompany()})
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.invoice?.client?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.purchaseOrderLine?.invoice?.client?.toCompany()})
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.article?.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.purchaseOrderLine?.article?.provider?.toCompany()})
-                    userDao.insertUser(response.map {user -> user.purchaseOrderLine?.article?.category?.company?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.purchaseOrderLine?.article?.category?.company?.toCompany()})
-                    purchaseOrderDao.insertOrder(response.map { order -> order.purchaseOrderLine?.purchaseorder?.toPurchaseOrder()!! })
-                    categoryDao.insertCategory(response.map { cat -> cat.purchaseOrderLine?.article?.category?.toCategory()!! })
-                    subCategoryDao.insertSubCategory(response.map { cat -> cat.purchaseOrderLine?.article?.subCategory?.toSubCategory()!! })
-                    articleDao.insertArticle(response.map { article -> article.purchaseOrderLine?.article?.article?.toArticle(isMy = true)!! })
-                    articleCompanyDao.insertArticle(response.map { article -> article.purchaseOrderLine?.article?.toArticleCompany(false)!! })
-                    invoiceDao.insertInvoice(response.map { invoice -> invoice.purchaseOrderLine?.invoice?.toInvoice()!! })
-                    purchaseOrderLineDao.insertOrderLine(response.map { line -> line.purchaseOrderLine?.toPurchaseOrderLine()!! })
-                    paymentForProvidersDao.insertPaymentForProviders(response.map {payment -> payment.toPaymentForProviders() })
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.purchaseorder?.company?.user?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.purchaseorder?.person?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.purchaseorder?.company?.toCompany()})
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.purchaseorder?.client?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.purchaseorder?.client?.toCompany()})
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.invoice?.person?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.invoice?.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.invoice?.provider?.toCompany()})
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.invoice?.client?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.invoice?.client?.toCompany()})
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.article?.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.article?.provider?.toCompany()})
+                    userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.article?.category?.company?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.article?.category?.company?.toCompany()})
+                    purchaseOrderDao.insertOrder(response.content.map { order -> order.purchaseOrderLine?.purchaseorder?.toPurchaseOrder()!! })
+                    categoryDao.insertCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.category?.toCategory()!! })
+                    subCategoryDao.insertSubCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.subCategory?.toSubCategory()!! })
+                    articleDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.article?.toArticle(isMy = true)!! })
+                    articleCompanyDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.toArticleCompany(false)!! })
+                    invoiceDao.insertInvoice(response.content.map { invoice -> invoice.purchaseOrderLine?.invoice?.toInvoice()!! })
+                    purchaseOrderLineDao.insertOrderLine(response.content.map { line -> line.purchaseOrderLine?.toPurchaseOrderLine()!! })
+                    paymentForProvidersDao.insertPaymentForProviders(response.content.map {payment -> payment.toPaymentForProviders() })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())

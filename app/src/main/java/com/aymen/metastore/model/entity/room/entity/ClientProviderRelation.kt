@@ -29,8 +29,8 @@ import com.aymen.metastore.model.entity.model.User
             onUpdate = ForeignKey.CASCADE
         ),
     ],
-            indices = [Index(value = ["userId"], unique = true),
-                Index(value = ["clientId"], unique = true),
+            indices = [Index(value = ["userId"]),
+                Index(value = ["clientId"]),
                 Index(value = ["providerId"])])
 data class ClientProviderRelation(
 

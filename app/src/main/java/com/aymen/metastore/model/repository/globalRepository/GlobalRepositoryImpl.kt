@@ -24,9 +24,11 @@ import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.PaymentForProviders
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.ConversationWithUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
@@ -111,7 +113,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getSubCategoryByCategory(id: Long): Flow<PagingData<SubCategory>> {
+    override fun getSubCategoryByCategory(id: Long, companyId : Long): Flow<PagingData<SubCategory>> {
         TODO("Not yet implemented")
     }
 
@@ -238,6 +240,14 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
+    override fun getAllCommandLineByInvoiceId(
+        companyId: Long,
+        invoiceId: Long
+    ): Flow<PagingData<CommandLineWithInvoiceAndArticle>> {
+        TODO("Not yet implemented")
+    }
+
+
     override suspend fun getLastInvoiceCode() = invoiceRepository.getLastInvoiceCode()
     override suspend fun addInvoice(
         commandLineDtos: List<CommandLine>,
@@ -287,7 +297,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getAllMyPointsPaymentForPoviders(companyId: Long): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
+    override fun getAllMyPointsPaymentForPoviders(companyId: Long): Flow<PagingData<PaymentForProviders>> {
         TODO("Not yet implemented")
     }
 
@@ -356,6 +366,14 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun getArticleByBarcode(bareCode: String) = articleRepository.getArticleByBarcode(bareCode)
     override fun getAllCompanyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getArticlesByCompanyAndCategoryOrSubCategory(
+        companyId: Long,
+        categoryId: Long,
+        subcategoryId: Long
+    ): Flow<PagingData<ArticleCompanyDto>> {
         TODO("Not yet implemented")
     }
 

@@ -35,6 +35,7 @@ import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.dto.WorkerDto
+import com.aymen.metastore.model.entity.model.PaginatedResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -143,8 +144,6 @@ interface ServiceApi {
                            ):Response<Void>
     @GET("werehouse/invoice/response/{invoiceId}/{status}")
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
-    @GET("werehouse/commandline/getcommandline/{invoiceId}")
-    suspend fun getAllCommandLinesByInvoiceId(@Path("invoiceId") invoiceId : Long):Response<List<CommandLineDto>>
     @GET("werehouse/message/getconversation/{id}/{type}")
     suspend fun getConversationByCaleeId(@Path("id") id : Long,@Path("type") type : MessageType): Response<ConversationDto>
     @POST("werehouse/message/send")
@@ -331,7 +330,7 @@ interface ServiceApi {
 
 
     @GET("werehouse/point/get_all_my_payment/{id}")
-    suspend fun getAllProvidersProfit(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PaymentForProvidersDto>
+    suspend fun getAllProvidersProfit(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<PaymentForProvidersDto>
 
     @GET("werehouse/point/get_all_my_profits/{id}")
     suspend fun getAllProfitPerDay(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
@@ -350,5 +349,16 @@ interface ServiceApi {
 
     @GET("werehouse/article/get_company_article_by_company_id/{companyId}")
     suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<ArticleCompanyDto>
+
+    @GET("werehouse/article/get_company_article_by_category_or_subcategory/{companyId}")
+    suspend fun companyArticlesByCategoryOrSubCategory(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("subCategoryId") subcategoryId: Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleCompanyDto>
+
+     @GET("werehouse/commandline/get_command_line/{companyId}")
+    suspend fun getAllCommandLinesByInvoiceId(@Path("companyId") companyId : Long, @Query("invoiceId") invoiceId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<CommandLineDto>
+
+
+
+
+
 
 }

@@ -71,37 +71,37 @@ class PointsPaymentViewModel @Inject constructor(
     val myProfits : StateFlow<String> = _myProfits
 
 init {
-    getAllMyPointsPayment()
-    getAllMyPointsPaymentRecharge()
+
+    val id = if(sharedViewModel.accountType.value == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
+    getAllMyPointsPaymentt(sharedViewModel.company.value.id?:0)
+    getAllMyPointsPaymentRecharge(id?:0)
 }
-    fun getAllMyPointsPayment() {
+    fun getAllMyPointsPaymentt(companyId: Long) {
 //        if(!NetworkUtil.isOnline(context)){
 //            Toast.makeText(context, "You are offline", Toast.LENGTH_LONG).show()
 //            return
 //        }
             viewModelScope.launch {
-             useCases.getAllMyPointsPaymentForProvider(sharedViewModel.company.value.id!!)
+             useCases.getAllMyPointsPaymentForProvider(companyId)
                  .distinctUntilChanged()
                  .cachedIn(viewModelScope)
                  .collect{
-                     _allMyPointsPaymentForProviders.value = it.map { pointPayment -> pointPayment.toPaymentForProvidersWithCommandLine() }
+                     _allMyPointsPaymentForProviders.value = it
                  }
             }
 
     }
 
-    fun getAllMyPointsPaymentRecharge() {
+    fun getAllMyPointsPaymentRecharge(companyId : Long) {
         viewModelScope.launch {
-            val id = if(sharedViewModel.accountType.value == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
-            id?.let {
-                useCases.getAllRechargeHistory(it)
+                useCases.getAllRechargeHistory(companyId)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect {
                         _allMyPointsPaymentRecharge.value =
                             it.map { pointPayment -> pointPayment.toPointsWithProvidersClientCompanyAndUser() }
                     }
-            }
+
         }
     }
 

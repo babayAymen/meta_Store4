@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
+import com.aymen.metastore.model.entity.model.PaymentForProviders
 import com.aymen.metastore.model.entity.paging.PointsEspeceByDateRemoteMediator
 import com.aymen.metastore.model.entity.paging.PointsEspeceRemoteMediator
 import com.aymen.metastore.model.entity.paging.ProfitOfProviderMediator
@@ -85,16 +86,17 @@ class PointPaymentRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyPointsPaymentForPoviders(companyId: Long): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
+    override fun getAllMyPointsPaymentForPoviders(companyId: Long): Flow<PagingData<PaymentForProviders>> {
         return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE, // Try increasing the prefetch distance
+                enablePlaceholders = false),
             remoteMediator = ProfitOfProviderMediator(
                 api = api, room = room, id = companyId
             ),
             pagingSourceFactory = { pointPaymentForProviderDao.getAllMyPaymentsEspece()}
         ).flow.map {
             it.map { article ->
-                article
+                article.toPaymentForProvidersWithCommandLine()
             }
         }
     }

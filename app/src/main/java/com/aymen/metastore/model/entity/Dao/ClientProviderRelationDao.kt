@@ -62,7 +62,7 @@ interface ClientProviderRelationDao {
 
 
     @Transaction
-    @Query("SELECT * FROM client_provider_relation WHERE (clientId = :id OR userId = :id)")
+    @Query("SELECT * FROM client_provider_relation WHERE (clientId = :id)") // without user id
     fun getAllMyProviders(id : Long) : PagingSource<Int,CompanyWithCompanyOrUser>
 
     @Upsert

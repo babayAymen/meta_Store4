@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 class GetAllOrdersLineByInvoiceId(private val repository : OrderRepository) {
 
     operator fun invoke(companyId : Long ,invoiceId : Long) : Flow<PagingData<PurchaseOrderLine>>{
-        Log.e("getAllOrdersLineByInvoiceId", "begin in use cases")
         return repository.getAllOrdersLineByInvoiceId(companyId,invoiceId)
     }
 }
