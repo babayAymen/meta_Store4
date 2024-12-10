@@ -17,8 +17,15 @@ import kotlinx.coroutines.flow.Flow
 interface PurchaseOrderLineDao {
 
     @Upsert
-    suspend fun insertOrderLine(order: List<PurchaseOrderLine>)
+    suspend fun insert(order: List<PurchaseOrderLine>)
 
+    suspend fun insertOrderLine(order: List<PurchaseOrderLine?>){
+        order.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insert(it)
+            }
+    }
     @Upsert
     suspend fun insertOrderLineKeys(keys : List<OrderLineKeysEntity>)
 

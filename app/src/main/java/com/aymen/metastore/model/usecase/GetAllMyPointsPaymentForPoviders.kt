@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 class GetAllMyPointsPaymentForPoviders(private val repository : PointPaymentRepository) {
 
-    operator fun invoke(companyId : Long): Flow<PagingData<PaymentForProviders>>
+    operator fun invoke(companyId : Long): Flow<PagingData<PaymentForProvidersWithCommandLine>>
     =
          repository.getAllMyPointsPaymentForPoviders(companyId)
 

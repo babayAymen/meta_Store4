@@ -81,14 +81,14 @@ class InvoiceViewModel @Inject constructor(
     var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
     var invoiceType by mutableStateOf(InvoiceDetailsType.ORDER_LINE)
 
-    private val _inComplete : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val inComplete: StateFlow<PagingData<Invoice>> get() = _inComplete
+//    private val _inComplete : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+//    val invoiceByPaymentStatus: StateFlow<PagingData<Invoice>> get() = _inComplete
 
-    private val _paid : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val paid: StateFlow<PagingData<Invoice>> get() = _paid
+    private val _invoiceByPaymentStatus : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val invoiceByPaymentStatus: StateFlow<PagingData<Invoice>> get() = _invoiceByPaymentStatus
 
-    private val _notPaid : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val notPaid: StateFlow<PagingData<Invoice>> get() = _notPaid
+//    private val _notPaid : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+//    val invoiceByPaymentStatus: StateFlow<PagingData<Invoice>> get() = _notPaid
 
     private val _notAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val notAccepted: StateFlow<PagingData<Invoice>> get() = _notAccepted
@@ -130,33 +130,28 @@ class InvoiceViewModel @Inject constructor(
     fun getAllMyPaymentFromInvoicee(status : PaymentStatus, isProvider : Boolean){
         viewModelScope.launch{
             when(status){
-                PaymentStatus.NOT_PAID -> {
-                    useCases.getNotPaidInvoice(company.id!!, isProvider)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _notPaid.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-
-                }
-                PaymentStatus.PAID -> {
-                    useCases.getPaidInvoice(company.id!!,isProvider)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _paid.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-
-                }
-                PaymentStatus.INCOMPLETE -> {
-                    useCases.getInCompleteInvoice(company.id!!,isProvider)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _inComplete.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-
-                }
+//                PaymentStatus.NOT_PAID -> {
+//                    useCases.getNotPaidInvoice(company.id!!, isProvider)
+//                        .distinctUntilChanged()
+//                        .cachedIn(viewModelScope)
+//                        .collect{
+//                            _notPaid.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+//                        }
+//
+//                }
+//                PaymentStatus.PAID -> {
+//
+//
+//                }
+//                PaymentStatus.INCOMPLETE -> {
+//                    useCases.getInCompleteInvoice(company.id!!,isProvider)
+//                        .distinctUntilChanged()
+//                        .cachedIn(viewModelScope)
+//                        .collect{
+//                            _inComplete.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+//                        }
+//
+//                }
 
                 PaymentStatus.ALL -> {
                     useCases.getAllInvoices(company.id!!)
@@ -166,6 +161,14 @@ class InvoiceViewModel @Inject constructor(
                             _myInvoicesAsProvider.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
                         }
                 }
+                else ->{
+                    useCases.getPaidInvoice(company.id!!,isProvider, status)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _invoiceByPaymentStatus.value = it
+                        }
+                }
             }
 
         }
@@ -173,11 +176,11 @@ class InvoiceViewModel @Inject constructor(
 
     fun getAllMyPaymentNotAccepted(isProvider : Boolean){
         viewModelScope.launch {
-            useCases.getNotAcceptedInvoice(company.id!!,isProvider)
+            useCases.getNotAcceptedInvoice(company.id!!,isProvider, Status.INWAITING)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _notAccepted.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                    _notAccepted.value = it
                 }
         }
     }

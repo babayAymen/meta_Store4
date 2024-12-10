@@ -12,8 +12,15 @@ import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 interface SubCategoryDao {
 
     @Upsert
-    suspend fun insertSubCategory(sub : List<SubCategory>)
+    suspend fun insert(sub : List<SubCategory>)
 
+    suspend fun insertSubCategory(sub: List<SubCategory?>) {
+        sub.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insert(it)
+            }
+    }
     @Upsert
     suspend fun insertKeys(subCategoryRemoteKeysEntity: List<SubCategoryRemoteKeysEntity>)
 

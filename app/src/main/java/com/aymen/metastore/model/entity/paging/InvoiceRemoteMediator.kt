@@ -60,17 +60,7 @@ class InvoiceRemoteMediator(
                     nextePage
                 }
             }
-            val response = when(type){
-                LoadType.RANDOM -> {
-                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, state.config.pageSize)
-                }
-                LoadType.ADMIN -> {
-                    api.getAllMyInvoicesAsClient(id,currentPage, state.config.pageSize)
-                }
-                LoadType.CONTAINING -> {
-                    api.getAllMyInvoicesAsProviderAndStatus(id, status!!,currentPage, state.config.pageSize)
-                }
-            }
+            val response = api.getAllMyInvoicesAsClient(id,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -93,7 +83,7 @@ class InvoiceRemoteMediator(
                     userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
                     companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {invoice -> invoice.toInvoice() })
+                    invoiceDao.insertInvoice(response.map {invoice -> invoice.toInvoice(isInvoice = true) })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -128,13 +118,7 @@ class InvoiceRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        if(type == LoadType.ADMIN){
-      //  invoiceDao.clearAllTableAsClient(id)
-        }
-        if(type == LoadType.RANDOM){
-            invoiceDao.clearAllTableAsProvider(id)
-        }
-
+        invoiceDao.clearAllTableAsClient(id)
         invoiceDao.clearInvoiceRemoteKeysTable()
     }
 }

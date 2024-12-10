@@ -82,11 +82,19 @@ class ArticleViewModel @Inject constructor(
     init {
 
             fetchRandomArticlesForHomePage(categoryName = CompanyCategory.DAIRY)
-//        if(sharedViewModel.accountType == AccountType.COMPANY) {
-//            sharedViewModel.company.value.id?.let {
-//            fetchAllMyArticlesApi(it)
-//            }
-//        }
+        viewModelScope.launch {
+        sharedViewModel.accountType.collect { accountType ->
+                    if (accountType == AccountType.COMPANY) {
+                        sharedViewModel.company.collect { company ->
+                            company.id?.let { companyId ->
+                                fetchAllMyArticlesApi(companyId)
+                            }
+                        }
+                    }
+                }
+
+
+        }
     }
 
      fun fetchAllMyArticlesApi(companyId: Long) {

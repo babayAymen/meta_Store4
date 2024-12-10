@@ -13,8 +13,15 @@ import kotlinx.coroutines.flow.Flow
 interface ArticleDao {
 
     @Upsert
-    suspend fun insertArticle(article: List<Article>)
+    suspend fun insert(article: List<Article>)
 
+    suspend fun insertArticle(article: List<Article?>){
+        article.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insert(it)
+            }
+    }
     @Upsert
     suspend fun insertKeys(keys : List<ArtRemoteKeysEntity>)
 
@@ -27,8 +34,8 @@ interface ArticleDao {
     @Query("DELETE FROM art_remote_keys_entity")
     suspend fun clearAllArticleRemoteKeys()
 
-    @Query("DELETE FROM article")
-    fun clearAllArticle()
+    @Query("DELETE FROM article WHERE isMy = :isMy")
+    fun clearAllArticle(isMy : Boolean)
 
     @Query("SELECT * FROM article WHERE category = :category")
      fun getAllArticlesByCategory(category : CompanyCategory): PagingSource<Int,Article>

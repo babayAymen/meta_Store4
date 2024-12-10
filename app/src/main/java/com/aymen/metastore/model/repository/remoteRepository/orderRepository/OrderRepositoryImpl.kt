@@ -1,6 +1,5 @@
 package com.aymen.metastore.model.repository.remoteRepository.orderRepository
 
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -11,13 +10,10 @@ import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.paging.OrderLineDetailsRemoteMediator
 import com.aymen.metastore.model.entity.paging.OrderNotAcceptedRemoteMediator
 import com.aymen.metastore.model.entity.paging.PurchaseOrderLinesByInvoiceIdPagingSource
-import com.aymen.metastore.model.entity.paging.SubCategoryPagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
 import com.aymen.metastore.util.PAGE_SIZE
-import com.aymen.metastore.util.Resource
-import com.aymen.metastore.util.networkBoundResource
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.flow.Flow
@@ -89,20 +85,20 @@ class OrderRepositoryImpl @Inject constructor(
         room.companyDao().insertCompany(response.map {company -> company.article?.company?.toCompany()})
         room.userDao().insertUser(response.map {user -> user.article?.provider?.user?.toUser()})
         room.companyDao().insertCompany(response.map { company -> company.article?.provider?.toCompany() })
-        room.categoryDao().insertCategory(response.map {category -> category.article?.category?.toCategory()!! })
-        room.subCategoryDao().insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory()!! })
-        room.articleDao().insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true)!! })
-        room.articleCompanyDao().insertArticle(response.map { it.article?.toArticleCompany(true)!! })
+        room.categoryDao().insertCategory(response.map {category -> category.article?.category?.toCategory() })
+        room.subCategoryDao().insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory() })
+        room.articleDao().insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true) })
+        room.articleCompanyDao().insertArticle(response.map { it.article?.toArticleCompany(true)})
         room.userDao().insertUser(response.map { user -> user.purchaseorder?.person?.toUser() })
         room.userDao().insertUser(response.map { user -> user.purchaseorder?.company?.user?.toUser() })
         room.userDao().insertUser(response.map { user -> user.purchaseorder?.client?.user?.toUser() })
         room.companyDao().insertCompany(response.map { company -> company.purchaseorder?.company?.toCompany() })
         room.companyDao().insertCompany(response.map { company -> company.purchaseorder?.client?.toCompany() })
-        purchaseOrderDao.insertOrder(response.map { order -> order.purchaseorder?.toPurchaseOrder()!! })
+        purchaseOrderDao.insertOrder(response.map { order -> order.purchaseorder?.toPurchaseOrder() })
         room.userDao().insertUser(response.map { invoice -> invoice.invoice?.person?.toUser()})
         room.userDao().insertUser(response.map { invoice -> invoice.invoice?.client?.user?.toUser()})
         room.companyDao().insertCompany(response.map { invoice -> invoice.invoice?.client?.toCompany()})
-        room.invoiceDao().insertInvoice(response.map { invoice -> invoice.invoice?.toInvoice()?:com.aymen.metastore.model.entity.room.entity.Invoice()})
+        room.invoiceDao().insertInvoice(response.map { invoice -> invoice.invoice?.toInvoice(isInvoice = false)})
         room.purchaseOrderLineDao().insertOrderLine(response.map { line -> line.toPurchaseOrderLine() })
     }
 

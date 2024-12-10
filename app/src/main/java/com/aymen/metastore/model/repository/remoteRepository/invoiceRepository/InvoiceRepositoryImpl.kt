@@ -10,7 +10,7 @@ import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.paging.remotemediator.AllInvoiceRemoteMediator
-import com.aymen.metastore.model.entity.paging.CommandLineByInvoiceRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.CommandLineByInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceAsClientAndStatusRemoteMediator
 import com.aymen.metastore.model.entity.paging.InvoiceRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
@@ -59,7 +59,7 @@ class InvoiceRepositoryImpl @Inject constructor(
                 if(accountType == AccountType.COMPANY){
                 invoiceDao.getAllMyInvoiceAsClient(clientId = clientId)
                 }else{
-                    invoiceDao.getAllMyInvoiceAsPersonClient(clientId = clientId)
+                    invoiceDao.getAllMyInvoiceAsPersonClient(clientId = clientId, isInvoice = true)
                 }
             }
         ).flow.map {

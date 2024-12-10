@@ -10,11 +10,11 @@ import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.paging.pagingsource.AllArticlesContainingPagingSource
-import com.aymen.metastore.model.entity.paging.ArticleCompanyRandomMediator
-import com.aymen.metastore.model.entity.paging.ArticleCompanyRemoteMediator
-import com.aymen.metastore.model.entity.paging.ArticleRemoteMediator
-import com.aymen.metastore.model.entity.paging.CompanyArticleRemoteMediator
-import com.aymen.metastore.model.entity.paging.CompanyArticlesByCategoryOrSubCategoryPagingSource
+import com.aymen.metastore.model.entity.paging.remotemediator.ArticleCompanyRandomMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.ArticleCompanyRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.ArticleRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.CompanyArticleRemoteMediator
+import com.aymen.metastore.model.entity.paging.pagingsource.CompanyArticlesByCategoryOrSubCategoryPagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany

@@ -39,53 +39,48 @@ class ProfitOfProviderMediator(
     private val invoiceDao = room.invoiceDao()
     private val purchaseOrderLineDao = room.purchaseOrderLineDao()
 
-//    override suspend fun initialize(): InitializeAction {
-//        val remoteKeyCount = paymentForProvidersDao.getRemoteKeyCount()
-//        return if (remoteKeyCount > 0) {
-//            // Remote keys exist; resume from stored state
-//            InitializeAction.SKIP_INITIAL_REFRESH
-//        } else {
-//            // No keys exist; force a fresh load
-//            InitializeAction.LAUNCH_INITIAL_REFRESH
-//        }
-//    }
+
+    override suspend fun initialize(): InitializeAction {
+        return InitializeAction.LAUNCH_INITIAL_REFRESH
+    }
 
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, PaymentForProvidersWithCommandLine>
     ): MediatorResult {
 
+        Log.e("deletecacheprofit","cal mediator and load type is : $loadType")
         return try {
 
-            Log.e("PagingState", "Load type: ${loadType} state : $state")
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    val remoteKeys = getPreviousPageForTheFirstItem(state)
-                    remoteKeys?.nextPage?.minus(1) ?: 0
+                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
                 }
                 LoadType.PREPEND -> {
-                    val remoteKey = getPreviousPageForTheFirstItem(state)
-                    val prevPage = remoteKey?.nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = remoteKey != null
+                    val previousePage = getPreviousPageForTheFirstItem(state)
+                    val prevPage = previousePage ?: return MediatorResult.Success(
+                        endOfPaginationReached = false
                     )
                     prevPage
                 }
                 LoadType.APPEND -> {
-                    val remoteKey = getNextPageForTheLastItem(state)
-                    val nextPage = remoteKey?.nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = remoteKey != null
+                    val nextePage = getNextPageForTheLastItem(state)
+                    val nextPage = nextePage ?: return MediatorResult.Success(
+                        endOfPaginationReached = false
                     )
                     nextPage
                 }
             }
-            val response = api.getAllProvidersProfit(id,currentPage!!, state.config.pageSize)
-            Log.e("remoteKey", "remote key apped type : ${response}")
+            val response = api.getAllProvidersProfit(id,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.last
             val prevPage = if(response.number== 0) null else response.number -1
             val nextPage = if(response.last) null else response.number +1
+
+            val empty = paymentForProvidersDao.existRecords() == 0
+            Log.e("deletecacheprofit","empty is : $empty")
             room.withTransaction {
                 try {
-                    if(loadType == LoadType.REFRESH){
+                    if(loadType == LoadType.REFRESH && empty){
                         deleteCache()
                     }
                     paymentForProvidersDao.insertProviderProfitHistoryKeys(response.content.map { article ->
@@ -96,24 +91,7 @@ class ProfitOfProviderMediator(
                         )
                     })
 
-//                    response.lastOrNull()?.let { lastItem ->
-//                        paymentForProvidersDao.insertProviderProfitHistoryKeys(
-//                            ProviderProfitHistoryRemoteKeysEntity(
-//                                id = lastItem.id!!,
-//                                nextPage = nextPage,
-//                                prevPage = null
-//                            )
-//                        )
-//                    }
-//                    response.firstOrNull()?.let { firstItem ->
-//                        paymentForProvidersDao.insertProviderProfitHistoryKeys(
-//                            ProviderProfitHistoryRemoteKeysEntity(
-//                                id = firstItem.id!!,
-//                                nextPage = null,
-//                                prevPage = prevPage
-//                            )
-//                        )
-//                    }
+
                     userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.purchaseorder?.company?.user?.toUser()})
                     userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.purchaseorder?.person?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.purchaseorder?.company?.toCompany()})
@@ -128,13 +106,13 @@ class ProfitOfProviderMediator(
                     companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.article?.provider?.toCompany()})
                     userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.article?.category?.company?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.article?.category?.company?.toCompany()})
-                    purchaseOrderDao.insertOrder(response.content.map { order -> order.purchaseOrderLine?.purchaseorder?.toPurchaseOrder()?: PurchaseOrder() })
-                    categoryDao.insertCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.category?.toCategory()?: Category() })
-                    subCategoryDao.insertSubCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.subCategory?.toSubCategory()?: SubCategory() })
-                    articleDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.article?.toArticle(isMy = true)?: Article() })
-                    articleCompanyDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.toArticleCompany(false)?: ArticleCompany() })
-                    invoiceDao.insertInvoice(response.content.map { invoice -> invoice.purchaseOrderLine?.invoice?.toInvoice()?:Invoice() })
-                    purchaseOrderLineDao.insertOrderLine(response.content.map { line -> line.purchaseOrderLine?.toPurchaseOrderLine()?: PurchaseOrderLine() })
+                    purchaseOrderDao.insertOrder(response.content.map { order -> order.purchaseOrderLine?.purchaseorder?.toPurchaseOrder() })
+                    categoryDao.insertCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.category?.toCategory() })
+                    subCategoryDao.insertSubCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.subCategory?.toSubCategory() })
+                    articleDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.article?.toArticle(isMy = true)})
+                    articleCompanyDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.toArticleCompany(false) })
+                    invoiceDao.insertInvoiceelse(response.content.map { invoice -> invoice.purchaseOrderLine?.invoice?.toInvoice(isInvoice = false) })
+                    purchaseOrderLineDao.insertOrderLine(response.content.map { line -> line.purchaseOrderLine?.toPurchaseOrderLine() })
                     paymentForProvidersDao.insertPaymentForProviders(response.content.map {payment -> payment.toPaymentForProviders() })
 
                 } catch (ex: Exception) {
@@ -149,34 +127,38 @@ class ProfitOfProviderMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PaymentForProvidersWithCommandLine>): ProviderProfitHistoryRemoteKeysEntity? {
+    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PaymentForProvidersWithCommandLine>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
+        val remoteKey = entity?.let { paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it.paymentForProviders.id?:0) }
+        return remoteKey?.prevPage
+    }
+
+    private suspend fun getNextPageForTheLastItem(state: PagingState<Int, PaymentForProvidersWithCommandLine>): Int? {
+        val lastItem = state.pages.lastOrNull { it.data.isNotEmpty() }
+            val entity = lastItem?.data?.lastOrNull()
         val remoteKey = entity?.let {
-            paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it.paymentForProviders.id?:0)
+            paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it.paymentForProviders.id!!)
         }
-        return remoteKey
-    }
-
-    private suspend fun getNextPageForTheLastItem(state: PagingState<Int, PaymentForProvidersWithCommandLine>): ProviderProfitHistoryRemoteKeysEntity? {
-        val lastItem = state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
-        return lastItem?.let {
-            paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it.paymentForProviders.id?:0)
-        }
+        return remoteKey?.nextPage
     }
 
 
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PaymentForProvidersWithCommandLine>): ProviderProfitHistoryRemoteKeysEntity? {
+    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PaymentForProvidersWithCommandLine>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        val remoteKey =  entity?.paymentForProviders?.id?.let {
-            paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it) }
-        return remoteKey
+        val remoteKey =  entity?.paymentForProviders?.id?.let { paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it) }
+        return remoteKey?.nextPage
 
     }
 
     private suspend fun deleteCache(){
+        Log.e("deletecacheprofit","begin")
         paymentForProvidersDao.clearAllProvidersProfitHistoryTable()
+        Log.e("deletecacheprofit","intermediar")
         paymentForProvidersDao.clearAllProvidersProfitHistoryRemoteKeysTable()
+        Log.e("deletecacheprofit","final")
+
+
     }
 }

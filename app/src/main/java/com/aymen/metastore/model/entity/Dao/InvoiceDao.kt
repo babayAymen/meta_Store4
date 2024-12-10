@@ -2,6 +2,8 @@ package com.aymen.metastore.model.entity.Dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -22,33 +24,33 @@ import com.aymen.store.model.Enum.Status
 interface InvoiceDao {
 
     @Upsert
-    suspend fun insertInvoice(invoice: List<Invoice>)
+    suspend fun insert(invoice: List<Invoice>)
 
-    @Query("SELECT * FROM invoice WHERE clientId = :clientId")
-    suspend fun getInvoicesByClientId(clientId: Long): List<Invoice>
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertelse(invoices : List<Invoice>)
 
-    @Query("UPDATE invoice SET status = :newStatus WHERE id = :invoiceId")
+    suspend fun insertInvoice(invoice: List<Invoice?>){
+     invoice.filterNotNull()
+      .takeIf { it.isNotEmpty() }
+      ?.let {
+       insert(it)
+      }
+    }
+
+ suspend fun insertInvoiceelse(invoice: List<Invoice?>){
+  invoice.filterNotNull()
+   .takeIf { it.isNotEmpty() }
+   ?.let {
+    insertelse(it)
+   }
+ }
+
+ @Query("SELECT COUNT(*) FROM invoice WHERE isInvoice = :source")
+ suspend fun getInvoiceCountBySource(source: Boolean): Int
+
+
+ @Query("UPDATE invoice SET status = :newStatus WHERE id = :invoiceId")
     suspend fun updateInvoiceStatus(invoiceId: Long, newStatus: Status)
-
-    @Transaction
-    @Query("SELECT * FROM invoice WHERE providerId = :mycompanyId")
-    suspend fun getAllInvoicesAsProvider(mycompanyId : Long) : List<InvoiceWithClientPersonProvider>
-
-    @Transaction
-    @Query("SELECT * FROM invoice WHERE clientId = :mycompanyId AND status = :status")
-    suspend fun getAllMyInvoicesAsClientAndStatus(mycompanyId : Long, status : Status) : List<InvoiceWithClientPersonProvider>
-
-    @Transaction
-    @Query("SELECT * FROM invoice WHERE personId = :userId AND status = :status")
-    suspend fun getAllMyInvoicesAsPersonAndStatus(userId : Long, status : Status) : List<InvoiceWithClientPersonProvider>
-
-    @Transaction
-    @Query("SELECT * FROM invoice WHERE providerId = :mycompanyId AND status = :status")
-    suspend fun getAllMyInvoicesAsProviderAndStatus(mycompanyId : Long, status : Status) : List<InvoiceWithClientPersonProvider>
-
-    @Transaction
-    @Query("SELECT * FROM invoice WHERE providerId = :mycompanyId AND paid = :status")
-    suspend fun getAllInvoicesAsProviderAndPaymentStatus(mycompanyId : Long, status : PaymentStatus) : List<InvoiceWithClientPersonProvider>
 
     @Upsert
      fun insertKeys(keys: List<InvoiceRemoteKeysEntity>)
@@ -123,6 +125,7 @@ interface InvoiceDao {
 
      @Query("DELETE FROM invoice WHERE (clientId = :id OR personId = :id)")
      suspend fun clearAllTableAsClient(id : Long)
+
      @Query("DELETE FROM invoice WHERE providerId = :id")
      suspend fun clearAllTableAsProvider(id : Long)
 
@@ -151,8 +154,8 @@ interface InvoiceDao {
      fun getAllMyInvoiceAsClientAndStatus(clientId : Long, status : Status): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE  personId = :clientId")
-     fun getAllMyInvoiceAsPersonClient(clientId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
+     @Query("SELECT * FROM invoice WHERE  personId = :clientId AND isInvoice = :isInvoice")
+     fun getAllMyInvoiceAsPersonClient(clientId : Long, isInvoice : Boolean): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
      @Query("SELECT * FROM invoice ")

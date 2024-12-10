@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.repository.ViewModel
 
 import android.util.Log
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -33,6 +34,8 @@ class PointsPaymentViewModel @Inject constructor(
     private val room : AppDatabase,
     private val useCases: MetaUseCases
 ) :ViewModel(){
+
+    val listState = LazyListState()
 
     var pointPaymentDto by mutableStateOf(PointsPayment())
     fun sendPoints(user: User, amount : Long, client : Company){
@@ -86,7 +89,7 @@ init {
                  .distinctUntilChanged()
                  .cachedIn(viewModelScope)
                  .collect{
-                     _allMyPointsPaymentForProviders.value = it
+                     _allMyPointsPaymentForProviders.value = it.map { payment -> payment.toPaymentForProvidersWithCommandLine() }
                  }
             }
 

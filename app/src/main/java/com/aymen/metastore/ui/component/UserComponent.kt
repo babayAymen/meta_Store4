@@ -2514,10 +2514,17 @@ fun EmptyImage(modifier: Modifier = Modifier) {
 @Composable
 fun BuyHistoryCard(paymentForProviders: PaymentForProviders){
     Box{
-        Column {
-        Text(text = paymentForProviders.giveenespece.toString())
-        Text(text = paymentForProviders.lastModifiedDate)
-        Text(text = paymentForProviders.purchaseOrderLine?.purchaseorder?.orderNumber.toString())
+        Card(
+            elevation = CardDefaults.cardElevation(6.dp),
+            modifier = Modifier
+                .padding(4.dp)
+                .fillMaxSize()
+        ) {
+            Column {
+                Text(text = paymentForProviders.giveenespece.toString())
+                Text(text = paymentForProviders.lastModifiedDate)
+                Text(text = paymentForProviders.purchaseOrderLine?.purchaseorder?.orderNumber.toString())
+            }
         }
     }
 }

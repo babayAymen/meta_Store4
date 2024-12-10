@@ -319,9 +319,6 @@ interface ServiceApi {
     @GET("werehouse/invoice/get_by_payment_paid_status_as_client/{id}")
     suspend fun getAllBuyHistoryByPaidStatusAsClient(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
 
-    @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_client/{id}")
-    suspend fun getAllBuyHistoryByStatusAsClient(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
-
     @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_provider/{id}")
     suspend fun getAllBuyHistoryByStatus(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
 

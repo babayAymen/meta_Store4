@@ -3,7 +3,6 @@ package com.aymen.store.model.repository.remoteRepository.PointsPaymentRepositor
 import androidx.paging.PagingData
 import com.aymen.metastore.model.entity.dto.PaymentForProviderPerDayDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
-import com.aymen.metastore.model.entity.model.PaymentForProviders
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
@@ -17,7 +16,7 @@ interface PointPaymentRepository {
 //    fun getAllMyPaymentFromInvoice(companyId : Long ,status : PaymentStatus) : Flow<PagingData<PointsWithProviderclientcompanyanduser>>
     fun getAllRechargeHistory(id : Long) : Flow<PagingData<PointsWithProviderclientcompanyanduser>>
     fun getAllMyProfitsPerDay(companyId: Long) : Flow<PagingData<PaymentPerDayWithProvider>>
-    fun getAllMyPointsPaymentForPoviders(companyId : Long) : Flow<PagingData<PaymentForProviders>>
+    fun getAllMyPointsPaymentForPoviders(companyId : Long) : Flow<PagingData<PaymentForProvidersWithCommandLine>>
     suspend fun sendPoints(pointsPayment: PointsPaymentDto):Response<Void>
 
 

@@ -2,12 +2,9 @@ package com.aymen.metastore.model.entity.Dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.aymen.metastore.model.entity.paging.CompanyArticleRemoteMediator
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
@@ -23,8 +20,15 @@ import kotlinx.coroutines.flow.Flow
 interface ArticleCompanyDao {
 
     @Upsert
-    suspend fun insertArticle(article: List<ArticleCompany>)
+    suspend fun insert(article: List<ArticleCompany>)
 
+    suspend fun insertArticle(article: List<ArticleCompany?>){
+        article.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insert(it)
+            }
+    }
     @Upsert
     suspend fun insertSigleArticle(article: ArticleCompany)
 

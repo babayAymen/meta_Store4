@@ -6,15 +6,10 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.aymen.metastore.model.Enum.LoadType
-import com.aymen.metastore.model.entity.paging.CategoryPagingSource
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.metastore.model.entity.dto.CategoryDto
 import com.aymen.metastore.model.entity.model.Category
-import com.aymen.metastore.model.entity.paging.CategoryRemoteMediator
-import com.aymen.metastore.model.entity.paging.SubCategoryRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.CategoryRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.repository.globalRepository.ServiceApi

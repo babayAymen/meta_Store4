@@ -1,7 +1,6 @@
 package com.aymen.metastore.ui.screen.admin
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -187,15 +186,17 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "PAID" ->{
-                            val paid = invoiceViewModel.paid.collectAsLazyPagingItems()
+                            val paid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 items(count = paid.itemCount,
-                                    key = paid.itemKey { it.id!! }
+                                    key = { index -> paid[index]?.id ?: index }
                                 ) { index ->
+
                                     val invoice = paid[index]
                                     if (invoice != null) {
+                                    Log.e("LazyColumnItemKey", "Item ID: ${invoice.id}, Key: $invoice")
                                         Row {
                                             Text(text = invoice.code.toString())
                                             Spacer(modifier = Modifier.padding(6.dp))
@@ -209,7 +210,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "NOT_PAID" -> {
-                            val notPaid = invoiceViewModel.notPaid.collectAsLazyPagingItems()
+                            val notPaid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
@@ -233,7 +234,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "IN_COMPLETE" ->{
-                            val inComplete = invoiceViewModel.inComplete.collectAsLazyPagingItems()
+                            val inComplete = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
@@ -299,7 +300,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "PAID" ->{
-                            val paid = invoiceViewModel.paid.collectAsLazyPagingItems()
+                            val paid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                             LazyColumn {
                                 items(count = paid.itemCount,
                                     key = paid.itemKey { it.id!! }
@@ -312,7 +313,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "NOT_PAID" ->{
-                            val notPaid = invoiceViewModel.notPaid.collectAsLazyPagingItems()
+                            val notPaid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                             LazyColumn {
                                 items(count = notPaid.itemCount,
                                     key = notPaid.itemKey { it.id!! }
@@ -325,7 +326,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "IN_COMPLETE" ->{
-                            val inComplete = invoiceViewModel.inComplete.collectAsLazyPagingItems()
+                            val inComplete = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                             LazyColumn {
                                 items(count = inComplete.itemCount,
                                     key = inComplete.itemKey { it.id!! }
@@ -338,7 +339,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "NOT_ACCEPTED" ->{
-                            val notAccepted = invoiceViewModel.notAccepted.collectAsLazyPagingItems()
+                            val notAccepted = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                             LazyColumn {
                                 items(count = notAccepted.itemCount,
                                     key = notAccepted.itemKey { it.id!! }

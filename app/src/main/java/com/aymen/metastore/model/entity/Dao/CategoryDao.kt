@@ -13,8 +13,15 @@ import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
 interface CategoryDao {
 
     @Upsert
-    suspend fun insertCategory(cat : List<Category>)
+    suspend fun insert(cat : List<Category>)
 
+    suspend fun insertCategory(cat : List<Category?>){
+        cat.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insert(it)
+            }
+    }
     @Upsert
     suspend fun insertKeys(keys : List<CategoryRemoteKeysEntity>)
 

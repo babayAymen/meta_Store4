@@ -25,7 +25,7 @@ import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
-import com.aymen.metastore.model.entity.model.PaymentForProviders
+import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
@@ -57,6 +57,7 @@ import com.aymen.metastore.model.repository.remoteRepository.messageRepository.M
 import com.aymen.metastore.util.Resource
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepository
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.providerRepository.ProviderRepository
 import com.aymen.store.model.repository.remoteRepository.signInRepository.SignInRepository
@@ -203,7 +204,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getPaidInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getPaidInvoice(id: Long, isProvider: Boolean, paymentStatus: PaymentStatus): Flow<PagingData<Invoice>> {
         TODO("Not yet implemented")
     }
 
@@ -218,7 +219,11 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getNotAcceptedInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getNotAcceptedInvoice(
+        id: Long,
+        isProvider: Boolean,
+        status: Status
+    ): Flow<PagingData<Invoice>> {
         TODO("Not yet implemented")
     }
 
@@ -306,7 +311,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getAllMyPointsPaymentForPoviders(companyId: Long): Flow<PagingData<PaymentForProviders>> {
+    override fun getAllMyPointsPaymentForPoviders(companyId: Long): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
         TODO("Not yet implemented")
     }
 

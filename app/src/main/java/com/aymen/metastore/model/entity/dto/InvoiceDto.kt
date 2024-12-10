@@ -25,7 +25,7 @@ data class InvoiceDto(
     val lastModifiedBy: String? = null,
     val createdBy: String? = null
 ){
-    fun toInvoice() : Invoice {
+    fun toInvoice(isInvoice : Boolean) : Invoice {
 
         return Invoice(
             id = id,
@@ -44,7 +44,8 @@ data class InvoiceDto(
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
             lastModifiedBy = lastModifiedBy,
-            createdBy = createdBy
+            createdBy = createdBy,
+            isInvoice = isInvoice
 
         )
     }

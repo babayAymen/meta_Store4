@@ -15,8 +15,15 @@ import com.aymen.store.model.Enum.Status
 interface PurchaseOrderDao {
 
     @Upsert
-    suspend fun insertOrder(order: List<PurchaseOrder>)
+    suspend fun insert(order: List<PurchaseOrder>)
 
+    suspend fun insertOrder(order : List<PurchaseOrder?>){
+        order.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insert(it)
+            }
+    }
 
     @Upsert
     suspend fun insertOrderNotAcceptedKeys(keys : List<OrderNotAcceptedKeysEntity>)

@@ -85,7 +85,7 @@ Log.e("invoiceresponse","response ${response.size} $response")
                     userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
                     companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {invoice -> invoice.toInvoice() })
+                    invoiceDao.insertInvoice(response.map {invoice -> invoice.toInvoice(isInvoice = true) })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())

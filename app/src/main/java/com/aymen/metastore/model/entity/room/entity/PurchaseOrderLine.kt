@@ -13,7 +13,7 @@ import com.aymen.store.model.Enum.Status
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
         ForeignKey(entity = Invoice::class, parentColumns = ["id"], childColumns = ["invoiceId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.SET_NULL,
             onUpdate = ForeignKey.CASCADE),
         ForeignKey(entity = ArticleCompany::class, parentColumns = ["id"], childColumns = ["articleId"],
             onDelete = ForeignKey.CASCADE,

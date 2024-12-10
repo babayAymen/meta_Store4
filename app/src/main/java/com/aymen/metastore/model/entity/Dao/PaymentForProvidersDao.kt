@@ -31,6 +31,9 @@ interface PaymentForProvidersDao {
     @Query("SELECT * FROM provider_profit_history_remote_keys WHERE id = :id")
     suspend fun getProvidersProfitHistoryRemoteKey(id : Long) : ProviderProfitHistoryRemoteKeysEntity
 
+    @Query("SELECT count(*) FROM payment_for_providers")
+    suspend fun existRecords() : Int
+
     @Transaction
     @Query("SELECT * FROM payment_for_providers WHERE lastModifiedDate BETWEEN :beginDate AND :finalDate")
      fun getAllMyPaymentsEspeceByDate( beginDate: String, finalDate: String) : PagingSource<Int, PaymentForProvidersWithCommandLine>
@@ -40,6 +43,9 @@ interface PaymentForProvidersDao {
 
     @Query("DELETE FROM provider_profit_history_remote_keys")
     suspend fun clearAllProvidersProfitHistoryRemoteKeysTable()
+
+    @Query("SELECT purchaseOrderLineId FROM payment_for_providers ")
+    suspend fun getAllProviderProfitIds(): List<Long>
 
     @Query("DELETE FROM payment_for_providers")
     suspend fun clearAllProvidersProfitHistoryTable()

@@ -48,7 +48,8 @@ data class Invoice(
     val createdDate : String? = null,
     val lastModifiedDate : String? = null,
     val lastModifiedBy: String? = null,
-    val createdBy: String? = null
+    val createdBy: String? = null,
+    val isInvoice : Boolean?
 ){
     fun toInvoice(user : com.aymen.metastore.model.entity.model.User?,
                   client : com.aymen.metastore.model.entity.model.Company?,

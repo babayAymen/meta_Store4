@@ -62,7 +62,7 @@ fun ArticleScreen() {
     val adminArticles = articleViewModel.adminArticles.collectAsLazyPagingItems()
     val context = LocalContext.current
     LaunchedEffect(key1 = Unit) {
-        sharedViewModel.company.value.id?.let { articleViewModel.fetchAllMyArticlesApi(it) }
+//        sharedViewModel.company.value.id?.let { articleViewModel.fetchAllMyArticlesApi(it) }
     }
     var articleIndex by remember {
         mutableIntStateOf(-1)

@@ -1,12 +1,10 @@
-package com.aymen.metastore.model.entity.paging
+package com.aymen.metastore.model.entity.paging.pagingsource
 
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.aymen.metastore.model.entity.model.SubCategory
-import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.util.PAGE_SIZE
-import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
 class SubCategoryPagingSource(

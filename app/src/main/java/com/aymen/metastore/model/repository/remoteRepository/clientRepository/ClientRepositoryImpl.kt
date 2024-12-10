@@ -8,9 +8,9 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.dto.UserDto
-import com.aymen.metastore.model.entity.paging.AllPersonContainingPagingSource
-import com.aymen.metastore.model.entity.paging.AllSearchRemoteMediator
-import com.aymen.metastore.model.entity.paging.ClientRemoteMediator
+import com.aymen.metastore.model.entity.paging.pagingsource.AllPersonContainingPagingSource
+import com.aymen.metastore.model.entity.paging.remotemediator.AllSearchRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.ClientRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.GetAllMyClientContainingForAutocompletePagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser

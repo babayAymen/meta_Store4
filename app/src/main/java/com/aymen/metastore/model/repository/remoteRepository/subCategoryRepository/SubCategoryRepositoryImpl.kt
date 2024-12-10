@@ -6,10 +6,9 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.paging.SubCategoryByCompanyIdRemoteMediator
-import com.aymen.metastore.model.entity.paging.SubCategoryPagingSource
+import com.aymen.metastore.model.entity.paging.pagingsource.SubCategoryPagingSource
 import com.aymen.metastore.model.entity.paging.SubCategoryRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory

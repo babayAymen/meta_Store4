@@ -17,7 +17,6 @@ interface UserDao {
         user.filterNotNull()
             .takeIf { it.isNotEmpty() }
             ?.let {
-                Log.e("error","from dao $it")
                 insert(it)
             }
     }

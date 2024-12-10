@@ -80,7 +80,7 @@ class InCompleteRemoteMediator(
                     userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
                     companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {category -> category.toInvoice() })
+//                    invoiceDao.insertInvoice(response.map {category -> category.toInvoice() })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -123,7 +123,7 @@ class InCompleteRemoteMediator(
 
     private suspend fun deleteCache(){
      //   invoiceDao.clearAllBuyHistoryTableByPaidStatus(PaymentStatus.INCOMPLETE)
-        invoiceDao.clearAllTableAsProvider(id)
+//        invoiceDao.clearAllTableAsProvider(id, true)
         invoiceDao.clearAllRemoteKeysTable()
         invoiceDao.clearAllBuyHistoryIncompleteRemoteKeysTable()
     }

@@ -1,4 +1,4 @@
-package com.aymen.metastore.model.entity.paging
+package com.aymen.metastore.model.entity.paging.remotemediator
 
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
@@ -8,8 +8,6 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.AllSearchRemoteKeysEntity
-import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentPerDayRemoteKeysEntity
-import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 

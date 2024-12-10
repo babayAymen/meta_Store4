@@ -1,4 +1,4 @@
-package com.aymen.metastore.model.entity.paging
+package com.aymen.metastore.model.entity.paging.remotemediator
 
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
@@ -7,18 +7,16 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.remoteKeys.PayedRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.BuyHistoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
-import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
-class PayedRemoteMediator(
+class BuyHistoryMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val id :Long,
-    private val isProvider : Boolean
-) : RemoteMediator<Int, InvoiceWithClientPersonProvider>(){
+    private val id : Long
+): RemoteMediator<Int, InvoiceWithClientPersonProvider>() {
 
     private val invoiceDao = room.invoiceDao()
     private val userDao = room.userDao()
@@ -42,7 +40,7 @@ class PayedRemoteMediator(
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     previousePage
                 }
@@ -50,13 +48,12 @@ class PayedRemoteMediator(
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     nextePage
                 }
             }
-            val response = if(isProvider)api.getAllBuyHistoryByPaidStatusAsProvider(id,PaymentStatus.PAID,currentPage, state.config.pageSize)
-            else api.getAllBuyHistoryByPaidStatusAsClient(id,PaymentStatus.PAID,currentPage, state.config.pageSize)
+            val response = api.getAllBuyHistory(id,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -66,8 +63,8 @@ class PayedRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    invoiceDao.insertBuyHistoryPaidKeys(response.map { article ->
-                        PayedRemoteKeysEntity(
+                    invoiceDao.insertBuyHistoryKeys(response.map { article ->
+                        BuyHistoryRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage,
@@ -79,7 +76,7 @@ class PayedRemoteMediator(
                     userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
                     companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {category -> category.toInvoice() })
+                    invoiceDao.insertInvoice(response.map {category -> category.toInvoice(isInvoice = true) })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -95,28 +92,24 @@ class PayedRemoteMediator(
     private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        val remoteKey = entity?.let { invoiceDao.getBuyHistoryPaidRemoteKey(it.invoice.id!!) }
-        return remoteKey?.prevPage
+        return entity?.let { invoiceDao.getBuyHistoryRemoteKey(it.invoice.id!!).prevPage }
     }
 
     private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        val remoteKey = entity?.let { invoiceDao.getBuyHistoryPaidRemoteKey(it.invoice.id!!) }
-        return remoteKey?.nextPage
+        return entity?.let { invoiceDao.getBuyHistoryRemoteKey(it.invoice.id!!).nextPage }
     }
 
     private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        val remoteKey = entity?.invoice?.id?.let { invoiceDao.getBuyHistoryPaidRemoteKey(it) }
-        return remoteKey?.nextPage
+        return entity?.invoice?.id?.let { invoiceDao.getBuyHistoryRemoteKey(it).nextPage }
     }
 
     private suspend fun deleteCache(){
-        invoiceDao.clearAllTableAsProvider(id)
-        invoiceDao.clearAllRemoteKeysTable()
-        invoiceDao.clearAllBuyHistoryPaidRemoteKeysTable()
+//        invoiceDao.clearAllTableAsProvider(id, false)
+        invoiceDao.clearAllBuyHistoryRemoteKeysTable()
     }
 
 }

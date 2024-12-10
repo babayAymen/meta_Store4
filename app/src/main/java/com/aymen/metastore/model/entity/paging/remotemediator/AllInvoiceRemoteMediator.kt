@@ -32,14 +32,17 @@ class AllInvoiceRemoteMediator(
         state: PagingState<Int, InvoiceWithClientPersonProvider>
     ): MediatorResult {
         return try {
-
+        Log.e("loadTypeallinvoice","load type : $loadType")
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                    val r = getNextPageClosestToCurrentPosition(state)
+                    Log.e("loadTypeallinvoice","refrechtype and r : $r")
+                    r?.minus(1) ?: 0
                 }
 
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
+                    Log.e("loadTypeallinvoice","prepand type and prev page : $previousPage")
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = false
                     )
@@ -48,6 +51,7 @@ class AllInvoiceRemoteMediator(
 
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
+                    Log.e("loadTypeallinvoice","append type and next page : $nextPage")
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = false
                     )
@@ -58,9 +62,12 @@ class AllInvoiceRemoteMediator(
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
+
+            val isDataIncomplete = invoiceDao.getInvoiceCountBySource(source = true) == 0
+            Log.e("loadTypeallinvoice","there is  : $isDataIncomplete")
             room.withTransaction {
                 try {
-                    if(loadType == LoadType.REFRESH){
+                    if(loadType == LoadType.REFRESH && isDataIncomplete){
                         deleteCache()
                     }
                     invoiceDao.insertAllInvoiceKeys(response.map { article ->
@@ -76,7 +83,7 @@ class AllInvoiceRemoteMediator(
                     userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
                     companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {invoice -> invoice.toInvoice() })
+                    invoiceDao.insertInvoice(response.map {invoice -> invoice.toInvoice(isInvoice = true) })
 
                 } catch (ex: Exception) {
                     Log.e("errorinvoice", ex.message.toString())
@@ -113,7 +120,15 @@ class AllInvoiceRemoteMediator(
 
 
     private suspend fun deleteCache(){
-      //  invoiceDao.clearAllTableAsProvider(id)
-        invoiceDao.clearAllRemoteKeysTable()
+        try {
+            Log.d("deleteCache", "Clearing invoices and remote keys for provider: $id")
+            invoiceDao.clearAllTableAsProvider(id)
+
+            Log.d("deleteCache", "Cleared all invoices")
+            invoiceDao.clearAllRemoteKeysTable()
+            Log.d("deleteCache", "Cleared all invoices and remote keys")
+        } catch (ex: Exception) {
+            Log.e("deleteCache", "Error while clearing cache: ${ex.message}", ex)
+        }
     }
 }

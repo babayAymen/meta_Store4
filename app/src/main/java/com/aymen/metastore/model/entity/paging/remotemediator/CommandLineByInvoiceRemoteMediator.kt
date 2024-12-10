@@ -1,24 +1,18 @@
-package com.aymen.metastore.model.entity.paging
+package com.aymen.metastore.model.entity.paging.remotemediator
 
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
-import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.Category
-import com.aymen.metastore.model.entity.room.entity.CommandLine
 import com.aymen.metastore.model.entity.room.entity.Invoice
-import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.metastore.model.entity.room.entity.SubCategory
 import com.aymen.metastore.model.entity.room.remoteKeys.CommandLineByInvoiceRemoteKeysEntity
-import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
-import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
-import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
@@ -93,18 +87,18 @@ class CommandLineByInvoiceRemoteMediator(
                     userDao.insertUser(response.map {user -> user.article?.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.article?.company?.toCompany()})
                     companyDao.insertCompany(response.map { company -> company.article?.provider?.toCompany() })
-                    categoryDao.insertCategory(response.map {category -> category.article?.category?.toCategory()?: Category() })
-                    categoryDao.insertCategory(response.map {category -> category.article?.subCategory?.category?.toCategory()?: Category() })
-                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory()?: SubCategory() })
+                    categoryDao.insertCategory(response.map {category -> category.article?.category?.toCategory() })
+                    categoryDao.insertCategory(response.map {category -> category.article?.subCategory?.category?.toCategory() })
+                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory() })
                     articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true)!! })
-                    articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(false)?: ArticleCompany() })
+                    articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(false)})
 
                     userDao.insertUser(response.map {user -> user.invoice?.person?.toUser()})
                     userDao.insertUser(response.map {user -> user.invoice?.client?.user?.toUser()})
                     userDao.insertUser(response.map {user -> user.invoice?.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.invoice?.client?.toCompany()})
                     companyDao.insertCompany(response.map {company -> company.invoice?.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {invoice -> invoice.invoice?.toInvoice()?:Invoice() })
+                    invoiceDao.insertInvoice(response.map {invoice -> invoice.invoice?.toInvoice(isInvoice = false) })
 
                     commandLineDao.insertCommandLine(response.map { line -> line.toCommandLine() })
 

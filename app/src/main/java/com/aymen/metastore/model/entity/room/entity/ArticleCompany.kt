@@ -11,7 +11,7 @@ import com.aymen.store.model.Enum.UnitArticle
 @Entity(tableName = "article_company",
     foreignKeys = [
         ForeignKey(entity = Article::class, parentColumns = ["id"], childColumns = ["articleId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.NO_ACTION,
             onUpdate = ForeignKey.CASCADE),
         ForeignKey(
             entity = Category::class,

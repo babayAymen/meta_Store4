@@ -1,4 +1,4 @@
-package com.aymen.metastore.model.entity.paging
+package com.aymen.metastore.model.entity.paging.remotemediator
 
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
@@ -7,20 +7,17 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.entity.Category
-import com.aymen.metastore.model.entity.room.entity.SubCategory
-import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
-import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
-class ArticleCompanyRandomMediator(
+class ArticleCompanyRemoteMediator(
     private val api : ServiceApi,
-    private val room : AppDatabase
-):RemoteMediator<Int, RandomArticleChild>() {
+    private val room : AppDatabase,
+    private val id : Long,
+
+): RemoteMediator<Int, ArticleWithArticleCompany>() {
 
 
     private val articleCompanyDao = room.articleCompanyDao()
@@ -35,7 +32,7 @@ class ArticleCompanyRandomMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, RandomArticleChild>
+        state: PagingState<Int, ArticleWithArticleCompany>
     ): MediatorResult {
         return try {
             val currentPage = when (loadType) {
@@ -57,7 +54,7 @@ class ArticleCompanyRandomMediator(
                     nextePage
                 }
             }
-            val response = api.getRandomArticles(currentPage, state.config.pageSize)
+            val response = api.getAll(id,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -67,56 +64,54 @@ class ArticleCompanyRandomMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    articleCompanyDao.insertArticleRandomKeys(response.map { article ->
-                        ArticleCompanyRandomRKE(
+                    articleCompanyDao.insertKeys(response.map { article ->
+                        ArticleRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
-                            prevPage = prevPage
+                            previousPage = prevPage
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.company?.user?.toUser()})
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.company?.toCompany()})
-                    companyDao.insertCompany(response.map { company -> company.provider?.toCompany() })
-                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory()?: Category() })
-                    categoryDao.insertCategory(response.map {category -> category.subCategory?.category?.toCategory()?: Category() })
-                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory()?: SubCategory() })
+                    userDao.insertUser(response.map {user -> user.company?.user?.toUser()!!})
+                    companyDao.insertCompany(response.map {company -> company.company?.toCompany()!!})
+                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()!!})
+                    companyDao.insertCompany(response.map { company -> company.provider?.toCompany()!! })
+                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory()!! })
+                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
                     articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true)!! })
-                        articleCompanyDao.insertRandomArticle(response.map { it.toRandomArticleCompany() })
+                    articleCompanyDao.insertArticle(response.map { it.toArticleCompany(false) })
 
                 } catch (ex: Exception) {
-                    Log.e("error", "articlecompany ${ex}")
+                    Log.e("error", "articlecompany ${ex.message}")
                 }
             }
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
-            Log.e("error", "articlecompany ${ex.message}")
             MediatorResult.Error(ex)
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, RandomArticleChild>): Int? {
+    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, ArticleWithArticleCompany>): Int? {
         val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { articleCompanyDao.getArticleRandomRemoteKey(it.articleCompany.id!!).prevPage }
+        return entity?.let { articleCompanyDao.getArticleRemoteKey(it.articleCompany.id!!).previousPage }
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, RandomArticleChild>): Int? {
+    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, ArticleWithArticleCompany>): Int? {
         val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
         val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { articleCompanyDao.getArticleRandomRemoteKey(it.articleCompany.id!!).nextPage }
+        return entity?.let { articleCompanyDao.getArticleRemoteKey(it.articleCompany.id!!).nextPage }
     }
 
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, RandomArticleChild>): Int? {
+    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, ArticleWithArticleCompany>): Int? {
         val position = state.anchorPosition
         val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.articleCompany?.id?.let { articleCompanyDao.getArticleRandomRemoteKey(it).nextPage }
+        return entity?.articleCompany?.id?.let { articleCompanyDao.getArticleRemoteKey(it).nextPage }
     }
 
     private suspend fun deleteCache(){
-        articleCompanyDao.clearAllRandomRemoteKeysTable()
         articleCompanyDao.clearAllArticleCompanyTable()
+        articleCompanyDao.clearAllRemoteKeysTable()
     }
 }
