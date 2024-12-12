@@ -10,10 +10,10 @@ import com.aymen.metastore.companydtodatastore
 import com.aymen.metastore.datastore
 import com.aymen.metastore.model.Location.DefaultLocationClient
 import com.aymen.metastore.model.Location.LocationClient
-import com.aymen.metastore.model.entity.Dao.CompanyDao
-import com.aymen.metastore.model.entity.Dao.PurchaseOrderDao
-import com.aymen.metastore.model.entity.Dao.PurchaseOrderLineDao
-import com.aymen.metastore.model.entity.Dao.UserDao
+import com.aymen.metastore.model.entity.dao.CompanyDao
+import com.aymen.metastore.model.entity.dao.PurchaseOrderDao
+import com.aymen.metastore.model.entity.dao.PurchaseOrderLineDao
+import com.aymen.metastore.model.entity.dao.UserDao
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepository
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepositoryImpl
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepository
@@ -28,7 +28,6 @@ import com.aymen.metastore.model.usecase.GetPagingSubCategoryByCompany
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.metastore.userdtodatastore
 import com.aymen.metastore.model.entity.model.Company
-import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
@@ -207,22 +206,22 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun priverPurchaseDao(appDatabase: AppDatabase): PurchaseOrderDao{
+    fun priverPurchaseDao(appDatabase: AppDatabase): PurchaseOrderDao {
         return appDatabase.purchaseOrderDao()
     }
     @Provides
     @Singleton
-    fun priverPurchaseLineDao(appDatabase: AppDatabase): PurchaseOrderLineDao{
+    fun priverPurchaseLineDao(appDatabase: AppDatabase): PurchaseOrderLineDao {
         return appDatabase.purchaseOrderLineDao()
     }
     @Provides
     @Singleton
-    fun priverCompanyDao(appDatabase: AppDatabase): CompanyDao{
+    fun priverCompanyDao(appDatabase: AppDatabase): CompanyDao {
         return appDatabase.companyDao()
     }
     @Provides
     @Singleton
-    fun priverUserDao(appDatabase: AppDatabase): UserDao{
+    fun priverUserDao(appDatabase: AppDatabase): UserDao {
         return appDatabase.userDao()
     }
 
@@ -249,8 +248,8 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun providArticleViewModel(repository: GlobalRepository, sharedViewModel: SharedViewModel, room : AppDatabase, useCases: MetaUseCases,
-                               appViewModel: AppViewModel): ArticleViewModel {
-        return ArticleViewModel(repository,sharedViewModel, room,useCases, appViewModel)
+                               appViewModel: AppViewModel, context: Context): ArticleViewModel {
+        return ArticleViewModel(repository,sharedViewModel, room,useCases, appViewModel, context)
     }
 
     @Provides

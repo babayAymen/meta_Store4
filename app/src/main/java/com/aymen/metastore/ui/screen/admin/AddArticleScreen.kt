@@ -73,6 +73,7 @@ fun AddArticleScreen(){
         val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
         val articleViewModel : ArticleViewModel = hiltViewModel()
         val providerViewModel : ProviderViewModel = hiltViewModel()
+        val company by sharedViewModel.company.collectAsStateWithLifecycle()
         val article = articleViewModel.article
         var image by remember {
             mutableStateOf<Uri?>(null)
@@ -153,16 +154,22 @@ fun AddArticleScreen(){
             mutableStateOf(Company())
         }
         if(articleViewModel.upDate){
-            val articlee = articleViewModel.articleCompany.collectAsStateWithLifecycle()
+            val articlee by articleViewModel.articleCompany.collectAsStateWithLifecycle()
             Log.e("articleCompany","from view model : $articlee")
-            articleCompany = articlee.value!!
-            minQuantity = if(articlee.value?.unit == UnitArticle.U)(articlee.value?.minQuantity?:0.0).toInt().toString() else (articlee.value?.minQuantity?:0.0).toString()
-            costFieald = (articlee.value?.cost?:0.0).toString()
-            sellingPriceFieald = (articlee.value?.sellingPrice?:0.0).toString()
-            unitItem = articlee.value?.unit?:UnitArticle.U
-            quantity = if(articlee.value?.unit == UnitArticle.U)(articlee.value?.quantity?:0.0).toInt().toString() else (articlee.value?.quantity?:0.0).toString()
-            privacy = articlee.value?.isVisible?:PrivacySetting.PUBLIC
-            subCategory = articlee.value?.subCategory?:SubCategory()
+            articleCompany = articlee!!
+            minQuantity = if(articlee?.unit == UnitArticle.U)(articlee?.minQuantity?:0.0).toInt().toString() else (articlee?.minQuantity?:0.0).toString()
+            qte = articlee?.quantity!!
+            minQte = articlee?.minQuantity!!
+            costFieald = (articlee?.cost?:0.0).toString()
+            cost = articlee?.cost!!
+            sellingPriceFieald = (articlee?.sellingPrice?:0.0).toString()
+            sellingPrice = articlee?.sellingPrice!!
+            unitItem = articlee?.unit!!
+            quantity = if(articlee?.unit == UnitArticle.U)(articlee?.quantity?:0.0).toInt().toString() else (articlee?.quantity?:0.0).toString()
+            privacy = articlee?.isVisible?:PrivacySetting.PUBLIC
+            category = articlee?.category!!
+            subCategory = articlee?.subCategory!!
+            provider = articlee?.provider!!
         }
         val providers = providerViewModel.providers.collectAsLazyPagingItems()
 
@@ -270,7 +277,6 @@ fun AddArticleScreen(){
                             ),
                             onValueChange = {
                                 if (unitItem == UnitArticle.U) {
-                                    // Restrict input to integers
                                     if (it.matches(Regex("^[0-9]*$"))) {
                                         quantity = it
                                         qte = it.toDoubleOrNull() ?: 0.0
@@ -279,13 +285,16 @@ fun AddArticleScreen(){
                                     if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                         val normalizedInput = it.replace(',', '.')
                                         quantity = normalizedInput
-
-                                        qte = if (normalizedInput.endsWith(".")) {
-                                            normalizedInput.let { inp ->
-                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                        qte = if (normalizedInput.startsWith(".")) {
+                                            0.0
+                                        }else{
+                                            if (normalizedInput.endsWith(".")) {
+                                                normalizedInput.let { inp ->
+                                                    if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                                }
+                                            } else {
+                                                normalizedInput.toDoubleOrNull() ?: 0.0
                                             }
-                                        } else {
-                                            normalizedInput.toDoubleOrNull() ?: 0.0
                                         }
                                     }
                                 }
@@ -305,7 +314,6 @@ fun AddArticleScreen(){
                             ),
                             onValueChange = {
                                 if (unitItem == UnitArticle.U) {
-                                    // Restrict input to integers
                                     if (it.matches(Regex("^[0-9]*$"))) {
                                         minQuantity = it
                                         minQte = it.toDoubleOrNull() ?: 0.0
@@ -314,7 +322,9 @@ fun AddArticleScreen(){
                                     if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                         val normalizedInput = it.replace(',', '.')
                                         minQuantity = normalizedInput
-                                        minQte = if (normalizedInput.endsWith(".")) {
+                                        minQte = if (normalizedInput.startsWith(".")) {
+                                             0.0
+                                        }else if (normalizedInput.endsWith(".")) {
                                             normalizedInput.let { inp ->
                                                 if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
                                             }
@@ -340,7 +350,9 @@ fun AddArticleScreen(){
                                 if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                     val normalizedInput = it.replace(',', '.')
                                     costFieald = normalizedInput
-                                    cost = if (normalizedInput.endsWith(".")) {
+                                    cost = if(normalizedInput.startsWith(".")) {
+                                        0.0
+                                    } else if (normalizedInput.endsWith(".")) {
                                         normalizedInput.let { inp ->
                                             if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
                                         }
@@ -365,7 +377,8 @@ fun AddArticleScreen(){
                                 if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                     val normalizedInput = it.replace(',', '.')
                                     sellingPriceFieald = normalizedInput
-                                    sellingPrice = if (normalizedInput.endsWith(".")) {
+                                    sellingPrice = if(normalizedInput.startsWith(".")) 0.0
+                                    else if (normalizedInput.endsWith(".")) {
                                         normalizedInput.let { inp ->
                                             if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
                                         }
@@ -412,18 +425,18 @@ fun AddArticleScreen(){
                 }
                 Row {
                     val unitList = UnitArticle.entries
-                    unitItem = dropDownItems(list = unitList)
+                    unitItem = dropDownItems(unitItem,list = unitList)
                 }
 
                 Row {
-                    DropDownCategory(pagingItems = categories){
+                    DropDownCategory(category,pagingItems = categories){
                         category = it
                     }
                 }
 
                 Row {
 
-                        DropDownSubCategory(list = subcategories,
+                        DropDownSubCategory(subCategory ,list = subcategories,
                             category.id?:0
                         ){
                             subCategory = it
@@ -431,7 +444,7 @@ fun AddArticleScreen(){
 
                 }
                 Row {
-                    DropDownCompany(list = providers){
+                    DropDownCompany(provider = provider, list = providers){
                         provider = it
                     }
                 }
@@ -477,6 +490,8 @@ fun AddArticleScreen(){
                             articleCompany.provider = provider
                             articleCompany.unit = unitItem
                             articleCompany.isVisible = privacy
+                            articleCompany.article = article
+                          //  articleCompany.company = company
                             val photo = resolveUriToFile(image, context)
                             val articleJsonString = gson.toJson(articleCompany)
                             val projsonstring = gson.toJson(companyViewModel.myCompany)
@@ -485,15 +500,13 @@ fun AddArticleScreen(){
                                 if (articleJsonString.isNotEmpty() && photo != null && article.id != null) {
 //                                articleViewModel.addArticle(articleCompany,articleJsonString, photo)
                                 } else {
-                                    articleViewModel.addArticleWithoutImage(
-                                        articleCompany,
-                                        articleJsonString
+                                    articleViewModel.addArticleCompany(
+                                        articleCompany
                                     )
                                 }
                             }else{
                                 articleViewModel.updateArticle(articleCompany)
                             }
-                                Log.e("articleCompany","article company : $articleCompany")
                         }
                     }
 

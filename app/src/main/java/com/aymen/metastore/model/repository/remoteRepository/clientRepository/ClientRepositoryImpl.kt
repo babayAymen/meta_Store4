@@ -7,6 +7,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
+import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.paging.pagingsource.AllPersonContainingPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.AllSearchRemoteMediator
@@ -56,20 +57,45 @@ class ClientRepositoryImpl  @Inject constructor(
     }
 
 
-   override suspend fun addClient(client: String, file: File){
-        withContext(Dispatchers.IO){
-            api.addClient(
-                client,
-                file = MultipartBody.Part
-                    .createFormData(
-                        "file",
-                        file.name,
-                        file.asRequestBody()
-                    )
-            )
+   override suspend fun addClient(client: String, file: File?): Response<ClientProviderRelationDto> {
+        return withContext(Dispatchers.IO){
+            if(file == null){
+                api.addClientWithoutImage(client)
+                }else {
+                api.addClient(
+                    client,
+                    file = file.asRequestBody().let {
+                        MultipartBody.Part
+                            .createFormData(
+                                "file",
+                                file.name,
+                                it
+                            )
+                    }
+                )
+            }
         }
     }
-    override suspend fun addClientWithoutImage(client: String) = api.addClientWithoutImage(client)
+   override suspend fun updateClient(client: String, file: File?): Response<CompanyDto> {
+      return  withContext(Dispatchers.IO){
+          Log.e("updateclient","in repo impl $file")
+          if(file == null){
+              api.updateClientWithoutImage(client)
+          }else {
+              api.updateClient(
+                  client,
+                  file = file.asRequestBody().let {
+                      MultipartBody.Part
+                          .createFormData(
+                              "file",
+                              file.name,
+                              it
+                          )
+                  }
+              )
+          }
+        }
+    }
     override suspend fun getAllMyClientContaining(
         clientName: String,
         companyId: Long

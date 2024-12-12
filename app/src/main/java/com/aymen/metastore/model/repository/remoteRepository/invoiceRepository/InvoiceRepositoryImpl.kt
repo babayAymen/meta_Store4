@@ -11,8 +11,8 @@ import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.paging.remotemediator.AllInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.CommandLineByInvoiceRemoteMediator
-import com.aymen.metastore.model.entity.paging.InvoiceAsClientAndStatusRemoteMediator
-import com.aymen.metastore.model.entity.paging.InvoiceRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.InvoiceAsClientAndStatusRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.InvoiceRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider

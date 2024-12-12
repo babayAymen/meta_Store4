@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.repository.ViewModel
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -10,13 +11,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import androidx.room.Transaction
+import androidx.room.withTransaction
+import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.model.Article
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Comment
+import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.AccountType
@@ -29,7 +32,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -41,7 +43,8 @@ class ArticleViewModel @Inject constructor(
     private val sharedViewModel : SharedViewModel,
     private val room : AppDatabase,
     private val useCases: MetaUseCases,
-    private val appViewModel: AppViewModel
+    private val appViewModel: AppViewModel,
+    private val context: Context
 )
     : ViewModel() {
 
@@ -88,12 +91,11 @@ class ArticleViewModel @Inject constructor(
                         sharedViewModel.company.collect { company ->
                             company.id?.let { companyId ->
                                 fetchAllMyArticlesApi(companyId)
+                                getArticlesForCompanyByCompanyCategory(companyId, company.category!!)
                             }
                         }
                     }
                 }
-
-
         }
     }
 
@@ -102,7 +104,7 @@ class ArticleViewModel @Inject constructor(
             useCases.getPagingArticleCompanyByCompany(companyId)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
-                .collect  {
+                .collectLatest  {
                     _adminArticles.value = it.map { article -> article.toArticleRelation() }
                 }
         }
@@ -128,10 +130,14 @@ class ArticleViewModel @Inject constructor(
             }
         }
 
+
         fun addQuantityArticle(quantity: Double, articleId: Long) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                  repository.addQuantityArticle(quantity, articleId)
+                    _adminArticles.value = PagingData.empty()
+                   articleCompanyDao.upDateQuantity(articleId, quantity)
+                   repository.addQuantityArticle(quantity, articleId)
+
                 } catch (ex: Exception) {
                     Log.e("addQuantityArticle", "exception is : ${ex.message}")
                 }
@@ -140,8 +146,34 @@ class ArticleViewModel @Inject constructor(
 
     fun assignarticleCompany(item : ArticleCompany){
         _articleCompany.value = item
+        article = item.article!!
         upDate = true
     }
+
+    fun deleteArticle(article: ArticleCompany){
+        viewModelScope.launch(Dispatchers.IO) {
+            val remoteKey = articleCompanyDao.getArticleRemoteKeysById(article.id!!)
+            val inventory = inventoryDao.getInventoryByArticleId(article.id)
+            val remoteKeysInventory = inventory?.id?.let {
+             inventoryDao.getInventoryRemoteKey(it)
+            }
+            room.withTransaction {
+                articleDao.updateArticleById(false , article.article?.id!!)
+            articleCompanyDao.clearArticleById(article.id)
+            articleCompanyDao.clearRemoteKeyById(article.id)
+                if(inventory != null){
+                inventoryDao.clearInventoryByArticleId(article.id)
+                inventoryDao.clearInventoryRemoteKeysById(inventory.id!!)
+                }
+            }
+            val response = repository.deleteArticle(article.id)
+            if(!response.isSuccessful){
+                articleCompanyDao.insertSigleArticle(article.toArticleCompanyEntity(true))
+                articleCompanyDao.insertSingleKey(remoteKey)
+            }
+        }
+    }
+
         fun getAllMyArticleContaining(articleLibel: String, searchType: SearchType) {
             viewModelScope.launch {
                 useCases.getAllMyArticleContaining(articleLibel, searchType, company.value?.id!!)
@@ -176,33 +208,71 @@ class ArticleViewModel @Inject constructor(
             }
         }
 
-        fun addArticleWithoutImage(articlee: ArticleCompany, articl: String) {
+
+        fun addArticleCompany(articlee: ArticleCompany) {
             viewModelScope.launch(Dispatchers.IO) {
-                val result: Result<Response<Void>> = runCatching {
-                    repository.addArticleWithoutImage(articl, article.id ?: 0L)
+                val latestArticleId = room.articleCompanyDao().getLatestArticleId()
+                var remoteKey = ArticleRemoteKeysEntity(0,0,0)
+                val id = if (latestArticleId != null) latestArticleId + 1 else 1
+                room.withTransaction{
+                    room.articleDao().updateArticleById(true,articlee.article?.id!!)
+                    val articleCount = articleCompanyDao.getArticlesCount()
+                    val page = articleCount.div(PAGE_SIZE)
+                  room.articleCompanyDao().insertSigleArticle(articlee.copy(id = id).toArticleCompanyEntity(isSync = false))
+                 remoteKey = ArticleRemoteKeysEntity(
+                    id = id,
+                    previousPage = if(page == 0) null else page,
+                    nextPage = null
+                )
+                room.articleCompanyDao().insertSingleKey(remoteKey)
+                }
+                val result: Result<Response<ArticleCompanyDto>> = runCatching {
+                    repository.addArticleWithoutImage(articlee.toArticleCompanyDto(), article.id ?: 0L)
                 }
                 result.fold(
                     onSuccess = { success ->
                         if (success.isSuccessful) {
+                            room.withTransaction {
+                                val serverArticle = success.body()!!
+                                val latestRemoteKey = articleCompanyDao.getArticleRemoteKey(id)
+                                val remoteKeys = ArticleRemoteKeysEntity(
+                                    id = serverArticle.id!!,
+                                    previousPage = latestRemoteKey.previousPage,
+                                    nextPage = null
+                                )
+                                room.articleCompanyDao().insertSigleArticle(serverArticle.toArticleCompany(true))
+                                room.articleCompanyDao().insertSingleKey(remoteKeys)
+                            }
+                            inventoryDao.getAllInventories().invalidate()
+                            appViewModel.updateShow("article")
                         } else {
-                            // Handle unsuccessful response
+                            room.articleCompanyDao().insertSigleArticle(articlee.toArticleCompanyEntity(true))
+                            room.articleCompanyDao().insertSingleKey(remoteKey)
                         }
                     },
                     onFailure = { exception ->
-                        Log.e("addnewarticle", "exception is : ${exception.message}")
+//                        withContext(Dispatchers.IO){
+//                        Toast.makeText(context, "something went wrong : ${exception.message}", Toast.LENGTH_SHORT).show()
+//                        }
                     }
                 )
             }
         }
 
     val articleCompanyDao = room.articleCompanyDao()
-
+    val articleDao = room.articleDao()
+    val inventoryDao = room.inventoryDao()
     fun updateArticle(article : ArticleCompany){
         viewModelScope.launch(Dispatchers.IO) {
+           val articleCompanyPrev = article
+      //      _adminArticles.value = PagingData.empty()
+            room.articleCompanyDao().insertSigleArticle(article.toArticleCompanyEntity(isSync = true))
             val response = repository.updateArticle(article.toArticleCompanyDto())
             if(response.isSuccessful){
 
                 appViewModel.updateShow("article")
+            }else{
+                room.articleCompanyDao().insertSigleArticle(articleCompanyPrev.toArticleCompanyEntity(isSync = true))
             }
 
         }

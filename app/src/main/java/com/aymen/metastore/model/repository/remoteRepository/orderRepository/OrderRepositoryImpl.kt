@@ -7,9 +7,9 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
-import com.aymen.metastore.model.entity.paging.OrderLineDetailsRemoteMediator
-import com.aymen.metastore.model.entity.paging.OrderNotAcceptedRemoteMediator
-import com.aymen.metastore.model.entity.paging.PurchaseOrderLinesByInvoiceIdPagingSource
+import com.aymen.metastore.model.entity.paging.remotemediator.OrderLineDetailsRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.OrderNotAcceptedRemoteMediator
+import com.aymen.metastore.model.entity.paging.pagingsource.PurchaseOrderLinesByInvoiceIdPagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient

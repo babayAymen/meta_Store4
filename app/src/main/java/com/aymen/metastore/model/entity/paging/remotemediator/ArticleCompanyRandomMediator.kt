@@ -76,10 +76,10 @@ class ArticleCompanyRandomMediator(
                     userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.company?.toCompany()})
                     companyDao.insertCompany(response.map { company -> company.provider?.toCompany() })
-                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory()?: Category() })
-                    categoryDao.insertCategory(response.map {category -> category.subCategory?.category?.toCategory()?: Category() })
-                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory()?: SubCategory() })
-                    articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true)!! })
+                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory() })
+                    categoryDao.insertCategory(response.map {category -> category.subCategory?.category?.toCategory() })
+                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory() })
+                    articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true) })
                         articleCompanyDao.insertRandomArticle(response.map { it.toRandomArticleCompany() })
 
                 } catch (ex: Exception) {
@@ -114,6 +114,6 @@ class ArticleCompanyRandomMediator(
 
     private suspend fun deleteCache(){
         articleCompanyDao.clearAllRandomRemoteKeysTable()
-        articleCompanyDao.clearAllArticleCompanyTable()
+        articleCompanyDao.clearAllRandomArticleCompanyTable()
     }
 }

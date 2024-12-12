@@ -96,7 +96,7 @@ import com.aymen.metastore.ui.screen.admin.DashBoardScreen
 import com.aymen.store.ui.screen.user.NotificationScreen
 import java.math.RoundingMode
 
-//@RequiresApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
@@ -112,7 +112,6 @@ fun HomeScreen() {
 
 
 
-//@RequiresApi(Build.VERSION_CODES.O)
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

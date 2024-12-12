@@ -25,13 +25,10 @@ import com.aymen.metastore.ui.component.ArticleCard
 fun ArticlesScreenForCompanyByCategory(){
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
-    val sharedViewModel = hiltViewModel<SharedViewModel>()
     var add by remember {
         mutableStateOf(false)
     }
-    LaunchedEffect(key1 = Unit) {
-        articleViewModel.getArticlesForCompanyByCompanyCategory(sharedViewModel.company.value.id!!, sharedViewModel.company.value.category!!)
-    }
+
 val articles = articleViewModel.articles.collectAsLazyPagingItems()
 
     Surface(

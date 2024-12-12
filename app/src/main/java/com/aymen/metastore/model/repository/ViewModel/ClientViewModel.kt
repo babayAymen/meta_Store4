@@ -1,6 +1,9 @@
 package com.aymen.metastore.model.repository.ViewModel
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -10,12 +13,9 @@ import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.model.User
-import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
-import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +44,12 @@ class ClientViewModel @Inject constructor(
     private val _myClientsContainingForAutocomplete: MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val myClientsContainingForAutocomplete: StateFlow<PagingData<ClientProviderRelation>> = _myClientsContainingForAutocomplete
 
+
+
+    private val _clientForUpdate : MutableStateFlow<Company?> = MutableStateFlow(Company())
+    var clientForUpdate : StateFlow<Company?>  = _clientForUpdate
+
+    var update by mutableStateOf(false)
     val company: StateFlow<Company?> = sharedViewModel.company
     val user: StateFlow<User?> = sharedViewModel.user
     init {
@@ -64,6 +70,10 @@ class ClientViewModel @Inject constructor(
 
     }
 
+    fun assignClientForUpdate(client : Company){
+        update = true
+        _clientForUpdate.value = client
+    }
     fun getAllMyClientContaining(clientname: String) {
         viewModelScope.launch {
             useCases.getAllMyClientContaining(sharedViewModel.company.value.id!!, clientname)
@@ -87,23 +97,37 @@ class ClientViewModel @Inject constructor(
         }
     }
 
+    fun updateClient(client: String, file: File) {
+        viewModelScope.launch {
+            try {
+                repository.updateClient(client, file)
+            } catch (_ex: Exception) {
+            }
+        }
+    }
+    fun updateClientWithoutImage(client: String){
+        viewModelScope.launch {
+            try {
+                repository.updateClient(client, null)
+            } catch (_ex: Exception) {
+            }
+        }
+    }
         fun addClient(client: String, file: File) {
             viewModelScope.launch {
                 try {
                     repository.addClient(client, file)
                 } catch (_ex: Exception) {
                 }
-                getAllMyClient()
             }
         }
 
         fun addClientWithoutImage(client: String) {
             viewModelScope.launch {
                 try {
-                    repository.addClientWithoutImage(client)
+                    repository.addClient(client, null)
                 } catch (_ex: Exception) {
                 }
-                getAllMyClient()
             }
         }
 

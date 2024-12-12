@@ -5,9 +5,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.aymen.metastore.model.Enum.LoadType
-import com.aymen.metastore.model.entity.paging.InventoryRemoteMediator
-import com.aymen.metastore.model.entity.paging.InvoiceRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.InventoryRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
 import com.aymen.metastore.util.PAGE_SIZE

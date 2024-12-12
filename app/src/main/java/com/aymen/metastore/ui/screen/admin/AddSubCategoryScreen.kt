@@ -109,7 +109,7 @@ fun AddSubCategoryScreen() {
 
             }
             Row {
-                DropDownCategory(categories ){
+                DropDownCategory(null,categories ){
                     category = it
                 }
             }

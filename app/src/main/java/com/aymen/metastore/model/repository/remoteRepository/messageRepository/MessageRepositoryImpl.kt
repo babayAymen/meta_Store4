@@ -9,8 +9,8 @@ import com.aymen.metastore.model.Enum.LoadType
 import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.entity.dto.ConversationDto
-import com.aymen.metastore.model.entity.paging.ConversationRemoteMediator
-import com.aymen.metastore.model.entity.paging.MessageRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.ConversationRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.MessageRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.ConversationWithUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAndConversation

@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -890,14 +891,16 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                                     if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                         val normalizedInput = it.replace(',', '.')
                                         shoppingViewModel.rawInput = normalizedInput
-
+                                        if (normalizedInput.startsWith(".")) {
+                                            shoppingViewModel.rawInput = normalizedInput
+                                            shoppingViewModel.qte = 0.0
+                                        } else
                                         if (normalizedInput.endsWith(".")) {
                                             shoppingViewModel.qte = normalizedInput.let { inp ->
                                                 if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
                                             }
                                         } else {
-                                            shoppingViewModel.qte =
-                                                normalizedInput.toDoubleOrNull() ?: 0.0
+                                            shoppingViewModel.qte = normalizedInput.toDoubleOrNull() ?: 0.0
                                         }
                                     }
                                 }
@@ -1237,7 +1240,7 @@ fun MessageCard(message: LazyPagingItems<Message>) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val me by sharedViewModel.user.collectAsStateWithLifecycle()
 
-    val lazyListState = rememberLazyListState()
+    val lazyListState = LazyListState()
 
 //    LaunchedEffect(key1 = message) {
 //        lazyListState.scrollToItem(index = message.size)

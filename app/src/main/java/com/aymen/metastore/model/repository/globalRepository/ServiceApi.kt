@@ -36,6 +36,7 @@ import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.dto.WorkerDto
 import com.aymen.metastore.model.entity.model.PaginatedResponse
+import com.aymen.metastore.model.entity.room.entity.ArticleCompany
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -56,7 +57,7 @@ interface ServiceApi {
     @GET("werehouse/article/subcategory/{subcategId}/{companyId}")
     suspend fun getRandomArticlesBySubCategory(@Path("subcategId") subcategoryId : Long , @Path("companyId") companyId : Long) : Response<List<ArticleCompanyDto>>
     @DELETE("werehouse/article/delete/{id}")
-    suspend fun deleteArticle(@Path("id") id: String): Response<Void>
+    suspend fun deleteArticle(@Path("id") id: Long): Response<Void>
     @Multipart
     @POST("werehouse/company/add")
     suspend fun addCompany(
@@ -78,8 +79,9 @@ interface ServiceApi {
         @Query("article") article : String,
         @Part file : MultipartBody.Part? = null
     ): Response<Void>
+
     @POST("werehouse/article/add/{id}")
-    suspend fun addArticleWithoutImage(@Path("id") articleId : Long, @Query("article") article: String):Response<Void>
+    suspend fun addArticleWithoutImage(@Path("id") articleId : Long, @Body article: ArticleCompanyDto):Response<ArticleCompanyDto>
 
     @POST("api/auth/authentication")
     suspend fun SignIn(@Body authenticationRequest: AuthenticationRequest): Response<AuthenticationResponse>
@@ -112,12 +114,17 @@ interface ServiceApi {
 
     @Multipart
     @POST("werehouse/client/add")
-    suspend fun addClient(
-        @Query("company") companyDto:String,
-        @Part file: MultipartBody.Part? = null): Response<Void>
+    suspend fun addClient(@Query("company") companyDto:String, @Part file: MultipartBody.Part? = null): Response<ClientProviderRelationDto>
 
-    @POST("werehouse/client/add")
-    suspend fun addClientWithoutImage(@Query("company") companyDto:String)
+    @POST("werehouse/client/add_without_image")
+    suspend fun addClientWithoutImage(@Query("company") companyDto:String): Response<ClientProviderRelationDto>
+
+    @Multipart
+    @PUT("werehouse/client/update")
+    suspend fun updateClient(@Query("company") companyDto:String, @Part file: MultipartBody.Part?): Response<CompanyDto>
+
+    @PUT("werehouse/client/update_without_image")
+    suspend fun updateClientWithoutImage(@Query("company") companyDto:String): Response<CompanyDto>
    @Multipart
     @POST("werehouse/provider/add")
     suspend fun addProvider(
@@ -238,9 +245,6 @@ interface ServiceApi {
 
     @GET("werehouse/article/my_article/{id}")
     suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
-
-    @GET("werehouse/order/get_by_order_id/{id}")
-    suspend fun getPurchaqseOrderDetails(@Path("id") orderId: Long) : List<PurchaseOrderLineDto>
 
 
     @GET("werehouse/article/search/{id}")

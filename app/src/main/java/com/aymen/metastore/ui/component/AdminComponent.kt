@@ -153,9 +153,9 @@ data class ToggleleableInfo(val isChecked: Boolean, val text: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun dropDownItems(list: List<UnitArticle>):UnitArticle {
+fun dropDownItems(unit : UnitArticle ,list: List<UnitArticle>):UnitArticle {
     var itemSelected by remember {
-        mutableStateOf(list[0])
+        mutableStateOf(unit)
     }
     var isExpanded by remember {
         mutableStateOf(false)
@@ -201,15 +201,18 @@ fun dropDownItems(list: List<UnitArticle>):UnitArticle {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCategory(pagingItems: LazyPagingItems<Category>, onSelected: (Category) -> Unit) {
+fun DropDownCategory(category : Category? , pagingItems: LazyPagingItems<Category>, onSelected: (Category) -> Unit) {
     val categoryViewModel: CategoryViewModel = hiltViewModel()
     if (pagingItems.itemCount != 0) {
         var itemSelected by remember {
             mutableStateOf(
-                pagingItems.peek(0)!!
+             category
             )
         }
-        onSelected(itemSelected)
+        if(category?.id == null) {
+            itemSelected =  pagingItems.peek(0)
+        }
+        onSelected(itemSelected!!)
      //   categoryViewModel.category = itemSelected
         var isExpanded by remember {
             mutableStateOf(false)
@@ -227,7 +230,7 @@ fun DropDownCategory(pagingItems: LazyPagingItems<Category>, onSelected: (Catego
                 ) {
                     TextField(
                         modifier = Modifier.menuAnchor(),
-                        value = itemSelected.libelle ?: "",
+                        value = itemSelected?.libelle ?: "",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -247,7 +250,7 @@ fun DropDownCategory(pagingItems: LazyPagingItems<Category>, onSelected: (Catego
                                         onSelected(item)
                                         itemSelected = item
                                         isExpanded = false
-                                        categoryViewModel.category = itemSelected
+                                        categoryViewModel.category = itemSelected!!
                                     },
                                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                                 )
@@ -262,11 +265,11 @@ fun DropDownCategory(pagingItems: LazyPagingItems<Category>, onSelected: (Catego
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, onSelected : (SubCategory) -> Unit) {
+fun DropDownSubCategory(subCategory : SubCategory, list : LazyPagingItems<SubCategory>, categoryId : Long, onSelected : (SubCategory) -> Unit) {
 
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
     var itemSelectedLibell by remember {
-        mutableStateOf("select sub category")
+        mutableStateOf(subCategory.libelle)
     }
     var itemSelected by remember {
         mutableStateOf(SubCategory())
@@ -278,6 +281,7 @@ fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, 
         itemSelected = SubCategory()
         itemSelectedLibell = "select sub category"
     }
+    onSelected(itemSelected)
     var isExpanded by remember {
         mutableStateOf(false)
     }
@@ -294,7 +298,7 @@ fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, 
             ) {
                 TextField(
                     modifier = Modifier.menuAnchor(),
-                    value = itemSelectedLibell,
+                    value = itemSelectedLibell?:"select sub category",
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -327,12 +331,16 @@ fun DropDownSubCategory(list : LazyPagingItems<SubCategory>, categoryId : Long, 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>, onSelected: (Company) -> Unit) {
+fun DropDownCompany(provider : Company? ,list: LazyPagingItems<ClientProviderRelation>, onSelected: (Company) -> Unit) {
     val companyViewModel: CompanyViewModel = hiltViewModel()
     if (list.itemCount != 0) {
         var itemSelected by remember {
-            mutableStateOf(list.peek(0)?:ClientProviderRelation())
+            mutableStateOf(provider)
         }
+        if(provider?.id == null) {
+            itemSelected =  list.peek(0)?.provider
+        }
+        onSelected(itemSelected!!)
         var isExpanded by remember {
             mutableStateOf(false)
         }
@@ -349,7 +357,7 @@ fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>, onSelected: (
                 ) {
                     TextField(
                         modifier = Modifier.menuAnchor(),
-                        value = itemSelected.provider?.name ?: "",
+                        value = itemSelected?.name ?: "",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -365,9 +373,9 @@ fun DropDownCompany(list: LazyPagingItems<ClientProviderRelation>, onSelected: (
                                 text = { Text(relation.provider?.name!!) },
                                 onClick = {
                                     onSelected(relation.provider!!)
-                                    itemSelected = relation
+                                    itemSelected = relation.provider
                                     isExpanded = false
-                                    companyViewModel.providerId = itemSelected.provider?.id ?: 0
+                                    companyViewModel.providerId = itemSelected?.id ?: 0
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                             )
@@ -481,7 +489,10 @@ fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: ()
 fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (Double) -> Unit) {
     var openDialog by remember { mutableStateOf(openDailoge) }
     var quantity by remember {
-        mutableStateOf(0.0)
+        mutableDoubleStateOf(0.0)
+    }
+    var rawInput by remember {
+        mutableStateOf("")
     }
     if (openDialog) {
         Dialog(
@@ -496,7 +507,7 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                     .clip(RoundedCornerShape(10.dp)),
             ) {
                 Column {
-                    NormalText(value = "Add Quantiry", aligne = TextAlign.Center)
+                    NormalText(value = "Add Quantity", aligne = TextAlign.Center)
                     Spacer(modifier = Modifier.padding(10.dp))
                     Row {
                         Row(
@@ -515,7 +526,7 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                         }
                     }
                     InputTextField(
-                        labelValue = if(quantity == 0.0)"" else quantity.toString(),
+                        labelValue = rawInput,
                         label = "Quantity",
                         singleLine = true,
                         maxLine = 1,
@@ -525,9 +536,29 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                             autoCorrect = true
                         ),
                         onValueChange = {
-                            quantity = it.toDouble()
+                            if (article.unit == UnitArticle.U) {
+                                if (it.matches(Regex("^[0-9]*$"))) {
+                                    rawInput = it
+                                    quantity = it.toDoubleOrNull() ?: 0.0
+                                }
+                            } else {
+                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                    val normalizedInput = it.replace(',', '.')
+
+                                    if (normalizedInput.startsWith(".")) {
+                                        rawInput = normalizedInput
+                                        quantity = 0.0
+                                    } else if (normalizedInput.endsWith(".")) {
+                                        rawInput = normalizedInput
+                                        quantity = normalizedInput.dropLast(1).toDoubleOrNull() ?: 0.0
+                                    } else {
+                                        rawInput = normalizedInput
+                                        quantity = normalizedInput.toDoubleOrNull() ?: 0.0
+                                    }
+                                }
+                            }
                         },
-                        onImage = {}
+                                onImage = {}
                     ) {
 
                     }
@@ -699,7 +730,6 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
 
 @Composable
 fun ClientCard(client: ClientProviderRelation, image : String) {
-    Log.e("clienttest","imegezzzz $image")
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -937,19 +967,25 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
     var openDialog by remember {
         mutableStateOf(openDialo)
     }
-    var quantity by remember {
+    var qte by remember {
         mutableDoubleStateOf(0.0)
     }
-    var discount by remember {
+    var dct by remember {
         mutableDoubleStateOf(0.0)
+    }
+    var quantity by remember {
+        mutableStateOf("")
+    }
+    var discount by remember {
+        mutableStateOf("")
     }
     var articleExist by remember {
         mutableStateOf(false)
     }
     if(update){
         articleExist = true
-        quantity = invoiceViewModel.commandLineDto.quantity
-        discount = invoiceViewModel.commandLineDto.discount?:0.0
+        qte = invoiceViewModel.commandLineDto.quantity
+        dct = invoiceViewModel.commandLineDto.discount?:0.0
     }
     val commandsLine by invoiceViewModel.commandLine.collectAsStateWithLifecycle()
     IconButton(onClick = { openDialog = true }) {
@@ -975,7 +1011,7 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                     }
                     Row {
                         InputTextField(
-                            labelValue = if (quantity == 0.0) "" else quantity.toString(),
+                            labelValue = quantity,
                             label = "Quantity",
                             singleLine = true,
                             maxLine = 1,
@@ -983,7 +1019,26 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                                 keyboardType = KeyboardType.Number,
                                 imeAction =  ImeAction.Next),
                             onValueChange = {
-                                quantity = it.toDouble()
+                                if (invoiceViewModel.article.unit == UnitArticle.U) {
+                                    if (it.matches(Regex("^[0-9]*$"))) {
+                                        quantity = it
+                                        qte = it.toDoubleOrNull() ?: 0.0
+                                    }
+                                } else {
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        quantity = normalizedInput
+                                        qte = if (normalizedInput.startsWith(".") && normalizedInput.endsWith(".")) {
+                                            0.0
+                                        } else if (normalizedInput.endsWith(".")) {
+                                            normalizedInput.let { inp ->
+                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                            }
+                                        } else {
+                                            normalizedInput.toDoubleOrNull() ?: 0.0
+                                        }
+                                    }
+                                }
                             }
                             , onImage = {}
                         ) {
@@ -992,7 +1047,7 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                     }
                     Row{
                         InputTextField(
-                            labelValue = if (discount == 0.0) "" else discount.toString(),
+                            labelValue = discount,
                             label = "Discount",
                             singleLine = true,
                             maxLine = 1,
@@ -1000,7 +1055,19 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                                 keyboardType = KeyboardType.Number,
                                 imeAction =  ImeAction.Next),
                             onValueChange = {
-                                discount = it.toDouble()
+                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                    val normalizedInput = it.replace(',', '.')
+                                    discount = normalizedInput
+                                    dct = if (normalizedInput.startsWith(".") && normalizedInput.endsWith(".")) {
+                                        0.0
+                                    }else if (normalizedInput.endsWith(".")) {
+                                        normalizedInput.let { inp ->
+                                            if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                        }
+                                    } else {
+                                        normalizedInput.toDoubleOrNull() ?: 0.0
+                                    }
+                                }
                             }
                             , onImage = {}
                         ) {
@@ -1013,24 +1080,26 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                             modifier = Modifier.weight(1f)
                         ){
 
-                            ButtonSubmit(labelValue = "ok", color = Color.Green, enabled = !(quantity == 0.0 || !articleExist)) {
+                            ButtonSubmit(labelValue = "ok", color = Color.Green, enabled = !(qte == 0.0 || !articleExist)) {
                                     val command = invoiceViewModel.commandLineDto.copy()
-                                    command.quantity = quantity
-                                    command.discount = discount
+                                    command.quantity = qte
+                                    command.discount = qte
                                     command.article = invoiceViewModel.article
                                 if(update) {
                                     invoiceViewModel.substructCommandsLine()
                                 }
                                     command.totTva =
-                                        quantity * command.article?.article?.tva!! * invoiceViewModel.article.sellingPrice!! / 100
+                                        qte * command.article?.article?.tva!! * invoiceViewModel.article.sellingPrice!! / 100
                                     command.prixArticleTot =
-                                        quantity * command.article?.sellingPrice!!*(1-command.discount!!/100)
+                                        qte * command.article?.sellingPrice!!*(1-command.discount!!/100)
                                     command.invoice?.code = invoiceViewModel.lastInvoiceCode
                                 invoiceViewModel.addCommandLine(command)
                                     invoiceViewModel.commandLineDto = CommandLine()
                                     invoiceViewModel.article = ArticleCompany()
-                                    quantity = 0.0
-                                    discount = 0.0
+                                    qte = 0.0
+                                    dct = 0.0
+                                quantity = ""
+                                discount = ""
                                     openDialog = false
                                       onSubmit()
 
@@ -1151,8 +1220,14 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
     var qte by remember {
         mutableDoubleStateOf(0.0)
     }
-    var discount by remember {
+    var quantity by remember {
+        mutableStateOf("")
+    }
+    var dct by remember {
         mutableDoubleStateOf(0.0)
+    }
+    var discount by remember {
+        mutableStateOf("")
     }
     var isEnabled by remember {
         mutableStateOf(false)
@@ -1178,7 +1253,7 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                         }
                     }
                     InputTextField(
-                        labelValue = if(qte == 0.0) "" else qte.toString(),
+                        labelValue = quantity,
                         label = "quantity",
                         singleLine = true,
                         maxLine = 1,
@@ -1187,19 +1262,32 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                             imeAction = ImeAction.Next
                         ),
                         onValueChange = {
-                            qte = it.toDouble()
-                            if(qte == 0.0 ){
-                                isEnabled = false
-                            }else{
-                                isEnabled = true
+                            if(article.unit == UnitArticle.U){
+                                if (it.matches(Regex("^[0-9]*$"))) {
+                                    quantity = it
+                                    qte = it.toDoubleOrNull() ?: 0.0
+                                }
+                            }else if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                val normalizedInput = it.replace(',', '.')
+                                quantity = normalizedInput
+                                qte = if(normalizedInput.startsWith(".")) 0.0
+                                else if (normalizedInput.endsWith(".")) {
+                                    normalizedInput.let { inp ->
+                                        if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                    }
+                                } else {
+                                    normalizedInput.toDoubleOrNull() ?: 0.0
+                                }
                             }
+
+                            isEnabled = qte != 0.0
                                         },
                         onImage = {}
                     ) {
 
                     }
                     InputTextField(
-                        labelValue = if(discount == 0.0) "" else discount.toString(),
+                        labelValue = discount,
                         label = "discount",
                         singleLine = true,
                         maxLine = 1,
@@ -1208,7 +1296,18 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                             imeAction = ImeAction.Next
                         ),
                         onValueChange = {
-                            discount = it.toDouble()
+                            if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                val normalizedInput = it.replace(',', '.')
+                                discount = normalizedInput
+                                dct = if(normalizedInput.startsWith(".")) 0.0
+                                else if (normalizedInput.endsWith(".")) {
+                                    normalizedInput.let { inp ->
+                                        if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                    }
+                                } else {
+                                    normalizedInput.toDoubleOrNull() ?: 0.0
+                                }
+                            }
                                         },
                         onImage = {}
                     ) {
@@ -1219,7 +1318,7 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                             ButtonSubmit(labelValue = "Ok", color = Color.Green, enabled = isEnabled) {
                                 val command = invoiceViewModel.commandLineDto.copy()
                                 command.quantity = qte
-                                command.discount = discount
+                                command.discount = dct
                                 command.article = article
                                 if(update) {
                                     invoiceViewModel.substructCommandsLine()
@@ -1230,7 +1329,9 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                                 invoiceViewModel.addCommandLine(command)
                                 invoiceViewModel.commandLineDto = CommandLine()
                                 qte = 0.0
-                                discount = 0.0
+                                quantity = ""
+                                dct = 0.0
+                                discount = ""
                                 openDialog = false
                                 onSubmit()
                             }

@@ -27,11 +27,11 @@ interface ArticleRepository {
     suspend fun getArticleByBarcode(bareCode : String) : Response<ArticleCompanyDto>
     fun getAllCompanyArticles(companyId : Long) : Flow<PagingData<ArticleWithArticleCompany>>
     fun getArticlesByCompanyAndCategoryOrSubCategory(companyId : Long , categoryId: Long, subcategoryId: Long) : Flow<PagingData<ArticleCompanyDto>>
-    suspend fun deleteArticle(id: String): Response<Void>
+    suspend fun deleteArticle(id: Long): Response<Void>
 
     suspend fun addArticle(article:String, file : File):Response<Void>
 
-    suspend fun addArticleWithoutImage(article: String, articleId : Long):Response<Void>
+    suspend fun addArticleWithoutImage(article: ArticleCompanyDto, articleId : Long):Response<ArticleCompanyDto>
     suspend fun getAllArticlesContaining(search : String, searchType: SearchType) : Response<List<ArticleCompanyDto>>
     suspend fun likeAnArticle(articleId : Long, isFav : Boolean) : Response<Void>
     suspend fun sendComment(comment : String, articleId : Long) : Response<Void>

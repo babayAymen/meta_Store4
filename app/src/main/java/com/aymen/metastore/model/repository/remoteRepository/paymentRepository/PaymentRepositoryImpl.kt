@@ -8,8 +8,8 @@ import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.PaymentForProvidersDto
 import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.paging.remotemediator.BuyHistoryMediator
-import com.aymen.metastore.model.entity.paging.InCompleteRemoteMediator
-import com.aymen.metastore.model.entity.paging.NotPaidremoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.InCompleteRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.NotPaidremoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.GetInvoicesByStatusPagingSource
 import com.aymen.metastore.model.entity.paging.pagingsource.PayedPagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase

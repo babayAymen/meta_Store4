@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.admin
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.aymen.metastore.model.entity.model.Company
@@ -36,14 +39,16 @@ import com.google.gson.Gson
 
 @Composable
 fun AddClientScreen() {
-    val appViewModel : AppViewModel = viewModel()
-    val clientViewModel : ClientViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val clientViewModel : ClientViewModel = hiltViewModel()
     val context  = LocalContext.current
+    val update = clientViewModel.update
     val gson = Gson()
     val client = Company()
     var image by remember {
         mutableStateOf<Uri?>(null)
     }
+
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = {uri -> image = uri }
@@ -74,6 +79,18 @@ fun AddClientScreen() {
     }
     var companyEmail by remember {
         mutableStateOf("")
+    }
+        val  clien by clientViewModel.clientForUpdate.collectAsStateWithLifecycle()
+    if(update) {
+        companyName = clien?.name?:""
+        companyCode = clien?.code?:""
+        companyMatriculeFiscal = clien?.matfisc?:""
+        companysector = clien?.category?:CompanyCategory.DAIRY
+        companycapital = clien?.capital?:""
+        companyBankAccount = clien?.bankaccountnumber?:""
+        companyaddress = clien?.address?:""
+        companyPhone = clien?.phone?:""
+        companyEmail = clien?.email?:""
     }
     Surface(
         modifier = Modifier
@@ -269,6 +286,9 @@ item {
 
                 ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
                     appViewModel.updateShow("client")
+                    if(update){
+                        clientViewModel.update = false
+                    }
                 }
             }
             Column(
@@ -285,13 +305,24 @@ item {
                     client.address = companyaddress
                     client.phone = companyPhone
                     client.email = companyEmail
+                    if(update){
+                        client.id = clien?.id
+                    }
+
 
                     val photo = resolveUriToFile(image, context)
                     val clientJsonString = gson.toJson(client)
                     if (clientJsonString.isNotEmpty() && photo != null) {
-                           clientViewModel.addClient(clientJsonString,photo)
-                    } else {
-                           clientViewModel.addClientWithoutImage(clientJsonString)
+                        if(update){
+                            Log.e("updateclient","update with image")
+                            clientViewModel.updateClient(clientJsonString, photo)
+                        }else clientViewModel.addClient(clientJsonString,photo)
+                    } else if(update){
+                            Log.e("updateclient","update without image")
+                            clientViewModel.updateClientWithoutImage(clientJsonString)
+                        }else clientViewModel.addClientWithoutImage(clientJsonString)
+                    if(update){
+                        clientViewModel.update = false
                     }
                     appViewModel.updateShow("client")
                 }

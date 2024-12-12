@@ -95,7 +95,7 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun addArticle(article: String, file: File):Response<Void> {
         return articleRepository.addArticle(article, file)
     }
-    override suspend fun addArticleWithoutImage(article: String, articleId : Long):Response<Void> {
+    override suspend fun addArticleWithoutImage(article: ArticleCompanyDto, articleId: Long): Response<ArticleCompanyDto> {
         return articleRepository.addArticleWithoutImage(article, articleId)
     }
     override suspend fun getAllArticlesContaining(search: String, searchType : SearchType) = articleRepository.getAllArticlesContaining(search, searchType)
@@ -104,10 +104,6 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getComments(articleId: Long) = articleRepository.getComments(articleId)
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long) = articleRepository.addQuantityArticle(quantity, articleId)
     override suspend fun updateArticle(article: ArticleCompanyDto) = articleRepository.updateArticle(article)
-
-    override suspend fun deleteArticle(id: String): Response<Void> {
-        TODO("Not yet implemented")
-    }
 
     override suspend fun addCategoryApiWithImage(category: String, file: File) = categoryRepository.addCategoryApiWithImage(category, file)
     override suspend fun addCategoryApiWithoutImeg(category: String) = categoryRepository.addCategoryApiWithoutImeg(category)
@@ -180,8 +176,9 @@ class GlobalRepositoryImpl  @Inject constructor
  
 
 
-    override suspend fun addClient(client: String, file: File) = clientRepository.addClient(client, file)
-    override suspend fun addClientWithoutImage(client: String) = clientRepository.addClientWithoutImage(client)
+    override suspend fun addClient(client: String, file: File?) = clientRepository.addClient(client, file)
+    override suspend fun updateClient(client: String, file: File?) = clientRepository.updateClient(client , file)
+
     override suspend fun getAllMyClientContaining(clientName: String,companyId : Long) = clientRepository.getAllMyClientContaining(clientName,companyId = companyId)
     override suspend fun sendClientRequest(id: Long, type: Type) = clientRepository.sendClientRequest(id,type)
     override suspend fun getAllClientContaining(search: String, searchType: SearchType, searchCategory: SearchCategory) = clientRepository.getAllClientContaining(search,searchType,searchCategory)
@@ -351,7 +348,7 @@ class GlobalRepositoryImpl  @Inject constructor
         companyId: Long
     ) = articleRepository.getRandomArticlesBySubCategory(subcategoryId, companyId)
 
-    override fun getAllMyArticles(companyid : Long): Flow<PagingData<ArticleWithArticleCompany>> {
+    override fun getAllMyArticles(companyId : Long): Flow<PagingData<ArticleWithArticleCompany>> {
         TODO("Not yet implemented")
     }
 
@@ -390,5 +387,7 @@ class GlobalRepositoryImpl  @Inject constructor
     ): Flow<PagingData<ArticleCompanyDto>> {
         TODO("Not yet implemented")
     }
+
+    override suspend fun deleteArticle(id: Long) = articleRepository.deleteArticle(id)
 
 }

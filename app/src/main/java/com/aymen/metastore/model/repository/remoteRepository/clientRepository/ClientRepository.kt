@@ -19,8 +19,8 @@ interface ClientRepository {
     fun getAllClientUserContaining(companyId: Long, searchType: SearchType,search : String):Flow<PagingData<UserDto>>
     fun getMyClientForAutocompleteClient(companyId : Long , clientName : String) : Flow<PagingData<ClientProviderRelationDto>>
 
-    suspend fun addClient(client: String, file : File)
-    suspend fun addClientWithoutImage(client: String)
+    suspend fun addClient(client: String, file : File?): Response<ClientProviderRelationDto>
+    suspend fun updateClient(client: String, file : File?) :Response<CompanyDto>
     suspend fun getAllMyClientContaining(clientName : String, companyId : Long):Response<List<ClientProviderRelationDto>>
     suspend fun sendClientRequest(id : Long, type : Type):Response<Void>
     suspend fun getAllClientContaining(search : String, searchType: SearchType, searchCategory: SearchCategory):Response<List<CompanyDto>>

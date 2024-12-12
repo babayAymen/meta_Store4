@@ -32,17 +32,14 @@ class AllInvoiceRemoteMediator(
         state: PagingState<Int, InvoiceWithClientPersonProvider>
     ): MediatorResult {
         return try {
-        Log.e("loadTypeallinvoice","load type : $loadType")
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
                     val r = getNextPageClosestToCurrentPosition(state)
-                    Log.e("loadTypeallinvoice","refrechtype and r : $r")
                     r?.minus(1) ?: 0
                 }
 
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
-                    Log.e("loadTypeallinvoice","prepand type and prev page : $previousPage")
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = false
                     )
@@ -51,7 +48,6 @@ class AllInvoiceRemoteMediator(
 
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem(state)
-                    Log.e("loadTypeallinvoice","append type and next page : $nextPage")
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = false
                     )
@@ -64,7 +60,6 @@ class AllInvoiceRemoteMediator(
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             val isDataIncomplete = invoiceDao.getInvoiceCountBySource(source = true) == 0
-            Log.e("loadTypeallinvoice","there is  : $isDataIncomplete")
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH && isDataIncomplete){
@@ -120,15 +115,9 @@ class AllInvoiceRemoteMediator(
 
 
     private suspend fun deleteCache(){
-        try {
-            Log.d("deleteCache", "Clearing invoices and remote keys for provider: $id")
-            invoiceDao.clearAllTableAsProvider(id)
+          invoiceDao.clearAllTableAsProvider(id)
 
-            Log.d("deleteCache", "Cleared all invoices")
             invoiceDao.clearAllRemoteKeysTable()
-            Log.d("deleteCache", "Cleared all invoices and remote keys")
-        } catch (ex: Exception) {
-            Log.e("deleteCache", "Error while clearing cache: ${ex.message}", ex)
-        }
+
     }
 }

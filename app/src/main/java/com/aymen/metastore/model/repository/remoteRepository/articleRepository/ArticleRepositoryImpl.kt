@@ -161,7 +161,7 @@ class ArticleRepositoryImpl @Inject constructor
         subcategoryId: Long,
         companyId: Long
     ) = api.getRandomArticlesBySubCategory(subcategoryId, companyId)
-    override suspend fun deleteArticle(id: String) =api.deleteArticle(id)
+    override suspend fun deleteArticle(id: Long) =api.deleteArticle(id)
     override suspend fun addArticle(article: String, file: File): Response<Void> {
        return api.addArticle(article,
             file = MultipartBody.Part
@@ -172,26 +172,13 @@ class ArticleRepositoryImpl @Inject constructor
                 )
         )
     }
-    override suspend fun addArticleWithoutImage(article: String, articleId : Long) = api.addArticleWithoutImage(articleId,article)
+    override suspend fun addArticleWithoutImage(article: ArticleCompanyDto, articleId: Long): Response<ArticleCompanyDto> = api.addArticleWithoutImage(articleId,article)
     override suspend fun getAllArticlesContaining(search: String, searchType: SearchType) = api.getAllArticlesContaining(search,searchType)
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = api.likeAnArticle(articleId,isFav)
     override suspend fun sendComment(comment: String, articleId: Long) = api.sendComment(comment, articleId)
     override suspend fun getComments(articleId: Long): Response<List<CommentDto>> = api.getComments(articleId)
-    override suspend fun addQuantityArticle(quantity: Double, articleId: Long): Response<ArticleCompanyDto> {
-        try {
-            articleCompanyDao.upDateQuantity(articleId, quantity)
-        }catch (ex : Exception){
-            Log.e("addQuantityArticle", "exception is : ${ex.message}")
-        }
-        val response = api.addQuantityArticle(quantity, articleId)
-        if(response.isSuccessful){
-            response.body()?.let {
-                articleCompanyDao.insertSigleArticle( it.toArticleCompany(false))
-            }
+    override suspend fun addQuantityArticle(quantity: Double, articleId: Long): Response<ArticleCompanyDto> = api.addQuantityArticle(quantity, articleId)
 
-        }
-        return response
-    }
     override suspend fun updateArticle(article: ArticleCompanyDto): Response<ArticleCompanyDto> {
         try {
             articleCompanyDao.insertSigleArticle(article.toArticleCompany(false))

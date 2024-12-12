@@ -56,11 +56,12 @@ fun ClientScreen() {
                     Column {
                         SwipeToDeleteContainer(
                             client,
-                            onDelete = {
+                            onDelete = {item ->
                                 Log.e("aymenbabatdelete", "delete")
                             },
-                            onUpdate = {
-                                Log.e("aymenbabatdelete", "delete")
+                            onUpdate = {item ->
+                                clientViewModel.assignClientForUpdate(item.client!!)
+                                appViewModel.updateShow("add client")
 
                             }
                         ) { client ->

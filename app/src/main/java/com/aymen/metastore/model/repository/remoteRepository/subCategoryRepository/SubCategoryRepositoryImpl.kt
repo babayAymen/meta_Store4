@@ -7,9 +7,9 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.model.SubCategory
-import com.aymen.metastore.model.entity.paging.SubCategoryByCompanyIdRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.SubCategoryByCompanyIdRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.SubCategoryPagingSource
-import com.aymen.metastore.model.entity.paging.SubCategoryRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.SubCategoryRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel

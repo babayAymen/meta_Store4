@@ -45,6 +45,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.dependencyInjection.BASE_URL
+import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
@@ -58,11 +59,10 @@ import kotlinx.coroutines.delay
 fun ArticleScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
-    val sharedViewModel = hiltViewModel<SharedViewModel>()
     val adminArticles = articleViewModel.adminArticles.collectAsLazyPagingItems()
     val context = LocalContext.current
-    LaunchedEffect(key1 = Unit) {
-//        sharedViewModel.company.value.id?.let { articleViewModel.fetchAllMyArticlesApi(it) }
+    var art by remember {
+        mutableStateOf(ArticleCompany())
     }
     var articleIndex by remember {
         mutableIntStateOf(-1)
@@ -90,19 +90,6 @@ fun ArticleScreen() {
                     .fillMaxWidth()
             ){
                 LazyColumn {
-                    adminArticles.loadState.apply {
-                        if (refresh is LoadState.Loading) {
-                            item {
-                                LodingShape()
-                            }
-                        }
-                        if (refresh is LoadState.Error) {
-                            item {
-                                Toast.makeText(context,
-                                    (refresh as LoadState.Error).error.localizedMessage, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
                     items(
                        count =  adminArticles.itemCount,
                         key = adminArticles.itemKey{ it.id!! },
@@ -111,14 +98,11 @@ fun ArticleScreen() {
                         var addQuantity by remember {
                             mutableStateOf(false)
                         }
-                        var update by remember {
-                            mutableStateOf(false)
-                        }
                         if(articleCompany != null) {
                             SwipeToDeleteContainer(
                                 articleCompany,
-                                onDelete = {
-                                    Log.e("aymenbabatdelete", "delete")
+                                onDelete = {item ->
+                                    articleViewModel.deleteArticle(item)
                                 },
                                 onUpdate = {item ->
                                     articleViewModel.assignarticleCompany(item)
@@ -130,10 +114,11 @@ fun ArticleScreen() {
                                     articleCompany,
                                     image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.article?.category!!.ordinal}"
                                 ) {
+                                    art = article
                                     addQuantity = true
                                 }
                                 if (addQuantity) {
-                                    addQuantityDailog(article, addQuantity) {quantity ->
+                                    addQuantityDailog(art, addQuantity) {quantity ->
                                         if(quantity != 0.0) {
                                             articleViewModel.addQuantityArticle(
                                                 quantity,
@@ -144,6 +129,19 @@ fun ArticleScreen() {
                                         articleIndex = -1
                                     }
                                 }
+                            }
+                        }
+                    }
+                    adminArticles.loadState.apply {
+                        if (refresh is LoadState.Loading) {
+                            item {
+                                LodingShape()
+                            }
+                        }
+                        if (refresh is LoadState.Error) {
+                            item {
+                                Toast.makeText(context,
+                                    (refresh as LoadState.Error).error.localizedMessage, Toast.LENGTH_SHORT).show()
                             }
                         }
                     }

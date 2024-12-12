@@ -72,7 +72,7 @@ import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-//@RequiresApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val context = LocalContext.current
@@ -174,6 +174,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     }
     var paid by remember {
         mutableStateOf(PaymentStatus.NOT_PAID)
+    }
+    var discount by remember {
+        mutableStateOf("")
     }
 
     when(invoiceMode){
@@ -475,7 +478,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 horizontalAlignment = Alignment.End
                             ) {
                                 DiscountTextField(
-                                    labelValue = if (invoiceViewModel.discount == 0.0) "" else invoiceViewModel.discount.toString(),
+                                    labelValue = discount,
                                     label = "discount",
                                     singleLine = true,
                                     maxLine = 1,
@@ -485,7 +488,19 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     ),
                                     enabled = true
                                 ) {
-                                    invoiceViewModel.discount = it.toDouble()
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        discount = normalizedInput
+                                        invoiceViewModel.discount = if (normalizedInput.startsWith(".") && normalizedInput.endsWith(".")) {
+                                            0.0
+                                        }else if (normalizedInput.endsWith(".")) {
+                                            normalizedInput.let { inp ->
+                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                            }
+                                        } else {
+                                            normalizedInput.toDoubleOrNull() ?: 0.0
+                                        }
+                                    }
                                 }
                                 Text(text = "total tva: $tottva Dt")
                                 Text(text = "total price: $totprice Dt")
@@ -803,7 +818,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 horizontalAlignment = Alignment.End
                             ) {
                                 DiscountTextField(
-                                    labelValue = if (invoiceViewModel.discount == 0.0) "" else invoiceViewModel.discount.toString(),
+                                    labelValue = discount,
                                     label = "discount",
                                     singleLine = true,
                                     maxLine = 1,
@@ -813,8 +828,19 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     ),
                                     enabled = true
                                 ) {
-                                    invoiceViewModel.discount =
-                                        it.toDouble()
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        discount = normalizedInput
+                                        invoiceViewModel.discount = if (normalizedInput.startsWith(".") && normalizedInput.endsWith(".")) {
+                                            0.0
+                                        }else if (normalizedInput.endsWith(".")) {
+                                            normalizedInput.let { inp ->
+                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                            }
+                                        } else {
+                                            normalizedInput.toDoubleOrNull() ?: 0.0
+                                        }
+                                    }
                                 }
                                 Text(text = "total tva: $tottva Dt")
                                 Text(text = "total price: $totprice Dt")
@@ -1064,7 +1090,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                         .weight(1f)
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
-                                                order.article?.article!!.code?.let {
+                                                order.article.article!!.code?.let {
                                                     Text(
                                                         text = it,
                                                         modifier = Modifier
@@ -1081,21 +1107,21 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
                                                 Text(
-                                                    text = order.article?.unit.toString(),
+                                                    text = order.article.unit.toString(),
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
                                                 Text(
-                                                    text = order.article?.article!!.tva.toString(),
+                                                    text = order.article.article!!.tva.toString(),
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)
                                                         .background(if (index % 2 == 0) Color.Gray else Color.LightGray)
                                                 )
                                                 Text(
-                                                    text = order.article?.sellingPrice!!.toString(),
+                                                    text = order.article.sellingPrice!!.toString(),
                                                     modifier = Modifier
                                                         .padding(end = 3.dp)
                                                         .weight(1f)
