@@ -23,6 +23,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.aymen.metastore.model.entity.model.Company
@@ -37,14 +39,16 @@ import com.google.gson.Gson
 
 @Composable
 fun AddProviderScreen() {
-    val appViewModel : AppViewModel = viewModel()
-    val providerViewModel : ProviderViewModel = viewModel()
+    val appViewModel : AppViewModel = hiltViewModel()
+    val providerViewModel : ProviderViewModel = hiltViewModel()
     val context  = LocalContext.current
     val gson = Gson()
     val provider = Company()
+    val update = providerViewModel.update
     var image by remember {
         mutableStateOf<Uri?>(null)
     }
+
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = {uri -> image = uri }
@@ -58,7 +62,7 @@ fun AddProviderScreen() {
     var companyMatriculeFiscal by remember {
         mutableStateOf("")
     }
-    val companysector by remember {
+    var companysector by remember {
         mutableStateOf(CompanyCategory.DAIRY)
     }
     var companycapital by remember {
@@ -75,6 +79,18 @@ fun AddProviderScreen() {
     }
     var companyEmail by remember {
         mutableStateOf("")
+    }
+    val providerForUpdate by providerViewModel.providerForUpdate.collectAsStateWithLifecycle()
+    if(update) {
+        companyName = providerForUpdate.name
+        companyCode = providerForUpdate.code?:""
+        companyMatriculeFiscal = providerForUpdate.matfisc?:""
+        companysector = providerForUpdate.category?:CompanyCategory.DAIRY
+        companycapital = providerForUpdate.capital?:""
+        companyBankAccount = providerForUpdate.bankaccountnumber?:""
+        companyaddress = providerForUpdate.address?:""
+        companyPhone = providerForUpdate.phone?:""
+        companyEmail = providerForUpdate.email?:""
     }
     Surface(
         modifier = Modifier
@@ -278,14 +294,20 @@ fun AddProviderScreen() {
                             provider.address = companyaddress
                             provider.phone = companyPhone
                             provider.email = companyEmail
-
+                            if(update){
+                                provider.id = providerForUpdate.id
+                                provider.logo = providerForUpdate.logo
+                                provider.isVisible = providerForUpdate.isVisible
+                                provider.virtual = providerForUpdate.virtual
+                            }
                             val photo = resolveUriToFile(image, context)
                             val providerJsonString = gson.toJson(provider)
-                            if (providerJsonString.isNotEmpty() && photo != null) {
-                                providerViewModel.addProvider(providerJsonString,photo)
-                            } else {
-                                providerViewModel.addProviderWithoutImage(providerJsonString)
-                            }
+                            if (providerJsonString.isNotEmpty() && photo != null)
+                                if(update)providerViewModel.updateProvider(provider, providerJsonString, photo)
+                                else providerViewModel.addProvider(provider,providerJsonString,photo)
+                             else if(update) providerViewModel.updateProvider(provider, providerJsonString,null)
+                                 else providerViewModel.addProvider(provider,providerJsonString, null)
+                            providerViewModel.update = false
                             appViewModel.updateShow("provider")
                         }
                     }

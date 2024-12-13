@@ -229,8 +229,7 @@ fun <T> SwipeToDeleteContainer(
         ShowConfirmDialog { confirmed ->
             showDialog = false
             if (confirmed) {
-                // Proceed with deletion if the user confirms
-                isRemoved = true
+             //   isRemoved = true // si i want to remove the item from the list without database
                 onDelete(item)
             }
         }

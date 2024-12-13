@@ -2,7 +2,7 @@ package com.aymen.store.model.repository.remoteRepository.shoppingRepository
 
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import retrofit2.Response
 import javax.inject.Inject
 

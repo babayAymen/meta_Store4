@@ -7,11 +7,9 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.entity.Category
-import com.aymen.metastore.model.entity.room.entity.SubCategory
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class ArticleCompanyRandomMediator(

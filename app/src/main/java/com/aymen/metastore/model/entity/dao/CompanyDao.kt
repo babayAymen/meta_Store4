@@ -38,4 +38,16 @@ interface CompanyDao {
     @Query("SELECT * FROM client_provider_relation WHERE createdDate = :search")// select from company where (name LIKE '%' || :search || '%' OR code LIKE '%' || :search || '%')
      fun getAllCompaniesContaining(search : String) : PagingSource<Int,CompanyWithCompanyClient>
 
+     @Query("SELECT MAX(companyId) FROM company")
+     suspend fun getLatestCompanyId() : Long?
+
+     @Query("SELECT COUNT(*) FROM company ")
+     suspend fun getCompanyCount() : Int
+
+     @Upsert
+     suspend fun insertSingleCompany(company : Company)
+
+     @Query("DELETE FROM company WHERE companyId = :id")
+     suspend fun deleteCompanyById(id : Long)
+
 }

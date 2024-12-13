@@ -6,7 +6,7 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.entity.dto.CategoryDto
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 class CategoryPagingSource(private val api : ServiceApi, private val sharedViewModel: SharedViewModel) : PagingSource<Int, CategoryDto>() {// should change to category
 

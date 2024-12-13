@@ -50,11 +50,13 @@ fun ProviderScreen() {
                        if (provider != null) {
                            SwipeToDeleteContainer(
                                provider,
-                               onDelete = {
-                                   Log.e("aymenbabatdelete", "delete $provider")
+                               onDelete = {item ->
+                                   providerViewModel.deleteProvider(item)
                                },
-                               onUpdate = {
-                                   Log.e("aymenbabatdelete", "delete")
+                               onUpdate = {item ->
+                                   providerViewModel.associateProviderForUpdate(item.provider!!)
+                                   providerViewModel.update = true
+                                   appViewModel.updateShow("add provider")
 
                                }
                            ) { prvd ->

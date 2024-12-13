@@ -1,7 +1,7 @@
 package com.aymen.metastore.model.repository.remoteRepository.ratingRepository
 
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody

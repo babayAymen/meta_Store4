@@ -75,30 +75,37 @@ interface ClientProviderRelationDao {
 
     @Query("DELETE FROM client_provider_relation")
     suspend fun clearAllRelationTable()
-
-//    @Transaction
-//    @Query("SELECT * FROM company WHERE name LIKE '%' || :search || '%'") // WHERE username LIKE '%' || :search || '%'
-//     fun getAllUserContaining(search: String) : PagingSource<Int,CompanyWithCompanyClient>
-    @Transaction
+   @Transaction
     @Query("SELECT * FROM client_provider_relation WHERE createdDate = :search ")
      fun getAllUserContaining(search: String) : PagingSource<Int,CompanyWithCompanyClient>
 
+     @Query("SELECT MAX(id) FROM client_provider_relation WHERE providerId = :id")
+     suspend fun getLatestClientId(id : Long) : Long?
 
+     @Query("SELECT MAX(id) FROM client_provider_relation WHERE clientId = :id")
+     suspend fun getLatestProviderId(id : Long) : Long?
 
-//
-//    @Transaction
-//    @Query(
-//        "SELECT  c.*, r.*, u.* " +
-//                "    FROM client_provider_relation AS r " +
-//                "    JOIN user AS u ON r.userId = u.id " +
-//                "    JOIN company AS c ON r.clientId = c.companyId WHERE (r.providerId = :id AND" +
-//                " (u.username LIKE '%' || :clientName || '%' OR c.name LIKE '%' || :clientName || '%' OR c.code LIKE '%' || :clientName || '%'))"
-//    )
-//    fun testClientContaing(id : Long , clientName : String) :List<CompanyWithCompanyClient>
+     @Query("SELECT COUNT(*) FROM client_provider_relation WHERE providerId = :id")
+     suspend fun getClientCount(id : Long) : Int
 
+     @Query("SELECT COUNT(*) FROM client_provider_relation WHERE clientId = :id")
+     suspend fun getProviderCount(id : Long) : Int
 
-     @Transaction
-     @Query("SELECT * FROM client_provider_relation")
-    fun testClientContaing() :List<CompanyWithCompanyClient>
+     @Upsert
+     suspend fun insertSingleClientProviderRelation(relation : ClientProviderRelation)
 
+     @Upsert
+     suspend fun insertSingleClientRemoteKey(key : ClientRemoteKeysEntity)
+
+     @Query("DELETE FROM client_provider_relation WHERE id = :id")
+     suspend fun deleteClientProviderRelationById(id  :Long)
+
+     @Query("DELETE FROM client_remote_keys WHERE id = :id")
+     suspend fun deleteClientRelationRemoteKey(id : Long)
+
+     @Query("DELETE FROM provider_remote_keys WHERE id = :id")
+     suspend fun deleteProviderRelationRemoteKey(id : Long)
+
+     @Upsert
+     suspend fun insertSingleProviderRemoteKey(key : ProviderRemoteKeysEntity)
 }

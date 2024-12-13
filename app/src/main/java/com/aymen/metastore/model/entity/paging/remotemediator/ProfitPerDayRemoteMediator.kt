@@ -9,7 +9,7 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentPerDayRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class ProfitPerDayRemoteMediator(

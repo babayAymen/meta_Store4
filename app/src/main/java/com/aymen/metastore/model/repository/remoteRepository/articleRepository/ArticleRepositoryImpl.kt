@@ -26,7 +26,7 @@ import com.aymen.metastore.util.Resource
 import com.aymen.metastore.util.networkBoundResource
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.repository.remoteRepository.articleRepository.ArticleRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -37,9 +37,9 @@ import java.io.File
 import javax.inject.Inject
 
 class ArticleRepositoryImpl @Inject constructor
-    (       private val api: ServiceApi,
-            private val sharedViewModel: SharedViewModel,
-            private val room : AppDatabase
+    (private val api: ServiceApi,
+     private val sharedViewModel: SharedViewModel,
+     private val room : AppDatabase
             )
     : ArticleRepository
 {

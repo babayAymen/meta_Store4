@@ -15,7 +15,7 @@ import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurcha
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.Status
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

@@ -16,9 +16,9 @@ data class Company (
     var bankaccountnumber: String? = "",
     var email: String? = "",
     var capital: String? = "",
-    val logo: String? = "",
+    var logo: String? = "",
     val workForce: Int? = 0,
-    val virtual : Boolean? = false,
+    var virtual : Boolean? = false,
     val rate: Double? = 0.0,
     val raters: Int? = 0,
     val user: User? = null,
@@ -29,7 +29,7 @@ data class Company (
     val metaSeller : Boolean? = false,
     var longitude : Double? = 0.0,
     var latitude : Double? = 0.0,
-    val isVisible: PrivacySetting? = PrivacySetting.PUBLIC,
+    var isVisible: PrivacySetting? = PrivacySetting.PUBLIC,
     val createdDate : String? = "",
     val lastModifiedDate : String? = "",
     val invoiceType : InvoiceType? = InvoiceType.NOT_SAVED
@@ -65,4 +65,52 @@ data class Company (
 
         )
     }
+    fun toCompanyEntity() : com.aymen.metastore.model.entity.room.entity.Company{
+        return com.aymen.metastore.model.entity.room.entity.Company(
+            companyId = id,
+            name = name,
+            code = code,
+            matfisc = matfisc,
+            address = address,
+            phone = phone,
+            bankaccountnumber = bankaccountnumber,
+            email = email,
+            capital = capital,
+            logo = logo,
+            workForce = workForce,
+            virtual = virtual,
+            rate = rate,
+            raters = raters,
+            userId = user?.id,
+            parentCompanyId = parentCompany?.id,
+            category = category,
+            balance = balance,
+            isPointsSeller = isPointsSeller,
+            metaSeller = metaSeller,
+            longitude = longitude,
+            latitude = latitude,
+            isVisible = isVisible,
+            createdDate = createdDate,
+            lastModifiedDate = lastModifiedDate,
+            invoiceType = invoiceType
+
+        )
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -9,7 +9,7 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentForProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class PointsEspeceByDateRemoteMediator(
@@ -19,7 +19,7 @@ class PointsEspeceByDateRemoteMediator(
     private val beginDate : String,
     private val finalDate : String,
 
-):RemoteMediator<Int, PaymentForProvidersWithCommandLine>() {
+    ):RemoteMediator<Int, PaymentForProvidersWithCommandLine>() {
 
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()

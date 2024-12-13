@@ -313,14 +313,10 @@ item {
                     val photo = resolveUriToFile(image, context)
                     val clientJsonString = gson.toJson(client)
                     if (clientJsonString.isNotEmpty() && photo != null) {
-                        if(update){
-                            Log.e("updateclient","update with image")
-                            clientViewModel.updateClient(clientJsonString, photo)
-                        }else clientViewModel.addClient(clientJsonString,photo)
-                    } else if(update){
-                            Log.e("updateclient","update without image")
-                            clientViewModel.updateClientWithoutImage(clientJsonString)
-                        }else clientViewModel.addClientWithoutImage(clientJsonString)
+                        if(update) clientViewModel.updateClient(client,clientJsonString, photo)
+                        else clientViewModel.addClient(client,clientJsonString,photo)
+                    } else if(update) clientViewModel.updateClient(client,clientJsonString, null)
+                        else clientViewModel.addClient(client,clientJsonString, null)
                     if(update){
                         clientViewModel.update = false
                     }

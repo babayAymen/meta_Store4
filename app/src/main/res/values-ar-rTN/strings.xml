@@ -2,4 +2,21 @@
 <resources>
 
     <string name="hello">عسلامة</string>
+    <string name="wellcome_back">عسلامة مرة اخرى</string>
+    <string name="user_name">شنوة اسمك</string>
+    <string name="password">شنية كلمة السر</string>
+    <string name="forget_password">نسيت كلمة السر متاعك؟</string>
+    <string name="login">مريقل</string>
+    <string name="dont_have_account"> ماعندكش كونط؟</string>
+    <string name="register_now">اعمل واحد تو!</string>
+    <string name="name_or_password_wrong">اسمك والا كلمة السر غالطة زيد ثبت</string>
 </resources>
+
+
+
+
+
+
+
+
+

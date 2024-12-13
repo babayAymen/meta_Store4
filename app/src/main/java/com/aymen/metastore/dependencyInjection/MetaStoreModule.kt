@@ -40,7 +40,7 @@ import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import com.aymen.store.model.repository.globalRepository.GlobalRepositoryImpl
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -241,8 +241,8 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providerCategoryViewModel(repository: GlobalRepository,room : AppDatabase,sharedViewModel: SharedViewModel, useCases: MetaUseCases):CategoryViewModel{
-        return CategoryViewModel(repository,room, sharedViewModel, useCases)
+    fun providerCategoryViewModel(repository: GlobalRepository,room : AppDatabase,sharedViewModel: SharedViewModel, useCases: MetaUseCases, context: Context):CategoryViewModel{
+        return CategoryViewModel(repository,room, sharedViewModel, useCases, context)
     }
 
     @Provides
@@ -269,8 +269,8 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providerClientViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases): ClientViewModel {
-        return ClientViewModel(repository, room, sharedViewModel, useCases)
+    fun providerClientViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases, context: Context): ClientViewModel {
+        return ClientViewModel(repository, room, sharedViewModel, useCases, context)
     }
     @Provides
     @Singleton

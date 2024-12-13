@@ -2,6 +2,8 @@ package com.aymen.store.model.repository.ViewModel
 
 import android.util.Log
 import android.annotation.SuppressLint
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,8 +35,9 @@ import javax.inject.Inject
 class CategoryViewModel @Inject constructor (
     private val repository: GlobalRepository,
     private val room : AppDatabase,
-     sharedViewModel : SharedViewModel,
-    private val useCases: MetaUseCases
+     private val sharedViewModel : SharedViewModel,
+    private val useCases: MetaUseCases,
+    private val context : Context
 ): ViewModel() {
 
     private val _categories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
@@ -43,9 +46,11 @@ class CategoryViewModel @Inject constructor (
     private val _companyCategories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
     val companyCategories : StateFlow<PagingData<Category>> get() = _companyCategories
 
+    private val _categoryForUpdate : MutableStateFlow<Category> = MutableStateFlow(Category())
+    val categoryForUpdate : StateFlow<Category> get() = _categoryForUpdate
 
     var category by mutableStateOf(Category())
-
+    var update by mutableStateOf(false)
     val company: StateFlow<Company?> = sharedViewModel.company
     val user: StateFlow<User?> = sharedViewModel.user
 
@@ -59,6 +64,13 @@ init {
 
 }
 
+    fun assignCategoryForUpdate(item : Category){
+        _categoryForUpdate.value = item
+    }
+
+    fun deleteCategory(){
+        Toast.makeText(context, "sorry you can not delete category", Toast.LENGTH_SHORT).show()
+    }
 
     fun addCtagory(category: String, file: File) {
         viewModelScope.launch {

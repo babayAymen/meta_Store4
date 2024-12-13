@@ -5,7 +5,7 @@ import androidx.paging.PagingState
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.SearchType
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 class AllPersonContainingPagingSource(
     private val api : ServiceApi,

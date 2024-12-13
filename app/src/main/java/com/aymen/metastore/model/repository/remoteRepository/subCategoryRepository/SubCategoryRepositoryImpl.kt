@@ -16,7 +16,7 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.repository.globalRepository.BaseRepository
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

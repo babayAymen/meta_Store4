@@ -2,4 +2,13 @@
 <resources>
 
     <string name="hello">Bonjour</string>
+    <string name="wellcome_back">Bienvenue</string>
+    <string name="user_name">nom</string>
+    <string name="password">mot de passe</string>
+    <string name="forget_password">Vous avez oublié votre mot de passe ?</string>
+    <string name="login">Connexion</string>
+    <string name="dont_have_account">Vous n\'avez pas de compte ?</string>
+    <string name="register_now">Inscrivez-vous!</string>
+    <string name="name_or_password_wrong">Le nom d\'utilisateur ou le mot de passe est incorrect !</string>
+
 </resources>

@@ -58,14 +58,16 @@ fun CategoryScreen() {
                     contentType = categories.itemContentType { "category" }
                 ) { index ->
                     val category = categories[index]
-                    Log.e("category","cateory : $category")
                     if (category != null) {
                         SwipeToDeleteContainer(
                             item = category,
-                            onDelete = { /* handle delete action */ },
-                            onUpdate = {
-                                Log.e("aymenbabatdelete", "delete")
-
+                            onDelete = {
+                                categoryViewModel.deleteCategory()
+                            },
+                            onUpdate = {item ->
+                                categoryViewModel.update = true
+                                categoryViewModel.assignCategoryForUpdate(item)
+                                appViewModel.updateShow("add category")
                             }
                         ) { categoryItem ->
                             CategoryCardForAdmin(

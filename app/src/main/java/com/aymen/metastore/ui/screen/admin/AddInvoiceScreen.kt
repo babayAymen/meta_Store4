@@ -855,7 +855,6 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
-                                Text(text = stringResource(id = R.string.hello))
                                 Text(text = invoice?.provider?.name?:"")
                                 invoice?.provider?.phone?.let { Text(text = it) }
                                 invoice?.provider?.address?.let { Text(text = it) }

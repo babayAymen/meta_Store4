@@ -1,4 +1,4 @@
-package com.aymen.store.model.repository.globalRepository
+package com.aymen.metastore.model.repository.globalRepository
 
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.MessageType
@@ -36,7 +36,26 @@ import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.dto.WorkerDto
 import com.aymen.metastore.model.entity.model.PaginatedResponse
-import com.aymen.metastore.model.entity.room.entity.ArticleCompany
+import com.aymen.metastore.util.ARTICLE_BASE_URL
+import com.aymen.metastore.util.AUTH_BASE_URL
+import com.aymen.metastore.util.CATEGORY_BASE_URL
+import com.aymen.metastore.util.CLIENT_BASE_URL
+import com.aymen.metastore.util.COMMANDLINE_BASE_URL
+import com.aymen.metastore.util.COMPANY_BASE_URL
+import com.aymen.metastore.util.INVENTORY_BASE_URL
+import com.aymen.metastore.util.INVITATION_BASE_URL
+import com.aymen.metastore.util.INVOICE_BASE_URL
+import com.aymen.metastore.util.LIKE_BASE_URL
+import com.aymen.metastore.util.MESSAGE_BASE_URL
+import com.aymen.metastore.util.META_BASE_URL
+import com.aymen.metastore.util.ORDER_BASE_URL
+import com.aymen.metastore.util.POINT_BASE_URL
+import com.aymen.metastore.util.PROVIDER_BASE_URL
+import com.aymen.metastore.util.RATE_BASE_URL
+import com.aymen.metastore.util.SEARCH_BASE_URL
+import com.aymen.metastore.util.SUBCATEGORY_BASE_URL
+import com.aymen.metastore.util.UPDATE_IMAGE_URL
+import com.aymen.metastore.util.WORKER_BASE_URL
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -50,97 +69,57 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ServiceApi {
-    @GET("werehouse/article/getrandom/{categname}")
-    suspend fun getRandomArticlesByCompanyCategory(@Path("categname") categName : String): Response<List<ArticleCompanyDto>>
-    @GET("werehouse/article/category/{categId}/{companyId}")
-    suspend fun getRandomArticlesByCategory(@Path("categId") categoryId : Long, @Path("companyId") companyId : Long): Response<List<ArticleCompanyDto>>
-    @GET("werehouse/article/subcategory/{subcategId}/{companyId}")
-    suspend fun getRandomArticlesBySubCategory(@Path("subcategId") subcategoryId : Long , @Path("companyId") companyId : Long) : Response<List<ArticleCompanyDto>>
-    @DELETE("werehouse/article/delete/{id}")
-    suspend fun deleteArticle(@Path("id") id: Long): Response<Void>
+
+
+    @GET("$META_BASE_URL/make_as_point_seller/{status}/{companyId}")
+    suspend fun makeAsPointSeller(@Path("status") status : Boolean,@Path("companyId") id : Long)
     @Multipart
-    @POST("werehouse/company/add")
-    suspend fun addCompany(
-        @Query("company") company: String,
-        @Part file: MultipartBody.Part? = null): Response<Void>
-    @Multipart
-    @PUT("werehouse/company/update")
-    suspend fun updateCompany(
-        @Query("company") company: String,
-        @Part file: MultipartBody.Part? = null):Response<Void>
-    @Multipart
-    @PUT("werehouse/image/update")
+    @PUT(UPDATE_IMAGE_URL)
     suspend fun updateImage(@Part image: MultipartBody.Part? = null):Response<Void>
-    @GET("werehouse/company/get_my_parent/{companyId}")
-    suspend fun getMyParent(@Path("companyId") companyId : Long):Response<CompanyDto>
-    @Multipart
-    @POST("werehouse/article/add")
-    suspend fun addArticle(
-        @Query("article") article : String,
-        @Part file : MultipartBody.Part? = null
-    ): Response<Void>
-
-    @POST("werehouse/article/add/{id}")
-    suspend fun addArticleWithoutImage(@Path("id") articleId : Long, @Body article: ArticleCompanyDto):Response<ArticleCompanyDto>
-
-    @POST("api/auth/authentication")
-    suspend fun SignIn(@Body authenticationRequest: AuthenticationRequest): Response<AuthenticationResponse>
-
-    @POST("api/auth/register")
-    suspend fun SignUp(@Body registerRequest: RegisterRequest) : Response<AuthenticationResponse>
-
-    @GET("werehouse/subcategory/{categoryId}/{companyId}")
-    suspend fun getAllSubCategoryByCategory(@Path("categoryId") categoryId : Long, @Path("companyId") companyId : Long) : Response<List<SubCategoryDto>>
-
-    @Multipart
-    @POST("werehouse/category/add")
-    suspend fun addCategoryApiWithImage(
-        @Query("categoryDto") categoryDto:String,
-        @Part file: MultipartBody.Part? = null): Response<Void>
-
-    @POST("werehouse/category/add")
-    suspend fun addCategoryApiWithoutImage(@Query("categoryDto") categoryDto:String)
-
-    @Multipart
-    @POST("werehouse/subcategory/add")
-    suspend fun addSubCategoryWithImage(
-        @Query("sousCategory") sousCategory:String,
-        @Part file: MultipartBody.Part? = null): Response<Void>
-
-    @POST("werehouse/subcategory/add")
-    suspend fun addSubCategoryWithoutImage(@Query("sousCategory") sousCategory:String)
-
-
-
-    @Multipart
-    @POST("werehouse/client/add")
-    suspend fun addClient(@Query("company") companyDto:String, @Part file: MultipartBody.Part? = null): Response<ClientProviderRelationDto>
-
-    @POST("werehouse/client/add_without_image")
-    suspend fun addClientWithoutImage(@Query("company") companyDto:String): Response<ClientProviderRelationDto>
-
-    @Multipart
-    @PUT("werehouse/client/update")
-    suspend fun updateClient(@Query("company") companyDto:String, @Part file: MultipartBody.Part?): Response<CompanyDto>
-
-    @PUT("werehouse/client/update_without_image")
-    suspend fun updateClientWithoutImage(@Query("company") companyDto:String): Response<CompanyDto>
-   @Multipart
-    @POST("werehouse/provider/add")
-    suspend fun addProvider(
-        @Query("company") company:String,
-        @Part file: MultipartBody.Part? = null): Response<Void>
-    @POST("werehouse/provider/add")
-    suspend fun addProviderWithoutImage(@Query("company") company:String)
-    @GET("werehouse/point/get_my_profit_by_date/{beginDate}/{finalDate}")
-    suspend fun getMyProfitByDate(@Path("beginDate") beginDate : String ,@Path("finalDate") finalDate : String):Response<String>
-    @GET("werehouse/point/get_all_my_profits")
-    suspend fun getAllMyProfits(): Response<List<PaymentForProviderPerDayDto>>
-    @GET("werehouse/worker/getbycompany/{companyId}")
+    @GET("$WORKER_BASE_URL/getbycompany/{companyId}")
     suspend fun getAllMyWorker(@Path("companyId") companyId: Long): Response<List<WorkerDto>>
-    @GET("werehouse/invoice/getlastinvoice")
-    suspend fun getLastInvoiceCode():Response<Long>
-    @POST("werehouse/commandline/save/{clientId}")
+     @GET("$LIKE_BASE_URL/{articleId}/{isFav}")
+    suspend fun likeAnArticle(@Path("articleId") articleId : Long, @Path("isFav") isFav : Boolean):Response<Void>
+    @GET("$RATE_BASE_URL/get_rate/{id}/{type}")
+    suspend fun getRate(@Path("id") id : Long, @Path("type") type : AccountType):Response<List<RatingDto>>
+    @Multipart
+    @POST("$RATE_BASE_URL/do_rate")
+    suspend fun doRating(@Query("ratingDto") rating : String, @Part image: MultipartBody.Part? = null):Response<Void>
+    @GET("$RATE_BASE_URL/enable_to_comment_company/{companyId}")
+    suspend fun enabledToCommentCompany(@Path("companyId") companyId: Long):Response<Boolean>
+    @GET("$RATE_BASE_URL/enable_to_comment_user/{userId}")
+    suspend fun enabledToCommentUser(@Path("userId") userid: Long):Response<Boolean>
+    @GET("$RATE_BASE_URL/enable_to_comment_article/{companyId}")
+    suspend fun enabledToCommentArticle(@Path("companyId") companyId: Long):Response<Boolean>
+    @GET("$MESSAGE_BASE_URL/get_conversation")
+    suspend fun getAllMyConversations(@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ConversationDto>
+    @GET("$MESSAGE_BASE_URL/getconversation/{id}/{type}")
+    suspend fun getConversationByCaleeId(@Path("id") id : Long,@Path("type") type : MessageType): Response<ConversationDto>
+    @POST("$MESSAGE_BASE_URL/send")
+    suspend fun sendMessage( @Body conversation : ConversationDto):Response<Void>
+    @GET("$MESSAGE_BASE_URL/getmessage/{id}/{type}")
+    suspend fun getAllMessageByCaleeId(@Path("id") id : Long, @Path("type") type: AccountType, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
+    @GET("$MESSAGE_BASE_URL/get_message/{conversationId}")
+    suspend fun getAllMyMessageByConversationId(@Path("conversationId") conversationId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
+    @GET("$INVENTORY_BASE_URL/getbycompany/{companyId}")
+    suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InventoryDto>
+    @GET("$INVITATION_BASE_URL/get_invetation")
+    suspend fun getAllMyInvetations(@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvitationDto>
+    @GET("$INVITATION_BASE_URL/send/{id}/{type}")
+    suspend fun sendClientRequest(@Path("id") id : Long,@Path("type") type : Type):Response<Void>
+    @GET("$INVITATION_BASE_URL/response/{status}/{id}")
+    suspend fun requestResponse(@Path("status") status : Status, @Path("id") id : Long) : Response<Void>
+    @GET("$INVITATION_BASE_URL/cancel/{id}")
+    suspend fun cancelInvitation(@Path("id") id : Long) : Response<Void>
+    @GET("$SEARCH_BASE_URL/{id}")
+    suspend fun getAllHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SearchHistoryDto>
+    @GET("$SEARCH_BASE_URL/company/{search}/{searchType}/{searchCategory}")
+    suspend fun getAllClientContaining(@Path("search") search : String,@Path("searchType")  searchType: SearchType,
+                                       @Path("searchCategory")  searchCategory: SearchCategory):Response<List<CompanyDto>>
+    @GET("$SEARCH_BASE_URL/save_history/{category}/{id}")
+    suspend fun saveHistory(@Path("category") category : SearchCategory, @Path("id") id : Long):Response<Void>
+    ///////////////////////////////////////////////////////////////:command line ////////////////////////////////////////////////////////////////////::
+    @POST("$COMMANDLINE_BASE_URL/save/{clientId}")
     suspend fun addInvoice(@Body commandLineDtos : List<CommandLine>,
                            @Path("clientId") clientId : Long,
                            @Query("invoiceCode") invoiceCode : Long,
@@ -148,217 +127,201 @@ interface ServiceApi {
                            @Query("clientType") clientType : AccountType,
                            @Query("invoiceMode") invoiceMode: InvoiceMode,
                            @Query("type") type: String
-                           ):Response<Void>
-    @GET("werehouse/invoice/response/{invoiceId}/{status}")
-    suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
-    @GET("werehouse/message/getconversation/{id}/{type}")
-    suspend fun getConversationByCaleeId(@Path("id") id : Long,@Path("type") type : MessageType): Response<ConversationDto>
-    @POST("werehouse/message/send")
-    suspend fun sendMessage( @Body conversation : ConversationDto):Response<Void>
-    @POST("werehouse/order/")
-    suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<Void>
-    @POST("werehouse/order/test")
-    suspend fun test(@Body order : PurchaseOrderLineDto): Response<Void>
-    @GET("werehouse/order/{id}/{status}/{isall}")
-    suspend fun orderLineResponse(@Path("id") id : Long, @Path("status") status : Status, @Path("isall") isAll: Boolean):Response<Double>
-    @GET("werehouse/order/get_all_my_lines/{companyId}")
-    suspend fun getAllMyOrdersLine(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderLineDto>>
-//    @GET("werehouse/order/get_all_by_invoice/{invoiceId}")
-//    suspend fun getAllOrdersLineByInvoiceId(@Path("invoiceId") invoiceId: Long):Response<List<PurchaseOrderLineDto>>
-    @GET("werehouse/order/get_all_my_orders/{companyId}")
-    suspend fun getAllMyOrder(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderDto>>
-    @GET("werehouse/order/get_lines/{orderId}")
-    suspend fun getAllMyOrdersLineByOrderId(@Path("orderId") orderId : Long) : Response<List<PurchaseOrderLineDto>>
-    @GET("werehouse/invetation/response/{status}/{id}")
-    suspend fun RequestResponse(@Path("status") status : Status,@Path("id") id : Long) : Response<Void>
-    @GET("werehouse/invetation/cancel/{id}")
-    suspend fun cancelInvitation(@Path("id") id : Long) : Response<Void>
-    @GET("werehouse/search/user/{search}/{searchType}/{searchCategory}")
-    suspend fun getAllUsersContaining(@Path ("search") search : String,@Path("searchType")  searchType: SearchType,
-                                      @Path("searchCategory")  searchCategory: SearchCategory):Response<List<UserDto>>
-    @GET("werehouse/like/{articleId}/{isFav}")
-    suspend fun likeAnArticle(@Path("articleId") articleId : Long, @Path("isFav") isFav : Boolean):Response<Void>
-    @GET("werehouse/invetation/send/{id}/{type}")
-    suspend fun sendClientRequest(@Path("id") id : Long,@Path("type") type : Type):Response<Void>
-    @GET("werehouse/search/company/{search}/{searchType}/{searchCategory}")
-    suspend fun getAllClientContaining(@Path("search") search : String,@Path("searchType")  searchType: SearchType,
-                                       @Path("searchCategory")  searchCategory: SearchCategory):Response<List<CompanyDto>>
-    @GET("werehouse/search/save_history/{category}/{id}")
-    suspend fun saveHistory(@Path("category") category : SearchCategory, @Path("id") id : Long):Response<Void>
-    @GET("werehouse/company/me")
-    suspend fun getMeAsCompany(): Response<CompanyDto>
-    @POST("werehouse/article/sendComment/{articleId}")
-    suspend fun sendComment(@Body comment : String,@Path("articleId") articleId : Long):Response<Void>
-    @GET("werehouse/article/get_comments/{articleId}")
-    suspend fun getComments(@Path("articleId") articleId : Long):Response<List<CommentDto>>
-    @GET("werehouse/article/{articleId}/{quantity}")
-    suspend fun addQuantityArticle(@Path("quantity") quantity : Double, @Path("articleId") articleId : Long ): Response<ArticleCompanyDto>
-    @PUT("werehouse/article/update")
-    suspend fun updateArticle(@Body article : ArticleCompanyDto) : Response<ArticleCompanyDto>
-    @POST("werehouse/point/")
-    suspend fun sendPoints(@Body pointsPayment: PointsPaymentDto):Response<Void>
-    @POST("api/auth/refresh")
-    suspend fun refreshToken(@Body token: String): Response<AuthenticationResponse>
-    @GET("api/auth/myuser")
-    suspend fun getMyUserDetails():Response<UserDto>
-    @GET("werehouse/company/update_location/{latitude}/{logitude}")
-    suspend fun updateLocations(@Path("latitude") latitude : Double ,@Path("logitude") logitude : Double):Response<Void>
-    @GET("werehouse/rate/get_rate/{id}/{type}")
-    suspend fun getRate(@Path("id") id : Long, @Path("type") type : AccountType):Response<List<RatingDto>>
-    @Multipart
-    @POST("werehouse/rate/do_rate")
-    suspend fun doRating(@Query("ratingDto") rating : String, @Part image: MultipartBody.Part? = null):Response<Void>
-    @GET("werehouse/rate/enable_to_comment_company/{companyId}")
-    suspend fun enabledToCommentCompany(@Path("companyId") companyId: Long):Response<Boolean>
-    @GET("werehouse/rate/enable_to_comment_user/{userId}")
-    suspend fun enabledToCommentUser(@Path("userId") userid: Long):Response<Boolean>
-    @GET("werehouse/rate/enable_to_comment_article/{companyId}")
-    suspend fun enabledToCommentArticle(@Path("companyId") companyId: Long):Response<Boolean>
-
-    @GET("werehouse/article/search/{search}/{searchType}")
-    suspend fun getAllArticlesContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType) : Response<List<ArticleCompanyDto>>
-
-    @GET("werehouse/article/get_by_barcode")
-    suspend fun getArticleByBarcode(@Query("barcode") barCode : String) : Response<ArticleCompanyDto>
-//suspend fun doRating(
-//    @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>,
-//    @Part file: MultipartBody.Part? = null
-//): Response<Void>
-////////////////////////// pagination ///////////////////////////////////////////////////////
-    @GET("werehouse/aymen/make_as_point_seller/{status}/{companyId}")
-    suspend fun makeAsPointSeller(@Path("status") status : Boolean,@Path("companyId") id : Long)
-
-    @GET("werehouse/category/get_all/{companyId}")
-    suspend fun getPagingCategoryByCompany(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<CategoryDto>
-
-    @GET("werehouse/article/getAllMyArticle/{companyId}/{offset}/{pageSize}")
-    suspend fun getAll(@Path("companyId") companyId : Long?, @Path("offset") offset : Int, @Path("pageSize") pageSize : Int): List<ArticleCompanyDto>
-
-    @GET("werehouse/article/getrandom")
-    suspend fun getRandomArticles( @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): List<ArticleCompanyDto>
-
-    @GET("werehouse/subcategory/getbycompany/{companyId}")
-    suspend fun getAllSubCategories(@Path("companyId") companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
-
-    @GET("werehouse/subcategory/getbycategory_id/{companyId}")
-    suspend fun getAllSubCategoriesByCategoryId(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
-
-    @GET("werehouse/article/my_article/{id}")
-    suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
-
-
-    @GET("werehouse/article/search/{id}")
-    suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
-
-    @GET("werehouse/category/get/{companyId}")
-    suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CategoryDto>
-
-    @GET("werehouse/client/get_all_my/{companyId}")
-    suspend fun getAllMyClient(@Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
-
-    @GET("werehouse/client/get_all_client_person_containing/{companyId}")
-    suspend fun getAllClientsPersonContaining(@Path("companyId") companyId: Long,@Query("searchType")searchType : SearchType, @Query("search") libelle : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<UserDto>
-
-
-    @GET("werehouse/message/get_conversation")
-    suspend fun getAllMyConversations(@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ConversationDto>
-
-    @GET("werehouse/message/getmessage/{id}/{type}")
-    suspend fun getAllMessageByCaleeId(@Path("id") id : Long, @Path("type") type: AccountType, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
-
-    @GET("werehouse/message/get_message/{conversationId}")
-    suspend fun getAllMyMessageByConversationId(@Path("conversationId") conversationId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
-
-    @GET("werehouse/invoice/getMyInvoiceAsProvider/{companyId}")
-    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
-
-    @GET("werehouse/invoice/getMyInvoiceAsClient/{companyId}")
-    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
-
-    @GET("werehouse/invoice/get_by_status_as_provider/{companyId}")
-    suspend fun getAllMyInvoicesAsProviderAndStatus(@Path("companyId") companyId : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
-
-    @GET("werehouse/invoice/get_by_status_as_client/{id}")
-    suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
-
-    @GET("werehouse/inventory/getbycompany/{companyId}")
-    suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InventoryDto>
-
-    @GET("werehouse/invetation/get_invetation")
-    suspend fun getAllMyInvetations(@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvitationDto>
-
-    @GET("werehouse/point/get_all_my_as_company/{id}")
-    suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<PaymentForProvidersDto>
-
-    @GET("werehouse/point/get_all_my/{companyId}")
-    suspend fun getAllMyPointsPayment(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PointsPaymentDto>
-
-    @GET("werehouse/invoice/get_all_my_invoices_notaccepted/{companyId}")
-    suspend fun getAllMyPaymentNotAccepted(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
-
-    @GET("werehouse/company/get_companies_containing/{id}")
-    suspend fun getAllCompaniesContaining(@Path("id") id : Long, @Query("search") search : String, @Query("searchType") searchType : SearchType ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CompanyDto>
-
-    @GET("werehouse/article/get_articles_by_category/{id}")
-    suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleDto>
-
-    @GET("werehouse/provider/get_all_my/{companyId}")
-    suspend fun getAllMyProvider(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
-
-    @GET("werehouse/order/get_all_my_orders_not_accepted/{id}")
-    suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PurchaseOrderLineDto>
-
-    @GET("werehouse/order/get_by_order_id/{orderId}")
-    suspend fun getOrdersLineDetails(@Path("orderId") orderId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
-
-    @GET("werehouse/point/get_all_my/{id}")
-    suspend fun getRechargeHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PointsPaymentDto>
-
-    @GET("werehouse/invoice/getMyInvoiceAsProvider/{id}")
-    suspend fun getAllBuyHistory(@Path("id")id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
-
-    @GET("werehouse/invoice/get_by_payment_paid_status/{id}")
-    suspend fun getAllBuyHistoryByPaidStatusAsProvider(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
-
-    @GET("werehouse/invoice/get_by_payment_paid_status_as_client/{id}")
-    suspend fun getAllBuyHistoryByPaidStatusAsClient(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
-
-    @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_provider/{id}")
-    suspend fun getAllBuyHistoryByStatus(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
-
-    @GET("werehouse/invoice/get_all_my_invoices_not_accepted_as_client/{id}")
-    suspend fun getAllMyInvoicesNotAccepted(@Path("id") id : Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
-
-
-    @GET("werehouse/point/get_all_my_payment/{id}")
-    suspend fun getAllProvidersProfit(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<PaymentForProvidersDto>
-
-    @GET("werehouse/point/get_all_my_profits/{id}")
-    suspend fun getAllProfitPerDay(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
-
-    @GET("werehouse/point/get_all_my_profits_per_day/{id}")
-    suspend fun getMyHistoryProfitByDate(@Path("id") id : Long, @Query("beginday") beginDay : String, @Query("finalday") finalDay : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
-
-    @GET("werehouse/search/get_search_history/{id}")
-    suspend fun getAllHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SearchHistoryDto>
-
-    @GET("werehouse/order/get_purchaseorder_line_by_invoice_id/{companyId}")
-    suspend fun getAllMyOrdersLinesByInvoiceId(@Path("companyId") companyId : Long , @Query("invoiceId") invoiceId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
-
-    @GET("werehouse/client/get_all_my_client_containing/{companyId}")
-    suspend fun getAllMyClientContaining( @Path("companyId") companyId: Long,@Query("searchType") searchType : SearchType,@Query("search") clientName : String,  @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
-
-    @GET("werehouse/article/get_company_article_by_company_id/{companyId}")
-    suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<ArticleCompanyDto>
-
-    @GET("werehouse/article/get_company_article_by_category_or_subcategory/{companyId}")
-    suspend fun companyArticlesByCategoryOrSubCategory(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("subCategoryId") subcategoryId: Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleCompanyDto>
-
-     @GET("werehouse/commandline/get_command_line/{companyId}")
+    ):Response<Void>
+    @GET("$COMMANDLINE_BASE_URL/get_command_line/{companyId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("companyId") companyId : Long, @Query("invoiceId") invoiceId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<CommandLineDto>
+    //////////////////////////////////////////////////////////////:order/////////////////////////////////////////////////////////////////
+    @GET("$ORDER_BASE_URL/get_purchaseorder_line_by_invoice_id/{companyId}")
+    suspend fun getAllMyOrdersLinesByInvoiceId(@Path("companyId") companyId : Long , @Query("invoiceId") invoiceId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
+    @GET("$ORDER_BASE_URL/get_all_my_orders_not_accepted/{id}")
+    suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PurchaseOrderLineDto>
+    @POST(ORDER_BASE_URL)
+    suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<Void>
+    @POST("$ORDER_BASE_URL/test")
+    suspend fun test(@Body order : PurchaseOrderLineDto): Response<Void>
+    @GET("$ORDER_BASE_URL/{id}/{status}/{isall}")
+    suspend fun orderLineResponse(@Path("id") id : Long, @Path("status") status : Status, @Path("isall") isAll: Boolean):Response<Double>
+    @GET("$ORDER_BASE_URL/get_all_my_lines/{companyId}")
+    suspend fun getAllMyOrdersLine(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderLineDto>>
+    @GET("$ORDER_BASE_URL/get_all_my_orders/{companyId}")
+    suspend fun getAllMyOrder(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderDto>>
+    @GET("$ORDER_BASE_URL/get_lines/{orderId}")
+    suspend fun getAllMyOrdersLineByOrderId(@Path("orderId") orderId : Long) : Response<List<PurchaseOrderLineDto>>
+    @GET("$ORDER_BASE_URL/get_by_order_id/{orderId}")
+    suspend fun getOrdersLineDetails(@Path("orderId") orderId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
+    /////////////////////////////////////////////////////////////invoice////////////////////////////////////////////////////////////////
+    @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{id}")
+    suspend fun getAllBuyHistory(@Path("id")id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/get_by_payment_paid_status/{id}")
+    suspend fun getAllBuyHistoryByPaidStatusAsProvider(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/get_by_payment_paid_status_as_client/{id}")
+    suspend fun getAllBuyHistoryByPaidStatusAsClient(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/get_all_my_invoices_not_accepted_as_provider/{id}")
+    suspend fun getAllBuyHistoryByStatus(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/get_all_my_invoices_not_accepted_as_client/{id}")
+    suspend fun getAllMyInvoicesNotAccepted(@Path("id") id : Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{companyId}")
+    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/getMyInvoiceAsClient/{companyId}")
+    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/get_by_status_as_client/{id}")
+    suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/getlastinvoice")
+    suspend fun getLastInvoiceCode():Response<Long>
+    @GET("$INVOICE_BASE_URL/response/{invoiceId}/{status}")
+    suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
+    ////////////////////////////////////////////////////////////:point//////////////////////////////////////////////////////////:::
+    @GET("$POINT_BASE_URL/get_all_my_as_company/{id}")
+    suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<PaymentForProvidersDto>
+    @GET("$POINT_BASE_URL/get_all_my/{id}")
+    suspend fun getRechargeHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PointsPaymentDto>
+    @GET("$POINT_BASE_URL/get_all_my/{companyId}")
+    suspend fun getAllMyPointsPayment(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PointsPaymentDto>
+    @GET("$POINT_BASE_URL/get_my_profit_by_date/{beginDate}/{finalDate}")
+    suspend fun getMyProfitByDate(@Path("beginDate") beginDate : String ,@Path("finalDate") finalDate : String):Response<String>
+    @GET("$POINT_BASE_URL/get_all_my_profits")
+    suspend fun getAllMyProfits(): Response<List<PaymentForProviderPerDayDto>>
+    @GET("$POINT_BASE_URL/get_all_my_payment/{id}")
+    suspend fun getAllProvidersProfit(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<PaymentForProvidersDto>
+    @GET("$POINT_BASE_URL/get_all_my_profits/{id}")
+    suspend fun getAllProfitPerDay(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
+    @GET("$POINT_BASE_URL/get_all_my_profits_per_day/{id}")
+    suspend fun getMyHistoryProfitByDate(@Path("id") id : Long, @Query("beginday") beginDay : String, @Query("finalday") finalDay : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
+    @POST("$POINT_BASE_URL/")
+    suspend fun sendPoints(@Body pointsPayment: PointsPaymentDto):Response<Void>
+///////////////////////////////////////////////:article //////////////////////////////////////////////////////////////////////:
+    @GET("$ARTICLE_BASE_URL/getrandom/{categname}")
+    suspend fun getRandomArticlesByCompanyCategory(@Path("categname") categName : String): Response<List<ArticleCompanyDto>>
+    @GET("$ARTICLE_BASE_URL/category/{categId}/{companyId}")
+    suspend fun getRandomArticlesByCategory(@Path("categId") categoryId : Long, @Path("companyId") companyId : Long): Response<List<ArticleCompanyDto>>
+    @GET("$ARTICLE_BASE_URL/subcategory/{subcategId}/{companyId}")
+    suspend fun getRandomArticlesBySubCategory(@Path("subcategId") subcategoryId : Long , @Path("companyId") companyId : Long) : Response<List<ArticleCompanyDto>>
+    @DELETE("$ARTICLE_BASE_URL/delete/{id}")
+    suspend fun deleteArticle(@Path("id") id: Long): Response<Void>
+    @Multipart
+    @POST("$ARTICLE_BASE_URL/add")
+    suspend fun addArticle(
+        @Query("article") article : String,
+        @Part file : MultipartBody.Part? = null
+    ): Response<Void>
+    @POST("$ARTICLE_BASE_URL/add/{id}")
+    suspend fun addArticleWithoutImage(@Path("id") articleId : Long, @Body article: ArticleCompanyDto):Response<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/get_company_article_by_company_id/{companyId}")
+    suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/get_company_article_by_category_or_subcategory/{companyId}")
+    suspend fun companyArticlesByCategoryOrSubCategory(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("subCategoryId") subcategoryId: Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/getAllMyArticle/{companyId}/{offset}/{pageSize}")
+    suspend fun getAll(@Path("companyId") companyId : Long?, @Path("offset") offset : Int, @Path("pageSize") pageSize : Int): List<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/getrandom")
+    suspend fun getRandomArticles( @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): List<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/my_article/{id}")
+    suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/get_articles_by_category/{id}")
+    suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleDto>
+    @GET("$ARTICLE_BASE_URL/search/{id}")
+    suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
+    @POST("$ARTICLE_BASE_URL/sendComment/{articleId}")
+    suspend fun sendComment(@Body comment : String,@Path("articleId") articleId : Long):Response<Void>
+    @GET("$ARTICLE_BASE_URL/get_comments/{articleId}")
+    suspend fun getComments(@Path("articleId") articleId : Long):Response<List<CommentDto>>
+    @GET("$ARTICLE_BASE_URL/{articleId}/{quantity}")
+    suspend fun addQuantityArticle(@Path("quantity") quantity : Double, @Path("articleId") articleId : Long ): Response<ArticleCompanyDto>
+    @PUT("$ARTICLE_BASE_URL/update")
+    suspend fun updateArticle(@Body article : ArticleCompanyDto) : Response<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/search/{search}/{searchType}")
+    suspend fun getAllArticlesContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType) : Response<List<ArticleCompanyDto>>
+    @GET("$ARTICLE_BASE_URL/get_by_barcode")
+    suspend fun getArticleByBarcode(@Query("barcode") barCode : String) : Response<ArticleCompanyDto>
+/////////////////////////////////////////////////////////////////::client/////////////////////////////////////////////////////////////:
+    @Multipart
+    @POST("$CLIENT_BASE_URL/add")
+    suspend fun addClient(@Query("company") companyDto:String, @Part file: MultipartBody.Part? = null): Response<ClientProviderRelationDto>
+    @POST("$CLIENT_BASE_URL/add_without_image")
+    suspend fun addClientWithoutImage(@Query("company") companyDto:String): Response<ClientProviderRelationDto>
+    @Multipart
+    @PUT("$CLIENT_BASE_URL/update")
+    suspend fun updateClient(@Query("company") companyDto:String, @Part file: MultipartBody.Part?): Response<CompanyDto>
+    @PUT("$CLIENT_BASE_URL/update_without_image")
+    suspend fun updateClientWithoutImage(@Query("company") companyDto:String): Response<CompanyDto>
+    @DELETE("$CLIENT_BASE_URL/{relationId}")
+    suspend fun deleteClient(@Path("relationId") relationId : Long) : Response<Void>
+    @GET("$CLIENT_BASE_URL/get_all_my_client_containing/{companyId}")
+    suspend fun getAllMyClientContaining( @Path("companyId") companyId: Long,@Query("searchType") searchType : SearchType,@Query("search") clientName : String,  @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+    @GET("$CLIENT_BASE_URL/get_all_my/{companyId}")
+    suspend fun getAllMyClient(@Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+    @GET("$CLIENT_BASE_URL/get_all_client_person_containing/{companyId}")
+    suspend fun getAllClientsPersonContaining(@Path("companyId") companyId: Long,@Query("searchType")searchType : SearchType, @Query("search") libelle : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<UserDto>
+////////////////////////////////////////////////////////////////////////:provider///////////////////////////////////////////////////////////////////////////////////////:
+    @Multipart
+    @POST("$PROVIDER_BASE_URL/add")
+    suspend fun addProvider(
+        @Query("company") company:String,
+        @Part file: MultipartBody.Part? = null): Response<ClientProviderRelationDto>
 
+    @Multipart
+    @PUT("$PROVIDER_BASE_URL/update")
+    suspend fun updateProvider(
+        @Query("company") company:String,
+        @Part file: MultipartBody.Part? = null): Response<CompanyDto>
 
-
-
-
+    @PUT("$PROVIDER_BASE_URL/update_without_image")
+    suspend fun updateProviderWithoutImage(@Query("company") companyDto:String): Response<CompanyDto>
+    @POST("$PROVIDER_BASE_URL/add")
+    suspend fun addProviderWithoutImage(@Query("company") company:String) : Response<ClientProviderRelationDto>
+    @DELETE("$PROVIDER_BASE_URL/delete/{relationId}")
+    suspend fun deleteProvider(@Path("relationId")relationId : Long) : Response<Void>
+    @GET("$PROVIDER_BASE_URL/get_all_my/{companyId}")
+    suspend fun getAllMyProvider(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+/////////////////////////////////////////////////////////////////////////////company///////////////////////////////////////////////////////////////////////////////::
+@GET("$COMPANY_BASE_URL/me")
+suspend fun getMeAsCompany(): Response<CompanyDto>
+    @Multipart
+    @POST("$COMPANY_BASE_URL/add")
+    suspend fun addCompany(
+        @Query("company") company: String,
+        @Part file: MultipartBody.Part? = null): Response<Void>
+    @Multipart
+    @PUT("$COMPANY_BASE_URL/update")
+    suspend fun updateCompany(
+        @Query("company") company: String,
+        @Part file: MultipartBody.Part? = null):Response<Void>
+    @GET("$COMPANY_BASE_URL/get_my_parent/{companyId}")
+    suspend fun getMyParent(@Path("companyId") companyId : Long):Response<CompanyDto>
+    @GET("$COMPANY_BASE_URL/update_location/{latitude}/{logitude}")
+    suspend fun updateLocations(@Path("latitude") latitude : Double ,@Path("logitude") logitude : Double):Response<Void>
+    @GET("$COMPANY_BASE_URL/get_companies_containing/{id}")
+    suspend fun getAllCompaniesContaining(@Path("id") id : Long, @Query("search") search : String, @Query("searchType") searchType : SearchType ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CompanyDto>
+////////////////////////////////////////////////////:auth///////////////////////////////////////////////////////////////////////////
+    @POST("$AUTH_BASE_URL/authentication")
+    suspend fun signIn(@Body authenticationRequest: AuthenticationRequest): Response<AuthenticationResponse>
+    @POST("$AUTH_BASE_URL/refresh")
+    suspend fun refreshToken(@Body token: String): Response<AuthenticationResponse>
+    @GET("$AUTH_BASE_URL/myuser")
+    suspend fun getMyUserDetails():Response<UserDto>
+    @POST("$AUTH_BASE_URL/register")
+    suspend fun signUp(@Body registerRequest: RegisterRequest) : Response<AuthenticationResponse>
+///////////////////////////////////////////////////////////////category/////////////////////////////////////////////////////////////
+    @Multipart
+    @POST("$CATEGORY_BASE_URL/add")
+    suspend fun addCategoryApiWithImage(
+    @Query("categoryDto") categoryDto:String,
+    @Part file: MultipartBody.Part? = null): Response<Void>
+    @GET("$CATEGORY_BASE_URL/get/{companyId}")
+    suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CategoryDto>
+    @GET("$CATEGORY_BASE_URL/get_all/{companyId}")
+    suspend fun getPagingCategoryByCompany(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<CategoryDto>
+    @POST("$CATEGORY_BASE_URL/add")
+    suspend fun addCategoryApiWithoutImage(@Query("categoryDto") categoryDto:String)
+///////////////////////////////////////////////////////////////////subcategory/////////////////////////////////////////////////////////////////////
+    @Multipart
+    @POST("$SUBCATEGORY_BASE_URL/add")
+    suspend fun addSubCategoryWithImage(
+    @Query("sousCategory") sousCategory:String,
+    @Part file: MultipartBody.Part? = null): Response<Void>
+    @POST("$SUBCATEGORY_BASE_URL/add")
+    suspend fun addSubCategoryWithoutImage(@Query("sousCategory") sousCategory:String)
+    @GET("$SUBCATEGORY_BASE_URL/getbycompany/{companyId}")
+    suspend fun getAllSubCategories(@Path("companyId") companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
+    @GET("$SUBCATEGORY_BASE_URL/getbycategory_id/{companyId}")
+    suspend fun getAllSubCategoriesByCategoryId(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
 }

@@ -11,7 +11,7 @@ import com.aymen.metastore.model.entity.room.entity.SearchHistory
 import com.aymen.metastore.model.entity.room.remoteKeys.ClientProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.store.model.Enum.SearchType
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class CompanyRemoteMediator(

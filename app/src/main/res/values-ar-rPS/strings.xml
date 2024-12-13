@@ -2,4 +2,14 @@
 <resources>
 
     <string name="hello">مرحبا</string>
+    <string name="wellcome_back">مرحبا بعودتك</string>
+    <string name="user_name">الاسم</string>
+    <string name="password">كلمة المرور</string>
+    <string name="forget_password">هل نسيت كلمة السر؟</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="dont_have_account">اليس لديك حساب؟</string>
+    <string name="register_now">سجل الان!</string>
+    <string name="name_or_password_wrong">اسم المستخدم أو كلمة المرور غير صحيحة!</string>
+
 </resources>
+

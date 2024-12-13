@@ -21,7 +21,7 @@ import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Type
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -96,6 +96,9 @@ class ClientRepositoryImpl  @Inject constructor(
           }
         }
     }
+
+    override suspend fun deleteClient(relationId: Long) = api.deleteClient(relationId)
+
     override suspend fun getAllMyClientContaining(
         clientName: String,
         companyId: Long

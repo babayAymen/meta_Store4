@@ -1,6 +1,6 @@
 package com.aymen.metastore.model.repository.remoteRepository.aymenRepository
 
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import javax.inject.Inject
 
 class AymenRepositoryImpl @Inject constructor(

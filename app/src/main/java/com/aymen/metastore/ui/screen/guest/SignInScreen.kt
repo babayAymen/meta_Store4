@@ -21,11 +21,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
@@ -56,8 +59,7 @@ fun SignInScreen(){
 @Composable
 fun MyScaffold(
 ) {
-    val viewModel : SignInViewModel = viewModel()
-    val appViewModel : AppViewModel = viewModel()
+    val viewModel : SignInViewModel = hiltViewModel()
     val context = LocalContext.current
     val signin = AuthenticationRequest(
         username = "",
@@ -83,36 +85,36 @@ fun MyScaffold(
 
         Column(modifier = Modifier.fillMaxSize())
         {
-            HeadingText(value = "Welcome back")
-             textField(label = "user name",labelValue = userName, icon = Icons.Outlined.Person ){
+            HeadingText(value = stringResource(id = R.string.wellcome_back))
+             textField(label = stringResource(id = R.string.user_name),labelValue = userName, icon = Icons.Outlined.Person ){
                 userName = it
             }
             Spacer(modifier = Modifier.height(10.dp))
             password = passwordTextField(
-                labelValue = "Password",
+                labelValue = stringResource(id = R.string.password),
                 icon = Icons.Outlined.Lock ,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done)
                 )
-            NormalText(value = "Forget Your Password?", aligne = TextAlign.End)
+            NormalText(value = stringResource(id = R.string.forget_password), aligne = TextAlign.End)
             Spacer(modifier = Modifier.height(20.dp))
             if(password.isNotEmpty() && userName.isNotEmpty()){
                 isEnabled = true
             }
             signin.username = userName
             signin.password = password
-            ButtonComponent(value = "Login",isEnabled,
+            ButtonComponent(value = stringResource(id = R.string.login),isEnabled,
                 clickAction = {
                     viewModel.signIn(signin){
                         if(it){
                             RouteController.navigateTo(Screen.HomeScreen)
                         }else{
-                            Toast.makeText(context, "username or password is wrong", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.dont_have_account), Toast.LENGTH_SHORT).show()
                         }
                     }
                 })
             DividerTextComponent()
-            NormalText(value = "You do not have an account?", aligne = TextAlign.Center )
-            ClickableLoginTextComponent ("Register Now!",
+            NormalText(value = stringResource(id = R.string.dont_have_account), aligne = TextAlign.Center )
+            ClickableLoginTextComponent (stringResource(id = R.string.register_now),
                 onTextSelected = {
                     RouteController.navigateTo(Screen.SignUpScreen)
                 }

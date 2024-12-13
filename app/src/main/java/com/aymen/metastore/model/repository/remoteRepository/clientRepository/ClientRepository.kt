@@ -21,6 +21,7 @@ interface ClientRepository {
 
     suspend fun addClient(client: String, file : File?): Response<ClientProviderRelationDto>
     suspend fun updateClient(client: String, file : File?) :Response<CompanyDto>
+    suspend fun deleteClient(relationId : Long) : Response<Void>
     suspend fun getAllMyClientContaining(clientName : String, companyId : Long):Response<List<ClientProviderRelationDto>>
     suspend fun sendClientRequest(id : Long, type : Type):Response<Void>
     suspend fun getAllClientContaining(search : String, searchType: SearchType, searchCategory: SearchCategory):Response<List<CompanyDto>>

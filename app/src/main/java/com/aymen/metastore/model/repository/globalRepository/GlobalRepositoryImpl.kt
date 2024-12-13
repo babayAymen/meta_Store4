@@ -178,6 +178,7 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun addClient(client: String, file: File?) = clientRepository.addClient(client, file)
     override suspend fun updateClient(client: String, file: File?) = clientRepository.updateClient(client , file)
+    override suspend fun deleteClient(relationId: Long) = clientRepository.deleteClient(relationId)
 
     override suspend fun getAllMyClientContaining(clientName: String,companyId : Long) = clientRepository.getAllMyClientContaining(clientName,companyId = companyId)
     override suspend fun sendClientRequest(id: Long, type: Type) = clientRepository.sendClientRequest(id,type)
@@ -186,8 +187,12 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllHistory(id: Long): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
         TODO("Not yet implemented")
     }
-   override suspend fun addProvider(provider: String, file: File) = providerRepository.addProvider(provider,file)
-    override suspend fun addProviderWithoutImage(provider: String) = providerRepository.addProviderWithoutImage(provider)
+   override suspend fun addProvider(provider: String, file: File?): Response<ClientProviderRelationDto> = providerRepository.addProvider(provider,file)
+    override suspend fun updateProvider(provider: String, file: File?) = providerRepository.updateProvider(provider,file)
+
+    override suspend fun deleteProvider(id: Long) = providerRepository.deleteProvider(id)
+
+//    override suspend fun addProviderWithoutImage(provider: String) = providerRepository.addProviderWithoutImage(provider)
      override suspend fun getAllMyPaymentsEspeceByDate(date: String, findate: String) = paymentRepository.getAllMyPaymentsEspeceByDate(date, findate = findate)
     override fun getAllMyPaymentsEspeceByDate(
         id: Long,

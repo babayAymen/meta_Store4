@@ -9,7 +9,7 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class ArticleCompanyRemoteMediator(
@@ -17,7 +17,7 @@ class ArticleCompanyRemoteMediator(
     private val room : AppDatabase,
     private val id : Long,
 
-): RemoteMediator<Int, ArticleWithArticleCompany>() {
+    ): RemoteMediator<Int, ArticleWithArticleCompany>() {
 
 
     private val articleCompanyDao = room.articleCompanyDao()

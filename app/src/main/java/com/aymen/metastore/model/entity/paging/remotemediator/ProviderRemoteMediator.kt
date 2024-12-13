@@ -9,7 +9,7 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.ProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class ProviderRemoteMediator(

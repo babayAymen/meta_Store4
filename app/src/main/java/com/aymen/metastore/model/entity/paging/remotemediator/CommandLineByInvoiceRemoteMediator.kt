@@ -7,13 +7,9 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.entity.ArticleCompany
-import com.aymen.metastore.model.entity.room.entity.Category
-import com.aymen.metastore.model.entity.room.entity.Invoice
-import com.aymen.metastore.model.entity.room.entity.SubCategory
 import com.aymen.metastore.model.entity.room.remoteKeys.CommandLineByInvoiceRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class CommandLineByInvoiceRemoteMediator(

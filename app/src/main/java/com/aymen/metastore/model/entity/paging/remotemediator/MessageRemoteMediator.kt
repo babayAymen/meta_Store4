@@ -11,7 +11,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.MessageRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAndConversation
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class MessageRemoteMediator(

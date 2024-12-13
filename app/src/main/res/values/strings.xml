@@ -1,4 +1,12 @@
 <resources>
-    <string name="app_name">Meta Store</string>
+    <string name="app_name" translatable="false">Meta Store</string>
     <string name="hello">Hello</string>
+    <string name="wellcome_back">Welcome Back</string>
+    <string name="user_name">Username</string>
+    <string name="password">Password</string>
+    <string name="forget_password">Forget Your Password?</string>
+    <string name="login">Login</string>
+    <string name="dont_have_account">You do not have an account?</string>
+    <string name="register_now">Register now!</string>
+    <string name="name_or_password_wrong">username or password is wrong!</string>
 </resources>

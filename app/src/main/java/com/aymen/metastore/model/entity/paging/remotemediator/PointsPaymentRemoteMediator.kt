@@ -10,7 +10,7 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
 import com.aymen.metastore.util.PAGE_SIZE
-import com.aymen.store.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
 class PointsPaymentRemoteMediator( // i can use another mediator that retreive pointspayment

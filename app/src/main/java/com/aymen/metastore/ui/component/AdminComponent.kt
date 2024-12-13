@@ -778,6 +778,7 @@ fun ClientCard(client: ClientProviderRelation, image : String) {
 
 @Composable
 fun ProviderCard(provider: ClientProviderRelation, image : String) {
+    Log.e("providerCard","log image provider : $image")
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
