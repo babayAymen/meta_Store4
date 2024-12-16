@@ -79,24 +79,31 @@ class ShoppingViewModel @Inject constructor(
     var cost by mutableStateOf(BigDecimal.ZERO)
 
 init {
-    viewModelScope.launch {
-    accountTyp.data.collect { type ->
-        _accountType.value = type
-        when(type){
-            AccountType.COMPANY -> company.data.collect{
-                getAllMyOrdersNotAccepted(it.id?:0)
-                _myCompany.value = it
-            }
-            AccountType.USER -> user.data.collect{
-                getAllMyOrdersNotAccepted(it.id!!)
-                _myUser.value = it
-            }
-            AccountType.AYMEN -> TODO()
-            AccountType.NULL -> {}
-        }
-        Log.e("azerty","fun call")
+    when(sharedViewModel.accountType.value){
+        AccountType.COMPANY ->{
+            getAllMyOrdersNotAccepted(sharedViewModel.company.value.id?:0)}
+        AccountType.USER -> {
+            getAllMyOrdersNotAccepted(sharedViewModel.user.value.id?:0)}
+        AccountType.AYMEN -> {}
+        AccountType.NULL -> {}
     }
-    }
+//    viewModelScope.launch {
+//    accountTyp.data.collect { type ->
+//        _accountType.value = type
+//        when(type){
+//            AccountType.COMPANY -> company.data.collect{
+//                getAllMyOrdersNotAccepted(it.id?:0)
+//                _myCompany.value = it
+//            }
+//            AccountType.USER -> user.data.collect{
+//                getAllMyOrdersNotAccepted(it.id!!)
+//                _myUser.value = it
+//            }
+//            AccountType.AYMEN -> {}
+//            AccountType.NULL -> {}
+//        }
+//    }
+//    }
 }
     fun removeOrderById(index: Int) {
         orderArray = orderArray.toMutableList().also {
@@ -220,9 +227,6 @@ fun submitShopping(newBalance: BigDecimal) {
 
     fun getAllMyOrdersNotAccepted(id : Long) {
         viewModelScope.launch {
-
-            Log.e("aymenbabayOrder","orderLineResponse exption: $id")
-
                 useCases.getAllMyOrdersNotAccepted(id)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)

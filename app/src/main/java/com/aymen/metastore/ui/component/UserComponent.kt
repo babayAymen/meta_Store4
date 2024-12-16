@@ -414,7 +414,9 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>, isEnabled : Bo
                                         articleViewModel.makeItAsFav(it)
                                     }
                                 )
-                                Text(text = "${it.likeNumber ?: 0}k")
+                                if (it.likeNumber != null) {
+                                    Text(text = "${if (it.likeNumber >= 1000000L) it.likeNumber.div(1000000L) else if (it.likeNumber >= 1000L) it.likeNumber.div(1000L) else it.likeNumber} ${if (it.likeNumber >= 1000000L) "M" else if (it.likeNumber >= 1000L) "K" else ""}")
+                                }
                             }
                         }
                         Column(
@@ -514,7 +516,7 @@ fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
 
 @Composable
 fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(Type) -> Unit) {
-    val sharedViewModel : SharedViewModel = viewModel()
+    val sharedViewModel: SharedViewModel = hiltViewModel()
     var openDialog by remember {
         mutableStateOf(isOpen)
     }
@@ -529,59 +531,62 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
     }
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = selected) {
-        if(accountType == AccountType.USER) {
-            if(isCompany){
-            when (subType) {
-                SubType.CLIENT -> {
-                    type = Type.USER_SEND_CLIENT_COMPANY
-                }
+        if (selected){
+            if (accountType == AccountType.USER) {
+                if (isCompany) {
+                    when (subType) {
+                        SubType.CLIENT -> {
+                            type = Type.USER_SEND_CLIENT_COMPANY
+                        }
 
-                SubType.WORKER -> {
-                    type = Type.USER_SEND_WORKER_COMPANY
+                        SubType.WORKER -> {
+                            type = Type.USER_SEND_WORKER_COMPANY
+                        }
+
+                        else -> {
+                        }
+                    }
                 }
-                else -> {
+            } else {
+                if (isCompany) {
+                    when (subType) {
+                        SubType.CLIENT -> {
+                            type = Type.COMPANY_SEND_CLIENT_COMPANY
+                        }
+
+                        SubType.PROVIDER -> {
+                            type = Type.COMPANY_SEND_PROVIDER_COMPANY
+                        }
+
+                        SubType.PARENT -> {
+                            type = Type.COMPANY_SEND_PARENT_COMPANY
+                        }
+
+                        else ->
+                            Type.OTHER
+                    }
+                } else {
+                    when (subType) {
+                        SubType.CLIENT -> {
+                            type = Type.COMPANY_SEND_PROVIDER_USER
+                        }
+
+                        SubType.WORKER -> {
+                            type = Type.COMPANY_SEND_WORKER_USER
+                        }
+
+                        else ->
+                            Type.OTHER
+                    }
                 }
+                if (type != Type.OTHER) {
+                    Log.e("type", "type $type")
                 }
             }
-        }
-        else {
-            if (isCompany) {
-                when (subType) {
-                    SubType.CLIENT -> {
-                        type = Type.COMPANY_SEND_CLIENT_COMPANY
-                    }
-
-                    SubType.PROVIDER -> {
-                        type = Type.COMPANY_SEND_PROVIDER_COMPANY
-                    }
-
-                    SubType.PARENT -> {
-                        type = Type.COMPANY_SEND_PARENT_COMPANY
-                    }
-
-                    else ->
-                        Type.OTHER
-                }
-            }
-            else{
-                when (subType) {
-                    SubType.CLIENT -> {
-                        type = Type.COMPANY_SEND_PROVIDER_USER
-                    }
-                    SubType.WORKER -> {
-                        type = Type.COMPANY_SEND_WORKER_USER
-                    }
-                    else ->
-                        Type.OTHER
-                }
-            }
-            if (type != Type.OTHER) {
-                Log.e("type","type $type")
-            }
-        }
 
         onSelected(type)
     }
+}
     Icon(imageVector = Icons.Default.AddBusiness,
         contentDescription = "add as provider",
         Modifier.clickable {

@@ -193,9 +193,8 @@ class InvoiceViewModel @Inject constructor(
                 getAllMyInvoicesAsClient()
             }
             AccountType.USER -> {
-                Log.e("accounttype", "type in viewmodel $type")
                 getAllMyInvoicesAsClient()
-                getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id!!)
+                getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id?:0)
             }
             AccountType.AYMEN -> TODO()
             AccountType.NULL -> {}

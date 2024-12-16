@@ -62,8 +62,6 @@ class OrderNotAcceptedRemoteMediator(
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
-            Log.e("response","response order ${response.size}")
-            response.forEach { Log.e("response","response order ${response.size} ${it.article}") }
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){

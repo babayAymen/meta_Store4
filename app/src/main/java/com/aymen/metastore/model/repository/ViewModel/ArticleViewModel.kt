@@ -15,10 +15,10 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.model.Article
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Comment
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.entity.Comment
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.metastore.util.PAGE_SIZE
@@ -78,8 +78,10 @@ class ArticleViewModel @Inject constructor(
     private val _articleCompany : MutableStateFlow<ArticleCompany?> = MutableStateFlow(ArticleCompany())
     var articleCompany : StateFlow<ArticleCompany?>  = _articleCompany
 
+    private val _commentArticle : MutableStateFlow<PagingData<Comment>> = MutableStateFlow(PagingData.empty())
+    val commentArticle : StateFlow<PagingData<Comment>> get() = _commentArticle
+
     var article by mutableStateOf(Article())
-    var allComments by mutableStateOf(emptyList<Comment>())
     var myComment by mutableStateOf("")
     var upDate by mutableStateOf(false)
     init {
@@ -297,7 +299,12 @@ class ArticleViewModel @Inject constructor(
 
         fun getAllArticleComments() {
             viewModelScope.launch(Dispatchers.IO) {
-
+                    useCases.getArticleComment(articleCompany.value?.id!!)
+                        .distinctUntilChanged()
+                        .cachedIn(viewModelScope)
+                        .collect{
+                            _commentArticle.value = it.map { comment -> comment.toCommentModel() }
+                        }
             }
         }
 

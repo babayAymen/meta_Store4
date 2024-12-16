@@ -69,9 +69,7 @@ fun ShoppingScreen() {
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val myInvoicesAccepted = if(accountType == AccountType.USER)invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()else null
     val invoicesNotAccepted = if(accountType == AccountType.USER)invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()else null
-LaunchedEffect(key1 = accountType) {
-    Log.e("accounttype","acount type : $accountType from shopping screen")
-}
+
     var order by remember {
         mutableStateOf(PurchaseOrder())
     }
@@ -226,7 +224,6 @@ LaunchedEffect(key1 = accountType) {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Log.e("purchaseorder","size ${allMyOrdersNotAccepted.itemCount}")
                             items(count = allMyOrdersNotAccepted.itemCount,
                                 key = allMyOrdersNotAccepted.itemKey{it.id!!})
                             { index: Int ->

@@ -6,7 +6,7 @@ class Comment (
      val content: String = "",
      val user: User? = null,
      val company: Company? = null,
-     val article: Article? = null,
+     val article: ArticleCompany? = null,
      val createdDate : String = "",
      val lastModifiedDate : String = "",
 )

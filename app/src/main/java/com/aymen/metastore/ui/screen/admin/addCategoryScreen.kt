@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
@@ -40,6 +41,7 @@ fun AddCategoryScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val category = Category()
+    val update = categoryViewModel.update
     var libelle by remember {
         mutableStateOf("")
     }
@@ -53,6 +55,11 @@ fun AddCategoryScreen() {
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = {uri -> image = uri }
     )
+    val categoryForUpdate = categoryViewModel.categoryForUpdate.collectAsStateWithLifecycle()
+    if(update){
+        libelle = categoryForUpdate.value.libelle?:""
+        code = categoryForUpdate.value.code?:""
+    }
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -125,14 +132,15 @@ fun AddCategoryScreen() {
                         ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true) {
                             category.libelle = libelle
                             category.code = code
-
+                            if(update) category.id = categoryForUpdate.value.id
                             val photo = resolveUriToFile(image, context)
                             val categoryJsonString = gson.toJson(category)
-                            if (categoryJsonString.isNotEmpty() && photo != null) {
-                                categoryViewModel.addCtagory(categoryJsonString, photo)
-                            } else {
-                                categoryViewModel.addCategoryWithoutImage(categoryJsonString)
-                            }
+                            if (categoryJsonString.isNotEmpty() && photo != null)
+                                if(update) categoryViewModel.updateCategory(category, categoryJsonString, photo)
+                                else categoryViewModel.addCtagory(category,categoryJsonString, photo)
+                            else if(update) categoryViewModel.updateCategory(category, categoryJsonString, null)
+                                else categoryViewModel.addCtagory(category,categoryJsonString, null)
+                            categoryViewModel.update = false
                             appViewModel.updateShow("category")
                         }
                     }

@@ -14,7 +14,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         ),
-        ForeignKey(entity = Article::class, parentColumns = ["id"], childColumns = ["articleId"],
+        ForeignKey(entity = ArticleCompany::class, parentColumns = ["id"], childColumns = ["articleId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE),
     ])
@@ -28,9 +28,9 @@ data class Comment(
     val createdDate : String = "",
     val lastModifiedDate : String = "",
 ){
-    fun toComment(user: com.aymen.metastore.model.entity.model.User,
-                  company: com.aymen.metastore.model.entity.model.Company,
-                  article: com.aymen.metastore.model.entity.model.Article):com.aymen.metastore.model.entity.model.Comment{
+    fun toComment(user: com.aymen.metastore.model.entity.model.User?,
+                  company: com.aymen.metastore.model.entity.model.Company?,
+                  article: com.aymen.metastore.model.entity.model.ArticleCompany?):com.aymen.metastore.model.entity.model.Comment{
         return com.aymen.metastore.model.entity.model.Comment(
             id = id,
             content = content,

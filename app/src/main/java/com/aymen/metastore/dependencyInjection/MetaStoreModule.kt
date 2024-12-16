@@ -109,7 +109,9 @@ import com.aymen.metastore.model.repository.remoteRepository.subCategoryReposito
 import com.aymen.metastore.model.usecase.GetAllCommandLineByInvoiceId
 import com.aymen.metastore.model.usecase.GetAllCompanyArticles
 import com.aymen.metastore.model.usecase.GetAllSubCategoriesByCompanyId
+import com.aymen.metastore.model.usecase.GetArticleComment
 import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCategory
+import com.aymen.metastore.model.usecase.GetCategoryTemp
 import com.aymen.metastore.model.usecase.GetMyClientForAutocompleteClient
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepository
@@ -131,7 +133,7 @@ import java.util.concurrent.Executors
 import javax.inject.Singleton
 
 //const val BASE_URL = "http://192.168.1.5:8080/"
-const val BASE_URL = "http://192.168.109.209:8080/"
+const val BASE_URL = "http://192.168.43.56:8080/"
 private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module
@@ -199,7 +201,9 @@ class MetaStoreModule {
             getAllSubCategoriesByCompanyId = GetAllSubCategoriesByCompanyId(repository = subCategoryRepository),
             getArticlesByCompanyAndCategoryOrSubCategory = GetArticlesByCompanyAndCategoryOrSubCategory(repository = articleRepository),
             getAllCommandLineByInvoiceId = GetAllCommandLineByInvoiceId(repository = invoiceRepository),
-            getMyClientForAutocompleteClient = GetMyClientForAutocompleteClient(repository = clientRepository)
+            getMyClientForAutocompleteClient = GetMyClientForAutocompleteClient(repository = clientRepository),
+            getCategoryTemp = GetCategoryTemp(repository = categoryRepository),
+            getArticleComment = GetArticleComment(repository = articleRepository)
 
         )
     }

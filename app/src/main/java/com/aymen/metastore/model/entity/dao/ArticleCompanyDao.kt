@@ -6,12 +6,14 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
+import com.aymen.metastore.model.entity.room.entity.Comment
 import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleContainingRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.CompanyArticleRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.store.model.Enum.CompanyCategory
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +34,9 @@ interface ArticleCompanyDao {
     @Upsert
     suspend fun insertSigleArticle(article: ArticleCompany)
 
+    @Transaction
+    @Query("SELECT * FROM comment WHERE articleId = :articleId")
+     fun getArticleComments(articleId : Long): PagingSource<Int, CommentWithArticleAndUserOrCompany>
     @Query("SELECT MAX(id) FROM article_company")
     suspend fun getLatestArticleId(): Long?
 
@@ -85,7 +90,7 @@ interface ArticleCompanyDao {
     @Query("SELECT * FROM article_company WHERE companyId = :companyId")
      fun getAllArticlesByCompanyId(companyId : Long) : PagingSource<Int,ArticleWithArticleCompany>
 
-    @Query("UPDATE article_company SET isFav = :isFave WHERE id = :articleId")
+    @Query("UPDATE random_article_company SET isFav = :isFave , likeNumber = likeNumber + 1 WHERE id = :articleId")
     suspend fun chageIsFav(articleId : Long , isFave : Boolean)
 
 

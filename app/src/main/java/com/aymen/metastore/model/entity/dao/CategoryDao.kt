@@ -32,16 +32,34 @@ interface CategoryDao {
     suspend fun getCategoryById(categoryId : Long) : Category
 
     @Transaction
-    @Query("SELECT * FROM category_werehouse WHERE companyId = :companyId")
+    @Query("SELECT * FROM category_werehouse WHERE companyId = :companyId  ORDER BY id DESC")
      fun getAllCategoriesByCompanyId(companyId : Long): PagingSource<Int, CategoryWithCompanyAndUser>
 
     @Transaction
     @Query("SELECT * FROM category_werehouse WHERE id = :categoryId")
     suspend fun getCategoryWithCompanyAndUser(categoryId: Long): CategoryWithCompanyAndUser?
 
-    @Query("DELETE FROM category_werehouse")
-    suspend fun clearAllCategoryTable()
+    @Query("DELETE FROM category_werehouse WHERE companyId = :id")
+    suspend fun clearAllCategoryTable(id : Long)
     @Query("DELETE FROM category_remote_keys_table")
     suspend fun clearAllRemoteKeysTable()
+
+    @Query("SELECT MAX(id) FROM category_werehouse WHERE companyId = :companyId")
+    suspend fun getLatestCategoryId(companyId : Long) : Long?
+    @Query("SELECT * FROM category_remote_keys_table ORDER BY id ASC LIMIT 1")
+    suspend fun getLatestCategoryRemoteKey(): CategoryRemoteKeysEntity?
+   @Query("SELECT * FROM category_remote_keys_table ORDER BY id DESC LIMIT 1")
+    suspend fun getFirstCategoryRemoteKey(): CategoryRemoteKeysEntity?
+
+    @Query("SELECT COUNT(*) FROM category_werehouse WHERE companyId = :companyId")
+    suspend fun getCategoryCount(companyId : Long) : Int
+    @Upsert
+    suspend fun insertSingCategory(cat : Category)
+    @Upsert
+    suspend fun insertSingelKey(key : CategoryRemoteKeysEntity)
+    @Query("DELETE FROM category_werehouse WHERE id = :id")
+    suspend fun deleteCategoryById(id : Long)
+    @Query("DELETE FROM category_remote_keys_table WHERE id = :id")
+    suspend fun deleteCategoryRemoteKeyById(id : Long)
 
 }

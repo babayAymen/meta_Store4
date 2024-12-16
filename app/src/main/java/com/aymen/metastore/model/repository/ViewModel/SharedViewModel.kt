@@ -62,22 +62,18 @@ class SharedViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             accountTypeDataStore.data.collect {
-
                 Log.e("SharedViewModel", "AccountType updated to: $it")
                 _accountType.value = it
-            }
-            launch {
-
-                companyDtoDataStore.data.collect {
-                    Log.e("SharedViewModel", "company updated to: $it")
-                    _company.value = it
+                companyDtoDataStore.data.collect { company ->
+                    Log.e("SharedViewModel", "company updated to: $company")
+                    _company.value = company
+                    userDtoDatastore.data.collect { user ->
+                        _user.value = user
+                    }
                 }
             }
-            userDtoDatastore.data.collect{
-                _user.value = it
-            }
-
         }
+
     }
 
     fun updateUserBalance(newBalance : Double){

@@ -15,9 +15,11 @@ import com.aymen.metastore.model.entity.paging.remotemediator.ArticleCompanyRemo
 import com.aymen.metastore.model.entity.paging.remotemediator.ArticleRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.CompanyArticleRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.CompanyArticlesByCategoryOrSubCategoryPagingSource
+import com.aymen.metastore.model.entity.paging.remotemediator.CommentArticleRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.util.PAGE_SIZE
@@ -35,7 +37,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Response
 import java.io.File
 import javax.inject.Inject
-
+@OptIn(ExperimentalPagingApi::class)
 class ArticleRepositoryImpl @Inject constructor
     (private val api: ServiceApi,
      private val sharedViewModel: SharedViewModel,
@@ -50,7 +52,6 @@ class ArticleRepositoryImpl @Inject constructor
     private val userDao = room.userDao()
     private val articleDao = room.articleDao()
 
-    @OptIn(ExperimentalPagingApi::class)
     override fun getRandomArticles(categoryName : CompanyCategory) :Flow<PagingData<RandomArticleChild>>{
             return Pager(
     config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -67,7 +68,6 @@ class ArticleRepositoryImpl @Inject constructor
             }
     }
 
-    @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>{
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -93,7 +93,6 @@ class ArticleRepositoryImpl @Inject constructor
             }
         ).flow
     }
-    @OptIn(ExperimentalPagingApi::class)
     override fun getAllArticlesByCategor(companyId : Long, companyCategory : CompanyCategory) :Flow<PagingData<Article>>{
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -109,7 +108,7 @@ class ArticleRepositoryImpl @Inject constructor
     }
 
     override suspend fun getArticleByBarcode(bareCode: String) = api.getArticleByBarcode(barCode = bareCode)
-    @OptIn(ExperimentalPagingApi::class)
+
     override fun getAllCompanyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -176,7 +175,19 @@ class ArticleRepositoryImpl @Inject constructor
     override suspend fun getAllArticlesContaining(search: String, searchType: SearchType) = api.getAllArticlesContaining(search,searchType)
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = api.likeAnArticle(articleId,isFav)
     override suspend fun sendComment(comment: String, articleId: Long) = api.sendComment(comment, articleId)
-    override suspend fun getComments(articleId: Long): Response<List<CommentDto>> = api.getComments(articleId)
+    override fun getArticleComments(articleId: Long): Flow<PagingData<CommentWithArticleAndUserOrCompany>> {
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = CommentArticleRemoteMediator(
+                api = api, room = room,  articleId = articleId
+            ),
+            pagingSourceFactory = { articleCompanyDao.getArticleComments(articleId = articleId)}
+        ).flow.map {
+            it.map { article ->
+                article
+            }
+        }
+    }
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long): Response<ArticleCompanyDto> = api.addQuantityArticle(quantity, articleId)
 
     override suspend fun updateArticle(article: ArticleCompanyDto): Response<ArticleCompanyDto> {

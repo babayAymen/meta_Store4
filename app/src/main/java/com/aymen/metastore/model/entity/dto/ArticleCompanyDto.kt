@@ -13,16 +13,16 @@ data class ArticleCompanyDto(
     var minQuantity: Double? = 0.0,
     var sharedPoint: Long? = null,
     var margin: Double? = 0.0,
-    var category: CategoryDto? = null,
-    var subCategory: SubCategoryDto? = null,
-    var provider: CompanyDto? = null,
-    var company: CompanyDto? = null,
     var isVisible: PrivacySetting? = PrivacySetting.PUBLIC,
     var sellingPrice: Double? = 0.0,
     var isFav : Boolean? = false,
-    var article : ArticleDto? = null,
     var isEnabledToComment : Boolean? = false,
     val likeNumber : Long? = null,
+    var article : ArticleDto? = null,
+    var subCategory: SubCategoryDto? = null,
+    var provider: CompanyDto? = null,
+    var category: CategoryDto? = null,
+    var company: CompanyDto? = null,
 ){
     fun toArticleCompany(isRandom : Boolean): ArticleCompany {
     return ArticleCompany(
@@ -73,16 +73,16 @@ data class ArticleCompanyDto(
             quantity,
             minQuantity,
             sharedPoint,
-            categoryId = category?.id,
-            subCategoryId = subCategory?.id,
-            providerId = provider?.id,
-            companyId = company?.id,
             isVisible = isVisible,
             sellingPrice = sellingPrice,
             isFav = isFav,
             articleId = article?.id,
             isEnabledToComment = isEnabledToComment,
-            likeNumber = likeNumber
+            likeNumber = likeNumber,
+            subCategoryId = subCategory?.id,
+            providerId = provider?.id,
+            companyId = company?.id,
+            categoryId = category?.id,
         )
     }
 }

@@ -35,6 +35,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
@@ -68,9 +70,9 @@ fun ArticleDetailsScreen() {
     }
     val company = companyViewModel.myCompany
     val article by articleViewModel.articleCompany.collectAsStateWithLifecycle()
-    val art = articleViewModel.article
     val userComment by articleViewModel.userComment.collectAsStateWithLifecycle()
     val companyComment by articleViewModel.companyComment.collectAsStateWithLifecycle()
+    val comments = articleViewModel.commentArticle.collectAsLazyPagingItems()
     var showComment by remember {
         mutableStateOf(false)
     }
@@ -86,11 +88,7 @@ fun ArticleDetailsScreen() {
     var comment by remember {
         mutableStateOf("")
     }
-    DisposableEffect(Unit) {
-        onDispose {
-            articleViewModel.allComments = emptyList()
-        }
-    }
+
     val listState = rememberLazyListState()
     Surface(
         modifier = Modifier
@@ -157,10 +155,13 @@ fun ArticleDetailsScreen() {
                         image = "${BASE_URL}werehouse/image/${article!!.article?.image}/article/${article!!.company?.category?.ordinal}"
                     ) {}
                 }
-                if (articleViewModel.allComments.isNotEmpty()) {
-                    items(articleViewModel.allComments) {
+                    items(count = comments.itemCount,
+                        key = comments.itemKey{it.id!!}
+                        ) {index ->
+                        val commantaire = comments[index]
+                if (commantaire != null) {
                         Text(text = if (userComment.id == null) companyComment.name else userComment.username!!)
-                        Text(text = it.content)
+                        Text(text = commantaire.content)
                         DividerTextComponent()
                     }
 

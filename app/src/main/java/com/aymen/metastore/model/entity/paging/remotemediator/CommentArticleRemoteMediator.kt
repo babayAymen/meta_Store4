@@ -1,4 +1,3 @@
-
 package com.aymen.metastore.model.entity.paging.remotemediator
 
 import android.util.Log
@@ -9,29 +8,31 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.CategoryRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.CommentArticleRemoteKeys
 import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
+import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
-class CategoryRemoteMediator(
-    private val api : ServiceApi,
+class CommentArticleRemoteMediator(
+    private val api: ServiceApi,
     private val room : AppDatabase,
-    private val id : Long?
-)
-    : RemoteMediator<Int, CategoryWithCompanyAndUser>() {
+    private val articleId : Long
+):RemoteMediator<Int, CommentWithArticleAndUserOrCompany>() {
 
-    private val categoryDao = room.categoryDao()
+    private val articleDao = room.articleDao()
+    private val articleCompanyDao = room.articleCompanyDao()
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
+    private val commentDao = room.commentDao()
 
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH
     }
 
-
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, CategoryWithCompanyAndUser>
+        state: PagingState<Int, CommentWithArticleAndUserOrCompany>
     ): MediatorResult {
         return try {
             val currentPage = when (loadType) {
@@ -40,7 +41,7 @@ class CategoryRemoteMediator(
                 }
 
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -55,7 +56,7 @@ class CategoryRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllCategoryByCompany(id!!,currentPage, state.config.pageSize)
+            val response = api.getArticleComments(articleId,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.last
             val prevPage = if (response.first) null else response.number - 1
             val nextPage = if (endOfPaginationReached) null else response.number + 1
@@ -65,18 +66,22 @@ class CategoryRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    categoryDao.insertKeys(response.content.map { article ->
-                        CategoryRemoteKeysEntity(
-                            id = article.id!!,
+                    commentDao.insertCommentRemoteKeys(response.content.map { comment ->
+                        CommentArticleRemoteKeys(
+                            id = comment.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage,
-                            lastUpdated = null
+                            articleId = comment.article?.id!!
                         )
                     })
+                    userDao.insertUser(response.content.map { user -> user.user?.toUser() })
+                    userDao.insertUser(response.content.map { user -> user.company?.user?.toUser() })
+                    companyDao.insertCompany(response.content.map { company -> company.company?.toCompany() })
+                    articleDao.insertArticle(response.content.map { article -> article.article?.article?.toArticle(false) })
+                    articleCompanyDao.insertArticle(response.content.map { article -> article.article?.toArticleCompany(true) })
+                    commentDao.insertComment(response.content.map { comment -> comment.toComment() })
 
-                    userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
-                    companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
-                    categoryDao.insertCategory(response.content.map {category -> category.toCategory() })
+
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -89,16 +94,16 @@ class CategoryRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, CategoryWithCompanyAndUser>): Int? {
-        return categoryDao.getFirstCategoryRemoteKey()?.prevPage
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return commentDao.getFirstCommentArticleRemoteKey()?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem() :Int? {
-        return categoryDao.getLatestCategoryRemoteKey()?.nextPage
+        return commentDao.getLatestCommentArticleRemoteKey()?.nextPage
     }
 
     private suspend fun deleteCache(){
-           categoryDao.clearAllCategoryTable(id?:0)
-        categoryDao.clearAllRemoteKeysTable()
+        commentDao.clearAllCommentArticleTableByArticleId(articleId)
+        commentDao.clearAllRemoteKeysTableByArticleId(articleId)
     }
 }

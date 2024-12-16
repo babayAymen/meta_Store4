@@ -15,9 +15,9 @@ data class CategoryDto(
 
     val company : CompanyDto? = null,
 
-    var createdDate : String = "",
+    var createdDate : String?,
 
-    var lastModifiedDate : String = "",
+    var lastModifiedDate : String?,
 
     ){
     fun toCategory() : Category {

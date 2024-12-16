@@ -26,9 +26,7 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 fun SubCategoryScreen() {
     val appViewModel: AppViewModel = hiltViewModel()
     val subCategoryViewModel: SubCategoryViewModel = hiltViewModel()
-    val sharedViewModel: SharedViewModel = hiltViewModel()
     val subcategories = subCategoryViewModel.subCategories.collectAsLazyPagingItems()
-    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -52,10 +50,12 @@ fun SubCategoryScreen() {
                     SwipeToDeleteContainer(
                         sub,
                         onDelete = {
-
+                            subCategoryViewModel.deleteSubCategories()
                         },
-                        onUpdate = {
-                            Log.e("aymenbabatdelete", "delete")
+                        onUpdate = {item ->
+                            subCategoryViewModel.update = true
+                            subCategoryViewModel.assignSubCategoryForUpdate(item)
+                            appViewModel.updateShow("add subCategory")
 
                         }
                     ) { subCategory ->

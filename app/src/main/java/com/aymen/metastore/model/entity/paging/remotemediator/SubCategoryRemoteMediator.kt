@@ -33,42 +33,39 @@ class SubCategoryRemoteMediator(
         loadType: LoadType,
         state: PagingState<Int, SubCategoryWithCategory>
     ): MediatorResult {
-        Log.e("subcategoryviewModel","call getAllSubCategoriesByCompanyId mediator1")
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                    0
                 }
 
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem(state)
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     previousePage
                 }
 
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     nextePage
                 }
             }
             val response = api.getAllSubCategories(id,currentPage, state.config.pageSize)
-            Log.e("subcategoryviewModel","call getAllSubCategoriesByCompanyId mediator")
-            Log.e("subcategoryviewModel","call getAllSubCategoriesByCompanyId ${response.size}")
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
-            val nextPage = if (endOfPaginationReached) null else currentPage + 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else response.number - 1
+            val nextPage = if (endOfPaginationReached) null else response.number + 1
 
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    subCategoryDao.insertKeys(response.map { article ->
+                    subCategoryDao.insertKeys(response.content.map { article ->
                         SubCategoryRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
@@ -76,10 +73,10 @@ class SubCategoryRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.company?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map {company -> company.company?.toCompany()!!})
-                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory()!! })
-                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.toSubCategory() })
+                    userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()!!})
+                    companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()!!})
+                    categoryDao.insertCategory(response.content.map {category -> category.category?.toCategory()!! })
+                    subCategoryDao.insertSubCategory(response.content.map {subCategory -> subCategory.toSubCategory() })
 
                 } catch (ex: Exception) {
                     Log.e("errorsubcategory", ex.message.toString())
@@ -100,22 +97,14 @@ class SubCategoryRemoteMediator(
         return remoteKey?.previousPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, SubCategoryWithCategory>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        val remoteKey =  entity?.let { subCategoryDao.getSubCategoryRemoteKey(it.subCategory.id!!) }
-        return remoteKey?.nextPage
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+        val remote = subCategoryDao.getLatestSubCategoryRemoteKey()
+        return if(remote?.nextPage == null) null else remote.nextPage
     }
 
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, SubCategoryWithCategory>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        val remoteKey =  entity?.subCategory?.id?.let { subCategoryDao.getSubCategoryRemoteKey(it) }
-        return remoteKey?.nextPage
-    }
 
     private suspend fun deleteCache(){
-//        subCategoryDao.clearAllSubCategoryTable(id)
+        subCategoryDao.clearAllSubCategoryTable(id)
         subCategoryDao.clearAllRemoteKeysTable()
     }
 }

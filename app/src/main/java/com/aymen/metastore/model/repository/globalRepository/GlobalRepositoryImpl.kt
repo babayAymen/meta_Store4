@@ -19,9 +19,11 @@ import com.aymen.metastore.model.entity.dto.AuthenticationRequest
 import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
+import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.dto.ConversationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
@@ -30,6 +32,7 @@ import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
+import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.ConversationWithUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
@@ -101,13 +104,20 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getAllArticlesContaining(search: String, searchType : SearchType) = articleRepository.getAllArticlesContaining(search, searchType)
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = articleRepository.likeAnArticle(articleId, isFav)
     override suspend fun sendComment(comment: String, articleId: Long) = articleRepository.sendComment(comment,articleId)
-    override suspend fun getComments(articleId: Long) = articleRepository.getComments(articleId)
+    override fun getArticleComments(articleId: Long): Flow<PagingData<CommentWithArticleAndUserOrCompany>>{
+        TODO()
+    }
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long) = articleRepository.addQuantityArticle(quantity, articleId)
     override suspend fun updateArticle(article: ArticleCompanyDto) = articleRepository.updateArticle(article)
 
-    override suspend fun addCategoryApiWithImage(category: String, file: File) = categoryRepository.addCategoryApiWithImage(category, file)
-    override suspend fun addCategoryApiWithoutImeg(category: String) = categoryRepository.addCategoryApiWithoutImeg(category)
-    override fun getAllCategory(companyId: Long): Flow<PagingData<Category>> {
+    override suspend fun addCategory(category: String, file: File?) = categoryRepository.addCategory(category, file)
+    override suspend fun updateCategory(category: String, file: File?) = categoryRepository.updateCategory(category,file)
+
+     override fun getAllCategory(companyId: Long): Flow<PagingData<Category>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getCategoryTemp(companyId: Long): Flow<PagingData<Category>> {
         TODO("Not yet implemented")
     }
 
@@ -115,8 +125,12 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override suspend fun addSubCtagoryWithImage(sousCategory: String, file: File) = subCategoryRepository.addSubCtagoryWithImage(sousCategory,file)
-    override suspend fun addSubCategoryWithoutImage(sousCategory: String) = subCategoryRepository.addSubCategoryWithoutImage(sousCategory)
+    override suspend fun addSubCtagory(sousCategory: String, file: File?): Response<SubCategoryDto> = subCategoryRepository.addSubCtagory(sousCategory,file)
+    override suspend fun updateSubCategory(
+        sousCategory: String,
+        file: File?
+    ) = subCategoryRepository.updateSubCategory(sousCategory, file)
+
     override fun getAllSubCategories(companyId: Long): Flow<PagingData<SubCategoryWithCategory>> {
         TODO("Not yet implemented")
     }

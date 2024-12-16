@@ -23,7 +23,8 @@ data class ArticleCompany (
     var isFav : Boolean? = false,
     var article : Article? = null,
     var isEnabledToComment : Boolean? = false,
-    val likeNumber : Long? = null,
+    val likeNumber : Long? = 0,
+    val commentNumber : Long? = null,
 ) {
     fun toArticleCompanyDto(): ArticleCompanyDto {
         return ArticleCompanyDto(

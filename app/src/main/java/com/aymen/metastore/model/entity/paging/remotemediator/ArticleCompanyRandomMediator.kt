@@ -53,6 +53,7 @@ class ArticleCompanyRandomMediator(
                 }
             }
             val response = api.getRandomArticles(currentPage, state.config.pageSize)
+            response.map { article -> if(article.id == 20L)Log.e("article","article $article") }
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1

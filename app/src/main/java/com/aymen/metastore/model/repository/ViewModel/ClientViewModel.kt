@@ -186,11 +186,11 @@ class ClientViewModel @Inject constructor(
                     onSuccess = {success ->
                         if(success.isSuccessful) {
                             room.withTransaction {
-                                val serverRelation = success.body()!!
+                                val serverRelation = success.body()
                                 val latestRemoteKey =
                                     room.clientProviderRelationDao().getClientRemoteKey(id)
                                 val remoteKeys = ClientRemoteKeysEntity(
-                                    id = serverRelation.id!!,
+                                    id = serverRelation?.id!!,
                                     prevPage = latestRemoteKey.prevPage,
                                     nextPage = null
                                 )
@@ -256,11 +256,11 @@ class ClientViewModel @Inject constructor(
 
     private fun errorBlock(error : String?){
         viewModelScope.launch{
-        val re = Gson().fromJson(error, ErrorResponse::class.java)
-        withContext(Dispatchers.Main) {
-            Toast.makeText(context, "error : ${re.message}", Toast.LENGTH_LONG)
-                .show()
-        }
+            val re = Gson().fromJson(error, ErrorResponse::class.java)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "error : ${re.message}", Toast.LENGTH_LONG)
+                    .show()
+            }
         }
     }
 

@@ -71,6 +71,12 @@ data class RandomArticle(
             provider = provider,
             company = company,
             article = article,
+            isFav = isFav,
+            likeNumber = likeNumber,
+            commentNumber = commentNumber,
+            isVisible = isVisible,
+            isEnabledToComment = isEnabledToComment
+
 
             )
     }

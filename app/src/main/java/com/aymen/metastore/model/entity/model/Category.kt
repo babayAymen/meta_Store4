@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.model
 
 import com.aymen.metastore.model.entity.dto.CategoryDto
+import com.aymen.metastore.model.entity.room.entity.Category
 
 data class Category  (
 
@@ -10,13 +11,13 @@ data class Category  (
 
     var code : String ?= null,
 
-    val image : String? = null,
+    var image : String? = null,
 
     val company : Company? = null,
 
-    var createdDate : String = "",
+    var createdDate : String? = null,
 
-    var lastModifiedDate : String = "",
+    var lastModifiedDate : String? = null,
     ){
     fun toCategoryDto() : CategoryDto{
         return CategoryDto(
@@ -25,6 +26,17 @@ data class Category  (
             code = code,
             image = image,
             company = company?.toCompanyDto(),
+            createdDate = createdDate,
+            lastModifiedDate = lastModifiedDate
+        )
+    }
+    fun toCategoryEntity() : Category{
+        return Category(
+            id = id,
+            libelle = libelle,
+            code = code,
+            image = image,
+            companyId = company?.id,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate
         )

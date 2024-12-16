@@ -102,7 +102,6 @@ fun CompanyScreen(company: Company) {
     DisposableEffect(key1 = Unit) {
         onDispose {
             ratingViewModel.rating = false
-            subCategoryViewModel.deleteSubCategories()
         }
     }
     LaunchedEffect(key1 = Unit) {
@@ -199,7 +198,7 @@ fun CompanyScreen(company: Company) {
                     if(article != null){
                     ArticleCardForSearch( article) {
                         companyViewModel.myCompany = article.company!!
-//                        articleViewModel.articleCompany = article  a determine
+                        articleViewModel.assignArticleCompany(article)
                         RouteController.navigateTo(Screen.ArticleDetailScreen)
                     }
                     }

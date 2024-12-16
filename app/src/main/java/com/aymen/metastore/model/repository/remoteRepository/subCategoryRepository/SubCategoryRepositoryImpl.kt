@@ -6,6 +6,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.paging.remotemediator.SubCategoryByCompanyIdRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.SubCategoryPagingSource
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import retrofit2.Response
 import java.io.File
 import javax.inject.Inject
 
@@ -46,8 +48,9 @@ class SubCategoryRepositoryImpl  @Inject constructor(
     }
 
 
-    override suspend fun addSubCtagoryWithImage(sousCategory: String, file: File) {
-        api.addSubCategoryWithImage(sousCategory,
+    override suspend fun addSubCtagory(sousCategory: String, file: File?): Response<SubCategoryDto> {
+       return if(file == null) api.addSubCategoryWithoutImage(sousCategory)
+        else api.addSubCategoryWithImage(sousCategory,
             file = MultipartBody.Part
                 .createFormData(
                     "file",
@@ -57,7 +60,21 @@ class SubCategoryRepositoryImpl  @Inject constructor(
         )
     }
 
-    override suspend fun addSubCategoryWithoutImage(sousCategory: String) = api.addSubCategoryWithoutImage(sousCategory)
+    override suspend fun updateSubCategory(
+        sousCategory: String,
+        file: File?
+    ): Response<SubCategoryDto> {
+        return if(file == null) api.updateSubCategoryWithoutImage(sousCategory)
+        else api.updateSubCategory(sousCategory,
+            file = MultipartBody.Part
+                .createFormData(
+                    "file",
+                    file.name,
+                    file.asRequestBody()
+                )
+            )
+    }
+
 
     @OptIn(ExperimentalPagingApi::class)
     override  fun getAllSubCategories(companyId: Long): Flow<PagingData<SubCategoryWithCategory>> {

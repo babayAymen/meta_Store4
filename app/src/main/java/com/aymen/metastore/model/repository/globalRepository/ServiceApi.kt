@@ -135,7 +135,7 @@ interface ServiceApi {
     suspend fun getAllMyOrdersLinesByInvoiceId(@Path("companyId") companyId : Long , @Query("invoiceId") invoiceId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
     @GET("$ORDER_BASE_URL/get_all_my_orders_not_accepted/{id}")
     suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PurchaseOrderLineDto>
-    @POST(ORDER_BASE_URL)
+    @POST("$ORDER_BASE_URL/")
     suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<Void>
     @POST("$ORDER_BASE_URL/test")
     suspend fun test(@Body order : PurchaseOrderLineDto): Response<Void>
@@ -301,27 +301,51 @@ suspend fun getMeAsCompany(): Response<CompanyDto>
     @POST("$AUTH_BASE_URL/register")
     suspend fun signUp(@Body registerRequest: RegisterRequest) : Response<AuthenticationResponse>
 ///////////////////////////////////////////////////////////////category/////////////////////////////////////////////////////////////
+
     @Multipart
     @POST("$CATEGORY_BASE_URL/add")
     suspend fun addCategoryApiWithImage(
     @Query("categoryDto") categoryDto:String,
-    @Part file: MultipartBody.Part? = null): Response<Void>
+    @Part file: MultipartBody.Part? = null): Response<CategoryDto>
+    @Multipart
+    @PUT("$CATEGORY_BASE_URL/update")
+    suspend fun updateCategory(
+    @Query("categoryDto") categoryDto:String,
+    @Part file: MultipartBody.Part? = null): Response<CategoryDto>
     @GET("$CATEGORY_BASE_URL/get/{companyId}")
-    suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<CategoryDto>
+    suspend fun getAllCategoryByCompany( @Path("companyId")companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): PaginatedResponse<CategoryDto>
     @GET("$CATEGORY_BASE_URL/get_all/{companyId}")
     suspend fun getPagingCategoryByCompany(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<CategoryDto>
-    @POST("$CATEGORY_BASE_URL/add")
-    suspend fun addCategoryApiWithoutImage(@Query("categoryDto") categoryDto:String)
+
+    @POST("$CATEGORY_BASE_URL/add_without_image")
+    suspend fun addCategoryApiWithoutImage(@Query("categoryDto") categoryDto:String) : Response<CategoryDto>
+    @PUT("$CATEGORY_BASE_URL/update_without_image")
+    suspend fun updateCategoryWithoutImage(@Query("categoryDto") categoryDto:String) : Response<CategoryDto>
 ///////////////////////////////////////////////////////////////////subcategory/////////////////////////////////////////////////////////////////////
     @Multipart
     @POST("$SUBCATEGORY_BASE_URL/add")
     suspend fun addSubCategoryWithImage(
     @Query("sousCategory") sousCategory:String,
-    @Part file: MultipartBody.Part? = null): Response<Void>
-    @POST("$SUBCATEGORY_BASE_URL/add")
-    suspend fun addSubCategoryWithoutImage(@Query("sousCategory") sousCategory:String)
+    @Part file: MultipartBody.Part? = null): Response<SubCategoryDto>
+    @POST("$SUBCATEGORY_BASE_URL/add_without_image")
+    suspend fun addSubCategoryWithoutImage(@Query("sousCategory") sousCategory:String) : Response<SubCategoryDto>
+    @PUT("$SUBCATEGORY_BASE_URL/update_without_image")
+    suspend fun updateSubCategoryWithoutImage(@Query("sousCategory") sousCategory:String) : Response<SubCategoryDto>
+    @Multipart
+    @PUT("$SUBCATEGORY_BASE_URL/update")
+    suspend fun updateSubCategory(
+        @Query("sousCategory") sousCategory:String,
+        @Part file: MultipartBody.Part? = null): Response<SubCategoryDto>
     @GET("$SUBCATEGORY_BASE_URL/getbycompany/{companyId}")
-    suspend fun getAllSubCategories(@Path("companyId") companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
+    suspend fun getAllSubCategories(@Path("companyId") companyId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<SubCategoryDto>
     @GET("$SUBCATEGORY_BASE_URL/getbycategory_id/{companyId}")
     suspend fun getAllSubCategoriesByCategoryId(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SubCategoryDto>
+    //////////////////////////////////////////////////////////////////// comment /////////////////////////////////////////////////////////////////
+    @GET("$ARTICLE_BASE_URL/get_comments/{articleId}")
+    suspend fun getArticleComments(@Path("articleId") articleId : Long , @Query("page") page : Int , @Query("pageSize") pageSize : Int) : PaginatedResponse<CommentDto>
+
+
+
+
+
 }

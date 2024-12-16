@@ -2,6 +2,7 @@ package com.aymen.metastore.model.usecase
 
 data class MetaUseCases(
     val getPagingCategoryByCompany: GetPagingCategoryByCompany,
+    val getCategoryTemp : GetCategoryTemp,
     val getPagingSubCategoryByCompany : GetPagingSubCategoryByCompany,
     val getPagingArticleCompanyByCompany : GetPagingArticleCompanyByCompany,
     val getRandomArticle : GetRandomArticle,
@@ -40,5 +41,6 @@ data class MetaUseCases(
     val getAllSubCategoriesByCompanyId : GetAllSubCategoriesByCompanyId,
     val getArticlesByCompanyAndCategoryOrSubCategory : GetArticlesByCompanyAndCategoryOrSubCategory,
     val getAllCommandLineByInvoiceId : GetAllCommandLineByInvoiceId,
-    val getMyClientForAutocompleteClient : GetMyClientForAutocompleteClient
+    val getMyClientForAutocompleteClient : GetMyClientForAutocompleteClient,
+    val getArticleComment : GetArticleComment
 )

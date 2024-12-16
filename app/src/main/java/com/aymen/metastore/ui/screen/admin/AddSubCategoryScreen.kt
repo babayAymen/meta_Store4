@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,7 @@ import coil.compose.AsyncImage
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
@@ -47,10 +49,10 @@ fun AddSubCategoryScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
-    val sharedViewModel : SharedViewModel = hiltViewModel()
-
-    val categories = categoryViewModel.categories.collectAsLazyPagingItems()
-    val subCategory = SubCategoryDto()
+    val categories = categoryViewModel.companyCategories.collectAsLazyPagingItems()
+    val subCategoryForUpdate by subCategoryViewModel.subCategoryForUpdate.collectAsStateWithLifecycle()
+    val subCategory = SubCategory()
+    val update = subCategoryViewModel.update
     var libelle by remember {
         mutableStateOf("")
     }
@@ -62,6 +64,16 @@ fun AddSubCategoryScreen() {
     }
     var image by remember {
         mutableStateOf<Uri?>(null)
+    }
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            subCategoryViewModel.update = false
+        }
+    }
+    if(update){
+        libelle = subCategoryForUpdate.libelle?:""
+        code = subCategoryForUpdate.code?:""
+        category = subCategoryForUpdate.category?:Category()
     }
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
@@ -109,7 +121,7 @@ fun AddSubCategoryScreen() {
 
             }
             Row {
-                DropDownCategory(null,categories ){
+                DropDownCategory(category,categories ){
                     category = it
                 }
             }
@@ -146,16 +158,19 @@ fun AddSubCategoryScreen() {
                     ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true){
                         subCategory.libelle = libelle
                         subCategory.code = code
-                        subCategory.category = category.toCategoryDto()
-
+                        subCategory.category = category
+                        if(update){
+                            subCategory.id = subCategoryForUpdate.id
+                        }
                         val photo =  resolveUriToFile(image, context)
                         val subCategoryJsonString = gson.toJson(subCategory)
-                        if (subCategoryJsonString.isNotEmpty() && photo != null) {
-                            subCategoryViewModel.addSubCategoryWithImage(subCategoryJsonString,photo)
-                        }
-                        else{
-                            subCategoryViewModel.addSubCategoryWithoutImage(subCategoryJsonString)
-                        }
+                        if (subCategoryJsonString.isNotEmpty() && photo != null)
+                            if(update) subCategoryViewModel.updateSubCategory(subCategory, subCategoryJsonString, photo)
+                            else subCategoryViewModel.addSubCategory(subCategory,subCategoryJsonString,photo)
+                        else
+                           if(update) subCategoryViewModel.updateSubCategory(subCategory, subCategoryJsonString, null)
+                            else subCategoryViewModel.addSubCategory(subCategory,subCategoryJsonString, null)
+                        subCategoryViewModel.update = false
                         appViewModel.updateShow("subcategory")
                     }
                 }

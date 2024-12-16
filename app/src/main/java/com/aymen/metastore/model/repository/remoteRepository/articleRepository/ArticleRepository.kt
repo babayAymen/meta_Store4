@@ -6,6 +6,7 @@ import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
+import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.util.Resource
 import com.aymen.store.model.Enum.CompanyCategory
@@ -35,7 +36,7 @@ interface ArticleRepository {
     suspend fun getAllArticlesContaining(search : String, searchType: SearchType) : Response<List<ArticleCompanyDto>>
     suspend fun likeAnArticle(articleId : Long, isFav : Boolean) : Response<Void>
     suspend fun sendComment(comment : String, articleId : Long) : Response<Void>
-    suspend fun getComments(articleId : Long) : Response<List<CommentDto>>
+     fun getArticleComments(articleId : Long) : Flow<PagingData<CommentWithArticleAndUserOrCompany>>
     suspend fun addQuantityArticle(quantity : Double, articleId : Long) : Response<ArticleCompanyDto>
     suspend fun updateArticle(article : ArticleCompanyDto) : Response<ArticleCompanyDto>
 }

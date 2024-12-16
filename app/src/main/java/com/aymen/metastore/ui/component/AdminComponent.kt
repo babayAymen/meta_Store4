@@ -212,7 +212,7 @@ fun DropDownCategory(category : Category? , pagingItems: LazyPagingItems<Categor
         if(category?.id == null) {
             itemSelected =  pagingItems.peek(0)
         }
-        onSelected(itemSelected!!)
+        onSelected(itemSelected?:Category())
      //   categoryViewModel.category = itemSelected
         var isExpanded by remember {
             mutableStateOf(false)
@@ -247,8 +247,8 @@ fun DropDownCategory(category : Category? , pagingItems: LazyPagingItems<Categor
                                 DropdownMenuItem(
                                     text = { Text(item.libelle ?: "Unknown") },
                                     onClick = {
-                                        onSelected(item)
                                         itemSelected = item
+                                        onSelected(item)
                                         isExpanded = false
                                         categoryViewModel.category = itemSelected!!
                                     },
@@ -621,8 +621,7 @@ fun CategoryCardForAdmin(category: Category, image : String) {
 }
 
 @Composable
-fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String,
-                            category: Category
+fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String, category: Category
 ) {
    val cat by remember {
        mutableStateOf(category)
