@@ -1,8 +1,9 @@
 package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.Category
+import kotlinx.serialization.Serializable
 
-
+@Serializable
 data class CategoryDto(
 
     var id : Long? = null,
@@ -20,7 +21,7 @@ data class CategoryDto(
     var lastModifiedDate : String?,
 
     ){
-    fun toCategory() : Category {
+    fun toCategory(isCategory : Boolean) : Category {
     return Category(
         id = id,
         libelle = libelle,
@@ -28,7 +29,8 @@ data class CategoryDto(
         image = image,
         companyId = company?.id,
         createdDate = createdDate,
-        lastModifiedDate = lastModifiedDate
+        lastModifiedDate = lastModifiedDate,
+        isCategory = isCategory
     )
     }
     fun toCategoryModel() : com.aymen.metastore.model.entity.model.Category {

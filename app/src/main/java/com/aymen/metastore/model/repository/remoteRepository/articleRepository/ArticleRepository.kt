@@ -35,7 +35,7 @@ interface ArticleRepository {
     suspend fun addArticleWithoutImage(article: ArticleCompanyDto, articleId : Long):Response<ArticleCompanyDto>
     suspend fun getAllArticlesContaining(search : String, searchType: SearchType) : Response<List<ArticleCompanyDto>>
     suspend fun likeAnArticle(articleId : Long, isFav : Boolean) : Response<Void>
-    suspend fun sendComment(comment : String, articleId : Long) : Response<Void>
+    suspend fun sendComment(comment : CommentDto) : Response<Void>
      fun getArticleComments(articleId : Long) : Flow<PagingData<CommentWithArticleAndUserOrCompany>>
     suspend fun addQuantityArticle(quantity : Double, articleId : Long) : Response<ArticleCompanyDto>
     suspend fun updateArticle(article : ArticleCompanyDto) : Response<ArticleCompanyDto>

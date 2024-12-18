@@ -1,5 +1,6 @@
 package com.aymen.metastore.ui.screen.admin
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ fun InventoryScreen() {
     ) {
         val inventories = inventoryViewModel.inventories.collectAsLazyPagingItems()
         LazyColumn {
+            Log.e("azertdhd","item count : ${inventories.itemCount}")
             items(
                 count = inventories.itemCount,
                 key = inventories.itemKey { it.id!! }) { index ->

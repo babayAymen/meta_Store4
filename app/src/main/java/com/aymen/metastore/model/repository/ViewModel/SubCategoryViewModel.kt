@@ -68,6 +68,9 @@ class SubCategoryViewModel @Inject constructor(
         }
     }
 
+    fun setSubCategory(){
+        _companySubCategories.value = PagingData.empty()
+    }
     fun assignSubCategoryForUpdate(item : SubCategory){
         _subCategoryForUpdate.value = item
     }
@@ -163,7 +166,7 @@ class SubCategoryViewModel @Inject constructor(
                         if (response != null) {
                             room.withTransaction {
                                 subCategoryDao.insertSingleSubCategory(response.toSubCategory())
-                                categoryDao.insertSingCategory(response.category?.toCategory()!!)
+                                categoryDao.insertSingCategory(response.category?.toCategory(isCategory = false)!!)
                                 categoryDao.insertSingelKey(CategoryRemoteKeysEntity(
                                     id = response.category?.id!!,
                                     prevPage = null,

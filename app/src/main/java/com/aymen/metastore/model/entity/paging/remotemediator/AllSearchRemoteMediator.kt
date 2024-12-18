@@ -59,7 +59,7 @@ class AllSearchRemoteMediator(
                 }
             }
             val response = api.getAllHistory(id!!,currentPage, state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
+            val endOfPaginationReached = response.last
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
@@ -68,23 +68,22 @@ class AllSearchRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    searchHistoryDao.insertAllSearchKeys(response.map { article ->
+                    searchHistoryDao.insertAllSearchKeys(response.content.map { article ->
                         AllSearchRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage
                         )
                     })
-                            userDao.insertUser( response.filter { article -> article.article != null}.map{article -> article.article?.company?.user?.toUser()})
-                            companyDao.insertCompany(response.filter { article -> article.article != null}.map{article -> article.article?.company?.toCompany()})
-                            categoryDao.insertCategory(response.filter { article -> article.article != null}.map { article -> article.article?.category?.toCategory()!! })
-                            subCategoryDao.insertSubCategory(response.filter { article -> article.article != null}.map { article -> article.article?.subCategory?.toSubCategory()!! })
-                            articleDao.insertArticle(response.filter { article -> article.article != null}.map { article -> article.article?.article?.toArticle(isMy = true)!! })
-                            articleCompanyDao.insertArticle(response.filter { article -> article.article != null}.map { article -> article.article?.toArticleCompany(true)!! })
-                            userDao.insertUser(response.filter { article -> article.company != null}.map { company -> company.user?.toUser()})
-                            companyDao.insertCompany(response.filter { article -> article.company != null}.map { company -> company.company?.toCompany() })
-                            userDao.insertUser(response.filter { article -> article.user != null}.map { user -> user.user?.toUser() })
-                            searchHistoryDao.insertSearchHistory(response.map { search -> search.toSearchHistory() })
+
+                            userDao.insertUser( response.content.map{article -> article.article?.company?.user?.toUser()})
+                            companyDao.insertCompany(response.content.map{article -> article.article?.company?.toCompany()})
+                            articleDao.insertArticle(response.content.map { article -> article.article?.article?.toArticle(isMy = true) })
+                            articleCompanyDao.insertArticleForSearch(response.content.map { article -> article.article?.toArticleCompany(isRandom = true, isSearch = true) })
+                            userDao.insertUser(response.content.map { company -> company.company?.user?.toUser()})
+                            companyDao.insertCompany(response.content.map { company -> company.company?.toCompany() })
+                            userDao.insertUser(response.content.map { user -> user.user?.toUser() })
+                            searchHistoryDao.insertSearchHistory(response.content.map { search -> search.toSearchHistory() })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())

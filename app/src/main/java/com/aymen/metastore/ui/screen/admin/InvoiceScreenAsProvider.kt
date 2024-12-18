@@ -102,14 +102,6 @@ fun InvoiceScreenAsProvider() {
                                     enabled = true
                                 ) {
                                     appViewModel.updateView("ALL")
-//                                    if(asProvider) {
-//                                        invoiceViewModel.getAllMyPaymentFromInvoicee(
-//                                            PaymentStatus.ALL,
-//                                            asProvider
-//                                        )
-//                                    }else{
-//                                        invoiceViewModel.getAllMyInvoicesAsClient()
-//                                    }
                                 }
                             }
                             Row(
@@ -121,7 +113,6 @@ fun InvoiceScreenAsProvider() {
                                     enabled = true
                                 ) {
                                     appViewModel.updateView("PAID")
-                                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.PAID,asProvider)
                                 }
                             }
                             Row(
@@ -134,7 +125,6 @@ fun InvoiceScreenAsProvider() {
                                 ) {
 
                                     appViewModel.updateView("IN_COMPLETE")
-                                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.INCOMPLETE,asProvider)
                                 }
                             }
                             Row(
@@ -147,7 +137,6 @@ fun InvoiceScreenAsProvider() {
                                 ) {
 
                                     appViewModel.updateView("NOT_PAID")
-                                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.NOT_PAID,asProvider)
                                 }
                             }
                             Row(
@@ -164,9 +153,10 @@ fun InvoiceScreenAsProvider() {
                             }
                     }
                 if(asProvider){
+                            val invoicesAsProvider = invoiceViewModel.invoices.collectAsLazyPagingItems()
                     when(view){
                         "ALL" ->{
-                            val invoicesAsProvider = invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.ALL)
                             LazyColumn(state = listState,
                                 modifier = Modifier.fillMaxSize()
                             ) {
@@ -186,15 +176,15 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "PAID" ->{
-                            val paid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.PAID)
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(count = paid.itemCount,
-                                    key = { index -> paid[index]?.id ?: index }
+                                items(count = invoicesAsProvider.itemCount,
+                                    key = { index -> invoicesAsProvider[index]?.id ?: index }
                                 ) { index ->
 
-                                    val invoice = paid[index]
+                                    val invoice = invoicesAsProvider[index]
                                     if (invoice != null) {
                                     Log.e("LazyColumnItemKey", "Item ID: ${invoice.id}, Key: $invoice")
                                         Row {
@@ -210,14 +200,14 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "NOT_PAID" -> {
-                            val notPaid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(count = notPaid.itemCount,
-                                    key = notPaid.itemKey { it.id!! }
+                                items(count = invoicesAsProvider.itemCount,
+                                    key = invoicesAsProvider.itemKey { it.id!! }
                                 ) { index ->
-                                    val invoice = notPaid[index]
+                                    val invoice = invoicesAsProvider[index]
                                     if (invoice != null) {
                                         Row {
                                             Text(text = invoice.code.toString())
@@ -234,14 +224,14 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "IN_COMPLETE" ->{
-                            val inComplete = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(count = inComplete.itemCount,
-                                    key = inComplete.itemKey { it.id!! }
+                                items(count = invoicesAsProvider.itemCount,
+                                    key = invoicesAsProvider.itemKey { it.id!! }
                                 ) { index ->
-                                    val invoice = inComplete[index]
+                                    val invoice = invoicesAsProvider[index]
                                     if (invoice != null) {
                                         Row {
                                             Text(text = "invoice code : " + invoice.code.toString())
@@ -258,7 +248,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "NOT_ACCEPTED" ->{
-                            val notAccepted = invoiceViewModel.notAccepted.collectAsLazyPagingItems()
+                            val notAccepted = invoiceViewModel.notAcceptedAsProvider.collectAsLazyPagingItems()
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
@@ -285,9 +275,10 @@ fun InvoiceScreenAsProvider() {
 
                 }
                 else{
+                            val invoiceAsClient = invoiceViewModel.invoicesAsClient.collectAsLazyPagingItems()
                     when(view){
                         "ALL" ->{
-                            val invoiceAsClient = invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.ALL)
                             LazyColumn {
                                 items(count = invoiceAsClient.itemCount,
                                     key = invoiceAsClient.itemKey { it.id!! }
@@ -300,12 +291,12 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "PAID" ->{
-                            val paid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.PAID)
                             LazyColumn {
-                                items(count = paid.itemCount,
-                                    key = paid.itemKey { it.id!! }
+                                items(count = invoiceAsClient.itemCount,
+                                    key = invoiceAsClient.itemKey { it.id!! }
                                 ) { index ->
-                                    val invoice = paid[index]
+                                    val invoice = invoiceAsClient[index]
                                     if (invoice != null) {
                                         InvoiceCard(invoice, appViewModel, invoiceViewModel, asProvider)
                                     }
@@ -313,12 +304,12 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "NOT_PAID" ->{
-                            val notPaid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
                             LazyColumn {
-                                items(count = notPaid.itemCount,
-                                    key = notPaid.itemKey { it.id!! }
+                                items(count = invoiceAsClient.itemCount,
+                                    key = invoiceAsClient.itemKey { it.id!! }
                                 ) { index ->
-                                    val invoice = notPaid[index]
+                                    val invoice = invoiceAsClient[index]
                                     if (invoice != null) {
                                         InvoiceCard(invoice, appViewModel, invoiceViewModel, asProvider)
                                     }
@@ -326,12 +317,12 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "IN_COMPLETE" ->{
-                            val inComplete = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
+                            invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
                             LazyColumn {
-                                items(count = inComplete.itemCount,
-                                    key = inComplete.itemKey { it.id!! }
+                                items(count = invoiceAsClient.itemCount,
+                                    key = invoiceAsClient.itemKey { it.id!! }
                                 ) { index ->
-                                    val invoice = inComplete[index]
+                                    val invoice = invoiceAsClient[index]
                                     if (invoice != null) {
                                         InvoiceCard(invoice, appViewModel, invoiceViewModel, asProvider)
                                     }
@@ -339,7 +330,7 @@ fun InvoiceScreenAsProvider() {
                             }
                         }
                         "NOT_ACCEPTED" ->{
-                            val notAccepted = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
+                            val notAccepted = invoiceViewModel.notAcceptedAsClient.collectAsLazyPagingItems()
                             LazyColumn {
                                 items(count = notAccepted.itemCount,
                                     key = notAccepted.itemKey { it.id!! }

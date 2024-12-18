@@ -29,7 +29,7 @@ data class ArticleWithArticleCompany(
         parentColumn = "categoryId",
         entityColumn = "id"
     )
-    val category : Category,
+    val category : Category?,
 
     @Relation(
         parentColumn = "subCategoryId",
@@ -49,7 +49,7 @@ data class ArticleWithArticleCompany(
 
     fun toArticleRelation(): com.aymen.metastore.model.entity.model.ArticleCompany {
         return articleCompany.toArticle(
-            category = category.toCategory(company = company?.toCompany()?:com.aymen.metastore.model.entity.model.Company()),
+            category = category?.toCategory(company = company?.toCompany()?:com.aymen.metastore.model.entity.model.Company()),
             subCategory = subCategory?.toSubCategory(),
             provider = provider?.toCompany()?:com.aymen.metastore.model.entity.model.Company(),
             article = article.toArticle(),

@@ -56,6 +56,7 @@ import com.aymen.metastore.util.SEARCH_BASE_URL
 import com.aymen.metastore.util.SUBCATEGORY_BASE_URL
 import com.aymen.metastore.util.UPDATE_IMAGE_URL
 import com.aymen.metastore.util.WORKER_BASE_URL
+import com.aymen.store.model.Enum.CompanyCategory
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -111,13 +112,13 @@ interface ServiceApi {
     suspend fun requestResponse(@Path("status") status : Status, @Path("id") id : Long) : Response<Void>
     @GET("$INVITATION_BASE_URL/cancel/{id}")
     suspend fun cancelInvitation(@Path("id") id : Long) : Response<Void>
-    @GET("$SEARCH_BASE_URL/{id}")
-    suspend fun getAllHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<SearchHistoryDto>
+    @GET("$SEARCH_BASE_URL/get_search_history/{id}")
+    suspend fun getAllHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<SearchHistoryDto>
     @GET("$SEARCH_BASE_URL/company/{search}/{searchType}/{searchCategory}")
     suspend fun getAllClientContaining(@Path("search") search : String,@Path("searchType")  searchType: SearchType,
                                        @Path("searchCategory")  searchCategory: SearchCategory):Response<List<CompanyDto>>
     @GET("$SEARCH_BASE_URL/save_history/{category}/{id}")
-    suspend fun saveHistory(@Path("category") category : SearchCategory, @Path("id") id : Long):Response<Void>
+    suspend fun saveHistory(@Path("category") category : SearchCategory, @Path("id") id : Long):Response<SearchHistoryDto>
     ///////////////////////////////////////////////////////////////:command line ////////////////////////////////////////////////////////////////////::
     @POST("$COMMANDLINE_BASE_URL/save/{clientId}")
     suspend fun addInvoice(@Body commandLineDtos : List<CommandLine>,
@@ -161,9 +162,9 @@ interface ServiceApi {
     @GET("$INVOICE_BASE_URL/get_all_my_invoices_not_accepted_as_client/{id}")
     suspend fun getAllMyInvoicesNotAccepted(@Path("id") id : Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{companyId}")
-    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
+    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getMyInvoiceAsClient/{companyId}")
-    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/get_by_status_as_client/{id}")
     suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getlastinvoice")
@@ -213,15 +214,15 @@ interface ServiceApi {
     @GET("$ARTICLE_BASE_URL/getAllMyArticle/{companyId}/{offset}/{pageSize}")
     suspend fun getAll(@Path("companyId") companyId : Long?, @Path("offset") offset : Int, @Path("pageSize") pageSize : Int): List<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/getrandom")
-    suspend fun getRandomArticles( @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): List<ArticleCompanyDto>
+    suspend fun getRandomArticles(@Query("category") category: CompanyCategory, @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): List<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/my_article/{id}")
     suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/get_articles_by_category/{id}")
     suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleDto>
     @GET("$ARTICLE_BASE_URL/search/{id}")
     suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
-    @POST("$ARTICLE_BASE_URL/sendComment/{articleId}")
-    suspend fun sendComment(@Body comment : String,@Path("articleId") articleId : Long):Response<Void>
+    @POST("$ARTICLE_BASE_URL/sendComment")
+    suspend fun sendComment(@Body comment : CommentDto):Response<Void>
     @GET("$ARTICLE_BASE_URL/get_comments/{articleId}")
     suspend fun getComments(@Path("articleId") articleId : Long):Response<List<CommentDto>>
     @GET("$ARTICLE_BASE_URL/{articleId}/{quantity}")

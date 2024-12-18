@@ -2,6 +2,8 @@ package com.aymen.metastore.model.entity.dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -21,7 +23,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ArticleCompanyDao {
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(article: List<ArticleCompany>)
 
     suspend fun insertArticle(article: List<ArticleCompany?>){
@@ -32,12 +34,25 @@ interface ArticleCompanyDao {
             }
     }
     @Upsert
+    suspend fun insertForSearch(article: List<ArticleCompany>)
+
+    suspend fun insertArticleForSearch(article: List<ArticleCompany?>){
+        article.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insertForSearch(it)
+            }
+    }
+
+
+    @Upsert
     suspend fun insertSigleArticle(article: ArticleCompany)
 
     @Transaction
     @Query("SELECT * FROM comment WHERE articleId = :articleId")
      fun getArticleComments(articleId : Long): PagingSource<Int, CommentWithArticleAndUserOrCompany>
-    @Query("SELECT MAX(id) FROM article_company")
+
+    @Query("SELECT id FROM article_company ORDER BY id DESC LIMIT 1")
     suspend fun getLatestArticleId(): Long?
 
     @Upsert
@@ -62,8 +77,8 @@ interface ArticleCompanyDao {
     suspend fun insertRandomArticle(article: List<RandomArticle>)
 
     @Transaction
-    @Query("SELECT * FROM random_article_company  ")
-     fun getRandomArticles(): PagingSource<Int, RandomArticleChild>
+    @Query("SELECT r.* FROM random_article_company AS r JOIN article AS a ON r.articleId = a.id WHERE a.category = :category ")
+     fun getRandomArticles(category : CompanyCategory): PagingSource<Int, RandomArticleChild>
 
     @Transaction
     @Query("SELECT ac.* FROM article_company AS ac JOIN article AS a ON ac.articleId = a.id WHERE isRandom = 1 AND a.category = :categoryName")
@@ -83,7 +98,7 @@ interface ArticleCompanyDao {
      fun getAllArticleContaining(libelle : String, companyId: Long) : PagingSource<Int,ArticleWithArticleCompany>
 
     @Transaction
-    @Query("SELECT * FROM Article_company WHERE companyId = :companyId ORDER BY id ASC")
+    @Query("SELECT * FROM Article_company WHERE companyId = :companyId AND isRandom = 0 ORDER BY id DESC")
     fun getAllMyArticles(companyId : Long): PagingSource<Int,ArticleWithArticleCompany>
 
     @Transaction
@@ -123,7 +138,7 @@ interface ArticleCompanyDao {
     @Query("DELETE FROM article_company_random_remote_keys")
     suspend fun clearAllRandomRemoteKeysTable()
 
-    @Query("DELETE FROM article_company WHERE isRandom = 1")
+    @Query("DELETE FROM article_company WHERE isRandom = 1 AND isSearch = 0")
     suspend fun clearAllArticleCompanyTable()
 
 
@@ -133,8 +148,8 @@ interface ArticleCompanyDao {
     @Query("DELETE FROM article_containing_remote_keys")
     suspend fun clearAllArticleContainingRemoteKeysTable()
 
-    @Query("DELETE FROM article_company WHERE companyId = :companyId")
-    suspend fun clearAllCompanyArticleTableById(companyId : Long)
+    @Query("DELETE FROM article_company WHERE companyId = :companyId AND isRandom = 0 AND isSearch = 0")
+    suspend fun clearAllCompanyArticleTableByIdAndIsRandom(companyId : Long)
 
     @Query("DELETE FROM company_article_remote_keys")
     suspend fun clearAllCompanyArticleRemoteKeysTable()

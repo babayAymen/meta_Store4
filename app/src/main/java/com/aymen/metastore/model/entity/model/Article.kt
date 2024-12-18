@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.model
 
 import com.aymen.metastore.model.entity.dto.ArticleDto
+import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.store.model.Enum.CompanyCategory
 
 data class Article(
@@ -16,6 +17,20 @@ data class Article(
 ){
     fun toArticleDto() : ArticleDto{
         return ArticleDto(
+            id = id,
+            libelle = libelle,
+            code = code,
+            discription = discription,
+            barcode = barcode,
+            tva = tva,
+            image = image,
+            isDiscounted = isDiscounted,
+            category = category,
+        )
+    }
+
+    fun toArticleEntity() : Article{
+        return Article(
             id = id,
             libelle = libelle,
             code = code,

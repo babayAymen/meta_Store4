@@ -50,6 +50,7 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
+import com.aymen.metastore.model.entity.model.Comment
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
@@ -134,7 +135,6 @@ fun ArticleDetailsScreen() {
 
                     }
                  CompanyDetails(
-                     messageViewModel = messageViewModel,
                      appViewModel = appViewModel,
                      clientViewModel = clientViewModel,
                      companyViewModel = companyViewModel,
@@ -196,7 +196,10 @@ fun ArticleDetailsScreen() {
                         if (comment.isNotEmpty()) {
                             showComment = true
                             articleViewModel.myComment = comment
-                            article?.id?.let { articleViewModel.sendComment(comment, it) }
+                            val com = Comment()
+                            com.content = comment
+                            com.article = article
+                            article?.id?.let { articleViewModel.sendComment(com) }
                             comment = ""
                             ratingViewModel.enableToComment = false
                         }

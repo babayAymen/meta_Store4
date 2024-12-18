@@ -76,7 +76,7 @@ class CategoryRemoteMediator(
 
                     userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
-                    categoryDao.insertCategory(response.content.map {category -> category.toCategory() })
+                    categoryDao.insertCategoryCateg(response.content.map {category -> category.toCategory(isCategory = true) })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())

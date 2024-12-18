@@ -6,16 +6,17 @@ import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.entity.dto.InvoiceDto
+import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
-import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
+import com.aymen.store.model.Enum.PaymentStatus
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 
 interface InvoiceRepository {
 
-     fun getAllMyInvoicesAsProvider(companyId : Long) : Flow<PagingData<InvoiceWithClientPersonProvider>>
-     fun getAllInvoicesAsClient(clientId : Long, accountType : AccountType) : Flow<PagingData<InvoiceWithClientPersonProvider>>
-     fun getAllInvoicesAsClientAndStatus(clientId: Long , status : Status) : Flow<PagingData<InvoiceWithClientPersonProvider>>
+     fun getAllMyInvoicesAsProvider(companyId : Long, isProvider : Boolean, status : PaymentStatus) : Flow<PagingData<Invoice>>
+    fun getAllInvoicesAsClient(clientId : Long, accountType : AccountType, status: PaymentStatus) : Flow<PagingData<Invoice>>
+    fun getAllInvoicesAsClientAndStatus(clientId: Long , status : Status) : Flow<PagingData<Invoice>>
     fun getAllCommandLineByInvoiceId(companyId : Long , invoiceId : Long) : Flow<PagingData<CommandLineWithInvoiceAndArticle>>
 
 

@@ -8,14 +8,15 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.dto.SearchHistoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.paging.pagingsource.AllPersonContainingPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.AllSearchRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ClientRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.GetAllMyClientContainingForAutocompletePagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
-import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.SearchCategory
@@ -148,9 +149,9 @@ class ClientRepositoryImpl  @Inject constructor(
     }
 
 
-    override suspend fun saveHistory(category: SearchCategory, id: Long) = api.saveHistory(category, id)
+    override suspend fun saveHistory(category: SearchCategory, id: Long): Response<SearchHistoryDto> = api.saveHistory(category, id)
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllHistory(id : Long):Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>{
+    override fun getAllHistory(id : Long):Flow<PagingData<SearchHistory>>{
         return  Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = AllSearchRemoteMediator(
@@ -159,7 +160,7 @@ class ClientRepositoryImpl  @Inject constructor(
             pagingSourceFactory = { searchHistoryDao.getAllSearchHistories() }
         ).flow.map {
             it.map { article ->
-                article
+                article.toSearchHistoryModel()
             }
         }
     }

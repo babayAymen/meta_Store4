@@ -56,7 +56,7 @@ class InvoiceAsClientAndStatusRemoteMediator(
             }
             val response =
                 api.getAllMyInvoicesAsClientAndStatus(id, status,currentPage, state.config.pageSize)
-Log.e("invoiceresponse","response ${response.size} $response")
+                Log.e("invoiceresponse","response ${response.size} $response")
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1

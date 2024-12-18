@@ -56,10 +56,10 @@ class ArticleRepositoryImpl @Inject constructor
             return Pager(
     config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
     remoteMediator = ArticleCompanyRandomMediator(
-    api = api, room = room
+    api = api, room = room, category = categoryName
     ),
     pagingSourceFactory = {
-        articleCompanyDao.getRandomArticles()
+        articleCompanyDao.getRandomArticles(categoryName)
     }
     ).flow.map {
                 it.map { article ->
@@ -174,7 +174,7 @@ class ArticleRepositoryImpl @Inject constructor
     override suspend fun addArticleWithoutImage(article: ArticleCompanyDto, articleId: Long): Response<ArticleCompanyDto> = api.addArticleWithoutImage(articleId,article)
     override suspend fun getAllArticlesContaining(search: String, searchType: SearchType) = api.getAllArticlesContaining(search,searchType)
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = api.likeAnArticle(articleId,isFav)
-    override suspend fun sendComment(comment: String, articleId: Long) = api.sendComment(comment, articleId)
+    override suspend fun sendComment(comment: CommentDto) = api.sendComment(comment)
     override fun getArticleComments(articleId: Long): Flow<PagingData<CommentWithArticleAndUserOrCompany>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -210,7 +210,7 @@ class ArticleRepositoryImpl @Inject constructor
         companyDao.insertCompany(articleDetails.map {company -> company.company?.toCompany()!!})
         userDao.insertUser(articleDetails.map {user -> user.provider?.user?.toUser()!!})
         companyDao.insertCompany(articleDetails.map { company -> company.provider?.toCompany()!! })
-        categoryDao.insertCategory(articleDetails.map {category -> category.category?.toCategory()!! })
+        categoryDao.insertCategory(articleDetails.map {category -> category.category?.toCategory(isCategory = false)!! })
         subCategoryDao.insertSubCategory(articleDetails.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
         articleDao.insertArticle(articleDetails.map {article -> article.article?.toArticle(isMy = true)!! })
         articleCompanyDao.insertArticle(articleDetails.map {dto ->

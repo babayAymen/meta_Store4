@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.model
 
 import com.aymen.metastore.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.room.entity.User
 import com.aymen.store.model.Enum.RoleEnum
 
 data class User (
@@ -22,6 +23,23 @@ data class User (
 ){
     fun toUserDto(): UserDto{
         return UserDto(
+            id,
+            phone,
+            address,
+            username,
+            email,
+            resettoken,
+            longitude,
+            latitude,
+            role,
+            balance,
+            image,
+            rate,
+            rater
+        )
+    }
+    fun toUserEntity(): User{
+        return User(
             id,
             phone,
             address,

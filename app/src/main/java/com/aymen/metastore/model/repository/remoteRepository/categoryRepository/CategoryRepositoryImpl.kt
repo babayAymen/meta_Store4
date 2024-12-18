@@ -79,7 +79,7 @@ class CategoryRepositoryImpl  @Inject constructor(
         return Pager(
             config = PagingConfig(pageSize = PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             pagingSourceFactory = {
-                CategoryPagingSource(api, sharedViewModel)
+                CategoryPagingSource(api, companyId)
             }
         ).flow.map {
             it.map { categ -> categ.toCategoryModel() }

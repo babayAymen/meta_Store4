@@ -127,6 +127,7 @@ import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
 import com.aymen.store.model.Enum.UnitArticle
+import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
@@ -353,11 +354,10 @@ fun resolveUriToFile(uri: Uri?, context: Context): File? {
 
 @Composable
 fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>, isEnabled : Boolean) {
-    val appViewModel: AppViewModel = hiltViewModel()
     val shoppingViewModel: ShoppingViewModel = hiltViewModel()
     val articleViewModel: ArticleViewModel = hiltViewModel()
-    val messageViewModel: MessageViewModel = hiltViewModel()
     val companyViewModel: CompanyViewModel = hiltViewModel()
+    val categoryViewModel: CategoryViewModel = hiltViewModel()
     Row {
         LazyColumn {
             items(
@@ -375,6 +375,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>, isEnabled : Bo
                                 modifier = Modifier
                                     .weight(0.8f)
                                     .clickable {
+                                        categoryViewModel.setFilter(art.company?.id!!)
                                         companyViewModel.myCompany = art.company!!
                                         articleViewModel.companyId = it.company?.id!!
                                         RouteController.navigateTo(Screen.CompanyScreen)
@@ -450,24 +451,24 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>, isEnabled : Bo
                             }
                         }
                         Row {
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                if (isEnabled) {
-
-                                    ButtonSubmit(
-                                        labelValue = "send message",
-                                        color = Color.Cyan,
-                                        enabled = isEnabled
-                                    ) {
-                                        messageViewModel.receiverAccountType = AccountType.COMPANY
-                                        messageViewModel.receiverCompany = art.company!!
-                                        messageViewModel.getAllMessageByCaleeId(it.company?.id!!)// from home screen
-                                        appViewModel.updateShow("message")
-                                        appViewModel.updateScreen(IconType.MESSAGE)
-                                    }
-                                }
-                            }
+//                            Row(
+//                                modifier = Modifier.weight(1f)
+//                            ) {
+//                                if (isEnabled) {
+//
+//                                    ButtonSubmit(
+//                                        labelValue = "send message",
+//                                        color = Color.Cyan,
+//                                        enabled = isEnabled
+//                                    ) {
+//                                        messageViewModel.receiverAccountType = AccountType.COMPANY
+//                                        messageViewModel.receiverCompany = art.company!!
+//                                        messageViewModel.getAllMessageByCaleeId(it.company?.id!!)// from home screen
+//                                        appViewModel.updateShow("message")
+//                                        appViewModel.updateScreen(IconType.MESSAGE)
+//                                    }
+//                                }
+//                            }
                             Row(
                                 modifier = Modifier
                                     .weight(1f)
@@ -538,11 +539,9 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                         SubType.CLIENT -> {
                             type = Type.USER_SEND_CLIENT_COMPANY
                         }
-
                         SubType.WORKER -> {
                             type = Type.USER_SEND_WORKER_COMPANY
                         }
-
                         else -> {
                         }
                     }
@@ -553,15 +552,12 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                         SubType.CLIENT -> {
                             type = Type.COMPANY_SEND_CLIENT_COMPANY
                         }
-
                         SubType.PROVIDER -> {
                             type = Type.COMPANY_SEND_PROVIDER_COMPANY
                         }
-
                         SubType.PARENT -> {
                             type = Type.COMPANY_SEND_PARENT_COMPANY
                         }
-
                         else ->
                             Type.OTHER
                     }
@@ -570,11 +566,9 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                         SubType.CLIENT -> {
                             type = Type.COMPANY_SEND_PROVIDER_USER
                         }
-
                         SubType.WORKER -> {
                             type = Type.COMPANY_SEND_WORKER_USER
                         }
-
                         else ->
                             Type.OTHER
                     }
@@ -606,8 +600,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                 Column(
                     modifier = Modifier.padding(2.dp)
                 ) {
-                    if (isCompany) {
-
+                    if (accountType == AccountType.USER) {
                         ButtonSubmit(
                             labelValue = "add as provider",
                             color = Color.Green,
@@ -617,34 +610,46 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                             openDialog = false
                             subType = SubType.PROVIDER
                         }
+                    } else {
+                        if (isCompany) {
+                            ButtonSubmit(
+                                labelValue = "add as provider",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                selected = true
+                                openDialog = false
+                                subType = SubType.PROVIDER
+                            }
+                            ButtonSubmit(
+                                labelValue = "add as parent",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                selected = true
+                                openDialog = false
+                                subType = SubType.PARENT
+                            }
+                        } else {
+                            ButtonSubmit(
+                                labelValue = "add as worker",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                selected = true
+                                openDialog = false
+                                subType = SubType.WORKER
+                            }
+                        }
                         ButtonSubmit(
-                            labelValue = "add as parent",
+                            labelValue = "add as client",
                             color = Color.Green,
                             enabled = true
                         ) {
                             selected = true
                             openDialog = false
-                            subType = SubType.PARENT
+                            subType = SubType.CLIENT
                         }
-                    }else{
-                        ButtonSubmit(
-                            labelValue = "add as worker",
-                            color = Color.Green,
-                            enabled = true
-                        ) {
-                            selected = true
-                            openDialog = false
-                            subType = SubType.WORKER
-                        }
-                    }
-                    ButtonSubmit(
-                        labelValue = "add as client",
-                        color = Color.Green,
-                        enabled = true
-                    ) {
-                        selected = true
-                        openDialog = false
-                        subType = SubType.CLIENT
                     }
                 }
                 }
@@ -1244,13 +1249,7 @@ fun ConversationCard(conversations : LazyPagingItems<Conversation>) {
 fun MessageCard(message: LazyPagingItems<Message>) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val me by sharedViewModel.user.collectAsStateWithLifecycle()
-
     val lazyListState = LazyListState()
-
-//    LaunchedEffect(key1 = message) {
-//        lazyListState.scrollToItem(index = message.size)
-//    }
-
 
         LazyColumn(
             state = lazyListState,

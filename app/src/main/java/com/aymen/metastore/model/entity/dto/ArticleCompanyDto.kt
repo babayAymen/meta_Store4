@@ -4,7 +4,9 @@ import com.aymen.metastore.model.entity.room.entity.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ArticleCompanyDto(
     val id : Long? = null,
     var unit: UnitArticle? = UnitArticle.U,
@@ -23,8 +25,9 @@ data class ArticleCompanyDto(
     var provider: CompanyDto? = null,
     var category: CategoryDto? = null,
     var company: CompanyDto? = null,
+    val isDeleted : Boolean?= false
 ){
-    fun toArticleCompany(isRandom : Boolean): ArticleCompany {
+    fun toArticleCompany(isRandom : Boolean, isSearch : Boolean? = false): ArticleCompany {
     return ArticleCompany(
         id,
         unit,
@@ -42,7 +45,8 @@ data class ArticleCompanyDto(
         isFav = isFav,
         articleId = article?.id,
         isEnabledToComment = isEnabledToComment,
-         likeNumber = likeNumber
+         likeNumber = likeNumber,
+        isSearch = isSearch
     )
     }
     fun toArticleCompanyModel():com.aymen.metastore.model.entity.model.ArticleCompany{

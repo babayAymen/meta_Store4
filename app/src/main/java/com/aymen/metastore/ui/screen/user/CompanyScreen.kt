@@ -102,12 +102,23 @@ fun CompanyScreen(company: Company) {
     DisposableEffect(key1 = Unit) {
         onDispose {
             ratingViewModel.rating = false
+            subCategoryViewModel.setSubCategory()
         }
     }
     LaunchedEffect(key1 = Unit) {
         articleViewModel.getAllCompanyArticles(companyId = company.id?:0)
         ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
-        categoryViewModel.getCategoryByCompany(companyId = company.id?:0)
+      //  categoryViewModel.getCategoryByCompany(companyId = company.id?:0)
+    }
+    LaunchedEffect(key1 = categories) {
+        if(categories.itemCount != 0){
+            articleViewModel.getRandomArticlesByCategory(categories[0]?.id?:0, company.id?:0, 0)
+        }
+    }
+    LaunchedEffect(key1 = subCategories) {
+        if(subCategories.itemCount != 0){
+            articleViewModel.getRandomArticlesByCategory(0, company.id?:0, subCategories[0]?.id?:0)
+        }
     }
 
 
@@ -151,7 +162,6 @@ fun CompanyScreen(company: Company) {
                         modifier = Modifier.padding(2.dp)
                     ) {
                         CompanyDetails(
-                            messageViewModel,
                             appViewModel,
                             clientViewModel,
                             companyViewModel,
@@ -183,9 +193,10 @@ fun CompanyScreen(company: Company) {
                                 subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryId = categ.id?:0, companyId = categ.company.id?:0)
                             }
                             ScreenByCompanySubCategory(items = subCategories, category = category) { categ ->
-                                articleViewModel.getRandomArticlesBySubCategory(
-                                    categ.id!!,
-                                    categ.company?.id!!
+                                articleViewModel.getRandomArticlesByCategory(
+                                    0,
+                                    categ.company?.id!!,
+                                    categ.id!!
                                 )
                             }
                         }
@@ -252,7 +263,7 @@ fun StarRating(
 }
 
 @Composable
-fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
+fun CompanyDetails( appViewModel: AppViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
                    ratingViewModel : RatingViewModel, company: Company, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     Row {
         Row(
@@ -264,23 +275,23 @@ fun CompanyDetails(messageViewModel: MessageViewModel, appViewModel: AppViewMode
                 clientViewModel.sendClientRequest(company.id!!, it)
             }
         }
-        Row(
-            modifier = Modifier.weight(1f)
-        ) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "send a message",
-                Modifier.clickable {
-//                            messageViewModel.senderId = company.user?.id!!
-//                            messageViewModel.getAllMyMessageByConversationId()
-//                            RouteController.navigateTo(Screen.HomeScreen)
-                    messageViewModel.receiverAccountType = AccountType.COMPANY
-                    messageViewModel.receiverCompany = company
-//                    messageViewModel.getAllMessageByCaleeId(company.id!!)// from company screen
-                    appViewModel.updateShow("message")
-                    appViewModel.updateScreen(IconType.MESSAGE)
-                }
-            )
-        }
+//        Row(
+//            modifier = Modifier.weight(1f)
+//        ) {
+//            Icon(imageVector = Icons.AutoMirrored.Filled.Send,
+//                contentDescription = "send a message",
+//                Modifier.clickable {
+////                            messageViewModel.senderId = company.user?.id!!
+////                            messageViewModel.getAllMyMessageByConversationId()
+////                            RouteController.navigateTo(Screen.HomeScreen)
+//                    messageViewModel.receiverAccountType = AccountType.COMPANY
+//                    messageViewModel.receiverCompany = company
+////                    messageViewModel.getAllMessageByCaleeId(company.id!!)// from company screen
+//                    appViewModel.updateShow("message")
+//                    appViewModel.updateScreen(IconType.MESSAGE)
+//                }
+//            )
+//        }
         if (isMePointSeller) {
             Row(
                 modifier = Modifier.weight(1f)

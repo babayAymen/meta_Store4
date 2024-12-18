@@ -1,8 +1,9 @@
 package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.SubCategory
+import kotlinx.serialization.Serializable
 
-
+@Serializable
 data class SubCategoryDto(
     var id : Long? = null,
     var libelle : String? = null,

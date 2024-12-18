@@ -76,7 +76,7 @@ class PointsPaymentViewModel @Inject constructor(
 init {
 
     val id = if(sharedViewModel.accountType.value == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
-    getAllMyPointsPaymentt(sharedViewModel.company.value.id?:0)
+    getAllMyPointsPaymentt(id?:0)
     getAllMyPointsPaymentRecharge(id?:0)
 }
     fun getAllMyPointsPaymentt(companyId: Long) {

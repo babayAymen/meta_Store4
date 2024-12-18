@@ -214,7 +214,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     }
     TopAppBar(
         title = {
-            Text(text = "aymen")
+            Text(text = "meta")
         },
         Modifier
             .clip(shape = RoundedCornerShape(topStart = 60.dp, topEnd = 60.dp))
@@ -341,30 +341,30 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         },
                         description = "home"
                     )
-                    IconWithBadge(
-                        iconType = IconType.NOTIFICATIONS,
-                        selectedIcon = selectedIcon,
-                        iconSelected = Icons.Default.Notifications,
-                        iconUnselected = Icons.Outlined.Notifications,
-                        badgeCount = 9, // Example of a message badge
-                        onClick = {
-//                            historySelected = selectedIcon
-                            viewModel.updateScreen(IconType.NOTIFICATIONS)
-                        },
-                        description = "notification"
-                    )
-                    IconWithBadge(
-                        iconType = IconType.MESSAGE,
-                        selectedIcon = selectedIcon,
-                        iconSelected = Icons.Default.ChatBubble,
-                        iconUnselected = Icons.Outlined.ChatBubbleOutline,
-                        badgeCount = 8, // Example of a message badge
-                        onClick = {
-//                            historySelected = selectedIcon
-                            viewModel.updateScreen(IconType.MESSAGE)
-                        },
-                        description = "email"
-                    )
+//                    IconWithBadge(
+//                        iconType = IconType.NOTIFICATIONS,
+//                        selectedIcon = selectedIcon,
+//                        iconSelected = Icons.Default.Notifications,
+//                        iconUnselected = Icons.Outlined.Notifications,
+//                        badgeCount = 9, // Example of a message badge
+//                        onClick = {
+////                            historySelected = selectedIcon
+//                            viewModel.updateScreen(IconType.NOTIFICATIONS)
+//                        },
+//                        description = "notification"
+//                    )
+//                    IconWithBadge(
+//                        iconType = IconType.MESSAGE,
+//                        selectedIcon = selectedIcon,
+//                        iconSelected = Icons.Default.ChatBubble,
+//                        iconUnselected = Icons.Outlined.ChatBubbleOutline,
+//                        badgeCount = 8, // Example of a message badge
+//                        onClick = {
+////                            historySelected = selectedIcon
+//                            viewModel.updateScreen(IconType.MESSAGE)
+//                        },
+//                        description = "email"
+//                    )
                     if (accountType == AccountType.COMPANY) {
 
                         IconWithBadge(
@@ -546,6 +546,7 @@ fun ScreenByCategory(articleViewModel: ArticleViewModel) {
     LazyRow {
         items(CompanyCategory.entries){ categ ->
             Card(onClick = {
+                Log.e("categoryarticle","category : ${categ.ordinal}")
                 articleViewModel.fetchRandomArticlesForHomePage(categ)
                            },
                 modifier = Modifier.height(50.dp))

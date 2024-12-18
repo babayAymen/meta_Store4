@@ -23,11 +23,13 @@ import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.dto.ConversationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.dto.SearchHistoryDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
@@ -103,7 +105,7 @@ class GlobalRepositoryImpl  @Inject constructor
     }
     override suspend fun getAllArticlesContaining(search: String, searchType : SearchType) = articleRepository.getAllArticlesContaining(search, searchType)
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = articleRepository.likeAnArticle(articleId, isFav)
-    override suspend fun sendComment(comment: String, articleId: Long) = articleRepository.sendComment(comment,articleId)
+    override suspend fun sendComment(comment: CommentDto) = articleRepository.sendComment(comment)
     override fun getArticleComments(articleId: Long): Flow<PagingData<CommentWithArticleAndUserOrCompany>>{
         TODO()
     }
@@ -197,8 +199,8 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getAllMyClientContaining(clientName: String,companyId : Long) = clientRepository.getAllMyClientContaining(clientName,companyId = companyId)
     override suspend fun sendClientRequest(id: Long, type: Type) = clientRepository.sendClientRequest(id,type)
     override suspend fun getAllClientContaining(search: String, searchType: SearchType, searchCategory: SearchCategory) = clientRepository.getAllClientContaining(search,searchType,searchCategory)
-    override suspend fun saveHistory(category: SearchCategory, id: Long) = clientRepository.saveHistory(category,id)
-    override fun getAllHistory(id: Long): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
+    override suspend fun saveHistory(category: SearchCategory, id: Long): Response<SearchHistoryDto> = clientRepository.saveHistory(category,id)
+    override fun getAllHistory(id: Long): Flow<PagingData<SearchHistory>> {
         TODO("Not yet implemented")
     }
    override suspend fun addProvider(provider: String, file: File?): Response<ClientProviderRelationDto> = providerRepository.addProvider(provider,file)
@@ -255,18 +257,26 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getAllMyOrdersLines(companyId: Long) = orderRepository.getAllMyOrdersLines((companyId))
     override suspend fun getAllMyOrdersLinesByOrderId(orderId: Long) = orderRepository.getAllMyOrdersLinesByOrderId(orderId)
     override suspend fun getAllMyWorker(companyId : Long) = workerRepository.getAllMyWorker(companyId = companyId)
-    override fun getAllMyInvoicesAsProvider(companyId: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getAllMyInvoicesAsProvider(
+        companyId: Long,
+        isProvider: Boolean,
+        status: PaymentStatus
+    ): Flow<PagingData<Invoice>> {
         TODO("Not yet implemented")
     }
 
-    override fun getAllInvoicesAsClient(clientId: Long, accountType : AccountType): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    override fun getAllInvoicesAsClient(
+        clientId: Long,
+        accountType: AccountType,
+        status: PaymentStatus
+    ): Flow<PagingData<Invoice>> {
         TODO("Not yet implemented")
     }
 
     override fun getAllInvoicesAsClientAndStatus(
         clientId: Long,
         status: Status
-    ): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+    ): Flow<PagingData<Invoice>> {
         TODO("Not yet implemented")
     }
 

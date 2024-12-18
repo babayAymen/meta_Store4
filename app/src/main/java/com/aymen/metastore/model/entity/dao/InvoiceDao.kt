@@ -123,11 +123,17 @@ interface InvoiceDao {
      @Query("DELETE FROM not_accepted_remote_keys")
      suspend fun clearAllBuyHistoryNotAcceptedRemoteKeysTable()
 
-     @Query("DELETE FROM invoice WHERE (clientId = :id OR personId = :id)")
+     @Query("DELETE FROM invoice WHERE clientId = :id")
      suspend fun clearAllTableAsClient(id : Long)
+
+     @Query("DELETE FROM invoice WHERE personId = :id")
+     suspend fun clearAllTableAsPerson(id : Long)
 
      @Query("DELETE FROM invoice WHERE providerId = :id")
      suspend fun clearAllTableAsProvider(id : Long)
+
+     @Query("DELETE FROM invoice WHERE providerId = :id AND status = :status")
+     suspend fun clearAllTableAsProviderAndStatus(id : Long, status: PaymentStatus)
 
      @Query("DELETE FROM invoice WHERE paid = :paid")
      suspend fun clearAllBuyHistoryTableByPaidStatus(paid: PaymentStatus)
@@ -138,20 +144,38 @@ interface InvoiceDao {
      @Query("DELETE FROM invoice WHERE status = :status AND personId = :id")
      suspend fun clearAllInvoiceTableAsClientAnStatus(status : Status , id : Long)
 
+     @Query("DELETE FROM invoice WHERE paid = :status AND clientId = :id")
+     suspend fun clearAllInvoiceTableAsClientAndPaid(status : PaymentStatus , id : Long)
+
+     @Query("DELETE FROM invoice WHERE paid = :status AND personId = :id")
+     suspend fun clearAllInvoiceTableAsPersonAndPaid(status : PaymentStatus , id : Long)
+
      @Query("DELETE FROM invoice_as_client_and_status_remote_keys")
      suspend fun clearInvoicesAsClientAndStatusRemoteKeysTable()
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE providerId = :companyId")
+     @Query("SELECT * FROM invoice WHERE providerId = :companyId ORDER BY lastModifiedDate DESC")
      fun getAllMyInvoiceAsProvider(companyId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE clientId = :clientId")
+     @Query("SELECT * FROM invoice WHERE providerId = :companyId AND paid = :status ORDER BY lastModifiedDate DESC")
+     fun getAllMyInvoiceAsProviderAndStatus(companyId : Long, status: PaymentStatus): PagingSource<Int, InvoiceWithClientPersonProvider>
+
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE clientId = :clientId ORDER BY lastModifiedDate DESC")
      fun getAllMyInvoiceAsClient(clientId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE personId = :clientId AND status = :status")
+     @Query("SELECT * FROM invoice WHERE personId = :clientId AND status = :status ORDER BY lastModifiedDate DESC ")
      fun getAllMyInvoiceAsClientAndStatus(clientId : Long, status : Status): PagingSource<Int, InvoiceWithClientPersonProvider>
+
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE clientId = :clientId AND paid = :status  ORDER BY lastModifiedDate DESC")
+     fun getAllMyInvoiceAsClientAndPaid(clientId : Long, status : PaymentStatus): PagingSource<Int, InvoiceWithClientPersonProvider>
+
+     @Transaction
+     @Query("SELECT * FROM invoice WHERE personId = :clientId AND paid = :status")
+     fun getAllMyInvoiceAsPersonClientAndPaid(clientId : Long, status : PaymentStatus): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
      @Query("SELECT * FROM invoice WHERE  personId = :clientId AND isInvoice = :isInvoice")

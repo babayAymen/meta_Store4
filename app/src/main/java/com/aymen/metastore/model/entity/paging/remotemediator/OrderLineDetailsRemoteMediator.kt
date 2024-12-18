@@ -77,7 +77,7 @@ class OrderLineDetailsRemoteMediator(
                     companyDao.insertCompany(response.map {company -> company.article?.company?.toCompany()})
                     userDao.insertUser(response.map {user -> user.article?.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map { company -> company.article?.provider?.toCompany() })
-                    categoryDao.insertCategory(response.map {category -> category.article?.category?.toCategory() })
+                    categoryDao.insertCategory(response.map {category -> category.article?.category?.toCategory(isCategory = false) })
                     subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory() })
                     articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true) })
                     articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(true)})

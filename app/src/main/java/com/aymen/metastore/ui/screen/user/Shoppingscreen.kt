@@ -67,8 +67,8 @@ fun ShoppingScreen() {
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     val allMyOrdersNotAccepted = shoppingViewModel.allMyOrdersNotAccepted.collectAsLazyPagingItems()
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
-    val myInvoicesAccepted = if(accountType == AccountType.USER)invoiceViewModel.myInvoicesAsClient.collectAsLazyPagingItems()else null
-    val invoicesNotAccepted = if(accountType == AccountType.USER)invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()else null
+    val myInvoicesAccepted = if(accountType == AccountType.USER)invoiceViewModel.invoicesAsClient.collectAsLazyPagingItems()else null
+    val invoicesNotAccepted = if(accountType == AccountType.USER)invoiceViewModel.invoicesNotAccepted.collectAsLazyPagingItems()else null
 
     var order by remember {
         mutableStateOf(PurchaseOrder())

@@ -85,7 +85,7 @@ class OrderRepositoryImpl @Inject constructor(
         room.companyDao().insertCompany(response.map {company -> company.article?.company?.toCompany()})
         room.userDao().insertUser(response.map {user -> user.article?.provider?.user?.toUser()})
         room.companyDao().insertCompany(response.map { company -> company.article?.provider?.toCompany() })
-        room.categoryDao().insertCategory(response.map {category -> category.article?.category?.toCategory() })
+        room.categoryDao().insertCategory(response.map {category -> category.article?.category?.toCategory(isCategory = false) })
         room.subCategoryDao().insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory() })
         room.articleDao().insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true) })
         room.articleCompanyDao().insertArticle(response.map { it.article?.toArticleCompany(true)})

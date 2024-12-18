@@ -11,14 +11,16 @@ import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
+import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.PaymentStatus
 
 @OptIn(ExperimentalPagingApi::class)
 class InvoiceRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val type : LoadType,
+    private val type : AccountType,
     private val id : Long,
-    private val status : Status?
+    private val status : PaymentStatus
 ): RemoteMediator<Int, InvoiceWithClientPersonProvider>()  {
 
     private val userDao = room.userDao()
@@ -56,7 +58,7 @@ class InvoiceRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllMyInvoicesAsClient(id,currentPage, state.config.pageSize)
+            val response = api.getAllMyInvoicesAsClient(id,status,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -114,7 +116,10 @@ class InvoiceRemoteMediator(
     }
 
     private suspend fun deleteCache(){
-        invoiceDao.clearAllTableAsClient(id)
+        when(status){
+            PaymentStatus.ALL -> if(type == AccountType.COMPANY) invoiceDao.clearAllTableAsClient(id) else invoiceDao.clearAllTableAsPerson(id)
+            else -> if(type == AccountType.COMPANY) invoiceDao.clearAllInvoiceTableAsClientAndPaid(status, id) else invoiceDao.clearAllInvoiceTableAsPersonAndPaid(status, id)
+        }
         invoiceDao.clearInvoiceRemoteKeysTable()
     }
 }

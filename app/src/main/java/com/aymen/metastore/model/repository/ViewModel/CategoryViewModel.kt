@@ -22,6 +22,7 @@ import com.aymen.metastore.model.entity.model.ErrorResponse
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.remoteKeys.CategoryRemoteKeysEntity
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -49,8 +51,8 @@ class CategoryViewModel @Inject constructor (
     private val _categories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
     val categories : StateFlow<PagingData<Category>> get() = _categories
 
-    private val _companyCategories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
-    val companyCategories : StateFlow<PagingData<Category>> get() = _companyCategories
+ //   private val _companyCategories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
+   // val companyCategories : StateFlow<PagingData<Category>> get() = _companyCategories
 
     private val _categoryForUpdate : MutableStateFlow<Category> = MutableStateFlow(Category())
     val categoryForUpdate : StateFlow<Category> get() = _categoryForUpdate
@@ -67,13 +69,25 @@ init {
             .cachedIn(viewModelScope)
             .collect { _categories.value = it.map { category -> category } }
     }
-    getCategoryByCompany(sharedViewModel.company.value.id?:0)
-
 }
+
+
+    private val _filter = MutableStateFlow(0L)
+    val filter : StateFlow<Long> = _filter
+
+    val companyCategories = _filter.flatMapLatest { filter ->
+        useCases.getCategoryTemp(filter)
+            .cachedIn(viewModelScope)
+    }
+
+    fun setFilter(filter : Long){
+        _filter.value = filter
+    }
 
     fun assignCategoryForUpdate(item : Category){
         _categoryForUpdate.value = item
     }
+
 
     fun deleteCategory(){
         Toast.makeText(context, "sorry you can not delete category", Toast.LENGTH_SHORT).show()
@@ -107,7 +121,7 @@ init {
                             room.withTransaction {
                                 categoryDao.deleteCategoryById(id)
                                 categoryDao.deleteCategoryRemoteKeyById(id)
-                                categoryDao.insertSingCategory(response.toCategory())
+                                categoryDao.insertSingCategory(response.toCategory(isCategory = true))
                                 categoryDao.insertSingelKey(remoteKey.copy(
                                     id = response.id!!
                                 ))
@@ -146,7 +160,7 @@ init {
                     val response = success.body()
                     if (success.isSuccessful) {
                         if (response != null) {
-                            categoryDao.insertSingCategory(response.toCategory())
+                            categoryDao.insertSingCategory(response.toCategory(isCategory = true))
                         }
                     }
                 },
@@ -157,15 +171,15 @@ init {
         }
     }
 
-
-    fun getCategoryByCompany(companyId : Long){
-        viewModelScope.launch {
-            useCases.getCategoryTemp(companyId)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect { _companyCategories.value = it }
-        }
-    }
+//
+//    fun getCategoryByCompany(companyId : Long){
+//        viewModelScope.launch {
+//            useCases.getCategoryTemp(companyId)
+//                .distinctUntilChanged()
+//                .cachedIn(viewModelScope)
+//                .collect { _companyCategories.value = it }
+//        }
+//    }
 
     private fun errorBlock(error : String?){
         viewModelScope.launch{

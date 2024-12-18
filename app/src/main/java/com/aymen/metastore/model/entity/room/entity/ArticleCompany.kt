@@ -52,9 +52,10 @@ data class ArticleCompany(
     val isVisible : PrivacySetting? = PrivacySetting.ONLY_ME,
     var articleId : Long? = null,
     val isEnabledToComment : Boolean? = false,
-    val isSync : Boolean? = true
+    val isSync : Boolean? = true,
+    val isSearch : Boolean? = false,
 ){
-    fun toArticle(category: com.aymen.metastore.model.entity.model.Category,
+    fun toArticle(category: com.aymen.metastore.model.entity.model.Category?,
                   subCategory: com.aymen.metastore.model.entity.model.SubCategory?,
                   provider: com.aymen.metastore.model.entity.model.Company,
                   company : com.aymen.metastore.model.entity.model.Company,

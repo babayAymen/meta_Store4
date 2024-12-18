@@ -1,7 +1,9 @@
 package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.Comment
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CommentDto(
 
     val id : Long? = null,

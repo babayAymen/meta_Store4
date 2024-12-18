@@ -3,12 +3,14 @@ package com.aymen.store.model.repository.ViewModel
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
@@ -33,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Response
 import java.math.BigDecimal
 import javax.inject.Inject
 @HiltViewModel
@@ -43,9 +46,6 @@ class ShoppingViewModel @Inject constructor(
     private val appViewModel: AppViewModel,
     private val context : Context,
     private val useCases: MetaUseCases,
-    private val accountTyp: DataStore<AccountType>,
-    private val company: DataStore<Company>,
-    private val user: DataStore<User>,
 
 ): ViewModel() {
 
@@ -74,36 +74,33 @@ class ShoppingViewModel @Inject constructor(
     private val _allMyOrdersNotAccepted : MutableStateFlow<PagingData<PurchaseOrder>> = MutableStateFlow(PagingData.empty())
     val allMyOrdersNotAccepted: StateFlow<PagingData<PurchaseOrder>> get() = _allMyOrdersNotAccepted
 
-
     var Order by mutableStateOf(PurchaseOrder())
     var cost by mutableStateOf(BigDecimal.ZERO)
 
 init {
-    when(sharedViewModel.accountType.value){
-        AccountType.COMPANY ->{
-            getAllMyOrdersNotAccepted(sharedViewModel.company.value.id?:0)}
-        AccountType.USER -> {
-            getAllMyOrdersNotAccepted(sharedViewModel.user.value.id?:0)}
-        AccountType.AYMEN -> {}
-        AccountType.NULL -> {}
+    viewModelScope.launch {
+        sharedViewModel.user.collect { user ->
+            val id = when (sharedViewModel.accountType.value) {
+                AccountType.COMPANY -> sharedViewModel.company.value.id
+                AccountType.USER -> sharedViewModel.user.value.id
+                else -> 0
+            }
+
+            when (sharedViewModel.accountType.value) {
+                AccountType.COMPANY -> {
+                    Log.e("collectid","company id : $id")
+                    getAllMyOrdersNotAccepted(id ?: 0)
+                }
+                AccountType.USER -> {
+                    Log.e("collectid","user id : $id")
+                    getAllMyOrdersNotAccepted(id ?: 0)
+                }
+                AccountType.AYMEN -> {}
+                AccountType.NULL -> {}
+            }
+        }
     }
-//    viewModelScope.launch {
-//    accountTyp.data.collect { type ->
-//        _accountType.value = type
-//        when(type){
-//            AccountType.COMPANY -> company.data.collect{
-//                getAllMyOrdersNotAccepted(it.id?:0)
-//                _myCompany.value = it
-//            }
-//            AccountType.USER -> user.data.collect{
-//                getAllMyOrdersNotAccepted(it.id!!)
-//                _myUser.value = it
-//            }
-//            AccountType.AYMEN -> {}
-//            AccountType.NULL -> {}
-//        }
-//    }
-//    }
+
 }
     fun removeOrderById(index: Int) {
         orderArray = orderArray.toMutableList().also {
@@ -241,21 +238,32 @@ fun submitShopping(newBalance: BigDecimal) {
 
     fun orderLineResponse(status: Status, id : Long, isAll : Boolean){
         viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    val order = repository.orderLineResponse(status,id,isAll)
-                    if(order.isSuccessful){
-                        if(isAll) {
+            if (isAll) {
+                room.purchaseOrderLineDao().deleteByPurchaseOrderId(id)
+            } else {
+                        room.purchaseOrderDao().deleteOrderNotAcceptedKeysById(id)
+            }
+            val result : Result<Response<Double>> = runCatching{
+                repository.orderLineResponse(status,id,isAll)
+            }
+            result.fold(
+                onSuccess = {success ->
+                        appViewModel.updateShow("order")
+                    val order = success.body()
+                    if(order != null) {
+                        appViewModel.updateCompanyBalance(order)
+                        if (isAll) {
                             room.purchaseOrderLineDao().deleteByPurchaseOrderId(id)
-                        }else{
+                        } else {
                             room.purchaseOrderDao().deletePurchaseOrderById(id)
                         }
-                        room.purchaseOrderDao().deleteOrderNotAcceptedKeysById(id)
-                        appViewModel.updateCompanyBalance(order.body()!!)
-                        appViewModel.updateShow("order")
                     }
-                }catch (_ex : Exception){
-                    Log.e("aymenbabayOrder","orderLineResponse exption: $_ex")
+
+                },
+                onFailure = {
+
                 }
+            )
         }
     }
 }

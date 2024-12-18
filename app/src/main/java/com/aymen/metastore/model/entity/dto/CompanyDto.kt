@@ -4,7 +4,9 @@ import com.aymen.metastore.model.Enum.InvoiceType
 import com.aymen.metastore.model.entity.room.entity.Company
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CompanyDto(
     var id : Long? = null,
     var name: String = "",

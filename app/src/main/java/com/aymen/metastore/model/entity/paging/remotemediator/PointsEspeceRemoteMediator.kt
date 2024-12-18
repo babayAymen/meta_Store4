@@ -92,7 +92,7 @@ class PointsEspeceRemoteMediator(
                     userDao.insertUser(response.content.map {user -> user.purchaseOrderLine?.article?.category?.company?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.purchaseOrderLine?.article?.category?.company?.toCompany()})
                     purchaseOrderDao.insertOrder(response.content.map { order -> order.purchaseOrderLine?.purchaseorder?.toPurchaseOrder() })
-                    categoryDao.insertCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.category?.toCategory() })
+                    categoryDao.insertCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.category?.toCategory(isCategory = false) })
                     subCategoryDao.insertSubCategory(response.content.map { cat -> cat.purchaseOrderLine?.article?.subCategory?.toSubCategory() })
                     articleDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.article?.toArticle(isMy = true) })
                     articleCompanyDao.insertArticle(response.content.map { article -> article.purchaseOrderLine?.article?.toArticleCompany(false) })

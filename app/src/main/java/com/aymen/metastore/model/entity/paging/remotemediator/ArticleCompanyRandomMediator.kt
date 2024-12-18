@@ -10,11 +10,13 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
+import com.aymen.store.model.Enum.CompanyCategory
 
 @OptIn(ExperimentalPagingApi::class)
 class ArticleCompanyRandomMediator(
     private val api : ServiceApi,
-    private val room : AppDatabase
+    private val room : AppDatabase,
+    private val category : CompanyCategory
 ):RemoteMediator<Int, RandomArticleChild>() {
 
 
@@ -52,8 +54,8 @@ class ArticleCompanyRandomMediator(
                     nextePage
                 }
             }
-            val response = api.getRandomArticles(currentPage, state.config.pageSize)
-            response.map { article -> if(article.id == 20L)Log.e("article","article $article") }
+            val response = api.getRandomArticles(category,currentPage, state.config.pageSize)
+            Log.e("article","article ${response.size}")
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -75,8 +77,8 @@ class ArticleCompanyRandomMediator(
                     userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.company?.toCompany()})
                     companyDao.insertCompany(response.map { company -> company.provider?.toCompany() })
-                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory() })
-                    categoryDao.insertCategory(response.map {category -> category.subCategory?.category?.toCategory() })
+                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory(isCategory = false) })
+                    categoryDao.insertCategory(response.map {category -> category.subCategory?.category?.toCategory(isCategory = false) })
                     subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory() })
                     articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true) })
                         articleCompanyDao.insertRandomArticle(response.map { it.toRandomArticleCompany() })

@@ -2,7 +2,9 @@ package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.store.model.Enum.CompanyCategory
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ArticleDto(
     var id: Long? = null,
     var libelle: String? = "",

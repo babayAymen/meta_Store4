@@ -204,29 +204,32 @@ class ArticleViewModel @Inject constructor(
             }
         }
 
-        fun getRandomArticlesBySubCategory(subCategoryId: Long, companyId: Long) {
-            viewModelScope.launch(Dispatchers.IO) {
-
-            }
-        }
 
 
         fun addArticleCompany(articlee: ArticleCompany) {
             viewModelScope.launch(Dispatchers.IO) {
-                val latestArticleId = room.articleCompanyDao().getLatestArticleId()
                 var remoteKey = ArticleRemoteKeysEntity(0,0,0)
-                val id = if (latestArticleId != null) latestArticleId + 1 else 1
+                 var id = 0L
                 room.withTransaction{
+                    val latestArticleId = articleCompanyDao.getLatestArticleId()
+                 id = if (latestArticleId != null) latestArticleId + 1 else 1
+                Log.e("azertyiiopo","id is : $id and last id $latestArticleId")
                     room.articleDao().updateArticleById(true,articlee.article?.id!!)
                     val articleCount = articleCompanyDao.getArticlesCount()
                     val page = articleCount.div(PAGE_SIZE)
-                  room.articleCompanyDao().insertSigleArticle(articlee.copy(id = id).toArticleCompanyEntity(isSync = false))
+                    Log.e("azertyiiopo","page is : $page  and articleCount $articleCount")
                  remoteKey = ArticleRemoteKeysEntity(
                     id = id,
-                    previousPage = if(page == 0) null else page,
-                    nextPage = null
+                    previousPage = if(page == 0) null else page-1,
+                    nextPage = page + 1
                 )
-                room.articleCompanyDao().insertSingleKey(remoteKey)
+                    try {
+
+                        room.articleCompanyDao().insertSigleArticle(articlee.copy(id = id).toArticleCompanyEntity(isSync = false))
+                        room.articleCompanyDao().insertSingleKey(remoteKey)
+                    }catch (ex : Exception){
+                        Log.e("azertyiiopo","exc : $ex")
+                    }
                 }
                 val result: Result<Response<ArticleCompanyDto>> = runCatching {
                     repository.addArticleWithoutImage(articlee.toArticleCompanyDto(), article.id ?: 0L)
@@ -236,6 +239,7 @@ class ArticleViewModel @Inject constructor(
                         if (success.isSuccessful) {
                             room.withTransaction {
                                 val serverArticle = success.body()!!
+                                Log.e("articleviewlodel","id is $id")
                                 val latestRemoteKey = articleCompanyDao.getArticleRemoteKey(id)
                                 val remoteKeys = ArticleRemoteKeysEntity(
                                     id = serverArticle.id!!,
@@ -289,11 +293,11 @@ class ArticleViewModel @Inject constructor(
             }
         }
 
-        fun sendComment(comment: String, articleId: Long) {
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    repository.sendComment(comment, articleId)
-                }
+        fun sendComment(comment : Comment) {
+            viewModelScope.launch(Dispatchers.IO) {
+
+                    repository.sendComment(comment.toCommentDto())
+
             }
         }
 

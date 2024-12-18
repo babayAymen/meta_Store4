@@ -43,7 +43,7 @@ interface PointsPaymentDao {
     fun getAllMyPointsPaymentForProviders() : PagingSource<Int, PaymentForProvidersWithCommandLine>
 
     @Transaction
-     @Query("SELECT * FROM points_payment WHERE (clientCompanyId = :id OR providerId = :id OR clientUserId = :id)")
+     @Query("SELECT * FROM points_payment WHERE (clientCompanyId = :id OR providerId = :id OR clientUserId = :id) ORDER BY lastModifiedDate DESC")
      fun getAllRechargeHistory(id : Long) : PagingSource<Int, PointsWithProviderclientcompanyanduser>
 
 }

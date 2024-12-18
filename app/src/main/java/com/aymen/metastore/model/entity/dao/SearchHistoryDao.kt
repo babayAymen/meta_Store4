@@ -20,10 +20,16 @@ interface SearchHistoryDao {
 
     @Upsert
     suspend fun insertAllSearchKeys(keys : List<AllSearchRemoteKeysEntity>)
+    @Upsert
+    suspend fun insertSingleRemoteKey(keys : AllSearchRemoteKeysEntity)
     @Transaction
-    @Query("SELECT * FROM search_history")
+    @Query("SELECT * FROM search_history ORDER BY lastModifiedDate DESC")
      fun getAllSearchHistories(): PagingSource<Int ,SearchHistoryWithClientOrProviderOrUserOrArticle>
 
+     @Query("DELETE FROM search_history WHERE id = :id")
+     suspend fun deleteSearchHistoryById(id : Long)
+     @Query("DELETE FROM all_search_remote_keys WHERE id = :id")
+     suspend fun deleteRemoteKeyById(id : Long)
     @Transaction
     @Query("SELECT s.*, u.* FROM search_history AS s JOIN user AS u ON s.userId = u.id WHERE u.username LIKE '%' || :search || '%'")
      fun getAllUserSearchHistories(search : String): PagingSource<Int ,SearchHistoryWithClientOrProviderOrUserOrArticle>
@@ -54,5 +60,10 @@ interface SearchHistoryDao {
      @Query("DELETE FROM all_search_remote_keys")
      suspend fun clearAllSearchHistoryRemoteKeysTable()
 
+     @Query("SELECT * FROM all_search_remote_keys ORDER BY id DESC LIMIT 1")
+     suspend fun getLatestRemoteKey() : AllSearchRemoteKeysEntity?
+
+     @Query("SELECT COUNT(*) FROM all_search_remote_keys")
+     suspend fun getRemoteKeysCount() : Int
 
 }

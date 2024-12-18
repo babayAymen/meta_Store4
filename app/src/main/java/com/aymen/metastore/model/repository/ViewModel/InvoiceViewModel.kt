@@ -32,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -45,28 +46,13 @@ class InvoiceViewModel @Inject constructor(
 ) : ViewModel(){
 
     val listState = LazyListState()
-
-    private val _myInvoicesAsProvider : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val myInvoicesAsProvider : StateFlow<PagingData<Invoice>> get() = _myInvoicesAsProvider
-
-    private val _myInvoicesAsClient : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val myInvoicesAsClient: StateFlow<PagingData<Invoice>> get() = _myInvoicesAsClient
-
     private val _ordersLine : MutableStateFlow<PagingData<PurchaseOrderLine>> = MutableStateFlow(PagingData.empty())
     val ordersLine: StateFlow<PagingData<PurchaseOrderLine>> get() = _ordersLine
-
     private val _commandLineInvoice : MutableStateFlow<PagingData<CommandLine>> = MutableStateFlow(PagingData.empty())
     val commandLineInvoice: StateFlow<PagingData<CommandLine>> get() = _commandLineInvoice
-
-
     private val _allMyInvoiceNotAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val allMyInvoiceNotAccepted: StateFlow<PagingData<Invoice>> get() = _allMyInvoiceNotAccepted
-//
-//    val _ordersLineArray : MutableStateFlow<List<PurchaseOrderLine>> = MutableStateFlow(emptyList())
-//    val ordersLineArray: StateFlow<List<PurchaseOrderLine>> = _ordersLineArray
-
     var invoice by mutableStateOf(Invoice())
-
     var lastInvoiceCode by mutableLongStateOf(0)
     var clientCompany by mutableStateOf(Company())
     var clientUser by mutableStateOf(User())
@@ -75,28 +61,17 @@ class InvoiceViewModel @Inject constructor(
     var commandLineDto by mutableStateOf(CommandLine())
     private val _commandLineDtos :  MutableStateFlow<List<CommandLine>> = MutableStateFlow(emptyList())
     val commandLine : StateFlow<List<CommandLine>> get() = _commandLineDtos
-    var isLoading by  mutableStateOf(true)
     var discount by mutableDoubleStateOf(0.0)
     val company by mutableStateOf(sharedViewModel.company.value)
     var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
     var invoiceType by mutableStateOf(InvoiceDetailsType.ORDER_LINE)
-
-//    private val _inComplete : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-//    val invoiceByPaymentStatus: StateFlow<PagingData<Invoice>> get() = _inComplete
-
-    private val _invoiceByPaymentStatus : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val invoiceByPaymentStatus: StateFlow<PagingData<Invoice>> get() = _invoiceByPaymentStatus
-
-//    private val _notPaid : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-//    val invoiceByPaymentStatus: StateFlow<PagingData<Invoice>> get() = _notPaid
-
-    private val _notAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val notAccepted: StateFlow<PagingData<Invoice>> get() = _notAccepted
-
+    private val _notAcceptedAsProvider : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val notAcceptedAsProvider: StateFlow<PagingData<Invoice>> get() = _notAcceptedAsProvider
+    private val _notAcceptedAsClient : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val notAcceptedAsClient: StateFlow<PagingData<Invoice>> get() = _notAcceptedAsClient
     fun substructCommandsLine(){
         _commandLineDtos.value = _commandLineDtos.value.minus(commandLineDto)
     }
-
     fun addCommandLine(commandLine: CommandLine){
         _commandLineDtos.value = _commandLineDtos.value.plus(commandLine)
     }
@@ -127,106 +102,75 @@ class InvoiceViewModel @Inject constructor(
         _commandLineDtos.value = emptyList()
         discount = 0.0
     }
-    fun getAllMyPaymentFromInvoicee(status : PaymentStatus, isProvider : Boolean){
-        viewModelScope.launch{
-            when(status){
-//                PaymentStatus.NOT_PAID -> {
-//                    useCases.getNotPaidInvoice(company.id!!, isProvider)
-//                        .distinctUntilChanged()
-//                        .cachedIn(viewModelScope)
-//                        .collect{
-//                            _notPaid.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-//                        }
-//
-//                }
-//                PaymentStatus.PAID -> {
-//
-//
-//                }
-//                PaymentStatus.INCOMPLETE -> {
-//                    useCases.getInCompleteInvoice(company.id!!,isProvider)
-//                        .distinctUntilChanged()
-//                        .cachedIn(viewModelScope)
-//                        .collect{
-//                            _inComplete.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-//                        }
-//
-//                }
 
-                PaymentStatus.ALL -> {
-                    useCases.getAllInvoices(company.id!!)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _myInvoicesAsProvider.value = it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                        }
-                }
-                else ->{
-                    useCases.getPaidInvoice(company.id!!,isProvider, status)
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                        .collect{
-                            _invoiceByPaymentStatus.value = it
-                        }
-                }
-            }
+    private val _filter = MutableStateFlow(PaymentStatus.ALL)
+    val filter : StateFlow<PaymentStatus> = _filter
 
-        }
+    val invoices = _filter.flatMapLatest {filter->
+        useCases.getAllInvoices(company.id!!,true,filter)
+            .cachedIn(viewModelScope)
     }
 
+    val invoicesAsClient = _filter.flatMapLatest {filter->
+        val id = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
+        useCases.getAllInvoicesAsClient(id!!, sharedViewModel.accountType.value, filter)
+            .cachedIn(viewModelScope)
+    }
+
+    fun setFilter(filter : PaymentStatus){
+        _filter.value = filter
+    }
+
+    private val _statusFilter = MutableStateFlow(Status.INWAITING)
+    val statusFilter : StateFlow<Status> = _statusFilter
+
+    val invoicesNotAccepted = _statusFilter.flatMapLatest { filter ->
+        useCases.getAllInvoicesAsClientAndStatus(sharedViewModel.user.value.id!!, filter)
+            .cachedIn(viewModelScope)
+
+    }
     fun getAllMyPaymentNotAccepted(isProvider : Boolean){
         viewModelScope.launch {
             useCases.getNotAcceptedInvoice(company.id!!,isProvider, Status.INWAITING)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _notAccepted.value = it
+                    if(isProvider) _notAcceptedAsProvider.value = it
+                    else _notAcceptedAsClient.value = it
                 }
         }
     }
     init {
         viewModelScope.launch {
+
         sharedViewModel.accountType.collect {type ->
         when(type){
             AccountType.COMPANY -> {
-                getAllMyPaymentFromInvoicee(PaymentStatus.ALL, true)
-                getAllMyInvoicesAsClient()
             }
             AccountType.USER -> {
-                getAllMyInvoicesAsClient()
                 getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id?:0)
             }
             AccountType.AYMEN -> TODO()
             AccountType.NULL -> {}
         }
         }
+
         }
     }
 
     fun getAllMyInvoiceAsClientAndStatus(status : Status, id : Long){
         viewModelScope.launch {
+            Log.e("laucnhcrd","launched")
                 useCases.getAllInvoicesAsClientAndStatus(id, status)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect {
                         _allMyInvoiceNotAccepted.value =
-                            it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
+                            it
                     }
         }
     }
 
-    fun getAllMyInvoicesAsClient() {
-        viewModelScope.launch {
-            val id =  if(sharedViewModel.accountType.value == AccountType.USER)sharedViewModel.user.value.id else sharedViewModel.company.value.id
-            useCases.getAllInvoicesAsClient(id!!, sharedViewModel.accountType.value)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect {
-                    _myInvoicesAsClient.value =
-                        it.map { invoice -> invoice.toInvoiceWithClientPersonProvider() }
-                }
-        }
-    }
     fun getLastInvoiceCode(){
         viewModelScope.launch (Dispatchers.IO){
             try {

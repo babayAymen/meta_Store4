@@ -55,7 +55,7 @@ interface PaymentForProvidersDao {
     suspend fun getMyPaymentByDate(date: String , finDate : String): List<PaymentForProvidersWithCommandLine>
 
     @Transaction
-    @Query("SELECT * from payment_for_providers")
+    @Query("SELECT * from payment_for_providers ORDER BY lastModifiedDate DESC")
     fun getAllMyPaymentsEspece(): PagingSource<Int, PaymentForProvidersWithCommandLine>
 
 }

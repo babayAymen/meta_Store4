@@ -41,7 +41,7 @@ interface PurchaseOrderDao {
      @Query("DELETE FROM purchase_order_line WHERE purchaseOrderId = :id")
      suspend fun deletePurchaseOrderById(id : Long)
 
-     @Query("DELETE FROM order_not_accepted_keys_entity WHERE id = :id")
+     @Query("DELETE FROM purchase_order_line WHERE purchaseOrderLineId = :id")
      suspend fun deleteOrderNotAcceptedKeysById(id : Long)
 
 

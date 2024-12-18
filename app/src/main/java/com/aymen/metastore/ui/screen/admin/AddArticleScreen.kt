@@ -82,7 +82,7 @@ fun AddArticleScreen(){
             contract = ActivityResultContracts.PickVisualMedia(),
             onResult = {uri -> image = uri }
         )
-        val categories = categoryViewModel.categories.collectAsLazyPagingItems()
+        val categories = categoryViewModel.companyCategories.collectAsLazyPagingItems()
         var category by remember {
             mutableStateOf(Category())
         }

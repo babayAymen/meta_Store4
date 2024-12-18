@@ -22,6 +22,7 @@ data class Category(
     val companyId : Long? = null,
     var createdDate : String?,
     var lastModifiedDate : String?,
+    val isCategory : Boolean? = false
 ){
     fun toCategory(company: com.aymen.metastore.model.entity.model.Company): com.aymen.metastore.model.entity.model.Category {
         return com.aymen.metastore.model.entity.model.Category(

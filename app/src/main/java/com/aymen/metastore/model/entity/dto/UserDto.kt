@@ -2,7 +2,9 @@ package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.User
 import com.aymen.store.model.Enum.RoleEnum
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class UserDto(
 
     var id : Long? = null,

@@ -8,7 +8,7 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.entity.dto.CategoryDto
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
-class CategoryPagingSource(private val api : ServiceApi, private val sharedViewModel: SharedViewModel) : PagingSource<Int, CategoryDto>() {// should change to category
+class CategoryPagingSource(private val api : ServiceApi, private val companyId: Long) : PagingSource<Int, CategoryDto>() {// should change to category
 
     override fun getRefreshKey(state: PagingState<Int, CategoryDto>): Int? {
         return state.anchorPosition
@@ -16,8 +16,7 @@ class CategoryPagingSource(private val api : ServiceApi, private val sharedViewM
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CategoryDto> {
         val currentPage = params.key ?: 0
-        val id = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
-        val response = api.getPagingCategoryByCompany(companyId = id!! ,page = currentPage, pageSize = PAGE_SIZE)
+        val response = api.getPagingCategoryByCompany(companyId = companyId ,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
         return try {
         LoadResult.Page(

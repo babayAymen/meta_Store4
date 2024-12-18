@@ -116,9 +116,9 @@ fun PaymentScreen() {
                                 color = Color.Green,
                                 enabled = buyInabled
                             ) {
+                                invoiceViewModel.setFilter(PaymentStatus.ALL)
                                 appViewModel.updateShow("buyhistory")
                                 appViewModel.updateView("allHistory")
-                              //  paymentViewModel.getAllMyPaymentFromInvoice(PaymentStatus.ALL)
                             }
                         }
 
@@ -133,7 +133,6 @@ fun PaymentScreen() {
                                 ) {
                                     appViewModel.updateShow("profit")
                                     appViewModel.updateView("all_histories_payment_for_provider")
-                                 //   paymentViewModel.getAllMyPaymentsEspece(0)
                                 }
                             }
                         }
@@ -141,9 +140,8 @@ fun PaymentScreen() {
                 }
             }
             when (show) {
-                "payment" -> PaymentView(appViewModel, pointPaymentViewModel)
+                "payment" -> PaymentView(pointPaymentViewModel)
                 "buyhistory" -> {
-                    Log.e("azertyuio","type : $type company : ${company.id}")
                     BuyView(appViewModel, invoiceViewModel)
                 }
                 "profit" -> if (type == AccountType.COMPANY && company.metaSeller == true) {
@@ -155,10 +153,9 @@ fun PaymentScreen() {
 }
 
 @Composable
-fun PaymentView( appViewModel: AppViewModel, pointPaymentViewModel : PointsPaymentViewModel) {
+fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel) {
 
     val allPaymentRecharge = pointPaymentViewModel.allMyPointsPaymentRecharge.collectAsLazyPagingItems()
-    Log.e("aymenbabatdelete", "${allPaymentRecharge.itemCount}")
     LazyColumn {
         items(count = allPaymentRecharge.itemCount,
             key = allPaymentRecharge.itemKey { it.id!! }
@@ -241,6 +238,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
             notAcceptedInabled = true
         }
     }
+    val myAllInvoice = invoiceViewModel.invoices.collectAsLazyPagingItems()
     Column {
         Row {
             Row(
@@ -251,6 +249,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     color = Color.Green,
                     enabled = allHistoryInabled
                 ) {
+                    invoiceViewModel.setFilter(PaymentStatus.ALL)
                     appViewModel.updateView("allHistory")
                 }
             }
@@ -263,7 +262,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     enabled = paidInabled
                 ) {
                     appViewModel.updateView("payed")
-                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.PAID, true)
+                    invoiceViewModel.setFilter(PaymentStatus.PAID)
                 }
             }
             Row(
@@ -275,7 +274,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     enabled = inCompleteInabled
                 ) {
                     appViewModel.updateView("incomplete")
-                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.INCOMPLETE, true)
+                    invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
                 }
             }
             Row(
@@ -287,7 +286,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     enabled = notPaidInabled
                 ) {
                     appViewModel.updateView("notpayed")
-                    invoiceViewModel.getAllMyPaymentFromInvoicee(PaymentStatus.NOT_PAID, true)
+                    invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
                 }
             }
             Row(
@@ -306,7 +305,6 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
         when (view) {
             "allHistory" -> {
                 val listState = invoiceViewModel.listState
-                val myAllInvoice = invoiceViewModel.myInvoicesAsProvider.collectAsLazyPagingItems()
                 LazyColumn(state = listState,
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -335,14 +333,13 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                 }
             }
             "payed" -> {
-                val paid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(count = paid.itemCount,
-                        key = paid.itemKey { it.id!! }
+                    items(count = myAllInvoice.itemCount,
+                        key = myAllInvoice.itemKey { it.id!! }
                     ) { index ->
-                        val invoice = paid[index]
+                        val invoice = myAllInvoice[index]
                         if (invoice != null) {
                             Row {
                                 Text(text = invoice.code.toString())
@@ -356,16 +353,14 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     }
                 }
             }
-
             "incomplete" -> {
-                val inComplete = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(count = inComplete.itemCount,
-                        key = inComplete.itemKey { it.id!! }
+                    items(count = myAllInvoice.itemCount,
+                        key = myAllInvoice.itemKey { it.id!! }
                     ) { index ->
-                        val invoice = inComplete[index]
+                        val invoice = myAllInvoice[index]
                         if (invoice != null) {
                             Row {
                                 Text(text = "invoice code : " + invoice.code.toString())
@@ -381,16 +376,14 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     }
                 }
             }
-
             "notpayed" -> {
-                val notPaid = invoiceViewModel.invoiceByPaymentStatus.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(count = notPaid.itemCount,
-                        key = notPaid.itemKey { it.id!! }
+                    items(count = myAllInvoice.itemCount,
+                        key = myAllInvoice.itemKey { it.id!! }
                     ) { index ->
-                        val invoice = notPaid[index]
+                        val invoice = myAllInvoice[index]
                         if (invoice != null) {
                             Row {
                                 Text(text = invoice.code.toString())
@@ -408,7 +401,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
             }
 
             "notaccepted" -> {
-                val notAccepted = invoiceViewModel.notAccepted.collectAsLazyPagingItems()
+                val notAccepted = invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -460,7 +453,6 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
     var sumProfitInabled by remember {
         mutableStateOf(false)
     }
-
     when (view) {
         "all_histories_payment_for_provider" -> {
             allHistoryInabled = false
@@ -500,8 +492,6 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
             sumProfitInabled = false
         }
     }
-
-
     Column {
         Row {
             Row(

@@ -2,6 +2,8 @@ package com.aymen.metastore.model.entity.dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -22,6 +24,18 @@ interface CategoryDao {
                 insert(it)
             }
     }
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCateg(cat : List<Category>)
+
+    suspend fun insertCategoryCateg(cat : List<Category?>){
+        cat.filterNotNull()
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                insertCateg(it)
+            }
+    }
+
+
     @Upsert
     suspend fun insertKeys(keys : List<CategoryRemoteKeysEntity>)
 
@@ -39,8 +53,9 @@ interface CategoryDao {
     @Query("SELECT * FROM category_werehouse WHERE id = :categoryId")
     suspend fun getCategoryWithCompanyAndUser(categoryId: Long): CategoryWithCompanyAndUser?
 
-    @Query("DELETE FROM category_werehouse WHERE companyId = :id")
+    @Query("DELETE FROM category_werehouse WHERE companyId = :id AND isCategory = 1")
     suspend fun clearAllCategoryTable(id : Long)
+
     @Query("DELETE FROM category_remote_keys_table")
     suspend fun clearAllRemoteKeysTable()
 

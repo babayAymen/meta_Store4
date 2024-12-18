@@ -6,7 +6,9 @@ import com.aymen.store.model.Enum.SearchCategory
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.dto.SearchHistoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
+import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +27,6 @@ interface ClientRepository {
     suspend fun getAllMyClientContaining(clientName : String, companyId : Long):Response<List<ClientProviderRelationDto>>
     suspend fun sendClientRequest(id : Long, type : Type):Response<Void>
     suspend fun getAllClientContaining(search : String, searchType: SearchType, searchCategory: SearchCategory):Response<List<CompanyDto>>
-    suspend fun saveHistory(category: SearchCategory, id: Long):Response<Void>
-    fun getAllHistory(id : Long):Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>
+    suspend fun saveHistory(category: SearchCategory, id: Long):Response<SearchHistoryDto>
+    fun getAllHistory(id : Long):Flow<PagingData<SearchHistory>>
  }

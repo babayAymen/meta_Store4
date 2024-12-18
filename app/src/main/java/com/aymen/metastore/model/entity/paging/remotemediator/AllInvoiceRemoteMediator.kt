@@ -10,12 +10,14 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.AllInvoiceRemoteKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
+import com.aymen.store.model.Enum.PaymentStatus
 
 @OptIn(ExperimentalPagingApi::class)
 class AllInvoiceRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
     private val id : Long,
+    private val status : PaymentStatus
 ): RemoteMediator<Int, InvoiceWithClientPersonProvider>()  {
 
     private val userDao = room.userDao()
@@ -54,7 +56,7 @@ class AllInvoiceRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllMyInvoicesAsProvider(id,currentPage, state.config.pageSize)
+            val response = api.getAllMyInvoicesAsProvider(id,status,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -115,7 +117,11 @@ class AllInvoiceRemoteMediator(
 
 
     private suspend fun deleteCache(){
-          invoiceDao.clearAllTableAsProvider(id)
+        when(status){
+            PaymentStatus.ALL ->  invoiceDao.clearAllTableAsProvider(id)
+            else ->  invoiceDao.clearAllTableAsProviderAndStatus(id, status)
+        }
+
 
             invoiceDao.clearAllRemoteKeysTable()
 
