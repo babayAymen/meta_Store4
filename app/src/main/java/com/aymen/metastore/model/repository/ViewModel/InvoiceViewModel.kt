@@ -29,13 +29,14 @@ import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class InvoiceViewModel @Inject constructor(
     private val repository: GlobalRepository,
@@ -106,7 +107,7 @@ class InvoiceViewModel @Inject constructor(
     private val _filter = MutableStateFlow(PaymentStatus.ALL)
     val filter : StateFlow<PaymentStatus> = _filter
 
-    val invoices = _filter.flatMapLatest {filter->
+    val invoices = _filter.flatMapLatest { filter->
         useCases.getAllInvoices(company.id!!,true,filter)
             .cachedIn(viewModelScope)
     }

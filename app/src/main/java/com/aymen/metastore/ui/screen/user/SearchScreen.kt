@@ -35,6 +35,7 @@ import com.aymen.metastore.ui.component.ArticleCardForSearch
 import com.aymen.metastore.ui.component.CompanyCard
 import com.aymen.metastore.ui.component.SearchField
 import com.aymen.metastore.ui.component.UserCard
+import com.aymen.metastore.ui.screen.admin.SwipeToDeleteContainer
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
@@ -180,6 +181,15 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                     Column {
                                         when (history?.searchCategory) {
                                             SearchCategory.COMPANY -> {
+                                                SwipeToDeleteContainer(
+                                                    item = history.company,
+                                                    onDelete = {
+                                                        searchViewModel.deleteSearch(history.id!!)
+                                                    },
+                                                    onUpdate = {
+
+                                                    }
+                                                ) {
                                                 CompanyCard(
                                                     history.company!!
                                                 ) {
@@ -193,10 +203,17 @@ fun SearchScreen(modifier: Modifier = Modifier) {
 
                                                     )
                                                 }
+                                                }
                                             }
 
                                             SearchCategory.USER -> {
-                                                UserCard(history.user!!, appViewModel) {
+                                                SwipeToDeleteContainer(
+                                                    item = history.user!!,
+                                                    onDelete = {searchViewModel.deleteSearch(history.id!!)},
+                                                    onUpdate = {}
+                                                ) {item ->
+
+                                                UserCard(item, appViewModel) {
                                                     appViewModel.assignUser(history.user!!)
                                                     RouteController.navigateTo(Screen.UserScreen)
                                                     searchViewModel.saveHitory(
@@ -206,11 +223,16 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                     )
                                                 }
                                             }
+                                            }
 
                                             SearchCategory.ARTICLE -> {
-                                                ArticleCardForSearch(
-                                                    history.article!!
-                                                ) {
+                                                SwipeToDeleteContainer(
+                                                    item = history.article!!,
+                                                    onDelete = {searchViewModel.deleteSearch(history.id!!)},
+                                                    onUpdate = {}
+                                                ) {item ->
+
+                                                ArticleCardForSearch(item) {
                                                     companyViewModel.myCompany = history.article?.company!!
                                                     articleViewModel.assignArticleCompany( history.article!!)
                                                     RouteController.navigateTo(Screen.ArticleDetailScreen)
@@ -222,6 +244,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 }
                                             }
 
+                                            }
                                             else -> {
                                                 Log.e("searchhistory", "search history other")
                                             }

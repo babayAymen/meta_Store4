@@ -20,9 +20,9 @@ class GetAllMyClientContainingForAutocompletePagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ClientProviderRelationDto> {
         val currentPage = params.key ?: 0
 
+        return try {
         val response = api.getAllMyClientContaining(companyId = companyId, searchType = SearchType.CLIENT, clientName = clientName,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
-        return try {
             LoadResult.Page(
                 data = response,
                 prevKey = if (currentPage == 0) null else currentPage - 1,

@@ -18,10 +18,10 @@ class AllCompaniesContainingPagingSource(
     }
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CompanyDto> {
+        return try {
         val currentPage = params.key ?: 0
         val response = api.getAllCompaniesContaining(id = id, search = search, searchType = searchType ,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
-        return try {
             LoadResult.Page(
                 data = response,
                 prevKey = if (currentPage == 0) null else currentPage - 1,

@@ -1,6 +1,5 @@
 package com.aymen.metastore.model.entity.paging.pagingsource
 
-import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.aymen.metastore.model.entity.model.SubCategory
@@ -18,10 +17,9 @@ class SubCategoryPagingSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, SubCategory> {
         val currentPage = params.key ?: 0
-        Log.e("affectsubcategory","categ id : $categoryId and company id : $companyId")
+        return try {
         val response = api.getAllSubCategoriesByCategoryId(companyId = companyId, categoryId = categoryId ,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
-        return try {
             LoadResult.Page(
                 data = response.map { it.toSubCategoryModel() },
                 prevKey = if (currentPage == 0) null else currentPage - 1,

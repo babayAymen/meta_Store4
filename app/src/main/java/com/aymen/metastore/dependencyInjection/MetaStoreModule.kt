@@ -316,7 +316,8 @@ class MetaStoreModule {
     @Singleton
     fun provideServiceApi(
             dataStore: DataStore<AuthenticationResponse>,
-            sharedViewModel: SharedViewModel
+            sharedViewModel: SharedViewModel,
+            context : Context
     ): ServiceApi {
         val scope = CoroutineScope(Dispatchers.IO)
         var token = ""
@@ -347,6 +348,7 @@ class MetaStoreModule {
                         }
                             .build())
                     }
+                    .addInterceptor(NetworkInterceptor(context))
                     .addInterceptor(AccountTypeInterceptor(sharedViewModel)) // Custom interceptor for Account-Type
                     .build()
             ).build()
@@ -358,6 +360,7 @@ class MetaStoreModule {
     fun provideInventoryRepository(api : ServiceApi, room: AppDatabase): InventoryRepository{
         return InventoryRepositoryImpl(api, room)
     }
+
     @Provides
     @Singleton
     fun provideClientRepository(api: ServiceApi, room : AppDatabase):ClientRepository{

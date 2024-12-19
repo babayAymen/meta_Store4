@@ -28,5 +28,6 @@ interface ClientRepository {
     suspend fun sendClientRequest(id : Long, type : Type):Response<Void>
     suspend fun getAllClientContaining(search : String, searchType: SearchType, searchCategory: SearchCategory):Response<List<CompanyDto>>
     suspend fun saveHistory(category: SearchCategory, id: Long):Response<SearchHistoryDto>
+    suspend fun deleteSearch(id: Long):Response<Void>
     fun getAllHistory(id : Long):Flow<PagingData<SearchHistory>>
  }

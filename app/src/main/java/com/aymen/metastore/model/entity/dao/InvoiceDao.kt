@@ -101,6 +101,12 @@ interface InvoiceDao {
      @Query("SELECT * FROM INVOICE_AS_CLIENT_AND_STATUS_REMOTE_KEYS WHERE id = :id")
      suspend fun getInvoiceAsClientAnStatusRemoteKey(id : Long) : InvoicesAsClientAndStatusRemoteKeysEntity
 
+     @Query("SELECT * FROM invoice_remote_keys_table ORDER BY id DESC LIMIT 1")
+     suspend fun getFirstInvoiceRemoteKey(): InvoiceRemoteKeysEntity?
+
+     @Query("SELECT * FROM invoice_remote_keys_table ORDER BY id ASC LIMIT 1")
+     suspend fun getLatestInvoiceRemoteKey() : InvoiceRemoteKeysEntity?
+
      @Query("Delete FROM all_invoice_remote_keys")
      suspend fun clearAllRemoteKeysTable()
 
@@ -174,11 +180,11 @@ interface InvoiceDao {
      fun getAllMyInvoiceAsClientAndPaid(clientId : Long, status : PaymentStatus): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE personId = :clientId AND paid = :status")
+     @Query("SELECT * FROM invoice WHERE personId = :clientId AND paid = :status ORDER BY lastModifiedDate DESC")
      fun getAllMyInvoiceAsPersonClientAndPaid(clientId : Long, status : PaymentStatus): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction
-     @Query("SELECT * FROM invoice WHERE  personId = :clientId AND isInvoice = :isInvoice")
+     @Query("SELECT * FROM invoice WHERE  personId = :clientId AND isInvoice = :isInvoice ORDER BY lastModifiedDate DESC")
      fun getAllMyInvoiceAsPersonClient(clientId : Long, isInvoice : Boolean): PagingSource<Int, InvoiceWithClientPersonProvider>
 
      @Transaction

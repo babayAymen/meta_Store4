@@ -29,6 +29,9 @@ import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
+import com.aymen.metastore.model.entity.model.PointsPayment
+import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.room.entity.Article
@@ -43,7 +46,6 @@ import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProv
 import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAndConversation
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
-import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
@@ -200,6 +202,8 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun sendClientRequest(id: Long, type: Type) = clientRepository.sendClientRequest(id,type)
     override suspend fun getAllClientContaining(search: String, searchType: SearchType, searchCategory: SearchCategory) = clientRepository.getAllClientContaining(search,searchType,searchCategory)
     override suspend fun saveHistory(category: SearchCategory, id: Long): Response<SearchHistoryDto> = clientRepository.saveHistory(category,id)
+    override suspend fun deleteSearch(id: Long) = clientRepository.deleteSearch(id)
+
     override fun getAllHistory(id: Long): Flow<PagingData<SearchHistory>> {
         TODO("Not yet implemented")
     }
@@ -245,7 +249,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getAllMyOrdersNotAccepted(id: Long): Flow<PagingData<PurchaseOrderWithCompanyAndUserOrClient>> {
+    override fun getAllMyOrdersNotAccepted(id: Long): Flow<PagingData<PurchaseOrder>> {
         TODO("Not yet implemented")
     }
 
@@ -329,11 +333,11 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun cancelInvitation(id: Long) = invetationRepository.cancelInvitation(id)
 
 
-    override fun getAllRechargeHistory(id: Long): Flow<PagingData<PointsWithProviderclientcompanyanduser>> {
+    override fun getAllRechargeHistory(id: Long): Flow<PagingData<PointsPayment>> {
         TODO("Not yet implemented")
     }
 
-    override fun getAllMyProfitsPerDay(companyId: Long): Flow<PagingData<PaymentPerDayWithProvider>> {
+    override fun getAllMyProfitsPerDay(companyId: Long): Flow<PagingData<PaymentForProviderPerDay>> {
         TODO("Not yet implemented")
     }
 

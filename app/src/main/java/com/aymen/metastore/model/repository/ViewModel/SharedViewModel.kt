@@ -62,10 +62,8 @@ class SharedViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             accountTypeDataStore.data.collect {
-                Log.e("SharedViewModel", "AccountType updated to: $it")
                 _accountType.value = it
                 companyDtoDataStore.data.collect { company ->
-                    Log.e("SharedViewModel", "company updated to: $company")
                     _company.value = company
                     userDtoDatastore.data.collect { user ->
                         _user.value = user
@@ -137,33 +135,8 @@ class SharedViewModel @Inject constructor(
         }
     }
 
-    fun getToken(onTokenRetrieved: (String?) -> Unit) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                    authDataStore.data
-                        .catch { exception ->
-                            Log.e("getTokenError", "Error getting token get token fun in app view model: ${exception.message}")
-                            onTokenRetrieved(null)
-                        }
-                        .collect { authenticationResponse ->
-                            if(authenticationResponse.token != ""){
-                                onTokenRetrieved(authenticationResponse.token)
-                            }else{
-                                onTokenRetrieved(null)
-                            }
-                        }
-                } catch (e: Exception) {
-                    Log.e("getTokenError", "Error getting token get token fun in app view model: ${e.message}")
-                    onTokenRetrieved(null)
-                }
-            }
-        }
-    }
-
     fun logout(){
-        viewModelScope.launch {
-            withContext(Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
                 authDataStore.updateData {
                     it.copy(token = "")
                 }
@@ -205,7 +178,6 @@ class SharedViewModel @Inject constructor(
                 }
                 roomBlock()
                 restartApp()
-            }
         }
     }
 

@@ -119,6 +119,8 @@ interface ServiceApi {
                                        @Path("searchCategory")  searchCategory: SearchCategory):Response<List<CompanyDto>>
     @GET("$SEARCH_BASE_URL/save_history/{category}/{id}")
     suspend fun saveHistory(@Path("category") category : SearchCategory, @Path("id") id : Long):Response<SearchHistoryDto>
+    @DELETE("$SEARCH_BASE_URL/delete_history/{id}")
+    suspend fun deleteSearch( @Path("id") id : Long):Response<Void>
     ///////////////////////////////////////////////////////////////:command line ////////////////////////////////////////////////////////////////////::
     @POST("$COMMANDLINE_BASE_URL/save/{clientId}")
     suspend fun addInvoice(@Body commandLineDtos : List<CommandLine>,
@@ -137,7 +139,7 @@ interface ServiceApi {
     @GET("$ORDER_BASE_URL/get_all_my_orders_not_accepted/{id}")
     suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PurchaseOrderLineDto>
     @POST("$ORDER_BASE_URL/")
-    suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<Void>
+    suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<List<PurchaseOrderLineDto>>
     @POST("$ORDER_BASE_URL/test")
     suspend fun test(@Body order : PurchaseOrderLineDto): Response<Void>
     @GET("$ORDER_BASE_URL/{id}/{status}/{isall}")
@@ -164,7 +166,7 @@ interface ServiceApi {
     @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{companyId}")
     suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getMyInvoiceAsClient/{companyId}")
-    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+    suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : PaginatedResponse<InvoiceDto>
     @GET("$INVOICE_BASE_URL/get_by_status_as_client/{id}")
     suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getlastinvoice")

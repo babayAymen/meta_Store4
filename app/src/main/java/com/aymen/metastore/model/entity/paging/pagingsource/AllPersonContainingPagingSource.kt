@@ -18,10 +18,10 @@ class AllPersonContainingPagingSource(
     }
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, UserDto> {
+        return try {
         val currentPage = params.key ?: 0
         val response = api.getAllClientsPersonContaining(companyId = companyId, searchType = searchType, libelle = libelle ,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
-        return try {
             LoadResult.Page(
                 data = response,
                 prevKey = if (currentPage == 0) null else currentPage - 1,

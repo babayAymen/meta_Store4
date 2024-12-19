@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.paging.remotemediator.OrderLineDetailsRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.OrderNotAcceptedRemoteMediator
@@ -29,7 +30,7 @@ class OrderRepositoryImpl @Inject constructor(
     private val purchaseOrderLineDao = room.purchaseOrderLineDao()
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyOrdersNotAccepted(id:Long): Flow<PagingData<PurchaseOrderWithCompanyAndUserOrClient>> {
+    override fun getAllMyOrdersNotAccepted(id:Long): Flow<PagingData<PurchaseOrder>> {
         return  Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 2),
             remoteMediator = OrderNotAcceptedRemoteMediator(
@@ -40,7 +41,7 @@ class OrderRepositoryImpl @Inject constructor(
             }
         ).flow.map {
             it.map { article ->
-                article
+                article.toPurchaseOrderWithCompanyAndUserOrClient()
             }
         }
     }

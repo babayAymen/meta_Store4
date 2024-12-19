@@ -27,6 +27,7 @@ import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -51,9 +52,6 @@ class CategoryViewModel @Inject constructor (
     private val _categories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
     val categories : StateFlow<PagingData<Category>> get() = _categories
 
- //   private val _companyCategories : MutableStateFlow<PagingData<Category>> = MutableStateFlow(PagingData.empty())
-   // val companyCategories : StateFlow<PagingData<Category>> get() = _companyCategories
-
     private val _categoryForUpdate : MutableStateFlow<Category> = MutableStateFlow(Category())
     val categoryForUpdate : StateFlow<Category> get() = _categoryForUpdate
 
@@ -75,6 +73,7 @@ init {
     private val _filter = MutableStateFlow(0L)
     val filter : StateFlow<Long> = _filter
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val companyCategories = _filter.flatMapLatest { filter ->
         useCases.getCategoryTemp(filter)
             .cachedIn(viewModelScope)
@@ -171,15 +170,6 @@ init {
         }
     }
 
-//
-//    fun getCategoryByCompany(companyId : Long){
-//        viewModelScope.launch {
-//            useCases.getCategoryTemp(companyId)
-//                .distinctUntilChanged()
-//                .cachedIn(viewModelScope)
-//                .collect { _companyCategories.value = it }
-//        }
-//    }
 
     private fun errorBlock(error : String?){
         viewModelScope.launch{

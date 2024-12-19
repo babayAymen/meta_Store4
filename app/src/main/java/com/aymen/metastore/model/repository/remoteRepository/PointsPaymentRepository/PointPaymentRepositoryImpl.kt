@@ -6,6 +6,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
+import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
+import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.entity.paging.remotemediator.PointsEspeceByDateRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.PointsEspeceRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProfitOfProviderMediator
@@ -15,7 +17,6 @@ import com.aymen.metastore.model.entity.paging.remotemediator.RechargeRemoteMedi
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
-import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
@@ -54,7 +55,7 @@ class PointPaymentRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllRechargeHistory(id: Long): Flow<PagingData<PointsWithProviderclientcompanyanduser>> {
+    override fun getAllRechargeHistory(id: Long): Flow<PagingData<PointsPayment>> {
        return  Pager(
 
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -64,13 +65,13 @@ class PointPaymentRepositoryImpl @Inject constructor(
             pagingSourceFactory = { pointsPaymentDao.getAllRechargeHistory(id = id)}
         ).flow.map {
             it.map { article ->
-                article
+                article.toPointsWithProvidersClientCompanyAndUser()
             }
         }
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyProfitsPerDay(companyId: Long): Flow<PagingData<PaymentPerDayWithProvider>> {
+    override fun getAllMyProfitsPerDay(companyId: Long): Flow<PagingData<PaymentForProviderPerDay>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = ProfitPerDayRemoteMediator(
@@ -79,7 +80,7 @@ class PointPaymentRepositoryImpl @Inject constructor(
             pagingSourceFactory = { paymentForProviderPerDayDao.getAllProfitPerDay()}
         ).flow.map {
             it.map { article ->
-                article
+                article.toPaymentPerDayWithProvider()
             }
         }
     }

@@ -213,11 +213,9 @@ class ArticleViewModel @Inject constructor(
                 room.withTransaction{
                     val latestArticleId = articleCompanyDao.getLatestArticleId()
                  id = if (latestArticleId != null) latestArticleId + 1 else 1
-                Log.e("azertyiiopo","id is : $id and last id $latestArticleId")
                     room.articleDao().updateArticleById(true,articlee.article?.id!!)
                     val articleCount = articleCompanyDao.getArticlesCount()
                     val page = articleCount.div(PAGE_SIZE)
-                    Log.e("azertyiiopo","page is : $page  and articleCount $articleCount")
                  remoteKey = ArticleRemoteKeysEntity(
                     id = id,
                     previousPage = if(page == 0) null else page-1,
@@ -271,7 +269,6 @@ class ArticleViewModel @Inject constructor(
     fun updateArticle(article : ArticleCompany){
         viewModelScope.launch(Dispatchers.IO) {
            val articleCompanyPrev = article
-      //      _adminArticles.value = PagingData.empty()
             room.articleCompanyDao().insertSigleArticle(article.toArticleCompanyEntity(isSync = true))
             val response = repository.updateArticle(article.toArticleCompanyDto())
             if(response.isSuccessful){

@@ -15,6 +15,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import androidx.room.withTransaction
+import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Invoice
@@ -22,9 +24,11 @@ import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
+import com.aymen.metastore.model.entity.room.remoteKeys.OrderNotAcceptedKeysEntity
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
@@ -48,6 +52,9 @@ class ShoppingViewModel @Inject constructor(
     private val useCases: MetaUseCases,
 
 ): ViewModel() {
+
+    private val purchaseOrderDao = room.purchaseOrderDao()
+    private val purchaseOrderLineDao = room.purchaseOrderLineDao()
 
     var rawInput by mutableStateOf("")
     var qte by mutableDoubleStateOf(0.0)
@@ -124,6 +131,7 @@ fun submitShopping(newBalance: BigDecimal) {
         val newOrder =  PurchaseOrderLine(quantity = qte, comment = comment , delivery = delivery , article = randomArticle)
         orderArray = orderArray + newOrder
     }
+
     calculateCost()
     sharedViewModel.updateBalance(newBalance)
     remiseAZero()
@@ -148,19 +156,55 @@ fun submitShopping(newBalance: BigDecimal) {
     }
     fun sendOrder(index : Int, myBalance : BigDecimal){
         viewModelScope.launch (Dispatchers.IO){
+            sharedViewModel.updateBalance(myBalance)
+            orderArray.forEach {item ->
+
+            val latestOrderRemoteKey = purchaseOrderDao.getLatestOrderRemoteKey()
+            val orderId = if(latestOrderRemoteKey == null) 1 else latestOrderRemoteKey.id+1
+            val ordersCount = purchaseOrderDao.getOrderCount()
+            val page = if(latestOrderRemoteKey?.prevPage == null) 0 else latestOrderRemoteKey.prevPage +1
+            val prevPage = if(page == 0) null else page -1
+            val remain = ordersCount % PAGE_SIZE
+            val nextPage = if(remain < PAGE_SIZE -1 && latestOrderRemoteKey?.nextPage != null) page +1 else null
+            val newOrderRemoteKey = OrderNotAcceptedKeysEntity(
+                id = orderId,
+                prevPage = prevPage,
+                nextPage = nextPage
+            )
+            room.withTransaction {
+                purchaseOrderDao.insertOrderNotAcceptedKeys(listOf(newOrderRemoteKey))
+                purchaseOrderDao.insertOrder(listOf(PurchaseOrder(
+                    id = orderId,
+                    company = item.article?.company,
+                    client = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value else null,
+                    person = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value else null,
+                    createdDate = System.currentTimeMillis().toString(),
+                    orderNumber = 1
+                ).toPurchaseOrderEntity()))
+            }
+            }
+
             if(orderArray.isNotEmpty() && index == -1){
-                try {
-                    val response = repository.sendOrder(orderArray)
-                    if(response.isSuccessful){
-                            sharedViewModel.updateBalance(myBalance)
-                        calculateCost()
+                    val result : Result<Response<List<PurchaseOrderLineDto>>> = runCatching {
+                         repository.sendOrder(orderArray)
                     }
-                }catch (ex : Exception){
-                    Log.e("sendOrder","exception : ${ex.message}")
-                }
+                    result.fold(
+                        onSuccess = {success ->
+                            if(success.isSuccessful){
+                                val response = success.body()
+                                if(response != null){
+
+                                    Log.e("azefdsciof","reszponse size : ${response.size}")
+                                }
+                            }
+                           // calculateCost()
+
+                        },
+                        onFailure = {}
+                    )
+
                 orderArray = emptyList()
             }else{
-                try {
                     when(accountType.value){
                         AccountType.COMPANY -> if(cost < BigDecimal(30)){
                             Toast.makeText(context, "3dt", Toast.LENGTH_SHORT).show()
@@ -173,13 +217,17 @@ fun submitShopping(newBalance: BigDecimal) {
                     }
                 val newOrderArray = orderArray.toMutableList()
                 newOrderArray.retainAll { newOrderArray.indexOf(it) == index }
-                val response = repository.sendOrder(newOrderArray)
-                    if (response.isSuccessful) {
-                        removeOrderById(index)
+                    val result : Result<Response<List<PurchaseOrderLineDto>>> = runCatching {
+                             repository.sendOrder(newOrderArray)
                     }
-                }catch (ex : Exception){
-                    Log.e("sendOrder","exception : ${ex.message}")
-                }
+                    result.fold(
+                        onSuccess = {
+                        removeOrderById(index)
+
+                        },
+                        onFailure = {}
+                    )
+
             }
         }
     }
@@ -189,6 +237,7 @@ fun submitShopping(newBalance: BigDecimal) {
         delivery = false
         order = PurchaseOrderLine()
         qte = 0.0
+        rawInput = ""
         comment = ""
         randomArticle = ArticleCompany()
     }
@@ -228,7 +277,7 @@ fun submitShopping(newBalance: BigDecimal) {
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect{
-                        _allMyOrdersNotAccepted.value = it.map { line -> line.toPurchaseOrderWithCompanyAndUserOrClient() }
+                        _allMyOrdersNotAccepted.value = it
                     }
 
         }

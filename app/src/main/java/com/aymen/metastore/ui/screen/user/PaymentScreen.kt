@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
@@ -154,7 +156,20 @@ fun PaymentScreen() {
 
 @Composable
 fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel) {
+    val context = LocalContext.current
 
+    // Observe network changes and trigger refresh
+    val isOnline by rememberUpdatedState(NetworkUtil.isOnline(context))
+    var isFirst by remember {
+        mutableStateOf(true)
+    }
+    LaunchedEffect(isOnline) {
+        Log.e("screenpaymeny","call")
+        if (isOnline && isFirst) {
+            pointPaymentViewModel.getAllMyPointsPaymentRecharge() // Force refresh when online
+        }
+            isFirst = false
+    }
     val allPaymentRecharge = pointPaymentViewModel.allMyPointsPaymentRecharge.collectAsLazyPagingItems()
     LazyColumn {
         items(count = allPaymentRecharge.itemCount,
@@ -528,7 +543,7 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                     color = Color.Green,
                     enabled = allProfitInabled
                 ) {
-                    pointPaymentViewModel.getAllMyProfitsPerDay()
+                 //   pointPaymentViewModel.getAllMyProfitsPerDay()
                     appViewModel.updateView("all_profit_payment_for_provider_per_day")
                 }
             }
@@ -587,18 +602,7 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                                 ) { index: Int ->
                                     val payment = paymentsEspece[index]
                                     if (payment != null) {
-                                        SwipeToDeleteContainer(
-                                            payment,
-                                            onDelete = {
-                                                Log.e("aymenbabatdelete", "delete")
-                                            },
-                                            onUpdate = {
-                                                Log.e("aymenbabatdelete", "delete")
-
-                                            }
-                                        ) { buy ->
-                                            BuyHistoryCard(buy)
-                                        }
+                                            BuyHistoryCard(payment)
                                     }
                                 }
                             }
@@ -615,18 +619,7 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                         ) { index: Int ->
                             val payment = allMyProfitsPerDay[index]
                             if (payment != null) {
-                                SwipeToDeleteContainer(
-                                    payment,
-                                    onDelete = {
-                                        Log.e("aymenbabatdelete", "delete")
-                                    },
-                                    onUpdate = {
-                                        Log.e("aymenbabatdelete", "delete")
-
-                                    }
-                                ) { buy ->
-                                    BuyHistoryCard(buy)
-                                }
+                                    BuyHistoryCard(payment)
 
                             }
                         }

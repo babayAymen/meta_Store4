@@ -37,7 +37,7 @@ interface PaymentForProviderPerDayDao {
     suspend fun clearAllpaymentForProviderPerDayTable()
 
     @Transaction
-    @Query("SELECT * FROM payment_for_provider_per_day")
+    @Query("SELECT * FROM payment_for_provider_per_day ORDER BY lastModifiedDate DESC")
     fun getAllProfitPerDay() : PagingSource<Int, PaymentPerDayWithProvider>
 
     @Transaction

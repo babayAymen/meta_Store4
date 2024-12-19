@@ -21,10 +21,10 @@ class GetInvoicesByStatusPagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Invoice> {
         val currentPage = params.key ?: 0
 
+        return try {
         val response = if(isProvider)api.getAllBuyHistoryByStatus(id, Status.INWAITING,currentPage, PAGE_SIZE)
         else api.getAllMyInvoicesNotAccepted(id,currentPage, PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
-        return try {
             LoadResult.Page(
                 data = response.map { it.toInvoiceModel() },
                 prevKey = if (currentPage == 0) null else currentPage - 1,

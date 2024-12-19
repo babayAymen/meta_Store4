@@ -132,6 +132,7 @@ import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.google.gson.Gson
+import kotlinx.coroutines.flow.map
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -451,35 +452,12 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>, isEnabled : Bo
                             }
                         }
                         Row {
-//                            Row(
-//                                modifier = Modifier.weight(1f)
-//                            ) {
-//                                if (isEnabled) {
-//
-//                                    ButtonSubmit(
-//                                        labelValue = "send message",
-//                                        color = Color.Cyan,
-//                                        enabled = isEnabled
-//                                    ) {
-//                                        messageViewModel.receiverAccountType = AccountType.COMPANY
-//                                        messageViewModel.receiverCompany = art.company!!
-//                                        messageViewModel.getAllMessageByCaleeId(it.company?.id!!)// from home screen
-//                                        appViewModel.updateShow("message")
-//                                        appViewModel.updateScreen(IconType.MESSAGE)
-//                                    }
-//                                }
-//                            }
-                            Row(
-                                modifier = Modifier
-                                    .weight(1f)
-                            ) {
                                 ShoppingDialog(
                                     it,
                                     "add to cart",
                                     isOpen = false,
                                     shoppingViewModel = shoppingViewModel
                                 )
-                            }
                         }
 
                     }
@@ -812,26 +790,29 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 
 @Composable
 fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
+    var openDialog by remember {
+        mutableStateOf(isOpen)
+    }
+    if(label != ""){
+    ButtonSubmit(labelValue = label, color = Color.Blue, enabled = true) {
+        openDialog = true
+    }
+    }
+    if(openDialog){
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
-    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
-    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val myCompanyBalance by sharedViewModel.company.map { it.balance }.collectAsStateWithLifecycle(0.0)
+    val myUserBalance by sharedViewModel.user.map { it.balance }.collectAsStateWithLifecycle(0.0)
 
     var isCompany by remember {
         mutableStateOf(false)
     }
-    var openDialog by remember {
-        mutableStateOf(isOpen)
-    }
 
-    var restBalance by remember {
-        if (isCompany){
-        mutableStateOf(myCompany.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP))
-        }else{
-        mutableStateOf(myUser.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP))
+        var restBalance by remember { mutableStateOf(BigDecimal.ZERO) }
+        LaunchedEffect(key1 = myUserBalance, key2 = myCompanyBalance) {
+            restBalance = if (isCompany) myCompanyBalance?.toBigDecimal()?.setScale(2, RoundingMode.HALF_UP)
+            else myUserBalance?.toBigDecimal()?.setScale(2, RoundingMode.HALF_UP)
         }
-    }
     val gson = Gson()
 
     var showFeesDialog by remember { mutableStateOf(false) }
@@ -843,11 +824,11 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
     LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
         isCompany = accountType == AccountType.COMPANY
         restBalance = if (isCompany) {
-            balance = myCompany.balance!!
-            myCompany.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
+            balance = myCompanyBalance!!
+            myCompanyBalance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
         } else {
-            balance = myUser.balance!!
-            myUser.balance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
+            balance = myUserBalance!!
+            myUserBalance?.toBigDecimal()!! - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
         }
         cost = BigDecimal(balance).subtract(restBalance)
         restBalance =
@@ -856,12 +837,6 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
             ) else restBalance
     }
 
-    if(label != ""){
-    ButtonSubmit(labelValue = label, color = Color.Blue, enabled = true) {
-        openDialog = true
-    }
-    }
-    if(openDialog){
         Dialog(
             onDismissRequest = {openDialog = false
                 shoppingViewModel.remiseAZero()
@@ -879,7 +854,11 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ){
                         ShowImage(image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.company?.category!!.ordinal}")
-                        Text(text = if( restBalance<BigDecimal.ZERO || (shoppingViewModel.qte == 0.0 && restBalance <= 1.toBigDecimal())) "sold insufficient $restBalance pts" else "$restBalance pts")
+                        Column {
+
+                        Text(text = if( restBalance!! <BigDecimal.ZERO || (shoppingViewModel.qte == 0.0 && restBalance!! <= 1.toBigDecimal())) "sold insufficient $restBalance DT" else "$restBalance DT")
+                            Text(text = article.article?.libelle!!)
+                        }
                     }
                     Row {
                         InputTextField(
@@ -940,7 +919,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                         }
                     }
                     Row {
-                        if((restBalance>=BigDecimal.ZERO && shoppingViewModel.qte != 0.0) ) {
+                        if((restBalance!! >=BigDecimal.ZERO && shoppingViewModel.qte != 0.0) ) {
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -951,7 +930,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                                 ) {
                                     openDialog = false
                                     shoppingViewModel.randomArticle = article
-                                    shoppingViewModel.submitShopping(restBalance)
+                                    shoppingViewModel.submitShopping(restBalance!!)
                                      gson.toJson(shoppingViewModel.orderArray)
                                 }
                             }
@@ -965,9 +944,9 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                                     enabled = true
                                 ) {
                                     shoppingViewModel.randomArticle = article
-                                    shoppingViewModel.submitShopping(restBalance)
+                                    shoppingViewModel.submitShopping(restBalance!!)
                                         openDialog = false
-                                        shoppingViewModel.sendOrder(-1, restBalance)
+                                        shoppingViewModel.sendOrder(-1, restBalance!!)
                                 }
                             }
                         }
@@ -996,7 +975,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                         ShowFeesDialog(isOpen = true){ submitfees ->
                             if(submitfees){
                                 openDialog = false
-                                shoppingViewModel.sendOrder(-1, restBalance)
+                                shoppingViewModel.sendOrder(-1, restBalance!!)
                             }else{
                                 showFeesDialog = false
                             }

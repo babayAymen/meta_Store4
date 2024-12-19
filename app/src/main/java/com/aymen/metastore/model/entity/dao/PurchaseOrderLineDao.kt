@@ -56,7 +56,7 @@ interface PurchaseOrderLineDao {
     @Query("UPDATE purchase_order_line SET status = :status WHERE purchaseOrderId = :id")
     suspend fun changeStatusByOrder(status : Status , id : Long)
 
-    @Query("SELECT DISTINCT o.* FROM purchase_order_line AS l JOIN purchase_order AS o ON l.purchaseOrderId = o.purchaseOrderId WHERE l.status = :status")
+    @Query("SELECT DISTINCT o.* FROM purchase_order_line AS l JOIN purchase_order AS o ON l.purchaseOrderId = o.purchaseOrderId WHERE l.status = :status ORDER BY lastModifiedDate DESC")
      fun getAllMyOrdersNotAccepted( status : Status) : PagingSource<Int,PurchaseOrderWithCompanyAndUserOrClient>
 
      @Query("DELETE FROM purchase_order_line WHERE purchaseOrderId = :purchaseOrderId")

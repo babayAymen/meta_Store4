@@ -150,6 +150,7 @@ class ClientRepositoryImpl  @Inject constructor(
 
 
     override suspend fun saveHistory(category: SearchCategory, id: Long): Response<SearchHistoryDto> = api.saveHistory(category, id)
+    override suspend fun deleteSearch( id: Long): Response<Void> = api.deleteSearch(id)
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllHistory(id : Long):Flow<PagingData<SearchHistory>>{
         return  Pager(

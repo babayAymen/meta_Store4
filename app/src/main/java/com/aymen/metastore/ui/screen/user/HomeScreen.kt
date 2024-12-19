@@ -292,8 +292,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         DropdownMenu(
                             expanded = isPopupVisible,
                             onDismissRequest = { isPopupVisible = false }) {
-                            Log.e("userRole", "isadmin: $isAdmin  authsize ${viewModel.authsize}")
-                            if (!isAdmin && viewModel.authsize == 1) {
+                            if (accountType == AccountType.USER && company.id == 0L) {
                                 DropdownMenuItem(
                                     text = { Text(text = "add company") },
                                     onClick = { RouteController.navigateTo(Screen.AddCompanyScreen) })
@@ -313,8 +312,8 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             LanguageSwither()
                             DropdownMenuItem(text = { Text(text = "logout") }, onClick = {
                                 viewModel.updateScreen(IconType.HOME)
-                                RouteController.navigateTo(Screen.SignInScreen)
                                 sharedViewModel.logout()
+                                RouteController.navigateTo(Screen.SignInScreen)
                             })
                         }
 

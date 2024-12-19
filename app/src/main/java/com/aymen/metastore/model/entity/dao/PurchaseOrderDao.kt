@@ -3,10 +3,12 @@ package com.aymen.metastore.model.entity.dao
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
 import com.aymen.metastore.model.entity.room.remoteKeys.OrderNotAcceptedKeysEntity
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
+import com.aymen.store.model.Enum.Status
 
 
 @Dao
@@ -33,9 +35,9 @@ interface PurchaseOrderDao {
     @Query("SELECT * FROM order_not_accepted_keys_entity WHERE id = :id")
     suspend fun getAllOrderNotAccepteRemoteKeys(id : Long): OrderNotAcceptedKeysEntity
 
-
-    @Query("SELECT * FROM purchase_order ORDER BY purchaseOrderId DESC ")
-    fun getAllMyOrdersNotAccepted(): PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
+//    @Transaction
+//    @Query("SELECT * FROM purchase_order WHERE s ORDER BY purchaseOrderId DESC ")
+//    fun getAllMyOrdersNotAccepted(status: Status): PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
 
 
      @Query("DELETE FROM purchase_order_line WHERE purchaseOrderId = :id")
@@ -44,5 +46,9 @@ interface PurchaseOrderDao {
      @Query("DELETE FROM purchase_order_line WHERE purchaseOrderLineId = :id")
      suspend fun deleteOrderNotAcceptedKeysById(id : Long)
 
+     @Query("SELECT * FROM order_not_accepted_keys_entity ORDER BY id DESC LIMIT 1")
+     suspend fun getLatestOrderRemoteKey() : OrderNotAcceptedKeysEntity?
+    @Query("SELECT COUNT(*) FROM order_not_accepted_keys_entity")
+    suspend fun getOrderCount(): Int
 
 }

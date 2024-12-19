@@ -63,6 +63,8 @@ interface CategoryDao {
     suspend fun getLatestCategoryId(companyId : Long) : Long?
     @Query("SELECT * FROM category_remote_keys_table ORDER BY id ASC LIMIT 1")
     suspend fun getLatestCategoryRemoteKey(): CategoryRemoteKeysEntity?
+
+
    @Query("SELECT * FROM category_remote_keys_table ORDER BY id DESC LIMIT 1")
     suspend fun getFirstCategoryRemoteKey(): CategoryRemoteKeysEntity?
 

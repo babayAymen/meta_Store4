@@ -81,7 +81,6 @@ import com.aymen.store.ui.navigation.SystemBackButtonHandler
 fun CompanyScreen(company: Company) {
     val articleViewModel: ArticleViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
-    val messageViewModel: MessageViewModel = hiltViewModel()
     val companyViewModel: CompanyViewModel = hiltViewModel()
     val ratingViewModel: RatingViewModel = hiltViewModel()
     val clientViewModel: ClientViewModel = hiltViewModel()
@@ -108,13 +107,12 @@ fun CompanyScreen(company: Company) {
     LaunchedEffect(key1 = Unit) {
         articleViewModel.getAllCompanyArticles(companyId = company.id?:0)
         ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
-      //  categoryViewModel.getCategoryByCompany(companyId = company.id?:0)
     }
-    LaunchedEffect(key1 = categories) {
-        if(categories.itemCount != 0){
-            articleViewModel.getRandomArticlesByCategory(categories[0]?.id?:0, company.id?:0, 0)
-        }
-    }
+//    LaunchedEffect(key1 = categories) {
+//        if(categories.itemCount != 0){
+//            articleViewModel.getRandomArticlesByCategory(categories[0]?.id?:0, company.id?:0, 0)
+//        }
+//    }
     LaunchedEffect(key1 = subCategories) {
         if(subCategories.itemCount != 0){
             articleViewModel.getRandomArticlesByCategory(0, company.id?:0, subCategories[0]?.id?:0)
@@ -183,15 +181,15 @@ fun CompanyScreen(company: Company) {
                 item {
 
                         Column {
-                            ScreenByCompanyCategory(categories) { categ ->
-                                category = categ
-                                articleViewModel.getRandomArticlesByCategory(
-                                    categ.id!!,
-                                    categ.company?.id!!,
-                                    0
-                                )
-                                subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryId = categ.id?:0, companyId = categ.company.id?:0)
-                            }
+//                            ScreenByCompanyCategory(categories) { categ ->
+//                                category = categ
+//                                articleViewModel.getRandomArticlesByCategory(
+//                                    categ.id!!,
+//                                    categ.company?.id!!,
+//                                    0
+//                                )
+//                                subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryId = categ.id?:0, companyId = categ.company.id?:0)
+//                            }
                             ScreenByCompanySubCategory(items = subCategories, category = category) { categ ->
                                 articleViewModel.getRandomArticlesByCategory(
                                     0,
@@ -275,23 +273,6 @@ fun CompanyDetails( appViewModel: AppViewModel, clientViewModel: ClientViewModel
                 clientViewModel.sendClientRequest(company.id!!, it)
             }
         }
-//        Row(
-//            modifier = Modifier.weight(1f)
-//        ) {
-//            Icon(imageVector = Icons.AutoMirrored.Filled.Send,
-//                contentDescription = "send a message",
-//                Modifier.clickable {
-////                            messageViewModel.senderId = company.user?.id!!
-////                            messageViewModel.getAllMyMessageByConversationId()
-////                            RouteController.navigateTo(Screen.HomeScreen)
-//                    messageViewModel.receiverAccountType = AccountType.COMPANY
-//                    messageViewModel.receiverCompany = company
-////                    messageViewModel.getAllMessageByCaleeId(company.id!!)// from company screen
-//                    appViewModel.updateShow("message")
-//                    appViewModel.updateScreen(IconType.MESSAGE)
-//                }
-//            )
-//        }
         if (isMePointSeller) {
             Row(
                 modifier = Modifier.weight(1f)
@@ -336,7 +317,6 @@ fun CompanyDetails( appViewModel: AppViewModel, clientViewModel: ClientViewModel
                         .fillMaxWidth()
                     ,
                     onRatingChanged = { newRating ->
-//                        ratingViewModel.rating = true
                         ratingViewModel.rate = newRating
                     }
                 )

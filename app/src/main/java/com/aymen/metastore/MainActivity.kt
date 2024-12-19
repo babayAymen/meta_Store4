@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.LocaleList
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,12 +20,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.aymen.metastore.dependencyInjection.AccountTypeDtoSerializer
 import com.aymen.metastore.dependencyInjection.CompanyDtoSerializer
+import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.dependencyInjection.UserDtoSerializer
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User
@@ -46,6 +49,7 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NetworkUtil.isOnline(this)
         val languageCode = getSavedLanguage(this)?: "en"
         setLanguage(this, languageCode)
         enableEdgeToEdge()
@@ -53,7 +57,7 @@ class MainActivity : ComponentActivity() {
             MetaStoreTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "AYMEN",
+                        name = "META",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

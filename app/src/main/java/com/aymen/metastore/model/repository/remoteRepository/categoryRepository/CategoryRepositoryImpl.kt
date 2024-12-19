@@ -81,9 +81,7 @@ class CategoryRepositoryImpl  @Inject constructor(
             pagingSourceFactory = {
                 CategoryPagingSource(api, companyId)
             }
-        ).flow.map {
-            it.map { categ -> categ.toCategoryModel() }
-        }
+        ).flow
     }
 }
 

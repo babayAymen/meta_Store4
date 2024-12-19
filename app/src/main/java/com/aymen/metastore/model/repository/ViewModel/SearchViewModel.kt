@@ -88,25 +88,20 @@ class SearchViewModel @Inject constructor(
             SearchCategory.COMPANY -> {
                 when(searchType){
                     SearchType.OTHER ->{
-                        Log.e("searchscreen","type company other")
                         getAllCompaniesContaining(searchText,searchType,searchCategory)
                     }
                     SearchType.MY ->{
-                        Log.e("searchscreen","type company my")
                         // والله لا تعرف كيفاه تمشي
                     }
                     else ->{
-                        Log.e("searchscreen","type company else")
                         getAllCompaniesContaining(searchText,searchType,searchCategory)
                     }
                 }
             }
             SearchCategory.USER -> {
-                Log.e("searchscreen","type user")
                 getAllPersonContaining(searchText,searchType)
             }
             SearchCategory.ARTICLE-> {
-                Log.e("searchscreen","type article")
                 getAllMyArticleContaining(searchText,searchType)
             }
             else ->{
@@ -147,13 +142,11 @@ class SearchViewModel @Inject constructor(
                 AccountType.AYMEN -> TODO()
                 AccountType.NULL -> TODO()
             }
-            Log.e("searchscreen","search person call")
             useCases.getAllPersonContaining(id!!,personName, searchType)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
                     _searchPersons.value = it.map { user -> user.toUserModel() }
-                    Log.e("searchscreen","search person")
                     it.map {r ->
                         Log.e("searchscreen","search person $r")}
                 }
@@ -249,6 +242,13 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun deleteSearch(id: Long){
+        viewModelScope.launch {
+            searchDao.deleteRemoteKeyById(id)
+            searchDao.deleteSearchHistoryById(id)
+            repository.deleteSearch(id)
+        }
+    }
 
     private fun errorBlock(error : String?){
         viewModelScope.launch{

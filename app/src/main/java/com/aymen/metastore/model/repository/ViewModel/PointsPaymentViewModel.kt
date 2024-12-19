@@ -73,17 +73,14 @@ class PointsPaymentViewModel @Inject constructor(
     private val _myProfits = MutableStateFlow<String>("")
     val myProfits : StateFlow<String> = _myProfits
 
+    val id = if(sharedViewModel.accountType.value == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
 init {
 
-    val id = if(sharedViewModel.accountType.value == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
     getAllMyPointsPaymentt(id?:0)
-    getAllMyPointsPaymentRecharge(id?:0)
+    getAllMyPointsPaymentRecharge()
+    getAllMyProfitsPerDay(id?:0)
 }
     fun getAllMyPointsPaymentt(companyId: Long) {
-//        if(!NetworkUtil.isOnline(context)){
-//            Toast.makeText(context, "You are offline", Toast.LENGTH_LONG).show()
-//            return
-//        }
             viewModelScope.launch {
              useCases.getAllMyPointsPaymentForProvider(companyId)
                  .distinctUntilChanged()
@@ -95,26 +92,25 @@ init {
 
     }
 
-    fun getAllMyPointsPaymentRecharge(companyId : Long) {
+    fun getAllMyPointsPaymentRecharge() {
         viewModelScope.launch {
-                useCases.getAllRechargeHistory(companyId)
+                useCases.getAllRechargeHistory(id!!)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect {
-                        _allMyPointsPaymentRecharge.value =
-                            it.map { pointPayment -> pointPayment.toPointsWithProvidersClientCompanyAndUser() }
+                        _allMyPointsPaymentRecharge.value = it
                     }
 
         }
     }
 
-    fun getAllMyProfitsPerDay(){
+    fun getAllMyProfitsPerDay(id : Long){
         viewModelScope.launch {
-            useCases.getAllMyProfitsPerDay(sharedViewModel.company.value.id!!)
+            useCases.getAllMyProfitsPerDay(id)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _allMyProfitsPerDay.value = it.map { profit -> profit.toPaymentPerDayWithProvider() }
+                    _allMyProfitsPerDay.value = it
                 }
         }
     }

@@ -40,7 +40,7 @@ class CategoryRemoteMediator(
                 }
 
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -89,7 +89,7 @@ class CategoryRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, CategoryWithCompanyAndUser>): Int? {
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
         return categoryDao.getFirstCategoryRemoteKey()?.prevPage
     }
 
