@@ -1,4 +1,4 @@
-package com.aymen.store.app
+package com.aymen.metastore.app
 
 import android.app.Application
 import android.app.NotificationChannel

@@ -821,20 +821,31 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
     var cost by remember {
         mutableStateOf(BigDecimal(0.0))
     }
-    LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
-        isCompany = accountType == AccountType.COMPANY
-        restBalance = if (isCompany) {
-            balance = myCompanyBalance!!
-            myCompanyBalance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
-        } else {
-            balance = myUserBalance!!
-            myUserBalance?.toBigDecimal()!! - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
+        LaunchedEffect(key1 = shoppingViewModel.qte) {
+            isCompany = accountType == AccountType.COMPANY
+            restBalance = if (isCompany) {
+                balance = myCompanyBalance!!
+                myCompanyBalance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
+            } else {
+                balance = myUserBalance!!
+                myUserBalance?.toBigDecimal()!! - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
+            }
         }
+
+    LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
+        Log.e("qehsghdtg","user 1 already : ${shoppingViewModel.isAlready} cost ${shoppingViewModel.cost.add(cost)} delivery  ${shoppingViewModel.delivery}")
+
         cost = BigDecimal(balance).subtract(restBalance)
+
+        restBalance = if(shoppingViewModel.isAlready && cost.add(shoppingViewModel.cost) > BigDecimal(30)) restBalance.add(BigDecimal(3)) else restBalance
+        shoppingViewModel.isAlready = shoppingViewModel.orderArray.any { order -> order.delivery == true } && shoppingViewModel.cost.add(cost) <= BigDecimal(30)
         restBalance =
-            if (shoppingViewModel.delivery && cost < BigDecimal(30) && shoppingViewModel.qte != 0.0) restBalance.subtract(
-                BigDecimal(3)
-            ) else restBalance
+            if (shoppingViewModel.delivery && shoppingViewModel.cost.add(cost) <= BigDecimal(30) && shoppingViewModel.qte != 0.0 && !shoppingViewModel.isAlready) {
+                Log.e("qehsghdtg","user already : ${shoppingViewModel.isAlready} cost ${shoppingViewModel.cost.add(cost)} delivery  ${shoppingViewModel.delivery} rest $restBalance")
+                restBalance.subtract(BigDecimal(3))
+            } else restBalance
+
+        Log.e("qehsghdtg","user already : ${shoppingViewModel.isAlready} cost ${shoppingViewModel.cost.add(cost)} delivery  ${shoppingViewModel.delivery}")
     }
 
         Dialog(
@@ -946,7 +957,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                                     shoppingViewModel.randomArticle = article
                                     shoppingViewModel.submitShopping(restBalance!!)
                                         openDialog = false
-                                        shoppingViewModel.sendOrder(-1, restBalance!!)
+                                        shoppingViewModel.sendOrder(-1)
                                 }
                             }
                         }
@@ -965,7 +976,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                             CheckBoxComp(
                                 value = "Delivery",
                                 free = if(cost>=BigDecimal(30))"free" else null,
-                                pay = if(cost<BigDecimal(30) && shoppingViewModel.delivery && shoppingViewModel.qte != 0.0)" 3dt" else null,
+                                pay = if(cost.add(shoppingViewModel.cost)<BigDecimal(30) && shoppingViewModel.delivery && shoppingViewModel.qte != 0.0)" 3dt" else null,
                                 shoppingViewModel.delivery
                             ) { isChecked ->
                                 shoppingViewModel.delivery = isChecked
@@ -975,7 +986,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                         ShowFeesDialog(isOpen = true){ submitfees ->
                             if(submitfees){
                                 openDialog = false
-                                shoppingViewModel.sendOrder(-1, restBalance!!)
+                                shoppingViewModel.sendOrder(-1)
                             }else{
                                 showFeesDialog = false
                             }
@@ -2610,8 +2621,8 @@ fun CheckLocation(type: AccountType, user: User?, company: Company, context: Con
 
     // Initial check for location permissions and GPS
     LaunchedEffect(isGpsEnabled, isLocationGranted) {
-        if ((type == AccountType.USER && user?.latitude == 0.0) ||
-            (type == AccountType.COMPANY && company.latitude == 0.0)) {
+        if ((type == AccountType.USER && (user?.latitude == 0.0 || user?.longitude == 0.0)) ||
+            (type == AccountType.COMPANY && (company.latitude == 0.0 || company.longitude == 0.0))) {
             if (isLocationGranted) {
                 if (isGpsEnabled) {
                     Intent(context, LocationService::class.java).apply {

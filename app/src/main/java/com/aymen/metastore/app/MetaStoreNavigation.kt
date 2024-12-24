@@ -1,4 +1,4 @@
-package com.aymen.store.app
+package com.aymen.metastore.app
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -35,7 +35,6 @@ import com.aymen.metastore.ui.screen.user.ShoppingScreen
 import com.aymen.metastore.ui.screen.user.UserScreen
 
 
-//@RequiresApi(Build.VERSION_CODES.O)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MetaStore (){

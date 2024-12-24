@@ -5,6 +5,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.CategoryDto
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel

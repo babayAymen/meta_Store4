@@ -8,7 +8,5 @@ enum class RoleEnum {
 
     WORKER,
 
-    SELLER,
-
-    AYMEN
+    PARENT
 }

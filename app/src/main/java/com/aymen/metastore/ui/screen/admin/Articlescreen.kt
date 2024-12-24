@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -53,12 +54,15 @@ import com.aymen.metastore.ui.component.ArticleCardForAdmin
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.LodingShape
 import com.aymen.metastore.ui.component.addQuantityDailog
+import com.aymen.store.model.Enum.RoleEnum
 import kotlinx.coroutines.delay
 
 @Composable
 fun ArticleScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
+    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val adminArticles = articleViewModel.adminArticles.collectAsLazyPagingItems()
     val context = LocalContext.current
     var art by remember {
@@ -77,12 +81,14 @@ fun ArticleScreen() {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-            ){
-                ButtonSubmit(labelValue = "Add New", color = Color.Green, enabled = true) {
-                    appViewModel.updateShow("ADD_ARTICLE")
+            if(user.role != RoleEnum.WORKER) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    ButtonSubmit(labelValue = "Add New", color = Color.Green, enabled = true) {
+                        appViewModel.updateShow("ADD_ARTICLE")
+                    }
                 }
             }
             Row (

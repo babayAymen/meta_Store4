@@ -20,21 +20,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ClientDialog
 import com.aymen.metastore.ui.component.InvoiceCard
+import com.aymen.store.model.Enum.RoleEnum
 
 //@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceScreenAsProvider() {
     val appViewModel: AppViewModel = hiltViewModel()
     val invoiceViewModel: InvoiceViewModel = hiltViewModel()
+    val sharedViewModel: SharedViewModel = hiltViewModel()
+    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val listState = invoiceViewModel.listState
     val context = LocalContext.current
     var asProvider by remember {
@@ -61,6 +66,8 @@ fun InvoiceScreenAsProvider() {
                         appViewModel.updateShow("add invoice")
                     }
                 }
+                if (user.role != RoleEnum.WORKER) {
+
                 Row(
                     modifier = Modifier
                         .weight(1f)
@@ -74,6 +81,7 @@ fun InvoiceScreenAsProvider() {
                         asProvider = false
                         appViewModel.updateView("ALL")
                     }
+                }
 
                 }
                 Row(

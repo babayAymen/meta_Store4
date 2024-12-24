@@ -84,6 +84,7 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
+import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
 import com.aymen.metastore.ui.component.ArticleCardForUser
 import com.aymen.metastore.ui.component.EmptyImage
 import com.aymen.metastore.ui.component.ShowImage
@@ -116,6 +117,7 @@ fun HomeScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
+    val signInViewModel : SignInViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
@@ -125,10 +127,16 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val randomArticles = articleViewModel.randomArticles.collectAsLazyPagingItems()
 
-    val triggerLocationCheck by appViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
+    val triggerLocationCheck by signInViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
+    val triggerLocationCheck2 by appViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
 
-    if(triggerLocationCheck) {
+    if(triggerLocationCheck || triggerLocationCheck2) {
         CheckLocation(type, user, company, context)
+    }
+    LaunchedEffect(key1 = Unit) {
+        if(randomArticles.itemCount == 0) {
+            articleViewModel.fetchRandomArticlesForHomePage(categoryName = CompanyCategory.DAIRY)
+        }
     }
 
     Scaffold (
@@ -202,7 +210,6 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     LaunchedEffect(sharedViewModel.accountType, company, user) {
         isCompany = sharedViewModel.accountType.value == AccountType.COMPANY
 }
-
     val balance = if (isCompany) {
         company.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP)
     } else {
@@ -297,15 +304,15 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                                     text = { Text(text = "add company") },
                                     onClick = { RouteController.navigateTo(Screen.AddCompanyScreen) })
                             } else {
-                                DropdownMenuItem(text = { Text(text = if (!isCompany) "my company" else "user") },
+                                DropdownMenuItem(text = { Text(text = if (!isCompany) company.name else user.username!!) },
                                     onClick = {
                                         isPopupVisible = false
                                         if (!isCompany) {
                                             sharedViewModel.changeAccountType(AccountType.COMPANY)
                                             companyViewModel.getMyCompany()
-                                        } else {
+                                        } else
                                             sharedViewModel.changeAccountType(AccountType.USER)
-                                        }
+
                                         viewModel.updateScreen(IconType.HOME)
                                     })
                             }
@@ -335,35 +342,10 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.Home,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-//                            viewModel._historySelected = selectedIcon
                             viewModel.updateScreen(IconType.HOME)
                         },
                         description = "home"
                     )
-//                    IconWithBadge(
-//                        iconType = IconType.NOTIFICATIONS,
-//                        selectedIcon = selectedIcon,
-//                        iconSelected = Icons.Default.Notifications,
-//                        iconUnselected = Icons.Outlined.Notifications,
-//                        badgeCount = 9, // Example of a message badge
-//                        onClick = {
-////                            historySelected = selectedIcon
-//                            viewModel.updateScreen(IconType.NOTIFICATIONS)
-//                        },
-//                        description = "notification"
-//                    )
-//                    IconWithBadge(
-//                        iconType = IconType.MESSAGE,
-//                        selectedIcon = selectedIcon,
-//                        iconSelected = Icons.Default.ChatBubble,
-//                        iconUnselected = Icons.Outlined.ChatBubbleOutline,
-//                        badgeCount = 8, // Example of a message badge
-//                        onClick = {
-////                            historySelected = selectedIcon
-//                            viewModel.updateScreen(IconType.MESSAGE)
-//                        },
-//                        description = "email"
-//                    )
                     if (accountType == AccountType.COMPANY) {
 
                         IconWithBadge(
@@ -371,9 +353,8 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             selectedIcon = selectedIcon,
                             iconSelected = Icons.Default.HomeWork,
                             iconUnselected = Icons.Outlined.HomeWork,
-                            badgeCount = 0, // Example of a message badge
+                            badgeCount = 1,
                             onClick = {
-//                                historySelected = selectedIcon
                                 viewModel.updateShow("dash")
                                 viewModel.updateScreen(IconType.COMPANY)
                             },
@@ -387,7 +368,6 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.ShoppingCart,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.SHOPPING)
                         },
                         description = "shopping"
@@ -399,8 +379,11 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.AccountBalanceWallet,
                         badgeCount = 0, // Example of a message badge
                         onClick = {
-//                            historySelected = selectedIcon
                             viewModel.updateScreen(IconType.WALLET)
+                            if(accountType == AccountType.COMPANY && user.role == RoleEnum.WORKER){
+                                viewModel.updateShow("buyhistory")
+                                viewModel.updateView("allHistory")
+                            }else viewModel.updateShow("payment")
                         },
                         description = "wallet"
                     )
@@ -415,17 +398,19 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         },
                         description = "search"
                     )
-                    IconWithBadge(
-                        iconType = IconType.USER,
-                        selectedIcon = selectedIcon,
-                        iconSelected = Icons.Default.GroupAdd,
-                        iconUnselected = Icons.Outlined.GroupAdd,
-                        badgeCount = 0,
-                        onClick = {
-                            viewModel.updateScreen(IconType.USER)
-                        },
-                        description = "user"
-                    )
+                    if(user.role != RoleEnum.WORKER || !isCompany ) {
+                        IconWithBadge(
+                            iconType = IconType.USER,
+                            selectedIcon = selectedIcon,
+                            iconSelected = Icons.Default.GroupAdd,
+                            iconUnselected = Icons.Outlined.GroupAdd,
+                            badgeCount = 0,
+                            onClick = {
+                                viewModel.updateScreen(IconType.USER)
+                            },
+                            description = "user"
+                        )
+                    }
                 }
             }
         },

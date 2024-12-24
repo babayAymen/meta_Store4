@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,9 +31,13 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 fun CategoryScreen() {
     val appViewModel: AppViewModel = hiltViewModel()
     val categoryViewModel: CategoryViewModel = hiltViewModel()
-    val sharedViewModel: SharedViewModel = hiltViewModel()
-    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val categories = categoryViewModel.categories.collectAsLazyPagingItems()
+
+    LaunchedEffect(key1 = Unit) {
+        if(categories.itemCount == 0){
+            categoryViewModel.getAllCategories()
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()

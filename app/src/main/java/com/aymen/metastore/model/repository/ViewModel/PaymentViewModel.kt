@@ -7,12 +7,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.PaymentForProviders
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -48,8 +46,9 @@ class PaymentViewModel @Inject constructor(
                 getAllMyPaymentsEspece(sharedViewModel.company.value.id!!)
 
             }
-            AccountType.AYMEN -> TODO()
+            AccountType.META -> TODO()
             AccountType.NULL -> TODO()
+            AccountType.SELLER -> {}
         }
     }
 

@@ -32,4 +32,5 @@ interface InvetationDao {
 
     @Query("UPDATE invitation SET status = :status WHERE id = :id")
     suspend fun requestResponse(status: Status , id : Long)
+
 }

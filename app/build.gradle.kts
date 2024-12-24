@@ -99,15 +99,20 @@ dependencies {
     implementation (libs.play.services.location)
 
     // pagination
-implementation("androidx.paging:paging-compose:3.3.4")
-implementation("androidx.paging:paging-runtime:3.3.4")
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.androidx.paging.runtime)
     implementation (libs.androidx.room.paging)
-//    implementation ( libs.kotlinx.coroutines.core)
-//    implementation(libs.androidx.paging.runtime.ktx)
-//    implementation(libs.androidx.paging.compose)
 
     implementation(libs.play.services.code.scanner)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.2")
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // websocket
+    implementation("io.ktor:ktor-client-okhttp:2.3.0")
+    implementation("io.ktor:ktor-client-core:2.3.0")
+    implementation("io.ktor:ktor-client-websockets:2.3.0")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.0")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.0")
+
 
 
 }

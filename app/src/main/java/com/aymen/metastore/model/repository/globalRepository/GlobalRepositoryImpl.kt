@@ -47,8 +47,6 @@ import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAn
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
-import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
@@ -381,11 +379,11 @@ class GlobalRepositoryImpl  @Inject constructor
         companyId: Long
     ) = articleRepository.getRandomArticlesBySubCategory(subcategoryId, companyId)
 
-    override fun getAllMyArticles(companyId : Long): Flow<PagingData<ArticleWithArticleCompany>> {
+    override fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleCompany>> {
         TODO("Not yet implemented")
     }
 
-    override fun getRandomArticles(categoryName: CompanyCategory): Flow<PagingData<RandomArticleChild>> {
+    override fun getRandomArticles(categoryName: CompanyCategory, companyId: Long?): Flow<PagingData<ArticleCompany>> {
         TODO("Not yet implemented")
     }
 

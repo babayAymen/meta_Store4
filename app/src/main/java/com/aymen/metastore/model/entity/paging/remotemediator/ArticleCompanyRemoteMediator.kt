@@ -37,17 +37,17 @@ class ArticleCompanyRemoteMediator(
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                    0
                 }
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
                     previousePage
                 }
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -55,8 +55,8 @@ class ArticleCompanyRemoteMediator(
                 }
             }
             val response = api.getAll(id,currentPage, state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             room.withTransaction {
@@ -64,22 +64,22 @@ class ArticleCompanyRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    articleCompanyDao.insertKeys(response.map { article ->
+                    articleCompanyDao.insertKeys(response.content.map { article ->
                         ArticleRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
                             previousPage = prevPage
                         )
                     })
-
-                    userDao.insertUser(response.map {user -> user.company?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map {company -> company.company?.toCompany()!!})
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map { company -> company.provider?.toCompany()!! })
-                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory(isCategory = false)!! })
-                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
-                    articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true)!! })
-                    articleCompanyDao.insertArticle(response.map { it.toArticleCompany(isRandom = false, isSearch = false) })
+                        Log.e("articlecompany","article size : ${response.content.size}")
+                    userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
+                    userDao.insertUser(response.content.map {user -> user.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map { company -> company.provider?.toCompany()})
+                    categoryDao.insertCategory(response.content.map {category -> category.category?.toCategory(isCategory = false)})
+                    subCategoryDao.insertSubCategory(response.content.map {subCategory -> subCategory.subCategory?.toSubCategory()})
+                    articleDao.insertArticle(response.content.map {article -> article.article?.toArticle(isMy = true)})
+                    articleCompanyDao.insertArticle(response.content.map { it.toArticleCompany(isRandom = false, isSearch = false) })
 
                 } catch (ex: Exception) {
                     Log.e("error", "articlecompany ${ex.message}")
@@ -92,26 +92,17 @@ class ArticleCompanyRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, ArticleWithArticleCompany>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { articleCompanyDao.getArticleRemoteKey(it.articleCompany.id!!).previousPage }
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return articleCompanyDao.getFirstArticleCompanyRemoteKey()?.previousPage
+     }
+
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+        return articleCompanyDao.getLatestArticleCompanyRemoteKey()?.nextPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, ArticleWithArticleCompany>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { articleCompanyDao.getArticleRemoteKey(it.articleCompany.id!!).nextPage }
-    }
-
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, ArticleWithArticleCompany>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.articleCompany?.id?.let { articleCompanyDao.getArticleRemoteKey(it).nextPage }
-    }
 
     private suspend fun deleteCache(){
-        articleCompanyDao.clearAllArticleCompanyTable()
+        articleCompanyDao.clearAllArticleCompanyTable(id)
         articleCompanyDao.clearAllRemoteKeysTable()
     }
 }

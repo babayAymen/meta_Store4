@@ -2,15 +2,11 @@ package com.aymen.store.model.repository.ViewModel
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
@@ -19,7 +15,6 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Company
-import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.model.User
@@ -38,7 +33,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.Response
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -64,6 +58,7 @@ class ShoppingViewModel @Inject constructor(
     var orderArray by mutableStateOf(listOf<PurchaseOrderLine>())
 
     var delivery by mutableStateOf(false)
+    var isAlready by mutableStateOf(false)
     var randomArticle by mutableStateOf(ArticleCompany())
 
     private var _myCompany = MutableStateFlow(Company())
@@ -95,26 +90,30 @@ init {
 
             when (sharedViewModel.accountType.value) {
                 AccountType.COMPANY -> {
-                    Log.e("collectid","company id : $id")
                     getAllMyOrdersNotAccepted(id ?: 0)
                 }
                 AccountType.USER -> {
-                    Log.e("collectid","user id : $id")
                     getAllMyOrdersNotAccepted(id ?: 0)
                 }
-                AccountType.AYMEN -> {}
+                AccountType.META -> {}
                 AccountType.NULL -> {}
+                AccountType.SELLER -> {}
             }
         }
     }
 
 }
-    fun removeOrderById(index: Int) {
+    fun removeOrderById(index: Int, restore : Boolean) {
         orderArray = orderArray.toMutableList().also {
             val quantity = it[index].quantity
             val sellingPrice = it[index].article?.sellingPrice
-            val price = BigDecimal(quantity!!).multiply(BigDecimal(sellingPrice!!))
-            sharedViewModel.returnThePrevioseBalance(price)
+            var price = BigDecimal(quantity!!).multiply(BigDecimal(sellingPrice!!))
+            if(delivery){
+                price += BigDecimal(3)
+            }
+            if(restore) {
+                sharedViewModel.returnThePrevioseBalance(price)
+            }
             it.removeAt(index)
         }
     }
@@ -146,45 +145,61 @@ fun submitShopping(newBalance: BigDecimal) {
                 onFinish(true, myCompany.value?.balance!!)
             }
             AccountType.USER -> if(cost < BigDecimal(30)){
-                onFinish(false, myCompany.value?.balance!!)
+                onFinish(false, myUser.value?.balance!!)
             }else{
-                onFinish(true, myCompany.value?.balance!!)
+                onFinish(true, myUser.value?.balance!!)
             }
-            AccountType.AYMEN -> TODO()
+            AccountType.META -> TODO()
             AccountType.NULL -> TODO()
+            AccountType.SELLER -> {}
         }
     }
-    fun sendOrder(index : Int, myBalance : BigDecimal){
+    fun sendOrder(index : Int){
         viewModelScope.launch (Dispatchers.IO){
-            sharedViewModel.updateBalance(myBalance)
-            orderArray.forEach {item ->
-
-            val latestOrderRemoteKey = purchaseOrderDao.getLatestOrderRemoteKey()
-            val orderId = if(latestOrderRemoteKey == null) 1 else latestOrderRemoteKey.id+1
-            val ordersCount = purchaseOrderDao.getOrderCount()
-            val page = if(latestOrderRemoteKey?.prevPage == null) 0 else latestOrderRemoteKey.prevPage +1
-            val prevPage = if(page == 0) null else page -1
-            val remain = ordersCount % PAGE_SIZE
-            val nextPage = if(remain < PAGE_SIZE -1 && latestOrderRemoteKey?.nextPage != null) page +1 else null
-            val newOrderRemoteKey = OrderNotAcceptedKeysEntity(
-                id = orderId,
-                prevPage = prevPage,
-                nextPage = nextPage
-            )
-            room.withTransaction {
-                purchaseOrderDao.insertOrderNotAcceptedKeys(listOf(newOrderRemoteKey))
-                purchaseOrderDao.insertOrder(listOf(PurchaseOrder(
-                    id = orderId,
-                    company = item.article?.company,
-                    client = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value else null,
-                    person = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value else null,
-                    createdDate = System.currentTimeMillis().toString(),
-                    orderNumber = 1
-                ).toPurchaseOrderEntity()))
-            }
-            }
-
+            val listOfIds: MutableList<OrderNotAcceptedKeysEntity> = mutableListOf()
             if(orderArray.isNotEmpty() && index == -1){
+            orderArray.forEach { item ->
+
+                val latestOrderRemoteKey = purchaseOrderDao.getLatestOrderRemoteKey()
+                val orderId = if (latestOrderRemoteKey == null) 1 else latestOrderRemoteKey.id + 1
+                val ordersCount = purchaseOrderDao.getOrderCount()
+                val page =
+                    if (latestOrderRemoteKey?.prevPage == null) 0 else latestOrderRemoteKey.prevPage + 1
+                val prevPage = if (page == 0) null else page - 1
+                val remain = ordersCount % PAGE_SIZE
+                val nextPage =
+                    if (remain < PAGE_SIZE - 1 && latestOrderRemoteKey?.nextPage != null) page + 1 else null
+                val newOrderRemoteKey = OrderNotAcceptedKeysEntity(
+                    id = orderId,
+                    prevPage = prevPage,
+                    nextPage = nextPage
+                )
+                listOfIds += newOrderRemoteKey
+                val latestPurchaseOrderLineId = purchaseOrderLineDao.getLatestPurchaseOrderId()
+                room.withTransaction {
+                    purchaseOrderDao.insertOrderNotAcceptedKeys(listOf(newOrderRemoteKey))
+                    val purchaseOrder = PurchaseOrder(
+                        id = orderId,
+                        company = item.article?.company,
+                        client = if (sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value else null,
+                        person = if (sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value else null,
+                        orderNumber = 1
+                    )
+                    purchaseOrderDao.insertOrder(listOf(purchaseOrder.toPurchaseOrderEntity()))
+                    purchaseOrderLineDao.insertOrderLine(
+                        listOf(
+                            PurchaseOrderLine(
+                                id = if (latestPurchaseOrderLineId == null) 1 else latestPurchaseOrderLineId + 1,
+                                purchaseorder = purchaseOrder,
+                                article = item.article,
+                                quantity = item.quantity,
+                                comment = item.comment,
+                                delivery = item.delivery
+                            ).toPurchaseOrderLineEntity()
+                        )
+                    )
+                }
+            }
                     val result : Result<Response<List<PurchaseOrderLineDto>>> = runCatching {
                          repository.sendOrder(orderArray)
                     }
@@ -192,29 +207,30 @@ fun submitShopping(newBalance: BigDecimal) {
                         onSuccess = {success ->
                             if(success.isSuccessful){
                                 val response = success.body()
-                                if(response != null){
+                                room.withTransaction {
+                                    listOfIds.forEach{key ->
 
-                                    Log.e("azefdsciof","reszponse size : ${response.size}")
+                                    purchaseOrderDao.deletePurchaseOrderById(key.id)
+                                    purchaseOrderDao.deleteOrderNotAcceptedKeysById(key.id)
+                                    purchaseOrderLineDao.deleteByPurchaseOrderId(key.id)
+                                    }
+                                if(response != null){
+                                    purchaseOrderDao.insertOrder(response.map { order -> order.purchaseorder?.toPurchaseOrder() })
+                                    listOfIds.zip(response) { key, res ->
+                                        key.copy(id = res.purchaseorder?.id ?: throw IllegalArgumentException("Purchase order ID is null"))
+                                    }.let { updatedKeys ->
+                                        purchaseOrderDao.insertOrderNotAcceptedKeys(updatedKeys)
+                                    }
+                                    purchaseOrderLineDao.insertOrderLine(response.map { line -> line.toPurchaseOrderLine() })
+                                    }
                                 }
                             }
-                           // calculateCost()
-
                         },
                         onFailure = {}
                     )
 
                 orderArray = emptyList()
             }else{
-                    when(accountType.value){
-                        AccountType.COMPANY -> if(cost < BigDecimal(30)){
-                            Toast.makeText(context, "3dt", Toast.LENGTH_SHORT).show()
-                        }
-                        AccountType.USER -> if(cost < BigDecimal(30)){
-                            Toast.makeText(context, "3dt", Toast.LENGTH_SHORT).show()
-                        }
-                        AccountType.AYMEN -> TODO()
-                        AccountType.NULL -> TODO()
-                    }
                 val newOrderArray = orderArray.toMutableList()
                 newOrderArray.retainAll { newOrderArray.indexOf(it) == index }
                     val result : Result<Response<List<PurchaseOrderLineDto>>> = runCatching {
@@ -222,13 +238,15 @@ fun submitShopping(newBalance: BigDecimal) {
                     }
                     result.fold(
                         onSuccess = {
-                        removeOrderById(index)
 
+                            removeOrderById(index, false)
                         },
-                        onFailure = {}
+                        onFailure = {
+                        }
                     )
 
             }
+            isAlready = false
         }
     }
 
@@ -245,8 +263,13 @@ fun submitShopping(newBalance: BigDecimal) {
     fun returnAllMyMony(){
         viewModelScope.launch {
             calculateCost()
+            Log.e("qehsghdtg","after already : $isAlready cost $cost")
+             cost = cost.add(if(isAlready || delivery) BigDecimal(3) else BigDecimal.ZERO)
+            Log.e("qehsghdtg","before already : $isAlready cost $cost delivery : $delivery")
             sharedViewModel.returnThePrevioseBalance(cost)
             orderArray = emptyList()
+            isAlready = false
+            cost = BigDecimal.ZERO
         }
     }
 
@@ -273,6 +296,7 @@ fun submitShopping(newBalance: BigDecimal) {
 
     fun getAllMyOrdersNotAccepted(id : Long) {
         viewModelScope.launch {
+            Log.e("getallordernotaccepted","company id : $id")
                 useCases.getAllMyOrdersNotAccepted(id)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)

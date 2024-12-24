@@ -35,6 +35,8 @@ class InventoryViewModel  @Inject constructor
     val companyId by mutableLongStateOf(0)
 
     init {
+
+        Log.e("testtoviewmodel","inventory view model")
         getMyInventory()
     }
 

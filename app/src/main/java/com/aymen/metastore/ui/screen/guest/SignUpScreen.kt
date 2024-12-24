@@ -100,7 +100,7 @@ fun SignUpScreen() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     ButtonSubmit(
-                        labelValue = if (asCompany) "com.aymen.metastore.model.entity.room.entity.Company" else "user",
+                        labelValue = if (asCompany) "company" else "user",
                         color = Color.Green,
                         enabled = true
                     ) {
@@ -108,7 +108,7 @@ fun SignUpScreen() {
                     }
                 }
                 textField(
-                    label = if (asCompany) "com.aymen.metastore.model.entity.room.entity.Company name" else "user name",
+                    label = if (asCompany) "company name" else "user name",
                     labelValue = userName,
                     Icons.Outlined.Person
                 ) {

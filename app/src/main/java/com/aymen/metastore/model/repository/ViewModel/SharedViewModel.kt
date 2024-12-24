@@ -10,6 +10,7 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aymen.metastore.MainActivity
+import com.aymen.metastore.model.ViewModelRunTracker
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
@@ -37,7 +38,8 @@ class SharedViewModel @Inject constructor(
     private val userDtoDatastore : DataStore<User>,
     private val room : AppDatabase,
     private  val context: Context,
-    private val accountTypeDataStore: DataStore<AccountType>
+    private val accountTypeDataStore: DataStore<AccountType>,
+    private val tracker: ViewModelRunTracker
 ): ViewModel() {
 
     private var _accountType = MutableStateFlow(AccountType.NULL)
@@ -52,8 +54,10 @@ class SharedViewModel @Inject constructor(
     fun assignAccountType(accountType: AccountType){
         _accountType.value = accountType
     }
-    fun assignCompany(company : Company){
+    fun assignCompanyy(company : Company){
+        Log.e("assigncompany","c bon company assigned ${company.id}")
         _company.value = company
+        Log.e("assigncompany","c bon company assigned value ${this.company.value.id}")
     }
     fun assignUser(user : User){
         _user.value = user
@@ -61,19 +65,22 @@ class SharedViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            accountTypeDataStore.data.collect {
-                _accountType.value = it
-                companyDtoDataStore.data.collect { company ->
-                    _company.value = company
-                    userDtoDatastore.data.collect { user ->
-                        _user.value = user
-                    }
-                }
-            }
+
+            _accountType.value = accountTypeDataStore.data.firstOrNull() ?: AccountType.NULL
+            _company.value = companyDtoDataStore.data.firstOrNull() ?: Company()
+            _user.value = userDtoDatastore.data.firstOrNull() ?: User()
         }
 
     }
-
+    suspend fun getCompany(): Company {
+        return companyDtoDataStore.data.firstOrNull() ?: Company()
+    }
+    suspend fun getAccountType(): AccountType {
+        return accountTypeDataStore.data.firstOrNull() ?: AccountType.NULL
+    }
+    suspend fun getUser(): User {
+        return userDtoDatastore.data.firstOrNull() ?: User()
+    }
     fun updateUserBalance(newBalance : Double){
         viewModelScope.launch {
             try {
@@ -81,9 +88,6 @@ class SharedViewModel @Inject constructor(
                     currentUser.copy(
                         balance = newBalance
                     )
-//                        .also{
-//                        _user.value = currentUser
-//                    }
                 }
             }catch (ex : Exception){
                 Log.e("updateUserBalance","exception :${ex.message}")
@@ -98,10 +102,6 @@ class SharedViewModel @Inject constructor(
                     currentCompany.copy (
                         balance = newBalance
                         )
-                        .also{
-                            Log.e("currentcompany","company : $currentCompany")
-//                        _company.value = currentCompany
-                    }
                 }
             }catch (ex : Exception){
                 Log.e("updateUserBalance","exception :${ex.message}")
@@ -141,7 +141,7 @@ class SharedViewModel @Inject constructor(
                     it.copy(token = "")
                 }
                 companyDtoDataStore.updateData {
-                    Company().copy(
+                    Company(
                         id = 0,
                         name = "",
                         code = "",
@@ -162,7 +162,7 @@ class SharedViewModel @Inject constructor(
                     )
                 }
                 userDtoDatastore.updateData {
-                    User().copy(
+                    User(
                         id = 0,
                         username = "",
                         address = "",
@@ -208,5 +208,6 @@ class SharedViewModel @Inject constructor(
         Runtime.getRuntime().exit(0)
 
     }
+
 
 }

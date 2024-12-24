@@ -2,6 +2,7 @@ package com.aymen.metastore.ui.screen.user
 
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ import com.aymen.metastore.ui.screen.admin.AddInvoiceScreen
 import com.aymen.metastore.ui.screen.admin.OrderScreen
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.util.Date
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -114,14 +116,24 @@ fun ShoppingScreen() {
                                                 modifier = Modifier.weight(0.1f)
                                             ) {
                                                 IconButton(onClick = {
-                                                    shoppingViewModel.beforSendOrder {isAccepted , balance ->
-                                                        if(isAccepted){
-                                                             shoppingViewModel.sendOrder(index, BigDecimal(balance))
+                                                        shoppingViewModel.beforSendOrder { isAccepted, balance ->
+
+                                                            if(it.delivery == true) {
+                                                            if (isAccepted) {
+                                                                shoppingViewModel.sendOrder(
+                                                                    index
+                                                                )
+                                                            } else {
+                                                                showFeesDialog = true
+                                                                balancee = balance
+                                                            }
                                                         }else{
-                                                            showFeesDialog = true
-                                                            balancee = balance
-                                                        }
-                                                    }
+                                                                shoppingViewModel.sendOrder(
+                                                                    index
+                                                                )
+                                                            }
+                                                            }
+
                                                 }) {
                                                     Icon(
                                                         imageVector = Icons.Default.Check,
@@ -133,8 +145,7 @@ fun ShoppingScreen() {
                                             if(showFeesDialog){
                                                 ShowFeesDialog(isOpen = true) {submitfees ->
                                                     if(submitfees){
-                                                        shoppingViewModel.sendOrder(-1,
-                                                            BigDecimal(balancee)
+                                                        shoppingViewModel.sendOrder(index
                                                         )
                                                     }else{
                                                         showFeesDialog = false
@@ -145,7 +156,7 @@ fun ShoppingScreen() {
                                                 modifier = Modifier.weight(0.1f)
                                             ) {
                                                 IconButton(onClick = {
-                                                    shoppingViewModel.removeOrderById(index)
+                                                    shoppingViewModel.removeOrderById(index, true)
                                                 }) {
                                                     Icon(
                                                         imageVector = Icons.Default.Remove,
@@ -179,8 +190,7 @@ fun ShoppingScreen() {
                                         ) {
                                             shoppingViewModel.beforSendOrder {isAccepte , balance ->
                                                 if(isAccepte){
-                                                     shoppingViewModel.sendOrder(-1,
-                                                         BigDecimal(balance)
+                                                     shoppingViewModel.sendOrder(-1
                                                      )
                                                 }else{
                                                     showFeesDialog = true
@@ -229,10 +239,12 @@ fun ShoppingScreen() {
                             { index: Int ->
                                 val orderLine = allMyOrdersNotAccepted[index]
                                 if (orderLine != null) {
+                                    val date = orderLine.createdDate?.let {
                                     val dateTime = LocalDateTime.parse(orderLine.createdDate)
-                                    val date = dateTime.toLocalDate()
+                                      dateTime.toLocalDate()
+                                    }
                                     Text(text =
-                                    if (orderLine.company?.id == myCompany.id) "you have an order from ${orderLine.person?.username ?: orderLine.client?.name}" else "you have sent an order to ${orderLine.company?.name}",
+                                    if (orderLine.company?.id == myCompany.id && accountType == AccountType.COMPANY) "you have an order from ${orderLine.person?.username ?: orderLine.client?.name}" else "you have sent an order to ${orderLine.company?.name}",
                                         modifier = Modifier.clickable {
                                             order = orderLine
                                             shoppingViewModel.Order = orderLine

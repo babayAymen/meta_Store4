@@ -59,6 +59,7 @@ class AllSearchRemoteMediator(
                 }
             }
             val response = api.getAllHistory(id!!,currentPage, state.config.pageSize)
+            Log.e("srhsrth","idd $id ${response.content.size}")
             val endOfPaginationReached = response.last
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1

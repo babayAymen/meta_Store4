@@ -77,7 +77,7 @@ interface ArticleCompanyDao {
     suspend fun insertRandomArticle(article: List<RandomArticle>)
 
     @Transaction
-    @Query("SELECT r.* FROM random_article_company AS r JOIN article AS a ON r.articleId = a.id WHERE a.category = :category ")
+    @Query("SELECT r.* FROM article_company AS r JOIN article AS a ON r.articleId = a.id WHERE a.category = :category AND isRandom = 1 AND isSearch = 0")
      fun getRandomArticles(category : CompanyCategory): PagingSource<Int, RandomArticleChild>
 
     @Transaction
@@ -98,14 +98,14 @@ interface ArticleCompanyDao {
      fun getAllArticleContaining(libelle : String, companyId: Long) : PagingSource<Int,ArticleWithArticleCompany>
 
     @Transaction
-    @Query("SELECT * FROM Article_company WHERE companyId = :companyId AND isRandom = 0 ORDER BY id DESC")
+    @Query("SELECT * FROM article_company WHERE companyId = :companyId ORDER BY id DESC")
     fun getAllMyArticles(companyId : Long): PagingSource<Int,ArticleWithArticleCompany>
 
     @Transaction
     @Query("SELECT * FROM article_company WHERE companyId = :companyId")
      fun getAllArticlesByCompanyId(companyId : Long) : PagingSource<Int,ArticleWithArticleCompany>
 
-    @Query("UPDATE random_article_company SET isFav = :isFave , likeNumber = likeNumber + 1 WHERE id = :articleId")
+    @Query("UPDATE article_company SET isFav = :isFave , likeNumber = likeNumber + CASE WHEN :isFave THEN 1 ELSE -1 END WHERE id = :articleId")
     suspend fun chageIsFav(articleId : Long , isFave : Boolean)
 
 
@@ -138,11 +138,11 @@ interface ArticleCompanyDao {
     @Query("DELETE FROM article_company_random_remote_keys")
     suspend fun clearAllRandomRemoteKeysTable()
 
+    @Query("DELETE FROM article_company WHERE isRandom = 0 AND isSearch = 0 AND companyId = :companyId")
+    suspend fun clearAllArticleCompanyTable(companyId: Long)
+
+
     @Query("DELETE FROM article_company WHERE isRandom = 1 AND isSearch = 0")
-    suspend fun clearAllArticleCompanyTable()
-
-
-    @Query("DELETE FROM random_article_company")
     suspend fun clearAllRandomArticleCompanyTable()
 
     @Query("DELETE FROM article_containing_remote_keys")
@@ -166,7 +166,14 @@ interface ArticleCompanyDao {
     @Query("SELECT * FROM company_article_remote_keys WHERE id = :id")
     suspend fun getCompanyArticleRemoteKey(id : Long) : CompanyArticleRemoteKeysEntity
 
-
+    @Query("SELECT * FROM article_remote_keys_table ORDER BY id DESC LIMIT 1")
+    suspend fun getFirstArticleCompanyRemoteKey() : ArticleRemoteKeysEntity?
+    @Query("SELECT * FROM article_remote_keys_table ORDER BY id ASC LIMIT 1")
+    suspend fun getLatestArticleCompanyRemoteKey() : ArticleRemoteKeysEntity?
+    @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id DESC LIMIT 1")
+    suspend fun getFirstRandomArticleCompanyRemoteKey() : ArticleCompanyRandomRKE?
+    @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id ASC LIMIT 1")
+    suspend fun getLatestRandomArticeCompanyRemoteKey() : ArticleCompanyRandomRKE?
 
 
 

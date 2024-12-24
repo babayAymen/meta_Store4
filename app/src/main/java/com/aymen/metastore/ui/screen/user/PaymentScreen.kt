@@ -43,6 +43,7 @@ import com.aymen.metastore.ui.component.BuyHistoryCard
 import com.aymen.metastore.ui.component.DateFilterUI
 import com.aymen.metastore.ui.component.InvoiceCard
 import com.aymen.metastore.ui.screen.admin.SwipeToDeleteContainer
+import com.aymen.store.model.Enum.RoleEnum
 
 
 @Composable
@@ -55,6 +56,7 @@ fun PaymentScreen() {
     val context = LocalContext.current
     val type by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
+    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val show by appViewModel.show
     var rechargeInabled by remember {
         mutableStateOf(false)
@@ -92,24 +94,22 @@ fun PaymentScreen() {
             .padding(2.dp)
     ) {
         Column{
-            if (type == AccountType.COMPANY) {
+            if (type == AccountType.COMPANY && user.role != RoleEnum.WORKER) {
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row {
-                        Row( // recharge history
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            ButtonSubmit(
-                                labelValue = "recharge history",
-                                color = Color.Green,
-                                enabled = rechargeInabled
+                            Row( // recharge history
+                                modifier = Modifier.weight(1f)
                             ) {
-                                appViewModel.updateShow("payment")
+                                ButtonSubmit(
+                                    labelValue = "recharge history",
+                                    color = Color.Green,
+                                    enabled = rechargeInabled
+                                ) {
+                                    appViewModel.updateShow("payment")
+                                }
                             }
-                        }
-
-
                         Row( // buy history
                             modifier = Modifier.weight(1f)
                         ) {

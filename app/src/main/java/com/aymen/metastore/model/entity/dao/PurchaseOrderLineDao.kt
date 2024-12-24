@@ -27,6 +27,9 @@ interface PurchaseOrderLineDao {
     @Upsert
     suspend fun insertOrderLineKeys(keys : List<OrderLineKeysEntity>)
 
+    @Query("SELECT MAX(purchaseOrderLineId) FROM purchase_order_line")
+    suspend fun getLatestPurchaseOrderId() : Long?
+
     @Query("DELETE FROM order_line_keys")
     suspend fun clearOrderLineKeys()
 

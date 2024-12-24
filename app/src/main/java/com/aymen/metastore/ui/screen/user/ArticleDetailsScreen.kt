@@ -135,12 +135,12 @@ fun ArticleDetailsScreen() {
 
                     }
                  CompanyDetails(
-                     appViewModel = appViewModel,
+                     sharedViewModel = sharedViewModel,
                      clientViewModel = clientViewModel,
                      companyViewModel = companyViewModel,
                      ratingViewModel = ratingViewModel,
                      company = company,
-                     isMePointSeller = myCompany.isPointsSeller!!
+                     isPointsSeller = myCompany.isPointsSeller!!
                  ) {
 
                  }

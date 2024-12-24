@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import com.aymen.metastore.model.ViewModelRunTracker
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SearchHistory
@@ -53,8 +54,10 @@ class CompanyViewModel @Inject constructor(
     private val companyDataStore: DataStore<Company>,
     private val appViewModel: AppViewModel,
     private  val sharedViewModel: SharedViewModel,
-    private val useCases: MetaUseCases
+    private val useCases: MetaUseCases,
+    private val tracker: ViewModelRunTracker
 ) : ViewModel() {
+    val isFirstRun: Boolean
 
     var providerId by mutableLongStateOf(0)
     var parent by mutableStateOf(Company())
@@ -62,9 +65,17 @@ class CompanyViewModel @Inject constructor(
     var update by mutableStateOf(false)
 
     init {
+        isFirstRun = tracker.isFirstViewModelRun
+        if (isFirstRun) {
+            tracker.firstViewModelName = "company view"
+            tracker.isFirstViewModelRun = false
+            // Perform first-run initialization
+        }
+        Log.d("ViewModelA", "Initialized. First: ${tracker.firstViewModelName}")
+        Log.e("testtoviewmodel","company view model")
         getMyCompany()
         getMyCompany {
-            sharedViewModel.assignCompany(it ?: Company())
+//            sharedViewModel.assignCompany(it ?: Company())
         }
     }
 

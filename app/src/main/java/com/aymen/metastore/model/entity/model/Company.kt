@@ -2,6 +2,7 @@ package com.aymen.metastore.model.entity.model
 
 import com.aymen.metastore.model.Enum.InvoiceType
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 

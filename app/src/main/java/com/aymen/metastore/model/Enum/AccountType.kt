@@ -5,7 +5,13 @@ enum class AccountType {
 
     USER,
 
-    AYMEN,
+    META,
+
+    SELLER ,
+
+//    PARENT,
+//
+//    WORKER,
 
     NULL
 

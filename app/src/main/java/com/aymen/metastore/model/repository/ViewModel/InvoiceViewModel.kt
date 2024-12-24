@@ -142,6 +142,8 @@ class InvoiceViewModel @Inject constructor(
         }
     }
     init {
+
+        Log.e("testtoviewmodel","invoice view model")
         viewModelScope.launch {
 
         sharedViewModel.accountType.collect {type ->
@@ -151,8 +153,9 @@ class InvoiceViewModel @Inject constructor(
             AccountType.USER -> {
                 getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id?:0)
             }
-            AccountType.AYMEN -> TODO()
+            AccountType.META -> {}
             AccountType.NULL -> {}
+            AccountType.SELLER -> {}
         }
         }
 

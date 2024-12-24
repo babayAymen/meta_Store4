@@ -6,30 +6,21 @@ import com.aymen.store.model.Enum.RoleEnum
 
 object TokenUtils {
 
-    fun isUser(token: String, authSize:(Int) -> Unit, userRole:(RoleEnum) -> Unit) {
+    fun isUser(token: String, userRole:(RoleEnum) -> Unit) {
         val jwt = JWT(token)
         val authList = jwt.getClaim("Authorization").asList(Map::class.java)
-        authSize(authList.size)
-        Log.e("aymenbabayrole", "authority admin ${authList.size}")
         authList?.forEach { auth ->
             when (val authority = auth["authority"]) {
-//                    "USER" ->{
-//                    Log.e("aymenbabayrole", "authority user $authority")
-//                        userRole(RoleEnum.USER)
-//                    }
-                "ADMIN" ->{
+                RoleEnum.ADMIN.toString() ->{
                     Log.e("aymenbabayrole", "authority admin $authority")
                     userRole(RoleEnum.ADMIN)
+                    return
                 }
-                "SELLER" ->{
+                RoleEnum.PARENT.toString() ->{
                     Log.e("aymenbabayrole", "authority seller $authority")
-                    userRole(RoleEnum.SELLER)
+                    userRole(RoleEnum.PARENT)
                 }
-                "AYMEN" ->{
-                    Log.e("aymenbabayrole", "authority aymen $authority")
-                    userRole(RoleEnum.AYMEN)
-                }
-                "WORKER" ->{
+                RoleEnum.WORKER.toString() ->{
                     Log.e("aymenbabayrole", "authority worker $authority")
                     userRole(RoleEnum.WORKER)
                 }

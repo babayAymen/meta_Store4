@@ -2,6 +2,7 @@ package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.Enum.InvoiceType
 import com.aymen.metastore.model.entity.room.entity.Company
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 import kotlinx.serialization.Serializable
@@ -34,6 +35,7 @@ data class CompanyDto(
     val createdDate : String? = "",
     val lastModifiedDate : String? = "",
     val invoiceType : InvoiceType? = InvoiceType.NOT_SAVED
+
 ){
     fun toCompany() : Company {
 
@@ -95,7 +97,7 @@ data class CompanyDto(
             isVisible = isVisible,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
-            invoiceType = invoiceType
+            invoiceType = invoiceType,
 
         )
     }

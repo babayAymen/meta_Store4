@@ -19,24 +19,29 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.store.model.Enum.IconType
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.metastore.ui.component.Item
 import com.aymen.metastore.ui.screen.user.AddCompanyScreen
 import com.aymen.metastore.ui.screen.user.PaymentScreen
 import com.aymen.metastore.ui.screen.user.ShoppingScreen
+import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.ui.screen.admin.AddSubCategoryScreen
 
 //@RequiresApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DashBoardScreen() {
     val viewModel : AppViewModel = hiltViewModel()
     val companyViewModel : CompanyViewModel = hiltViewModel()
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
-    val shoppingViewModel : ShoppingViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
+    val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val invoiceType = invoiceViewModel.invoiceMode
     val context = LocalContext.current
     LaunchedEffect(key1 =  Unit) {
@@ -60,11 +65,12 @@ fun DashBoardScreen() {
                     "subcategory",
                     "order",
                     "invoice",
-                    "worker",
                     "inventory",
-                    "parent",
-                    "update"
-                )
+                )+ if (user.role != RoleEnum.WORKER) {
+                listOf("worker", "parent", "update")
+            }else{
+                emptyList()
+                }
 
                 val screenWidthDp = screenWidth()
                 val itemWidthDp = 110.dp
@@ -119,21 +125,31 @@ fun DashBoardScreen() {
         }
         "payment" -> {
             viewModel.updateScreen(IconType.WALLET)
+            if(user.role == RoleEnum.WORKER){
+                viewModel.updateShow("buyhistory")
+                viewModel.updateView("allHistory")
+            }else viewModel.updateShow("payment")
             PaymentScreen()
         }
         "order" -> {
             viewModel.updateScreen(IconType.SHOPPING)
             ShoppingScreen()
         }
-        "worker" -> {
-            WorkerScreen()
+            "worker" -> {
+        if(user.role != RoleEnum.WORKER) {
+                WorkerScreen()
+            }
         }
-        "parent" -> {
-            ParentScreen()
-        }
-        "update" -> {
-            AddCompanyScreen(update = true)
-        }
+            "parent" -> {
+                if (user.role != RoleEnum.WORKER) {
+                    ParentScreen()
+                }
+            }
+            "update" -> {
+                if (user.role != RoleEnum.WORKER) {
+                    AddCompanyScreen(update = true)
+                }
+            }
         "invoice" -> {
             InvoiceScreenAsProvider()
         }

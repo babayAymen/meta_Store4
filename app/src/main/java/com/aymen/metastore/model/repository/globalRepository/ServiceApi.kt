@@ -213,10 +213,10 @@ interface ServiceApi {
     suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/get_company_article_by_category_or_subcategory/{companyId}")
     suspend fun companyArticlesByCategoryOrSubCategory(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("subCategoryId") subcategoryId: Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleCompanyDto>
-    @GET("$ARTICLE_BASE_URL/getAllMyArticle/{companyId}/{offset}/{pageSize}")
-    suspend fun getAll(@Path("companyId") companyId : Long?, @Path("offset") offset : Int, @Path("pageSize") pageSize : Int): List<ArticleCompanyDto>
+    @GET("$ARTICLE_BASE_URL/get_all_my_article/{companyId}")
+    suspend fun getAll(@Path("companyId") companyId : Long?, @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/getrandom")
-    suspend fun getRandomArticles(@Query("category") category: CompanyCategory, @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): List<ArticleCompanyDto>
+    suspend fun getRandomArticles(@Query("category") category: CompanyCategory, @Query("offset") offset : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/my_article/{id}")
     suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/get_articles_by_category/{id}")

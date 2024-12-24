@@ -137,7 +137,6 @@ class ClientRepositoryImpl  @Inject constructor(
         companyId: Long,
         clientName: String
     ) : Flow<PagingData<ClientProviderRelationDto>>{
-        Log.e("getAllMyClientContaining","reached to repo impl")
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE, // Number of items per page

@@ -20,7 +20,6 @@ import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
-import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
@@ -52,23 +51,23 @@ class ArticleRepositoryImpl @Inject constructor
     private val userDao = room.userDao()
     private val articleDao = room.articleDao()
 
-    override fun getRandomArticles(categoryName : CompanyCategory) :Flow<PagingData<RandomArticleChild>>{
+    override fun getRandomArticles(categoryName: CompanyCategory, companyId: Long?): Flow<PagingData<ArticleCompany>> {
             return Pager(
     config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
     remoteMediator = ArticleCompanyRandomMediator(
-    api = api, room = room, category = categoryName
+    api = api, room = room, category = categoryName, companyId = companyId
     ),
     pagingSourceFactory = {
         articleCompanyDao.getRandomArticles(categoryName)
     }
     ).flow.map {
                 it.map { article ->
-                    article
+                    article.toArticleRelation()
                 }
             }
     }
 
-    override fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>{
+    override fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleCompany>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = ArticleCompanyRemoteMediator(
@@ -77,7 +76,7 @@ class ArticleRepositoryImpl @Inject constructor
             pagingSourceFactory = { articleCompanyDao.getAllMyArticles(companyId = companyId)}
         ).flow.map {
             it.map { article ->
-                article
+                article.toArticleRelation()
             }
         }
     }

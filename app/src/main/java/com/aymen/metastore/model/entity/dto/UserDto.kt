@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.User
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.RoleEnum
 import kotlinx.serialization.Serializable
 
@@ -21,7 +22,8 @@ data class UserDto(
     val image : String? = "",
 
     val rate: Double? = 0.0,
-    val rater: Int? = 0
+    val rater: Int? = 0,
+    val accountType: AccountType? = AccountType.NULL
 ){
     fun toUser(): User {
 
@@ -56,7 +58,8 @@ data class UserDto(
             balance = balance,
             image = image,
             rate = rate,
-            rater = rater
+            rater = rater,
+            accountType = accountType
         )
     }
 }

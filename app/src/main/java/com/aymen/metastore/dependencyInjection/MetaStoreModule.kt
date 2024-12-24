@@ -10,6 +10,7 @@ import com.aymen.metastore.companydtodatastore
 import com.aymen.metastore.datastore
 import com.aymen.metastore.model.Location.DefaultLocationClient
 import com.aymen.metastore.model.Location.LocationClient
+import com.aymen.metastore.model.ViewModelRunTracker
 import com.aymen.metastore.model.entity.dao.CompanyDao
 import com.aymen.metastore.model.entity.dao.PurchaseOrderDao
 import com.aymen.metastore.model.entity.dao.PurchaseOrderLineDao
@@ -122,6 +123,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -237,16 +243,18 @@ class MetaStoreModule {
                             userDataStore: DataStore<User>,
                             sharedViewModel: SharedViewModel,
                             context: Context,
-                            accountTypeDataStore: DataStore<AccountType>
+                            accountTypeDataStore: DataStore<AccountType>,
+                            viewModelRunTracker: ViewModelRunTracker
                             )
     : AppViewModel {
-        return AppViewModel(repository,dataStore, companyDataStore, userDataStore, sharedViewModel, context, accountTypeDataStore)
+        return AppViewModel(repository,dataStore, companyDataStore, userDataStore, sharedViewModel, context, accountTypeDataStore, viewModelRunTracker)
     }
 
     @Provides
     @Singleton
-    fun providerCategoryViewModel(repository: GlobalRepository,room : AppDatabase,sharedViewModel: SharedViewModel, useCases: MetaUseCases, context: Context):CategoryViewModel{
-        return CategoryViewModel(repository,room, sharedViewModel, useCases, context)
+    fun providerCategoryViewModel(repository: GlobalRepository,room : AppDatabase,sharedViewModel: SharedViewModel, useCases: MetaUseCases, context: Context,
+                                  api : ServiceApi):CategoryViewModel{
+        return CategoryViewModel(repository,room, sharedViewModel, useCases, context, api)
     }
 
     @Provides
@@ -266,8 +274,9 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideCompanyViewModel(globalRepository: GlobalRepository, room : AppDatabase,
-                                companyDataStore: DataStore<Company>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel, useCases: MetaUseCases): CompanyViewModel {
-        return CompanyViewModel(globalRepository,room,companyDataStore, appViewModel, sharedViewModel, useCases)
+                                companyDataStore: DataStore<Company>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel, useCases: MetaUseCases,
+                                viewModelRunTracker: ViewModelRunTracker): CompanyViewModel {
+        return CompanyViewModel(globalRepository,room,companyDataStore, appViewModel, sharedViewModel, useCases, viewModelRunTracker)
     }
 
     @Provides
@@ -288,8 +297,11 @@ class MetaStoreModule {
     }
     @Provides
     @Singleton
-    fun provideSignInViewModel(repository: GlobalRepository, dataStore: DataStore<AuthenticationResponse>, appViewModel: AppViewModel): SignInViewModel {
-        return SignInViewModel(repository, dataStore, appViewModel)
+    fun provideSignInViewModel(repository: GlobalRepository, dataStore: DataStore<AuthenticationResponse>, appViewModel: AppViewModel, companyDataStore: DataStore<Company>, userDataStore: DataStore<User>,
+                               sharedViewModel: SharedViewModel, accountTypeDataStore: DataStore<AccountType>,
+                               viewModelRunTracker: ViewModelRunTracker, room: AppDatabase
+                               ): SignInViewModel {
+        return SignInViewModel(repository, dataStore, appViewModel, companyDataStore, userDataStore, sharedViewModel, accountTypeDataStore, viewModelRunTracker, room)
     }
 
     @Provides
@@ -300,9 +312,10 @@ class MetaStoreModule {
         userDtoDataStore: DataStore<User>,
         room: AppDatabase,
         context: Context,
-        accountTypeDataStore: DataStore<AccountType>
+        accountTypeDataStore: DataStore<AccountType>,
+        viewModelRunTracker: ViewModelRunTracker
                                ):SharedViewModel{
-        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context, accountTypeDataStore)
+        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context, accountTypeDataStore, viewModelRunTracker)
     }
 
     @Provides
@@ -353,6 +366,18 @@ class MetaStoreModule {
                     .build()
             ).build()
         return retrofit.create(ServiceApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideStompClient(): HttpClient {
+        return HttpClient(OkHttp) {
+
+            install(ContentNegotiation) {
+                json()
+            }
+            install(WebSockets)
+        }
     }
 
     @Provides

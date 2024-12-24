@@ -160,7 +160,7 @@ fun CompanyScreen(company: Company) {
                         modifier = Modifier.padding(2.dp)
                     ) {
                         CompanyDetails(
-                            appViewModel,
+                            sharedViewModel,
                             clientViewModel,
                             companyViewModel,
                             ratingViewModel,
@@ -261,8 +261,9 @@ fun StarRating(
 }
 
 @Composable
-fun CompanyDetails( appViewModel: AppViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
-                   ratingViewModel : RatingViewModel, company: Company, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
+fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
+                   ratingViewModel : RatingViewModel, company: Company, isPointsSeller: Boolean, onRatingChanged: () -> Unit) {
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     Row {
         Row(
             modifier = Modifier
@@ -273,14 +274,14 @@ fun CompanyDetails( appViewModel: AppViewModel, clientViewModel: ClientViewModel
                 clientViewModel.sendClientRequest(company.id!!, it)
             }
         }
-        if (isMePointSeller) {
+        if (isPointsSeller) {
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 SendPointDialog(isOpen = false, User(), company)
             }
         }
-        if (appViewModel.userRole == RoleEnum.AYMEN) {
+        if (accountType == AccountType.META) {
             Row(
                 modifier = Modifier.weight(1f)
             ) {

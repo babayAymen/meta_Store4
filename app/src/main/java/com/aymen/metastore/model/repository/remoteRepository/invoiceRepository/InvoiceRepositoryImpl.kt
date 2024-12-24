@@ -80,8 +80,9 @@ class InvoiceRepositoryImpl @Inject constructor(
                         else invoiceDao.getAllMyInvoiceAsPersonClientAndPaid(clientId = clientId, status = status)
 
                     }
-                    AccountType.AYMEN -> TODO()
+                    AccountType.META -> TODO()
                     AccountType.NULL -> TODO()
+                    AccountType.SELLER -> TODO()
                 }
             }
         ).flow.map {

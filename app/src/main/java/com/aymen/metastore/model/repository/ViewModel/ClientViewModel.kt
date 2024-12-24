@@ -69,6 +69,7 @@ class ClientViewModel @Inject constructor(
     val user: StateFlow<User?> = sharedViewModel.user
     init {
 
+        Log.e("testtoviewmodel","client view model")
         getAllMyClient()
     }
 

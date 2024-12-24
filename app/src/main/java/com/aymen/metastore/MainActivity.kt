@@ -6,7 +6,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.LocaleList
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,22 +19,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.aymen.metastore.dependencyInjection.AccountTypeDtoSerializer
 import com.aymen.metastore.dependencyInjection.CompanyDtoSerializer
 import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.dependencyInjection.UserDtoSerializer
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User
-import com.aymen.store.app.MetaStore
+import com.aymen.metastore.app.MetaStore
 import com.aymen.store.dependencyInjection.TokenSerializer
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.webSocket.WebSocketViewModel
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.ui.theme.MetaStoreTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -92,10 +91,13 @@ private fun saveLanguage(context: Context, languageCode: String){
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
+     val socket : WebSocketViewModel = hiltViewModel()
     Column {
         MetaStore()
+//            socket.connectToWebSocket()
     }
 }
+
 
 @Composable
 fun LanguageSwither() {

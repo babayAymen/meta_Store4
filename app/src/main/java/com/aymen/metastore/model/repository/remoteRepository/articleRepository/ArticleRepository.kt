@@ -7,7 +7,6 @@ import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
-import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.util.Resource
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.SearchType
@@ -20,9 +19,9 @@ interface ArticleRepository {
      suspend fun getRandomArticlesByCategory(categoryId : Long,  companyId : Long ) : Response<List<ArticleCompanyDto>>
     suspend fun getRandomArticlesBySubCategory(subcategoryId : Long , companyId: Long) : Response<List<ArticleCompanyDto>>
 
-     fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleWithArticleCompany>>
-     fun getRandomArticles(categoryName : CompanyCategory): Flow<PagingData<RandomArticleChild>>
-     fun getArticleDetails(id : Long) : Flow<Resource<ArticleCompany>>
+     fun getAllMyArticles(companyId: Long): Flow<PagingData<ArticleCompany>>
+    fun getRandomArticles(categoryName : CompanyCategory, companyId: Long?): Flow<PagingData<ArticleCompany>>
+    fun getArticleDetails(id : Long) : Flow<Resource<ArticleCompany>>
      fun getAllMyArticleContaining(libelle : String, searchType: SearchType, companyId : Long) : Flow<PagingData<ArticleCompanyDto>>
      fun getAllArticlesByCategor(companyId : Long, companyCategory: CompanyCategory): Flow<PagingData<Article>>
     suspend fun getArticleByBarcode(bareCode : String) : Response<ArticleCompanyDto>

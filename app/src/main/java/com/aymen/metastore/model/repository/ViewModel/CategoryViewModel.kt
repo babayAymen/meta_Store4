@@ -8,6 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
@@ -20,8 +23,12 @@ import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.ErrorResponse
 import com.aymen.metastore.model.entity.model.User
+import com.aymen.metastore.model.entity.paging.remotemediator.CategoryRemoteMediator
 import com.aymen.metastore.model.entity.room.remoteKeys.CategoryRemoteKeysEntity
+import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import com.google.gson.Gson
@@ -31,7 +38,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -44,7 +53,8 @@ class CategoryViewModel @Inject constructor (
     private val room : AppDatabase,
      private val sharedViewModel : SharedViewModel,
     private val useCases: MetaUseCases,
-    private val context : Context
+    private val context : Context,
+    private val api : ServiceApi
 ): ViewModel() {
 
     private val categoryDao = room.categoryDao()
@@ -57,19 +67,20 @@ class CategoryViewModel @Inject constructor (
 
     var category by mutableStateOf(Category())
     var update by mutableStateOf(false)
-    val company: StateFlow<Company?> = sharedViewModel.company
-    val user: StateFlow<User?> = sharedViewModel.user
+    var company = sharedViewModel.company.value
+    var user = User()
+    var accountType = AccountType.NULL
 
-init {
+fun getAllCategories(){
     viewModelScope.launch {
-        useCases.getPagingCategoryByCompany(sharedViewModel.company.value.id?:0)
+       sharedViewModel.company.collect{item ->
+        useCases.getPagingCategoryByCompany(item.id?:0)
             .distinctUntilChanged()
             .cachedIn(viewModelScope)
-            .collect { _categories.value = it.map { category -> category } }
+            .collect { _categories.value = it }
+       }
     }
 }
-
-
     private val _filter = MutableStateFlow(0L)
     val filter : StateFlow<Long> = _filter
 
