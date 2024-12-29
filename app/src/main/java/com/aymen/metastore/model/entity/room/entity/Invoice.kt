@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
+import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 
@@ -53,7 +54,7 @@ data class Invoice(
 ){
     fun toInvoice(user : com.aymen.metastore.model.entity.model.User?,
                   client : com.aymen.metastore.model.entity.model.Company?,
-                  provider : com.aymen.metastore.model.entity.model.Company): com.aymen.metastore.model.entity.model.Invoice{
+                  provider : com.aymen.metastore.model.entity.model.Company): Invoice {
         return com.aymen.metastore.model.entity.model.Invoice(
             id = id,
             code = code,

@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.model.Company
@@ -83,6 +85,8 @@ fun AddArticleScreen(){
             onResult = {uri -> image = uri }
         )
         val categories = categoryViewModel.companyCategories.collectAsLazyPagingItems()
+        val subcategories = subCategoryViewModel.allSubCategories.collectAsLazyPagingItems()
+        val providers = providerViewModel.providers.collectAsLazyPagingItems()
         var category by remember {
             mutableStateOf(Category())
         }
@@ -97,7 +101,6 @@ fun AddArticleScreen(){
         var subCategory by remember {
             mutableStateOf(SubCategory())
         }
-        val subcategories = subCategoryViewModel.allSubCategories.collectAsLazyPagingItems()
 
         val context = LocalContext.current
         var articleCompany = ArticleCompany()
@@ -151,14 +154,11 @@ fun AddArticleScreen(){
         var isDiscounted by remember {
             mutableStateOf(false)
         }
-
-
         var provider by remember {
             mutableStateOf(Company())
         }
         if(articleViewModel.upDate){
             val articlee by articleViewModel.articleCompany.collectAsStateWithLifecycle()
-            Log.e("articleCompany","from view model : $articlee")
             articleCompany = articlee!!
             minQuantity = if(articlee?.unit == UnitArticle.U)(articlee?.minQuantity?:0.0).toInt().toString() else (articlee?.minQuantity?:0.0).toString()
             qte = articlee?.quantity!!
@@ -174,7 +174,6 @@ fun AddArticleScreen(){
             subCategory = articlee?.subCategory!!
             provider = articlee?.provider!!
         }
-        val providers = providerViewModel.providers.collectAsLazyPagingItems()
 
         LazyColumn(
             modifier = Modifier.fillMaxSize()
@@ -193,7 +192,7 @@ fun AddArticleScreen(){
 
                             InputTextField(
                                 labelValue = label,
-                                label = "label",
+                                label = stringResource(id = R.string.label),
                                 singleLine = true,
                                 maxLine = 1,
                                 keyboardOptions = KeyboardOptions(
@@ -207,7 +206,7 @@ fun AddArticleScreen(){
                             }
                             InputTextField(
                                 labelValue = code,
-                                label = "code",
+                                label = stringResource(id = R.string.code),
                                 singleLine = true,
                                 maxLine = 1,
                                 keyboardOptions = KeyboardOptions(
@@ -221,7 +220,7 @@ fun AddArticleScreen(){
                             }
                             InputTextField(
                                 labelValue = barcode,
-                                label = "barcode",
+                                label = stringResource(id = R.string.barcode),
                                 singleLine = true,
                                 maxLine = 1,
                                 keyboardOptions = KeyboardOptions(
@@ -235,7 +234,7 @@ fun AddArticleScreen(){
                             }
                             InputTextField(
                                 labelValue = description,
-                                label = "description",
+                                label = stringResource(id = R.string.description),
                                 singleLine = false,
                                 maxLine = 3,
                                 keyboardOptions = KeyboardOptions(
@@ -249,7 +248,7 @@ fun AddArticleScreen(){
                             }
                             InputTextField(
                                 labelValue = if (tva == 0.0) "" else tva.toString(),
-                                label = "tva",
+                                label = stringResource(id = R.string.tva),
                                 singleLine = true,
                                 maxLine = 1,
                                 KeyboardOptions(
@@ -271,7 +270,7 @@ fun AddArticleScreen(){
                     ) {
                         InputTextField(
                             labelValue = quantity,
-                            label = "quantity",
+                            label = stringResource(id = R.string.quantity),
                             singleLine = true,
                             maxLine = 1,
                             KeyboardOptions(
@@ -308,7 +307,7 @@ fun AddArticleScreen(){
                         }
                         InputTextField(
                             labelValue = minQuantity,
-                            label = "minQuantity",
+                            label = stringResource(id = R.string.minQuantity),
                             singleLine = true,
                             maxLine = 1,
                             KeyboardOptions(
@@ -342,7 +341,7 @@ fun AddArticleScreen(){
                         }
                         InputTextField(
                             labelValue = costFieald,
-                            label = "cost",
+                            label = stringResource(id = R.string.cost),
                             singleLine = true,
                             maxLine = 1,
                             KeyboardOptions(
@@ -369,7 +368,7 @@ fun AddArticleScreen(){
                         }
                         InputTextField(
                             labelValue = sellingPriceFieald,
-                            label = "selling price",
+                            label = stringResource(id = R.string.selling_price),
                             singleLine = true,
                             maxLine = 1,
                             KeyboardOptions(
@@ -415,7 +414,7 @@ fun AddArticleScreen(){
                         .fillMaxWidth()
                         .padding(start = 10.dp, top = 10.dp)
                 ) {
-                    Text(text = "Visibility")
+                    Text(text = stringResource(id = R.string.visibility))
                 }
                 Row(
                     modifier = Modifier
@@ -452,7 +451,7 @@ fun AddArticleScreen(){
                     }
                 }
                 if(false) {
-                ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
+                ButtonSubmit(labelValue = stringResource(id = R.string.add_photo), color = Color.Cyan, enabled = true) {
                     singlePhotoPickerLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
@@ -474,16 +473,16 @@ fun AddArticleScreen(){
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-
-                        ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
-                            appViewModel.updateShow("article")
+                        val articleText = stringResource(id = R.string.article)
+                        ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
+                            appViewModel.updateShow(articleText)
                         }
                     }
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
 
-                        ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true) {
+                        ButtonSubmit(labelValue = stringResource(id = R.string.submit), color = Color.Green, enabled = true) {
                             articleCompany.quantity = qte
                             articleCompany.minQuantity = minQte
                             articleCompany.cost = cost

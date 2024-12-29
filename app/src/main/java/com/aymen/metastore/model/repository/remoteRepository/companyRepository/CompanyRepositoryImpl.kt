@@ -6,11 +6,11 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.paging.pagingsource.AllCompaniesContainingPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.SearchType
@@ -51,7 +51,7 @@ class CompanyRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyProvider(id: Long): Flow<PagingData<CompanyWithCompanyOrUser>> {
+    override fun getAllMyProvider(id: Long): Flow<PagingData<ClientProviderRelation>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
             remoteMediator = ProviderRemoteMediator(
@@ -60,7 +60,7 @@ class CompanyRepositoryImpl @Inject constructor(
             pagingSourceFactory = { clientProviderDao.getAllMyProviders(id)}
         ).flow.map {
             it.map { article ->
-                article
+                article.toClientProviderRelation()
             }
         }
     }

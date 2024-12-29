@@ -34,4 +34,7 @@ interface CommanLineDao {
     @Transaction
     @Query("SELECT * FROM command_line WHERE invoiceId = :invoiceId")
     fun testroom(invoiceId : Long):List<CommandLineWithInvoiceAndArticle>
+
+    @Query("DELETE FROM command_line WHERE id = :id")
+    suspend fun deleteCommandLineById(id : Long)
 }

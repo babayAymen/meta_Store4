@@ -53,10 +53,16 @@ interface InvoiceDao {
     suspend fun updateInvoiceStatus(invoiceId: Long, newStatus: Status)
 
     @Upsert
-     fun insertKeys(keys: List<InvoiceRemoteKeysEntity>)
+     suspend fun insertKeys(keys: List<InvoiceRemoteKeysEntity>)
+
+     @Query("DELETE FROM invoice_remote_keys_table WHERE id = :id")
+     suspend fun deleteInvoiceRemoteKeyById(id: Long)
+
+     @Query("DELETE FROM invoice WHERE id = :id")
+     suspend fun deleteInvoiceById(id : Long)
 
      @Upsert
-     fun insertBuyHistoryKeys(keys : List<BuyHistoryRemoteKeysEntity>)
+     suspend fun insertBuyHistoryKeys(keys : List<BuyHistoryRemoteKeysEntity>)
 
      @Upsert
      fun insertBuyHistoryPaidKeys(keys : List<PayedRemoteKeysEntity>)

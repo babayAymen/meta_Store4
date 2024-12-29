@@ -90,7 +90,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.androidx.datastore)
-//    implementation (libs.androidx.runtime.livedata)
     implementation (libs.jwtdecode)
     implementation (libs.androidx.lifecycle.runtime.compose)
 
@@ -112,6 +111,12 @@ dependencies {
     implementation("io.ktor:ktor-client-websockets:2.3.0")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.0")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.0")
+
+// test websocket
+    implementation ("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation ("io.reactivex.rxjava3:rxjava:3.1.6")
+    implementation ("io.reactivex.rxjava3:rxandroid:3.0.2")
+    implementation (libs.stompprotocolandroid)
 
 
 

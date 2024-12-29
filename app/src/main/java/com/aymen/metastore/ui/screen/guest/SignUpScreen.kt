@@ -23,11 +23,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.R
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.metastore.model.entity.dto.RegisterRequest
@@ -58,8 +60,8 @@ fun SignUpScreen() {
         phone = "",
         password = "",
         address = "",
-        longitude = 1.2,
-        latitude = 1.2,
+        longitude = 0.0,
+        latitude = 0.0,
         category = CompanyCategory.DAIRY,
         type = AccountType.USER
     )
@@ -95,12 +97,12 @@ fun SignUpScreen() {
             .padding(10.dp)
         ) {
             item {
-                HeadingText(value = "Create an account")
+                HeadingText(value = stringResource(id = R.string.create_an_account))
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     ButtonSubmit(
-                        labelValue = if (asCompany) "company" else "user",
+                        labelValue = if (asCompany) stringResource(R.string.company) else stringResource(R.string.user),
                         color = Color.Green,
                         enabled = true
                     ) {
@@ -108,7 +110,9 @@ fun SignUpScreen() {
                     }
                 }
                 textField(
-                    label = if (asCompany) "company name" else "user name",
+                    label = if (asCompany)
+                        stringResource(R.string.company) +stringResource(R.string.name)
+                     else stringResource(R.string.user)+stringResource(R.string.name),
                     labelValue = userName,
                     Icons.Outlined.Person
                 ) {
@@ -122,31 +126,29 @@ fun SignUpScreen() {
                     ) {
                         dropDownCompanyCategory {
                             companyCategory = it
-                            Toast.makeText(context, "$it tt $companyCategory", Toast.LENGTH_SHORT).show()
-                            Log.e("companycateg","$companyCategory ${it.name}")
                         }
                     }
                 }
                 email = emailField(
-                    labelValue = "email",
+                    labelValue = stringResource(id = R.string.email),
                     Icons.Outlined.AlternateEmail
                 )
                 phone = PhoneField(
-                    labelValue = "phone",
+                    labelValue = stringResource(id = R.string.phone),
                     Icons.Outlined.Phone
                 )
                 password = passwordTextField(
-                    labelValue = "password",
+                    labelValue = stringResource(id = R.string.password),
                     Icons.Outlined.Lock,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next)
                 )
                 password = passwordTextField(
-                    labelValue = "re-password",
+                    labelValue = stringResource(id = R.string.re_password),
                     Icons.Outlined.Lock,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done)
                 )
                 CheckBoxComponent(
-                    value = "By continuing you accept our Privacy Policy and term of use",
+                    value = stringResource(id = R.string.privacy_policy),
                     onTextSelected = {
                         RouteController.navigateTo(Screen.TermConditionScreen)
                     })
@@ -167,9 +169,8 @@ fun SignUpScreen() {
                     registerRequest.phone = phone
 
                 }
-                ButtonComponent(value = "Register", isEnabled,
+                ButtonComponent(value = stringResource(id = R.string.register), isEnabled,
                     clickAction = {
-                        Toast.makeText(context, "clicked ${registerRequest.category}", Toast.LENGTH_SHORT).show()
                          viewModel.signUp(registerRequest){
                              if(it){
                             RouteController.navigateTo(Screen.HomeScreen)
@@ -177,8 +178,9 @@ fun SignUpScreen() {
                          }
                     })
                 DividerTextComponent()
-                NormalText(value = "you already have an account? ", aligne = TextAlign.Center)
-                ClickableLoginTextComponent("Login",
+                NormalText(value = stringResource(id = R.string.have_account), aligne = TextAlign.Center)
+                ClickableLoginTextComponent(
+                    stringResource(id = R.string.login),
                     onTextSelected = {
                         RouteController.navigateTo(Screen.SignInScreen)
                     }

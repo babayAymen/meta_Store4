@@ -6,7 +6,8 @@ import javax.inject.Inject
 class AymenRepositoryImpl @Inject constructor(
     private val api : ServiceApi
 ): AymenRepository {
-    override suspend fun makeAsPointSeller(status: Boolean, id: Long) = api.makeAsPointSeller(status,id)
+    override suspend fun makeAsPointSeller(status: Boolean, id: Long) = api.makeAsPointSeller(id,status)
+    override suspend fun makeAsMetaSeller(status: Boolean, id: Long) = api.makeAsMetaSeller(id, status)
 
 
 }

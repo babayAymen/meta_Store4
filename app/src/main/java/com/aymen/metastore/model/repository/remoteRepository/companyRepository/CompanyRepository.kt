@@ -2,6 +2,7 @@ package com.aymen.store.model.repository.remoteRepository.companyRepository
 
 import androidx.paging.PagingData
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.store.model.Enum.SearchType
@@ -13,7 +14,7 @@ interface CompanyRepository {
 
     suspend fun addCompany(company: String, file : File)
 
-     fun getAllMyProvider(companyId: Long): Flow<PagingData<CompanyWithCompanyOrUser>>
+     fun getAllMyProvider(companyId: Long): Flow<PagingData<ClientProviderRelation>>
 
     suspend fun getMyParent(companyId: Long): Response<CompanyDto>
 

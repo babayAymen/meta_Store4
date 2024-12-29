@@ -194,7 +194,6 @@ fun InvoiceScreenAsProvider() {
 
                                     val invoice = invoicesAsProvider[index]
                                     if (invoice != null) {
-                                    Log.e("LazyColumnItemKey", "Item ID: ${invoice.id}, Key: $invoice")
                                         Row {
                                             Text(text = invoice.code.toString())
                                             Spacer(modifier = Modifier.padding(6.dp))

@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 import com.aymen.metastore.model.entity.model.Payment
 import com.aymen.store.model.Enum.PaymentMode
 import com.aymen.store.model.Enum.Status
-import java.util.Date
+
 @Entity(tableName = "payment",
     foreignKeys = [
         ForeignKey(entity = Invoice::class, parentColumns = ["id"], childColumns = ["invoiceId"],

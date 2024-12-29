@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +35,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
@@ -56,6 +53,7 @@ import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
+import com.aymen.metastore.util.BASE_URL
 
 @Composable
 fun ArticleDetailsScreen() {
@@ -140,7 +138,8 @@ fun ArticleDetailsScreen() {
                      companyViewModel = companyViewModel,
                      ratingViewModel = ratingViewModel,
                      company = company,
-                     isPointsSeller = myCompany.isPointsSeller!!
+                     isPointsSeller = myCompany.isPointsSeller!!,
+                     appViewModel = appViewModel
                  ) {
 
                  }

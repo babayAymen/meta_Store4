@@ -15,11 +15,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ProviderViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ProviderCard
+import com.aymen.metastore.util.BASE_URL
 
 @Composable
 fun ProviderScreen() {

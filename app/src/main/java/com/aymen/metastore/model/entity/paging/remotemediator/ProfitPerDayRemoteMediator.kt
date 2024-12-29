@@ -72,8 +72,8 @@ class ProfitPerDayRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
+                    userDao.insertUser(response.map {user -> user.receiver?.user?.toUser()})
+                    companyDao.insertCompany(response.map {company -> company.receiver?.toCompany()})
                     paymentForProviderPerDayDao.insertPaymentForProviderPerDay(response.map { payment -> payment.toPaymentForProviderPerDay() })
 
                 } catch (ex: Exception) {

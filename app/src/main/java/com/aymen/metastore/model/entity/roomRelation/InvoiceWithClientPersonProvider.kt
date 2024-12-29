@@ -29,7 +29,7 @@ data class InvoiceWithClientPersonProvider(
     )
     val provider : CompanyWithUser
 ){
-    fun toInvoiceWithClientPersonProvider():com.aymen.metastore.model.entity.model.Invoice{
+    fun toInvoiceWithClientPersonProvider(): com.aymen.metastore.model.entity.model.Invoice {
         return invoice.toInvoice(
             user = person?.toUser(),
             client = client?.toCompany(),

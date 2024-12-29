@@ -21,8 +21,6 @@ class AllSearchRemoteMediator(
 
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
-    private val categoryDao = room.categoryDao()
-    private val subCategoryDao = room.subCategoryDao()
     private val articleDao = room.articleDao()
     private val articleCompanyDao = room.articleCompanyDao()
     private val searchHistoryDao = room.searchHistoryDao()

@@ -127,7 +127,7 @@ class SubCategoryViewModel @Inject constructor(
                     if (success.isSuccessful) {
                         if (response != null) {
                             room.withTransaction {
-                                subCategoryDao.insertSingleSubCategory(response.toSubCategory())
+                                subCategoryDao.insertSingleSubCategory(response.toSubCategory(isSubcategory = true))
                                 subCategoryDao.insertSingleSubCategoryRemoteKey(remoteKey.copy(id = response.id!!))
                             }
                         }
@@ -165,7 +165,7 @@ class SubCategoryViewModel @Inject constructor(
                     if(success.isSuccessful) {
                         if (response != null) {
                             room.withTransaction {
-                                subCategoryDao.insertSingleSubCategory(response.toSubCategory())
+                                subCategoryDao.insertSingleSubCategory(response.toSubCategory(isSubcategory = true))
                                 categoryDao.insertSingCategory(response.category?.toCategory(isCategory = false)!!)
                                 categoryDao.insertSingelKey(CategoryRemoteKeysEntity(
                                     id = response.category?.id!!,

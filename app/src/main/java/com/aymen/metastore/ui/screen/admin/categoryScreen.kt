@@ -9,23 +9,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.CategoryCardForAdmin
-import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.metastore.util.BASE_URL
 
 @Composable
 fun CategoryScreen() {

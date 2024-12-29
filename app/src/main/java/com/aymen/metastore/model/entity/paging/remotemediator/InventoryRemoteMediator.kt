@@ -26,8 +26,6 @@ class InventoryRemoteMediator(
     private val articleDao = room.articleDao()
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
-    private val categoryDao = room.categoryDao()
-    private val subCategoryDao = room.subCategoryDao()
 
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH

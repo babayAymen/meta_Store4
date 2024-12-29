@@ -187,59 +187,6 @@ Log.e("testtoviewmodel","app view model")
 
 
 
-//    private fun getMyUserDetails() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//                try {
-//                    val response = repository.getMyUserDetails()
-//                    if (response.isSuccessful) {
-//                        storeUser(response.body()!!.toUserModel())
-//                        sharedViewModel.assignUser(response.body()!!.toUserModel())
-//                    }
-//                } catch (ex: Exception) {
-//                    Log.e("getmyuserdetails", "error is : $ex")
-//                }
-//
-//        }
-//    }
-
-//     private fun userRole() {
-//         viewModelScope.launch{
-//             getToken {
-//                 if (it != null) {
-//                     TokenUtils.isUser(it,
-//                         authSize = { authSize ->
-//                             authsize = authSize
-//                         })
-//                     { isUser ->
-//                         when (isUser) {
-//                             RoleEnum.ADMIN -> {
-//                                 if (authsize == 1) {
-//                                     sharedViewModel.assignAccountType(AccountType.COMPANY)
-//                                     storeAccountType(AccountType.COMPANY)
-//                                 } else {
-//                                     sharedViewModel.assignAccountType(AccountType.USER)
-//                                     storeAccountType(AccountType.USER)
-//                                 }
-//                                 getMyCompany()
-//                             }
-//                             RoleEnum.USER ->{
-//                                 sharedViewModel.assignAccountType(AccountType.USER)
-//                                 storeAccountType(AccountType.USER)
-//                                 getMyUserDetails()
-//                             }
-//                             else -> {
-//                            //     storeAccountType(AccountType.WORKER)
-//                                 getMyUserDetails()
-//                             }
-//                         }
-//
-//                         userRole = isUser
-//                     }
-//                 }
-//             }
-//         }
-//     }
-
     fun isLoggedIn(isLogged : (Boolean) -> Unit){
         getToken {
             if (it != null) {

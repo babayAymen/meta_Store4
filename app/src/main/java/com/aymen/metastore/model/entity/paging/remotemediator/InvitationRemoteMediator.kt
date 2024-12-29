@@ -15,7 +15,8 @@ import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 @OptIn(ExperimentalPagingApi::class)
 class InvitationRemoteMediator(
     private val api : ServiceApi,
-    private val room : AppDatabase
+    private val room : AppDatabase,
+    private val companyId : Long
 ): RemoteMediator<Int, InvitationWithClientOrWorkerOrCompany> (){
 
     private val userDao = room.userDao()
@@ -53,8 +54,9 @@ class InvitationRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllMyInvetations(currentPage, PAGE_SIZE)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
+            val response = api.getAllMyInvetations(companyId,currentPage, PAGE_SIZE)
+            Log.e("aztshxfgh","response: ${response.content[0]}")
+            val endOfPaginationReached = response.last
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
@@ -63,7 +65,7 @@ class InvitationRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    invitationDao.insertInvitationKeys(response.map { article ->
+                    invitationDao.insertInvitationKeys(response.content.map { article ->
                         InvitationRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
@@ -71,13 +73,13 @@ class InvitationRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.worker?.toUser()})
-                    userDao.insertUser(response.map {user -> user.client?.toUser()})
-                    userDao.insertUser(response.map {user -> user.companySender?.user?.toUser()})
-                    userDao.insertUser(response.map {user -> user.companyReceiver?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.companySender?.toCompany()})
-                    companyDao.insertCompany(response.map {company -> company.companyReceiver?.toCompany()})
-                    invitationDao.insertInvitation(response.map { invitation -> invitation.toInvitation() })
+                    userDao.insertUser(response.content.map {user -> user.worker?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.client?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.companySender?.user?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.companyReceiver?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.companySender?.toCompany()})
+                    companyDao.insertCompany(response.content.map {company -> company.companyReceiver?.toCompany()})
+                    invitationDao.insertInvitation(response.content.map { invitation -> invitation.toInvitation() })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())

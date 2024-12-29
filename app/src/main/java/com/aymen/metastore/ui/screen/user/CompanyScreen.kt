@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
@@ -46,7 +45,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -56,23 +54,22 @@ import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
-import com.aymen.store.model.Enum.IconType
-import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
-import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
+import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.ui.component.AddTypeDialog
 import com.aymen.metastore.ui.component.ArticleCardForSearch
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.SendPointDialog
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.ui.screen.admin.ReglementScreen
+import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
@@ -87,12 +84,16 @@ fun CompanyScreen(company: Company) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
+    val paymentViewModel : PointsPaymentViewModel = hiltViewModel()
     val subCategories = subCategoryViewModel.companySubCategories.collectAsLazyPagingItems()
     val categories = categoryViewModel.companyCategories.collectAsLazyPagingItems()
     val randomArticles = articleViewModel.companyArticles.collectAsLazyPagingItems()
+    val view by appViewModel.view
+    val show by appViewModel.show
     var category by remember {
         mutableStateOf(Category())
     }
+
     if(subCategories.itemCount != 0) {
         category = subCategories.peek(0)?.category ?: Category()
     }
@@ -105,14 +106,15 @@ fun CompanyScreen(company: Company) {
         }
     }
     LaunchedEffect(key1 = Unit) {
+        appViewModel.updateView("COMPANY_CONTENT")
         articleViewModel.getAllCompanyArticles(companyId = company.id?:0)
         ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
     }
-//    LaunchedEffect(key1 = categories) {
-//        if(categories.itemCount != 0){
-//            articleViewModel.getRandomArticlesByCategory(categories[0]?.id?:0, company.id?:0, 0)
-//        }
-//    }
+    LaunchedEffect(key1 = categories) {
+        if(categories.itemCount != 0){
+            articleViewModel.getRandomArticlesByCategory(categories[0]?.id?:0, company.id?:0, 0)
+        }
+    }
     LaunchedEffect(key1 = subCategories) {
         if(subCategories.itemCount != 0){
             articleViewModel.getRandomArticlesByCategory(0, company.id?:0, subCategories[0]?.id?:0)
@@ -127,105 +129,128 @@ fun CompanyScreen(company: Company) {
             .fillMaxSize()
             .padding(3.dp, 36.dp, 3.dp, 3.dp)
     ) {
-        Column {
-            LazyColumn(
-                state = listState
-            ) {
-                item {
-                    Row {
-                        if (company.logo == "" || company.logo == null) {
-                            val painter: Painter =
-                                painterResource(id = R.drawable.emptyprofile)
-                            Image(
-                                painter = painter,
-                                contentDescription = "empty photo profil",
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(
-                                        RoundedCornerShape(10.dp)
-                                    )
-                            )
-                        } else {
-                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                        }
-                        Icon(
-                            imageVector = Icons.Default.Verified,
-                            contentDescription = "verification account",
-                            tint = Color.Green
-                        )
-                        Text(text = company.name)
-
-                    }
-                    Row(
-                        modifier = Modifier.padding(2.dp)
-                    ) {
-                        CompanyDetails(
-                            sharedViewModel,
-                            clientViewModel,
-                            companyViewModel,
-                            ratingViewModel,
-                            company,
-                            myCompany.isPointsSeller!!
-                        ) {
-                        }
-                    }
-                    Column {
-                        company.address?.let { it1 -> Text(text = it1) }
-                        company.phone?.let { it1 -> Text(text = it1) }
-                        company.email?.let { Text(text = it) }
-                        company.code?.let { it1 -> Text(text = it1) }
-                        company.matfisc?.let { it1 -> Text(text = it1) }
-                    }
-                }
-                    if (!rating) {
-                item {
-
-                        Column {
-//                            ScreenByCompanyCategory(categories) { categ ->
-//                                category = categ
-//                                articleViewModel.getRandomArticlesByCategory(
-//                                    categ.id!!,
-//                                    categ.company?.id!!,
-//                                    0
-//                                )
-//                                subCategoryViewModel.getAllSubCategoriesByCategoryId(categoryId = categ.id?:0, companyId = categ.company.id?:0)
-//                            }
-                            ScreenByCompanySubCategory(items = subCategories, category = category) { categ ->
-                                articleViewModel.getRandomArticlesByCategory(
-                                    0,
-                                    categ.company?.id!!,
-                                    categ.id!!
+        when (view) {
+          "COMPANY_CONTENT" ->
+            Column {
+                LazyColumn(
+                    state = listState
+                ) {
+                    item {
+                        Row {
+                            if (company.logo == "" || company.logo == null) {
+                                val painter: Painter =
+                                    painterResource(id = R.drawable.emptyprofile)
+                                Image(
+                                    painter = painter,
+                                    contentDescription = "empty photo profil",
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(
+                                            RoundedCornerShape(10.dp)
+                                        )
                                 )
+                            } else {
+                                ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
+                            }
+                            Icon(
+                                imageVector = Icons.Default.Verified,
+                                contentDescription = "verification account",
+                                tint = if (company.metaSeller == true) Color.Green else Color.Cyan
+                            )
+                            Text(text = company.name)
+
+                        }
+                        Row(
+                            modifier = Modifier.padding(2.dp)
+                        ) {
+                            CompanyDetails(
+                                sharedViewModel,
+                                clientViewModel,
+                                companyViewModel,
+                                ratingViewModel,
+                                company,
+                                myCompany.isPointsSeller!!,
+                                appViewModel
+                            ) {
                             }
                         }
+                        Column {
+                            company.address?.let { it1 -> Text(text = it1) }
+                            company.phone?.let { it1 -> Text(text = it1) }
+                            company.email?.let { Text(text = it) }
+                            company.code?.let { it1 -> Text(text = it1) }
+                            company.matfisc?.let { it1 -> Text(text = it1) }
+                        }
+                    }
+                    if (!rating) {
+                        item {
+
+                            Column {
+                                ScreenByCompanyCategory(categories) { categ ->
+                                    category = categ
+                                    articleViewModel.getRandomArticlesByCategory(
+                                        categ.id!!,
+                                        categ.company?.id!!,
+                                        0
+                                    )
+                                    subCategoryViewModel.getAllSubCategoriesByCategoryId(
+                                        categoryId = categ.id ?: 0,
+                                        companyId = categ.company.id ?: 0
+                                    )
+                                }
+                                ScreenByCompanySubCategory(
+                                    items = subCategories,
+                                    category = category
+                                ) { categ ->
+                                    articleViewModel.getRandomArticlesByCategory(
+                                        0,
+                                        categ.company?.id!!,
+                                        categ.id!!
+                                    )
+                                }
+                            }
+                        }
+                        items(
+                            count = randomArticles.itemCount,
+                            key = randomArticles.itemKey { it.id!! }
+                        ) { index ->
+                            val article = randomArticles[index]
+                            if (article != null) {
+                                ArticleCardForSearch(article) {
+                                    companyViewModel.myCompany = article.company!!
+                                    articleViewModel.assignArticleCompany(article)
+                                    RouteController.navigateTo(Screen.ArticleDetailScreen)
+                                }
+                            }
+                        }
+                    }
                 }
-                items(
-                    count = randomArticles.itemCount,
-                    key = randomArticles.itemKey{it.id!!}
-                ) {index ->
-                    val article = randomArticles[index]
-                    if(article != null){
-                    ArticleCardForSearch( article) {
-                        companyViewModel.myCompany = article.company!!
-                        articleViewModel.assignArticleCompany(article)
-                        RouteController.navigateTo(Screen.ArticleDetailScreen)
-                    }
-                    }
+                if (rating) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        RatingScreen(AccountType.COMPANY, company, null)
                     }
                 }
             }
-            if(rating){
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    RatingScreen(AccountType.COMPANY, company, null)
-                }
+            "REGLEMENT_FOR_PROVIDER" ->{
+                ReglementFeature(paymentViewModel = paymentViewModel , appViewModel = appViewModel, company = company)
             }
         }
     }
             SystemBackButtonHandler {
-                RouteController.navigateTo(Screen.HomeScreen)
+                Log.e("backbutton","view: $view")
+                when(view){
+                    "COMPANY_CONTENT" ->  RouteController.navigateTo(Screen.HomeScreen)
+                    "REGLEMENT_FOR_PROVIDER" -> {
+                        when(show){
+                            "REGLEMENT_FOR_PROVIDER" -> appViewModel.updateView("COMPANY_CONTENT")
+                            "REGLEMENT_SCREEN" -> appViewModel.updateShow("REGLEMENT_FOR_PROVIDER")
+                        }
+                    }
+
+                }
             }
 }
 
@@ -262,7 +287,7 @@ fun StarRating(
 
 @Composable
 fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
-                   ratingViewModel : RatingViewModel, company: Company, isPointsSeller: Boolean, onRatingChanged: () -> Unit) {
+                   ratingViewModel : RatingViewModel, company: Company, isPointsSeller: Boolean, appViewModel: AppViewModel, onRatingChanged: () -> Unit) {
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     Row {
         Row(
@@ -283,23 +308,55 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
         }
         if (accountType == AccountType.META) {
             Row(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(2f)
             ) {
-                if (!company.isPointsSeller!!) {
+                Row(modifier = Modifier.weight(1f)) {
+                    if (!company.metaSeller!!) {
+                        ButtonSubmit(
+                            labelValue = "make as meta seller",
+                            color = Color.Green,
+                            enabled = true
+                        ) {
+                            companyViewModel.MakeAsMetaSeller(true, company.id!!)
+                        }
+                    } else {
+                        ButtonSubmit(
+                            labelValue = "remove as meta seller",
+                            color = Color.Red,
+                            enabled = true
+                        ) {
+                            companyViewModel.MakeAsMetaSeller(false, company.id!!)
+                        }
+                    }
+                }
+                Row(modifier = Modifier.weight(1f)) {
+
+                    if (!company.isPointsSeller!!) {
+                        ButtonSubmit(
+                            labelValue = "make as point seller",
+                            color = Color.Green,
+                            enabled = true
+                        ) {
+                            companyViewModel.MakeAsPointSeller(true, company.id!!)
+                        }
+                    } else {
+                        ButtonSubmit(
+                            labelValue = "remove as seller",
+                            color = Color.Red,
+                            enabled = true
+                        ) {
+                            companyViewModel.MakeAsPointSeller(false, company.id!!)
+                        }
+                    }
+                }
+                Row(modifier = Modifier.weight(1f)) {
                     ButtonSubmit(
-                        labelValue = "make as seller",
+                        labelValue = "reglement",
                         color = Color.Green,
                         enabled = true
                     ) {
-                        companyViewModel.MakeAsPointSeller(true, company.id!!)
-                    }
-                } else {
-                    ButtonSubmit(
-                        labelValue = "remove as seller",
-                        color = Color.Red,
-                        enabled = true
-                    ) {
-                        companyViewModel.MakeAsPointSeller(false, company.id!!)
+                        appViewModel.updateView("REGLEMENT_FOR_PROVIDER")
+                        appViewModel.updateShow("REGLEMENT_FOR_PROVIDER")
                     }
                 }
             }
@@ -398,3 +455,46 @@ fun ScreenByCompanySubCategory(items : LazyPagingItems<SubCategory>, category : 
         }
     }
 }
+
+
+@Composable
+fun ReglementFeature(paymentViewModel: PointsPaymentViewModel, appViewModel: AppViewModel, company : Company) {
+    val companyPayment = paymentViewModel.allMyProfitsPerDay.collectAsLazyPagingItems()
+    val show by appViewModel.show
+    var idx by remember {
+        mutableStateOf(-1)
+    }
+    LaunchedEffect(key1 = companyPayment) {
+        if(companyPayment.itemCount == 0){
+            paymentViewModel.getAllMyProfitsPerDay(company.id!!)
+        }
+    }
+
+    when(show){
+        "REGLEMENT_FOR_PROVIDER" -> {
+            LazyColumn {
+                items(count = companyPayment.itemCount,
+                    key = companyPayment.itemKey { it.id!! }
+                ) { index ->
+                    val payment = companyPayment[index]
+                    if (payment != null) {
+                        Column(
+                            modifier = Modifier.clickable {
+                                idx = index
+                                appViewModel.updateShow("REGLEMENT_SCREEN")
+                            }
+                        ) {
+                            Text(text = "name : ${payment.receiver?.name}")
+                            Text(text = "credit : ${payment.amount}")
+                            Text(text = "rest : ${payment.rest}")
+                        }
+                    }
+                }
+            }
+        }
+         "REGLEMENT_SCREEN" -> {
+            ReglementScreen(companyPayment[idx], paymentViewModel, appViewModel)
+        }
+         }
+}
+

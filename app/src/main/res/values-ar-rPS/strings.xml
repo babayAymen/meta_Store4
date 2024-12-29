@@ -11,5 +11,44 @@
     <string name="register_now">سجل الان!</string>
     <string name="name_or_password_wrong">اسم المستخدم أو كلمة المرور غير صحيحة!</string>
 
+
+
+    <string name="register">Register</string>
+    <string name="create_an_account">Create an account</string>
+    <string name="company">Company</string>
+    <string name="user">User</string>
+    <string name="name">name</string>
+    <string name="email">email</string>
+    <string name="phone">phone</string>
+    <string name="re_password">re-password</string>
+    <string name="privacy_policy">By continuing you accept our Privacy Policy and term of use</string>
+    <string name="have_account">you already have an account?</string>
+    <string name="label">label</string>
+    <string name="code">code</string>
+    <string name="barcode">barcode</string>
+    <string name="description">description</string>
+    <string name="tva">tva</string>
+    <string name="quantity">quantity</string>
+    <string name="minQuantity">minQuantity</string>
+    <string name="cost">cost</string>
+    <string name="selling_price">selling price</string>
+    <string name="visibility">Visibility</string>
+    <string name="add_photo">add photo</string>
+    <string name="cancel">Cancel</string>
+    <string name="article">article</string>
+    <string name="submit">Submit</string>
+    <string name="category">category</string>
+    <string name="mat_fisc">matricule fiscale</string>
+    <string name="sector">sector</string>
+    <string name="capital">capital</string>
+    <string name="bank_account">bank account</string>
+    <string name="address">address</string>
+    <string name="client">client</string>
+    <string name="warehouse">werehouse</string>
+    <string name="image">image</string>
+    <string name="invoice_date">invoice date:</string>
+    <string name="send">send</string>
+    <string name="barcode_notfound">this barcode not found</string>
+
 </resources>
 

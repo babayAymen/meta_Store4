@@ -8,8 +8,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.Interceptor
 import okhttp3.Response
+import javax.inject.Inject
 
-class AccountTypeInterceptor(
+class AccountTypeInterceptor @Inject constructor(
     private val sharedViewModel: SharedViewModel
 ) : Interceptor {
 

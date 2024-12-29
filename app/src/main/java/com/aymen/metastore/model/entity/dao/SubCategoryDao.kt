@@ -30,7 +30,7 @@ interface SubCategoryDao {
      fun getAllSubCategories(companyId  :Long) : PagingSource<Int, SubCategoryWithCategory>
     @Query("DELETE FROM sub_category_remote_keys_table")
     suspend fun clearAllRemoteKeysTable()
-    @Query("DELETE FROM subcategory_werehouse WHERE companyId = :id")
+    @Query("DELETE FROM subcategory_werehouse WHERE companyId = :id AND isSubcategory = 1")
     suspend fun clearAllSubCategoryTable(id : Long)
     @Query("SELECT MAX(id) FROM subcategory_werehouse WHERE id = :id")
     suspend fun getLatestSubCategoryId(id : Long) : Long?

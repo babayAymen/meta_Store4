@@ -5,8 +5,9 @@ import okhttp3.Interceptor
 import okhttp3.Protocol
 import okhttp3.Response
 import okhttp3.ResponseBody
+import javax.inject.Inject
 
-class NetworkInterceptor(
+class NetworkInterceptor @Inject constructor(
     private val context : Context
 ) : Interceptor {
 

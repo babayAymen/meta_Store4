@@ -67,11 +67,12 @@ class ProviderViewModel @Inject constructor(
     fun getAllMyProviders(){
         viewModelScope.launch {
             val id = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value.id else sharedViewModel.user.value.id
+            Log.e("provideridazeie","company id for probviders $id")
             useCases.getAllMyProviders(id!!)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _providers.value = it.map { provider -> provider.toClientProviderRelation() }
+                    _providers.value = it
                 }
         }
     }

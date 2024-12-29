@@ -22,20 +22,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.SavedSearch
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.GroupAdd
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.HomeWork
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Badge
@@ -53,7 +49,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,24 +61,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.LanguageSwither
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
-import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
-import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
 import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
 import com.aymen.metastore.ui.component.ArticleCardForUser
 import com.aymen.metastore.ui.component.EmptyImage
@@ -94,6 +83,7 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.ui.screen.admin.DashBoardScreen
+import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.ui.screen.user.NotificationScreen
 import java.math.RoundingMode
 
@@ -157,7 +147,7 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
                 IconType.HOME ->
                     Column {
                         ScreenByCategory(articleViewModel = articleViewModel)
-                        ArticleCardForUser(randomArticles, isEnabled = true)
+                        ArticleCardForUser(randomArticles)
                     }
                 IconType.NOTIFICATIONS -> {
                     NotificationScreen()
@@ -188,7 +178,6 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
 @Composable
 fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedViewModel : SharedViewModel)   {
     val viewModel : AppViewModel = hiltViewModel()
-    val companyViewModel : CompanyViewModel = hiltViewModel()
     val selectedIcon by viewModel.currentScreen
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
@@ -309,7 +298,6 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                                         isPopupVisible = false
                                         if (!isCompany) {
                                             sharedViewModel.changeAccountType(AccountType.COMPANY)
-                                            companyViewModel.getMyCompany()
                                         } else
                                             sharedViewModel.changeAccountType(AccountType.USER)
 
@@ -318,9 +306,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             }
                             LanguageSwither()
                             DropdownMenuItem(text = { Text(text = "logout") }, onClick = {
-                                viewModel.updateScreen(IconType.HOME)
                                 sharedViewModel.logout()
-                                RouteController.navigateTo(Screen.SignInScreen)
                             })
                         }
 
@@ -423,7 +409,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
 
         }
 
-        if( viewModel.show.value == "dash" || viewModel.show.value == "conversation" || viewModel.show.value == "payment" || viewModel.show.value == "order"){
+        if( viewModel.show.value == "dash" || viewModel.show.value == "payment" || viewModel.show.value == "order"){
             if(historySelected == IconType.COMPANY){
                 viewModel.updateShow("dash")
             }
@@ -476,6 +462,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                 "ADD_ARTICLE" ->{
                     viewModel.updateShow("article")
                 }
+                "REGLEMENT_SCREEN" -> viewModel.updateShow("REGLEMENT_FOR_PROVIDER")
                 else -> {
                     viewModel.updateShow("dash")
                 }

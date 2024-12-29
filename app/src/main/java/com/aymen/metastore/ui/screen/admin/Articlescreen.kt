@@ -1,6 +1,5 @@
 package com.aymen.metastore.ui.screen.admin
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -45,7 +43,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
@@ -54,6 +51,7 @@ import com.aymen.metastore.ui.component.ArticleCardForAdmin
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.LodingShape
 import com.aymen.metastore.ui.component.addQuantityDailog
+import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.model.Enum.RoleEnum
 import kotlinx.coroutines.delay
 

@@ -126,7 +126,7 @@ class ArticleRepositoryImpl @Inject constructor
         companyId: Long,
         categoryId: Long,
         subcategoryId: Long
-    ): Flow<PagingData<ArticleCompanyDto>> {
+    ): Flow<PagingData<ArticleCompany>> {
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE, // Number of items per page
@@ -135,7 +135,11 @@ class ArticleRepositoryImpl @Inject constructor
             pagingSourceFactory = {
                 CompanyArticlesByCategoryOrSubCategoryPagingSource(api, companyId, categoryId,subcategoryId)
             }
-        ).flow
+        ).flow.map { article ->
+            article.map {
+                it.toArticleCompanyModel()
+            }
+        }
     }
 
     override fun getArticleDetails(id: Long): Flow<Resource<ArticleCompany>> {
@@ -209,8 +213,8 @@ class ArticleRepositoryImpl @Inject constructor
         companyDao.insertCompany(articleDetails.map {company -> company.company?.toCompany()!!})
         userDao.insertUser(articleDetails.map {user -> user.provider?.user?.toUser()!!})
         companyDao.insertCompany(articleDetails.map { company -> company.provider?.toCompany()!! })
-        categoryDao.insertCategory(articleDetails.map {category -> category.category?.toCategory(isCategory = false)!! })
-        subCategoryDao.insertSubCategory(articleDetails.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
+        categoryDao.insertCategory(articleDetails.map {category -> category.category?.toCategory(isCategory = false) })
+        subCategoryDao.insertSubCategory(articleDetails.map {subCategory -> subCategory.subCategory?.toSubCategory(isSubcategory = false) })
         articleDao.insertArticle(articleDetails.map {article -> article.article?.toArticle(isMy = true)!! })
         articleCompanyDao.insertArticle(articleDetails.map {dto ->
             dto.toArticleCompany(false) })

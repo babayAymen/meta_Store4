@@ -1,7 +1,6 @@
 package com.aymen.metastore.ui.screen.admin
 
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -21,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AddToHomeScreen
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -51,13 +51,10 @@ import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
-import com.aymen.metastore.dependencyInjection.BASE_URL
-import com.aymen.metastore.model.entity.model.Company
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.entity.model.Invoice
-import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.ui.component.ArticleDialog
@@ -67,6 +64,8 @@ import com.aymen.metastore.ui.component.DiscountTextField
 import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.ui.component.ShowPaymentDailog
 import com.aymen.metastore.ui.component.ShowQuantityDailog
+import com.aymen.metastore.util.BASE_URL
+import com.aymen.store.ui.screen.user.generatePDF
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDateTime
@@ -85,6 +84,8 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val clientType = invoiceViewModel.clientType
     val currentDateTime = LocalDateTime.now()
     val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) // HH:mm:ss
+    var showDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(key1 = Unit) {
         if (invoiceMode == InvoiceMode.CREATE) {
         invoiceViewModel.getLastInvoiceCode()
@@ -206,7 +207,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                 ) {
                     Column {
                         ShowImage(
-                            image = "${BASE_URL}werehouse/image/${myCompany.logo}/company/${myCompany.user?.id}"
+                            image = "${BASE_URL}${stringResource(id = R.string.warehouse)}/${stringResource(id = R.string.image)}/${myCompany.logo}/${stringResource(id = R.string.company)}/${myCompany.user?.id}"
                         )
                         Text(text = myCompany.email ?: "")
                         myCompany.matfisc?.let { Text(text = it) }
@@ -225,7 +226,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                            .fillMaxWidth()
                            .wrapContentWidth(Alignment.CenterHorizontally)
                     )
-                    Text(text = "invoice date: $formattedDate",
+                    Text(text = stringResource(id = R.string.invoice_date)+formattedDate,
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentWidth(Alignment.CenterHorizontally))
@@ -244,14 +245,15 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "send"
+                                contentDescription = stringResource(id = R.string.send)
                             )
                         }
+                        val barcodenotfound = stringResource(id = R.string.barcode_notfound)
                         IconButton(
                             onClick = {
                                 invoiceViewModel.startScan {
                                     if(it == null){
-                                    Toast.makeText(context, "this barcode not found", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, barcodenotfound, Toast.LENGTH_SHORT).show()
                                     }else{
                                         article = it
                                         isShowQuantityDailog = true
@@ -264,6 +266,18 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 contentDescription = "Favorite"
                             )
                         }
+                        IconButton(onClick = {showDialog = true
+                        }) {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.InsertDriveFile,
+                                contentDescription = "pdf"
+                            )
+                        }
+//                        if (showDialog) {
+//                            Dialog(onDismissRequest = { showDialog = false }) {
+//                                PDFGenerateScreen(context, companyViewModel,commandsLine)
+//                            }
+//                        }
                         if(isShowQuantityDailog){
                             ShowQuantityDailog(article , true,invoiceViewModel, false){
                                     isShowQuantityDailog = false
@@ -284,10 +298,17 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 val invoicee = Invoice().copy()
                                     invoicee.rest = mony.toDouble()
                                     invoicee.paid = paid
+                                    invoicee.code = invoiceViewModel.lastInvoiceCode
+                                    invoicee.client = invoiceViewModel.clientCompany
+                                    invoicee.person = invoiceViewModel.clientUser
+                                    invoicee.provider = myCompany
                                 for (x in commandsLine){
                                     x.invoice = invoicee
                                 }
+
+                                generatePDF(context, commandsLine)
                                 invoiceViewModel.addInvoice()
+
                                 appViewModel.updateShow("invoice")
                             }
                         }
@@ -521,8 +542,8 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         Row(modifier = Modifier.weight(1f)) {
                             Column {
                                 Text(text = invoice.provider?.name!!)
-                                invoice.provider.phone?.let { Text(text = it) }
-                                invoice.provider.address?.let { Text(text = it) }
+                                invoice.provider?.phone?.let { Text(text = it) }
+                                invoice.provider?.address?.let { Text(text = it) }
                             }
                         }
                         Row(

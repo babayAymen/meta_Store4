@@ -445,7 +445,13 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
 
 @Composable
 fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel: PaymentViewModel, appViewModel: AppViewModel) {
-
+val sharedViewModel : SharedViewModel = hiltViewModel()
+    val paymentsEspece = pointPaymentViewModel.allMyPointsPaymentForProviders.collectAsLazyPagingItems()
+    LaunchedEffect(key1 = paymentsEspece) {
+        if(paymentsEspece.itemCount == 0) {
+            pointPaymentViewModel.getAllMyPointsPaymentt(sharedViewModel.company.value.id ?: 0)
+        }
+    }
     var beginDate by remember {
         mutableStateOf("")
     }
@@ -476,7 +482,6 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
             allProfitByDateInabled = true
             sumProfitInabled = true
         }
-
         "all_histories_payment_for_provider_by_date" -> {
             allHistoryInabled = true
             allHistoryByDateInabled = false
@@ -484,7 +489,6 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
             allProfitByDateInabled = true
             sumProfitInabled = true
         }
-
         "all_profit_payment_for_provider_per_day" -> {
             allHistoryInabled = true
             allHistoryByDateInabled = true
@@ -543,7 +547,6 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                     color = Color.Green,
                     enabled = allProfitInabled
                 ) {
-                 //   pointPaymentViewModel.getAllMyProfitsPerDay()
                     appViewModel.updateView("all_profit_payment_for_provider_per_day")
                 }
             }
@@ -590,7 +593,6 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
             when (view) {
                 "all_histories_payment_for_provider" -> {
                     val listState = pointPaymentViewModel.listState
-                    val paymentsEspece = pointPaymentViewModel.allMyPointsPaymentForProviders.collectAsLazyPagingItems()
                             LazyColumn(state = listState,
                                 modifier = Modifier.fillMaxSize()
                             ) {
@@ -637,7 +639,7 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                                     val profitPerDay = allMyProfitsPerDay[index]
                                     if(profitPerDay != null) {
                                         Row(
-                                            modifier = Modifier.background(if(profitPerDay.payed== true)Color.Green else Color.Red)
+                                            modifier = Modifier.background(if(profitPerDay.isPayed== true)Color.Green else Color.Red)
                                         ) {
                                             profitPerDay.lastModifiedDate?.let { Text(text = it) }
                                             Spacer(modifier = Modifier.width(20.dp))
@@ -656,7 +658,7 @@ fun ProfitView( pointPaymentViewModel : PointsPaymentViewModel, paymentViewModel
                             val profit = profitPerDayByDate[index]
                             if(profit != null){
                                 Row(
-                                    modifier = Modifier.background(if(profit.payed== true)Color.Green else Color.Red)
+                                    modifier = Modifier.background(if(profit.isPayed== true)Color.Green else Color.Red)
                                 ) {
                                     profit.lastModifiedDate?.let { Text(text = it) }
                                     Spacer(modifier = Modifier.width(20.dp))

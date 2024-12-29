@@ -50,7 +50,7 @@ data class InvoiceDto(
         )
     }
 
-    fun toInvoiceModel() : com.aymen.metastore.model.entity.model.Invoice{
+    fun toInvoiceModel() : com.aymen.metastore.model.entity.model.Invoice {
         return com.aymen.metastore.model.entity.model.Invoice(
             id = id,
             code = code,

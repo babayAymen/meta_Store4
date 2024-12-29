@@ -30,14 +30,14 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.User
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.util.BASE_URL
 
 @Composable
 fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
 
-    val current = LocalContext.current
-    var height = LocalConfiguration.current.screenHeightDp.dp
+//    val current = LocalContext.current
+//    var height = LocalConfiguration.current.screenHeightDp.dp
     val ratingViewModel: RatingViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
     var id by remember { mutableLongStateOf(0) }

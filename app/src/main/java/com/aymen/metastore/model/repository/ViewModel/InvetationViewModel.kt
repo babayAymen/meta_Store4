@@ -28,7 +28,8 @@ class InvetationViewModel @Inject constructor(
     private val repository: GlobalRepository,
     private val room : AppDatabase,
     private val useCases: MetaUseCases,
-    private val appViewModel: AppViewModel
+    private val appViewModel: AppViewModel,
+    private val sharedViewModel: SharedViewModel
 ): ViewModel() {
 
     private val invitationDao = room.invetationDao()
@@ -37,11 +38,11 @@ class InvetationViewModel @Inject constructor(
 
     fun getAllMyInvetations(){
         viewModelScope.launch(Dispatchers.IO) {
-            useCases.getAllMyInvitations()
+            useCases.getAllMyInvitations(sharedViewModel.company.value.id!!)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _myAllInvetation.value = it.map { invitation -> invitation.toInvitationWithClientOrWorkerOrCompany() }
+                    _myAllInvetation.value = it
                 }
         }
     }

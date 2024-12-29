@@ -76,7 +76,7 @@ class SubCategoryByCompanyIdRemoteMediator(
                     userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
                     categoryDao.insertCategory(response.content.map {category -> category.category?.toCategory(isCategory = false)})
-                    subCategoryDao.insertSubCategory(response.content.map {subCategory -> subCategory.toSubCategory() })
+                    subCategoryDao.insertSubCategory(response.content.map {subCategory -> subCategory.toSubCategory(isSubcategory = true) })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())

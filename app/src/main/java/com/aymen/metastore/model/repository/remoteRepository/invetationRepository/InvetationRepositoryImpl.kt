@@ -5,9 +5,9 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.aymen.metastore.model.entity.model.Invitation
 import com.aymen.metastore.model.entity.paging.remotemediator.InvitationRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorkerOrCompany
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.store.model.Enum.Status
@@ -25,16 +25,16 @@ class InvetationRepositoryImpl @Inject constructor(
         private val invitationDao = room.invetationDao()
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyInvetations(): Flow<PagingData<InvitationWithClientOrWorkerOrCompany>>{
+    override fun getAllMyInvetations(companyId : Long): Flow<PagingData<Invitation>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = InvitationRemoteMediator(
-                api = api,room = room
+                api = api,room = room, companyId = companyId
             ),
             pagingSourceFactory = { invitationDao.getAllInvitations()}
         ).flow.map {
             it.map { article ->
-                article
+                article.toInvitationWithClientOrWorkerOrCompany()
             }
         }
     }

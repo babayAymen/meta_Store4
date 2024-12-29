@@ -8,6 +8,7 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
+import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import com.aymen.store.model.Enum.CompanyCategory
@@ -18,12 +19,10 @@ class ArticleCompanyRandomMediator(
     private val room : AppDatabase,
     private val category : CompanyCategory,
     private val companyId : Long?
-):RemoteMediator<Int, RandomArticleChild>() {
+):RemoteMediator<Int, ArticleWithArticleCompany>() {
 
 
     private val articleCompanyDao = room.articleCompanyDao()
-    private val categoryDao = room.categoryDao()
-    private val subCategoryDao = room.subCategoryDao()
     private val companyDao = room.companyDao()
     private val userDao = room.userDao()
     private val articleDao = room.articleDao()
@@ -33,7 +32,7 @@ class ArticleCompanyRandomMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, RandomArticleChild>
+        state: PagingState<Int, ArticleWithArticleCompany>
     ): MediatorResult {
         return try {
             val currentPage = when (loadType) {
@@ -74,16 +73,11 @@ class ArticleCompanyRandomMediator(
                         )
                     })
 
-                    response.content.map { article -> Log.e("logartilce","article company : ${article.company?.id} and my company is : $companyId") }
+                    response.content.map { article -> Log.e("logartilce","article category : ${article} and my company is : $companyId") }
                     userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
-                    userDao.insertUser(response.content.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
-                    companyDao.insertCompany(response.content.map { company -> company.provider?.toCompany() })
-                    categoryDao.insertCategory(response.content.map {category -> category.category?.toCategory(isCategory = false) })
-                    categoryDao.insertCategory(response.content.map {category -> category.subCategory?.category?.toCategory(isCategory = false) })
-                    subCategoryDao.insertSubCategory(response.content.map {subCategory -> subCategory.subCategory?.toSubCategory() })
                     articleDao.insertArticle(response.content.map {article -> article.article?.toArticle(isMy = article.company?.id == companyId) })
-                        articleCompanyDao.insertArticle(response.content.map { article -> article.toArticleCompany(isRandom = true) })
+                        articleCompanyDao.insertOrUpdate(response.content.map { article -> article.toArticleCompany(isRandom = true, isMy = false) })
 
                 } catch (ex: Exception) {
                     Log.e("error", "articlecompany ${ex}")

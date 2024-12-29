@@ -3,17 +3,17 @@ package com.aymen.metastore.model.entity.model
 import com.aymen.store.model.Enum.Status
 data class Cash (
 
-     var id : Long? = null,
+    var id : Long? = null,
 
-     var transactionId: String = "",
+    var transactionId: String = "",
 
-     var amount: Double? = null,
+    var amount: Double? = null,
 
-     var status: Status? = Status.INWAITING,
+    var status: Status? = Status.INWAITING,
 
-     var invoice: Invoice? = null,
+    var invoice: Invoice? = null,
 
-     var createdDate : String = "",
+    var createdDate : String = "",
 
-     var lastModifiedDate : String = "",
+    var lastModifiedDate : String = "",
 )

@@ -3,8 +3,10 @@ package com.aymen.store.model.repository.remoteRepository.PointsPaymentRepositor
 import androidx.paging.PagingData
 import com.aymen.metastore.model.entity.dto.PaymentForProviderPerDayDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
+import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PointsPayment
+import com.aymen.metastore.model.entity.model.ReglementForProviderModel
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 import com.aymen.metastore.model.entity.roomRelation.PointsWithProviderclientcompanyanduser
@@ -20,6 +22,7 @@ interface PointPaymentRepository {
     fun getAllMyProfitsPerDay(companyId: Long) : Flow<PagingData<PaymentForProviderPerDay>>
     fun getAllMyPointsPaymentForPoviders(companyId : Long) : Flow<PagingData<PaymentForProvidersWithCommandLine>>
     suspend fun sendPoints(pointsPayment: PointsPaymentDto):Response<Void>
+    suspend fun sendReglement(reglement: ReglementFoProviderDto):Response<Void>
 
 
     fun getAllMyPaymentsEspece(companyId : Long) : Flow<PagingData<PaymentForProvidersWithCommandLine>>
@@ -30,5 +33,6 @@ interface PointPaymentRepository {
 
      fun getMyHistoryProfitByDate(id : Long, beginDate : String, finalDate : String): Flow<PagingData<PaymentPerDayWithProvider>>
 
+     fun getPaymentForProviderDetails(paymentId : Long) : Flow<PagingData<ReglementForProviderModel>>
 
 }

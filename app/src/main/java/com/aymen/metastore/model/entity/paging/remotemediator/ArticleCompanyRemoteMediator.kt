@@ -71,15 +71,14 @@ class ArticleCompanyRemoteMediator(
                             previousPage = prevPage
                         )
                     })
-                        Log.e("articlecompany","article size : ${response.content.size}")
                     userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
                     userDao.insertUser(response.content.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.content.map { company -> company.provider?.toCompany()})
-                    categoryDao.insertCategory(response.content.map {category -> category.category?.toCategory(isCategory = false)})
-                    subCategoryDao.insertSubCategory(response.content.map {subCategory -> subCategory.subCategory?.toSubCategory()})
+                    categoryDao.insertCategoryCateg(response.content.map {category -> category.category?.toCategory(isCategory = false)})
+                    subCategoryDao.insertSubCategory(response.content.map {subCategory -> subCategory.subCategory?.toSubCategory(isSubcategory = false)})
                     articleDao.insertArticle(response.content.map {article -> article.article?.toArticle(isMy = true)})
-                    articleCompanyDao.insertArticle(response.content.map { it.toArticleCompany(isRandom = false, isSearch = false) })
+                    articleCompanyDao.insertOrUpdateMy(response.content.map { it.toArticleCompany(isRandom = false, isSearch = false, isMy = true) })
 
                 } catch (ex: Exception) {
                     Log.e("error", "articlecompany ${ex.message}")

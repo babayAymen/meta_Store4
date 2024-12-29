@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aymen.metastore.dependencyInjection.TokenManager
 import com.aymen.metastore.model.ViewModelRunTracker
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
@@ -39,8 +40,8 @@ class SignInViewModel @Inject constructor(
     private val userDatastore: DataStore<User>,
     private val sharedViewModel: SharedViewModel,
     private val accountTypeDataStore: DataStore<AccountType>,
-    private val tracker: ViewModelRunTracker,
-    private val room : AppDatabase
+    private val room : AppDatabase,
+    private val tokenManager: TokenManager
 ): ViewModel() {
 
     fun signIn(authenticationRequest: AuthenticationRequest, onSignInSuccess: (Boolean) -> Unit){
@@ -49,6 +50,7 @@ class SignInViewModel @Inject constructor(
                     val token = repository.SignIn(authenticationRequest)
                     Log.e("token","token : ${token.body()}")
                     if (token.isSuccessful) {
+                            tokenManager.saveToken(token.body()?.token!!) // Save new token dynamically
                         getUserRole(token.body()?.token!!)
                         storeToken(token.body()!!)
                         onSignInSuccess(true)
@@ -118,17 +120,21 @@ class SignInViewModel @Inject constructor(
                 val response = repository.getMeAsCompany()
                 Log.e("token","company size : ${response.body()?.id}")
                 if(response.isSuccessful){
+                    Log.e("userrole","user role in get company 1 $userRole")
                     val company = response.body()!!
                    checkLocation(company.toCompanyModel(), null){
                        _showCheckLocationDialog.value = it
                    }
-                    sharedViewModel.assignCompanyy( company.toCompanyModel())
+                    Log.e("userrole","user role in get company 2 $userRole")
                     storeCompany(company.toCompanyModel())
-                    room.companyDao().insertCompany(listOf(company.toCompany()))
-                    Log.e("userrole","user role $userRole")
+                    Log.e("userrole","user role in get company 3 $userRole")
                     if(userRole == RoleEnum.ADMIN) {
+                        Log.e("userrole","user role in get company 4 ${company.user}")
                         storeUser(company.user?.toUserModel()!!)
+                        sharedViewModel.assignUser(company.user.toUserModel())
                     }
+                    sharedViewModel.assignCompanyy( company.toCompanyModel())
+                    room.companyDao().insertCompany(listOf(company.toCompany()))
 
                 }
             }catch (ex : Exception){
@@ -150,7 +156,6 @@ class SignInViewModel @Inject constructor(
                     val user = response.body()?.toUserModel()
                     sharedViewModel.assignAccountType(user?.accountType!!)
                     storeAccountType(user.accountType)
-                    Log.e("userdetails","user : ${response.body()}")
                     checkLocation(null, user){
                         _showCheckLocationDialog.value = it
                     }

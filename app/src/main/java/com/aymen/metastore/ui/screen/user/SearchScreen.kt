@@ -64,7 +64,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
         mutableStateOf(false)
     }
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
-    var search by remember {
+    val search by remember {
         mutableStateOf(SearchHistory())
     }
 
@@ -118,7 +118,6 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 ) {
                                                     companyViewModel.myCompany = company
                                                     search.company = company
-//                                                        articleViewModel.companyId = company.company.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
                                                     searchViewModel.saveHitory(
                                                         searchCategory,
@@ -197,8 +196,8 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                     articleViewModel.companyId = history.company?.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
                                                     searchViewModel.saveHitory(
-                                                        searchCategory,
-                                                        history.id!!,
+                                                        history.searchCategory,
+                                                        history.company?.id!!,
                                                         history
 
                                                     )
@@ -217,7 +216,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                     appViewModel.assignUser(history.user!!)
                                                     RouteController.navigateTo(Screen.UserScreen)
                                                     searchViewModel.saveHitory(
-                                                        searchCategory,
+                                                        history.searchCategory,
                                                         history.user?.id!!,
                                                         history
                                                     )
@@ -237,8 +236,8 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                     articleViewModel.assignArticleCompany( history.article!!)
                                                     RouteController.navigateTo(Screen.ArticleDetailScreen)
                                                     searchViewModel.saveHitory(
-                                                        searchCategory,
-                                                        history.id!!,
+                                                        history.searchCategory,
+                                                        history.article?.id!!,
                                                         history
                                                     )
                                                 }

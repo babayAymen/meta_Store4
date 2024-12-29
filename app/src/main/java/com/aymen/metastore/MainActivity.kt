@@ -33,10 +33,12 @@ import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.app.MetaStore
 import com.aymen.store.dependencyInjection.TokenSerializer
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.webSocket.ChatClient
 import com.aymen.metastore.model.webSocket.WebSocketViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.ui.theme.MetaStoreTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 val Context.datastore: DataStore<AuthenticationResponse> by dataStore("setting.json", TokenSerializer)
 val Context.companydtodatastore: DataStore<Company> by dataStore("companydto.json", CompanyDtoSerializer)
@@ -45,6 +47,11 @@ val Context.accounttypedtodatastore: DataStore<AccountType> by dataStore("accoun
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+
+    @Inject
+    lateinit var chatClient: ChatClient
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

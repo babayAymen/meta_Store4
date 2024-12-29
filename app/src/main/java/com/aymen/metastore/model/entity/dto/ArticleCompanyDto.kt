@@ -1,7 +1,6 @@
 package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
-import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
 import kotlinx.serialization.Serializable
@@ -19,15 +18,16 @@ data class ArticleCompanyDto(
     var sellingPrice: Double? = 0.0,
     var isFav : Boolean? = false,
     var isEnabledToComment : Boolean? = false,
-    val likeNumber : Long? = null,
+    val likeNumber : Long? = 0,
     var article : ArticleDto? = null,
     var subCategory: SubCategoryDto? = null,
     var provider: CompanyDto? = null,
     var category: CategoryDto? = null,
     var company: CompanyDto? = null,
-    val isDeleted : Boolean?= false
+    val isDeleted : Boolean?= false,
+    val commentNumber : Long? = 0,
 ){
-    fun toArticleCompany(isRandom : Boolean, isSearch : Boolean? = false): ArticleCompany {
+    fun toArticleCompany(isRandom : Boolean, isSearch : Boolean? = false, isMy : Boolean? = false): ArticleCompany {
     return ArticleCompany(
         id,
         unit,
@@ -46,7 +46,9 @@ data class ArticleCompanyDto(
         articleId = article?.id,
         isEnabledToComment = isEnabledToComment,
          likeNumber = likeNumber,
-        isSearch = isSearch
+        isSearch = isSearch,
+        commentNumber = commentNumber,
+        isMy = isMy
     )
     }
     fun toArticleCompanyModel():com.aymen.metastore.model.entity.model.ArticleCompany{
@@ -66,27 +68,8 @@ data class ArticleCompanyDto(
             isFav = isFav,
             article = article?.toArticleModel(),
             isEnabledToComment = isEnabledToComment,
-            likeNumber = likeNumber
-        )
-    }
-    fun toRandomArticleCompany():RandomArticle{
-        return RandomArticle(
-            id,
-            unit,
-            cost,
-            quantity,
-            minQuantity,
-            sharedPoint,
-            isVisible = isVisible,
-            sellingPrice = sellingPrice,
-            isFav = isFav,
-            articleId = article?.id,
-            isEnabledToComment = isEnabledToComment,
             likeNumber = likeNumber,
-            subCategoryId = subCategory?.id,
-            providerId = provider?.id,
-            companyId = company?.id,
-            categoryId = category?.id,
+            commentNumber = commentNumber
         )
     }
 }

@@ -54,6 +54,7 @@ data class ArticleCompany(
     val isEnabledToComment : Boolean? = false,
     val isSync : Boolean? = true,
     val isSearch : Boolean? = false,
+    val isMy : Boolean? = false
 ){
     fun toArticle(category: com.aymen.metastore.model.entity.model.Category?,
                   subCategory: com.aymen.metastore.model.entity.model.SubCategory?,
@@ -73,6 +74,9 @@ data class ArticleCompany(
             provider = provider,
             company = company,
             article = article,
+            isFav = isFav,
+            likeNumber = likeNumber,
+            commentNumber = commentNumber
 
         )
     }

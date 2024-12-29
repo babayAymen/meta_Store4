@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.Invoice
@@ -137,7 +138,7 @@ class InvoiceRepositoryImpl @Inject constructor(
         clientId: Long, invoiceCode: Long,
         discount: Double, clientType: AccountType,
         invoiceMode: InvoiceMode,
-        ) = api.addInvoice(commandLineDtos,clientId,invoiceCode,discount,
+        ): Response<List<CommandLineDto>> = api.addInvoice(commandLineDtos,clientId,invoiceCode,discount,
         clientType, invoiceMode,type = "pdf-save-client")
 
     override suspend fun getAllMyInvoicesAsClientAndStatus(

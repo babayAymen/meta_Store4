@@ -26,7 +26,7 @@ interface ArticleRepository {
      fun getAllArticlesByCategor(companyId : Long, companyCategory: CompanyCategory): Flow<PagingData<Article>>
     suspend fun getArticleByBarcode(bareCode : String) : Response<ArticleCompanyDto>
     fun getAllCompanyArticles(companyId : Long) : Flow<PagingData<ArticleWithArticleCompany>>
-    fun getArticlesByCompanyAndCategoryOrSubCategory(companyId : Long , categoryId: Long, subcategoryId: Long) : Flow<PagingData<ArticleCompanyDto>>
+    fun getArticlesByCompanyAndCategoryOrSubCategory(companyId : Long , categoryId: Long, subcategoryId: Long) : Flow<PagingData<ArticleCompany>>
     suspend fun deleteArticle(id: Long): Response<Void>
 
     suspend fun addArticle(article:String, file : File):Response<Void>

@@ -2,10 +2,8 @@ package com.aymen.metastore.ui.component
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -63,7 +60,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.LazyPagingItems
-import androidx.paging.map
 import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
@@ -76,7 +72,6 @@ import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Inventory
 import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.SubCategory
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.Status
@@ -87,7 +82,9 @@ import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.model.repository.ViewModel.PaymentViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
+import com.aymen.metastore.util.BASE_URL
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -1083,15 +1080,18 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                             ButtonSubmit(labelValue = "ok", color = Color.Green, enabled = !(qte == 0.0 || !articleExist)) {
                                     val command = invoiceViewModel.commandLineDto.copy()
                                     command.quantity = qte
-                                    command.discount = qte
+                                    command.discount = dct
                                     command.article = invoiceViewModel.article
                                 if(update) {
                                     invoiceViewModel.substructCommandsLine()
                                 }
-                                    command.totTva =
-                                        qte * command.article?.article?.tva!! * invoiceViewModel.article.sellingPrice!! / 100
-                                    command.prixArticleTot =
-                                        qte * command.article?.sellingPrice!!*(1-command.discount!!/100)
+                                val totTva = BigDecimal(qte).multiply(BigDecimal(command.article?.article?.tva!!).multiply(BigDecimal( invoiceViewModel.article.sellingPrice!!)).divide(BigDecimal(100)))
+                                    command.totTva = totTva.setScale(2, RoundingMode.HALF_UP).toDouble()
+
+                                val prixarticletot = BigDecimal(qte).multiply(BigDecimal(command.article?.sellingPrice!!)).multiply(
+                                    (BigDecimal(1).subtract((BigDecimal(command.discount!!).divide(BigDecimal(100))))))
+                                    command.prixArticleTot = prixarticletot.setScale(2, RoundingMode.HALF_UP).toDouble()
+
                                     command.invoice?.code = invoiceViewModel.lastInvoiceCode
                                 invoiceViewModel.addCommandLine(command)
                                     invoiceViewModel.commandLineDto = CommandLine()

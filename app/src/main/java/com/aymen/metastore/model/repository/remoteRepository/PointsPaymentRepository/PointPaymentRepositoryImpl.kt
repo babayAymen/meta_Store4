@@ -6,14 +6,17 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
+import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PointsPayment
+import com.aymen.metastore.model.entity.model.ReglementForProviderModel
 import com.aymen.metastore.model.entity.paging.remotemediator.PointsEspeceByDateRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.PointsEspeceRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProfitOfProviderMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProfitPerDayByDateRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProfitPerDayRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.RechargeRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.ReglementForProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
@@ -22,8 +25,9 @@ import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import retrofit2.Response
 import javax.inject.Inject
-
+@OptIn(ExperimentalPagingApi::class)
 class PointPaymentRepositoryImpl @Inject constructor(
     private val api: ServiceApi,
     private val room : AppDatabase
@@ -103,6 +107,8 @@ class PointPaymentRepositoryImpl @Inject constructor(
 
 
     override suspend fun sendPoints(pointsPayment: PointsPaymentDto) = api.sendPoints(pointsPayment)
+    override suspend fun sendReglement(reglement: ReglementFoProviderDto) = api.sendReglement(reglement)
+
     @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyPaymentsEspece(companyId: Long) : Flow<PagingData<PaymentForProvidersWithCommandLine>>{
         return Pager(
@@ -119,7 +125,7 @@ class PointPaymentRepositoryImpl @Inject constructor(
     }
     override suspend fun getMyProfitByDate(beginDate: String, finalDate: String) = api.getMyProfitByDate(beginDate, finalDate)
     override suspend fun getAllMyProfits() = api.getAllMyProfits()
-    @OptIn(ExperimentalPagingApi::class)
+
     override fun getMyHistoryProfitByDate(id: Long, beginDate: String, finalDate: String): Flow<PagingData<PaymentPerDayWithProvider>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -130,6 +136,20 @@ class PointPaymentRepositoryImpl @Inject constructor(
         ).flow.map {
             it.map { article ->
                 article
+            }
+        }
+    }
+
+    override fun getPaymentForProviderDetails(paymentId: Long): Flow<PagingData<ReglementForProviderModel>> {
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = ReglementForProviderRemoteMediator(
+                api = api, room = room, paymentId = paymentId
+            ),
+            pagingSourceFactory = { paymentForProviderPerDayDao.getMyHistoryReglementForProvider(paymentId)}
+        ).flow.map {
+            it.map { article ->
+                article.toReglementForProviderModel()
             }
         }
     }

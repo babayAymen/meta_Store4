@@ -42,5 +42,7 @@ data class MetaUseCases(
     val getArticlesByCompanyAndCategoryOrSubCategory : GetArticlesByCompanyAndCategoryOrSubCategory,
     val getAllCommandLineByInvoiceId : GetAllCommandLineByInvoiceId,
     val getMyClientForAutocompleteClient : GetMyClientForAutocompleteClient,
-    val getArticleComment : GetArticleComment
+    val getArticleComment : GetArticleComment,
+    val getAllWorkers: GetAllWorkers,
+    val getPaymentForProviderDetails : GetPaymentForProviderDetails
 )

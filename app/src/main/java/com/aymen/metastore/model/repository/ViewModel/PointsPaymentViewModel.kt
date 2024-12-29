@@ -14,6 +14,7 @@ import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PaymentForProviders
 import com.aymen.metastore.model.entity.model.PointsPayment
+import com.aymen.metastore.model.entity.model.ReglementForProviderModel
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.usecase.MetaUseCases
@@ -23,8 +24,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,9 +39,11 @@ class PointsPaymentViewModel @Inject constructor(
     private val useCases: MetaUseCases
 ) :ViewModel(){
 
+    private val paymentForProviderPerDayDao = room.paymentForProviderPerDayDao()
     val listState = LazyListState()
 
     var pointPaymentDto by mutableStateOf(PointsPayment())
+
     fun sendPoints(user: User, amount : Long, client : Company){
         viewModelScope.launch(Dispatchers.IO) {
             try{
@@ -56,6 +62,31 @@ class PointsPaymentViewModel @Inject constructor(
             }
         }
     }
+
+    fun sendReglement(reglement : ReglementForProviderModel){
+        viewModelScope.launch (Dispatchers.IO){
+            val deff = BigDecimal(reglement.paymentForProviderPerDay?.rest!!).subtract(BigDecimal(reglement.amount!!))
+            Log.e("deffernce","deff = :$deff")
+            when{
+                deff < BigDecimal.ZERO -> {
+                    reglement.paymentForProviderPerDay.isPayed = true
+                    reglement.paymentForProviderPerDay.rest = 0.0
+                }
+                else -> {
+                    Log.e("deffernce","deff = :${deff.setScale(2, RoundingMode.HALF_UP).toDouble()}")
+
+                    reglement.paymentForProviderPerDay.rest =
+                        deff.setScale(2, RoundingMode.HALF_UP).toDouble()
+                }
+            }
+            Log.e("deffernce","deff = :${reglement.paymentForProviderPerDay.rest}")
+            paymentForProviderPerDayDao.updatePaymentForProviderPerDay(reglement.paymentForProviderPerDay.id!! , reglement.paymentForProviderPerDay.rest!! , reglement.paymentForProviderPerDay.isPayed!!)
+        repository.sendReglement(reglement.toReglementDto())
+        }
+    }
+
+    private val _paymentForProviderPerDay : MutableStateFlow<PagingData<ReglementForProviderModel>> = MutableStateFlow(PagingData.empty())
+    val paymentForProviderPerDay : StateFlow<PagingData<ReglementForProviderModel>> = _paymentForProviderPerDay
 
     private val _allMyPointsPaymentForProviders : MutableStateFlow<PagingData<PaymentForProviders>> = MutableStateFlow(PagingData.empty())
     val allMyPointsPaymentForProviders: StateFlow<PagingData<PaymentForProviders>> get() = _allMyPointsPaymentForProviders
@@ -76,7 +107,6 @@ class PointsPaymentViewModel @Inject constructor(
     val id = if(sharedViewModel.accountType.value == AccountType.COMPANY)sharedViewModel.company.value.id else sharedViewModel.user.value.id
 init {
 
-    getAllMyPointsPaymentt(id?:0)
     getAllMyPointsPaymentRecharge()
     getAllMyProfitsPerDay(id?:0)
 }
@@ -141,7 +171,16 @@ init {
         }
     }
 
-
+    fun getPaymentForProviderDetails(paymentForProviderId : Long){
+        viewModelScope.launch {
+            useCases.getPaymentForProviderDetails(paymentForProviderId)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _paymentForProviderPerDay.value = it
+                }
+        }
+    }
 
 
 

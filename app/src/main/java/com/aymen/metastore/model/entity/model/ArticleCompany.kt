@@ -24,7 +24,7 @@ data class ArticleCompany (
     var article : Article? = null,
     var isEnabledToComment : Boolean? = false,
     val likeNumber : Long? = 0,
-    val commentNumber : Long? = null,
+    val commentNumber : Long? = 0,
 ) {
     fun toArticleCompanyDto(): ArticleCompanyDto {
         return ArticleCompanyDto(
@@ -44,7 +44,8 @@ data class ArticleCompany (
             isFav = isFav,
             article = article?.toArticleDto(),
             isEnabledToComment = isEnabledToComment,
-            likeNumber = likeNumber
+            likeNumber = likeNumber,
+            commentNumber = commentNumber,
 
         )
     }
@@ -66,7 +67,8 @@ data class ArticleCompany (
             articleId = article?.id,
             isEnabledToComment = isEnabledToComment,
             likeNumber = likeNumber,
-            isSync = isSync
+            isSync = isSync,
+            commentNumber = commentNumber,
 
         )
     }

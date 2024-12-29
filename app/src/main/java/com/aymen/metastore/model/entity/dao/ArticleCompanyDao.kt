@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import androidx.room.Upsert
 import com.aymen.metastore.model.entity.room.entity.ArticleCompany
 import com.aymen.metastore.model.entity.room.entity.Comment
@@ -24,7 +25,7 @@ import kotlinx.coroutines.flow.Flow
 interface ArticleCompanyDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(article: List<ArticleCompany>)
+    suspend fun insert(article: List<ArticleCompany>) : List<Long>
 
     suspend fun insertArticle(article: List<ArticleCompany?>){
         article.filterNotNull()
@@ -33,6 +34,22 @@ interface ArticleCompanyDao {
                 insert(it)
             }
     }
+    @Transaction
+    suspend fun insertOrUpdateMy(articles: List<ArticleCompany>) {
+        articles.forEach { article ->
+            val result = insert(listOf(article)).firstOrNull() ?: -1L
+            if (result == -1L) { // Conflict occurred
+                val existingArticle = getArticleById(article.id!!) // Fetch the existing record
+
+                if (existingArticle != null && article.isMy != existingArticle.isMy) {
+                    updateMy(article.id, article.isMy!!) // Update only if price differs
+                }
+            }
+        }
+    }
+
+    @Query("UPDATE article_company SET isMy = :isMy WHERE id = :id")
+    suspend fun updateMy(id : Long , isMy : Boolean)
     @Upsert
     suspend fun insertForSearch(article: List<ArticleCompany>)
 
@@ -43,6 +60,26 @@ interface ArticleCompanyDao {
                 insertForSearch(it)
             }
     }
+
+    @Transaction
+    suspend fun insertOrUpdate(articles: List<ArticleCompany>) {
+        articles.forEach { article ->
+            val result = insert(listOf(article)).firstOrNull() ?: -1L
+            if (result == -1L) { // Conflict occurred
+                val existingArticle = getArticleById(article.id!!) // Fetch the existing record
+
+                if (existingArticle != null && article.isRandom != existingArticle.isRandom) {
+                    update(article.id, article.isRandom!!) // Update only if price differs
+                }
+            }
+        }
+    }
+
+    @Query("UPDATE article_company SET isRandom = :isRandom WHERE id = :id")
+    suspend fun update(id : Long, isRandom : Boolean)
+
+    @Query("SELECT * FROM article_company WHERE id = :id")
+    suspend fun getArticleById(id : Long) : ArticleCompany?
 
 
     @Upsert
@@ -68,6 +105,8 @@ interface ArticleCompanyDao {
     suspend fun clearArticleById(id : Long)
 
     @Query("DELETE FROM article_remote_keys_table WHERE id = :id")
+    suspend fun clearArticleCompanyRemoteKeyById(id : Long)
+    @Query("DELETE FROM article_remote_keys_table WHERE id = :id")
     suspend fun clearRemoteKeyById(id : Long)
 
     @Query("SELECT * FROM article_remote_keys_table WHERE id = :id")
@@ -77,8 +116,8 @@ interface ArticleCompanyDao {
     suspend fun insertRandomArticle(article: List<RandomArticle>)
 
     @Transaction
-    @Query("SELECT r.* FROM article_company AS r JOIN article AS a ON r.articleId = a.id WHERE a.category = :category AND isRandom = 1 AND isSearch = 0")
-     fun getRandomArticles(category : CompanyCategory): PagingSource<Int, RandomArticleChild>
+    @Query("SELECT r.* FROM article_company AS r JOIN article AS a ON r.articleId = a.id WHERE a.category = :category AND isRandom = 1")
+     fun getRandomArticles(category : CompanyCategory): PagingSource<Int, ArticleWithArticleCompany>
 
     @Transaction
     @Query("SELECT ac.* FROM article_company AS ac JOIN article AS a ON ac.articleId = a.id WHERE isRandom = 1 AND a.category = :categoryName")
@@ -142,7 +181,7 @@ interface ArticleCompanyDao {
     suspend fun clearAllArticleCompanyTable(companyId: Long)
 
 
-    @Query("DELETE FROM article_company WHERE isRandom = 1 AND isSearch = 0")
+    @Query("DELETE FROM article_company WHERE isRandom = 1 AND isSearch = 0 AND isMy = 0")
     suspend fun clearAllRandomArticleCompanyTable()
 
     @Query("DELETE FROM article_containing_remote_keys")

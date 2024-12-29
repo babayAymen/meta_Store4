@@ -33,7 +33,7 @@ import com.aymen.metastore.ui.screen.user.ShoppingScreen
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.ui.screen.admin.AddSubCategoryScreen
 
-//@RequiresApi(Build.VERSION_CODES.O)
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DashBoardScreen() {
@@ -44,9 +44,6 @@ fun DashBoardScreen() {
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val invoiceType = invoiceViewModel.invoiceMode
     val context = LocalContext.current
-    LaunchedEffect(key1 =  Unit) {
-        companyViewModel.getMyCompany()
-    }
     val show by viewModel.show
     when (show) {
         "dash" -> {

@@ -21,11 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
@@ -42,6 +44,7 @@ fun AddCategoryScreen() {
     val categoryViewModel : CategoryViewModel = hiltViewModel()
     val category = Category()
     val update = categoryViewModel.update
+    val categoryText = stringResource(id = R.string.category)
     var libelle by remember {
         mutableStateOf("")
     }
@@ -71,7 +74,7 @@ fun AddCategoryScreen() {
             item {
                 InputTextField(
                     labelValue = libelle,
-                    label = "libel",
+                    label = stringResource(id = R.string.label),
                     singleLine = true,
                     maxLine = 1,
                     keyboardOptions = KeyboardOptions(
@@ -86,7 +89,7 @@ fun AddCategoryScreen() {
                 }
                 InputTextField(
                     labelValue = code,
-                    label = "code",
+                    label = stringResource(id = R.string.code),
                     singleLine = true,
                     maxLine = 1,
                     keyboardOptions = KeyboardOptions(
@@ -99,7 +102,7 @@ fun AddCategoryScreen() {
                 ) {
 
                 }
-                ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
+                ButtonSubmit(labelValue = stringResource(id = R.string.add_photo), color = Color.Cyan, enabled = true) {
                     singlePhotoPickerLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
@@ -120,16 +123,15 @@ fun AddCategoryScreen() {
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-
-                        ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
-                            appViewModel.updateShow("category")
+                        ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
+                            appViewModel.updateShow(categoryText)
                         }
                     }
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
 
-                        ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true) {
+                        ButtonSubmit(labelValue = stringResource(id = R.string.submit), color = Color.Green, enabled = true) {
                             category.libelle = libelle
                             category.code = code
                             if(update) category.id = categoryForUpdate.value.id
@@ -141,7 +143,7 @@ fun AddCategoryScreen() {
                             else if(update) categoryViewModel.updateCategory(category, categoryJsonString, null)
                                 else categoryViewModel.addCtagory(category,categoryJsonString, null)
                             categoryViewModel.update = false
-                            appViewModel.updateShow("category")
+                            appViewModel.updateShow(categoryText)
                         }
                     }
 

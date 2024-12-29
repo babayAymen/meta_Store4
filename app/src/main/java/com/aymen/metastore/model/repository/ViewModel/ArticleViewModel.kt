@@ -198,7 +198,7 @@ class ArticleViewModel @Inject constructor(
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect{
-                        _companyArticles.value = it.map { article -> article.toArticleCompanyModel() }
+                        _companyArticles.value = it
                     }
             }
         }
@@ -207,21 +207,26 @@ class ArticleViewModel @Inject constructor(
 
         fun addArticleCompany(articlee: ArticleCompany) {
             viewModelScope.launch(Dispatchers.IO) {
-                var remoteKey = ArticleRemoteKeysEntity(0,0,0)
+//                var remoteKey = ArticleRemoteKeysEntity(0,0,0)
                  var id = 0L
-                room.withTransaction{
                     val latestArticleId = articleCompanyDao.getLatestArticleId()
-                 id = if (latestArticleId != null) latestArticleId + 1 else 1
-                    room.articleDao().updateArticleById(true,articlee.article?.id!!)
+                 id = if (latestArticleId != null) {
+                     latestArticleId + 1
+                 } else {
+                     1
+                 }
                     val articleCount = articleCompanyDao.getArticlesCount()
                     val page = articleCount.div(PAGE_SIZE)
-                 remoteKey = ArticleRemoteKeysEntity(
+                    val remain = articleCount % PAGE_SIZE
+                 val remoteKey = ArticleRemoteKeysEntity(
                     id = id,
                     previousPage = if(page == 0) null else page-1,
-                    nextPage = page + 1
+                    nextPage = if(remain == 0) page + 1 else null
                 )
+                room.withTransaction{
                     try {
 
+                    room.articleDao().updateArticleById(true,articlee.article?.id!!)
                         room.articleCompanyDao().insertSigleArticle(articlee.copy(id = id).toArticleCompanyEntity(isSync = false))
                         room.articleCompanyDao().insertSingleKey(remoteKey)
                     }catch (ex : Exception){
@@ -235,16 +240,13 @@ class ArticleViewModel @Inject constructor(
                     onSuccess = { success ->
                         if (success.isSuccessful) {
                             room.withTransaction {
-                                val serverArticle = success.body()!!
-                                Log.e("articleviewlodel","id is $id")
-                                val latestRemoteKey = articleCompanyDao.getArticleRemoteKey(id)
-                                val remoteKeys = ArticleRemoteKeysEntity(
-                                    id = serverArticle.id!!,
-                                    previousPage = latestRemoteKey.previousPage,
-                                    nextPage = null
-                                )
+                                articleCompanyDao.clearArticleById(id)
+                                articleCompanyDao.clearArticleCompanyRemoteKeyById(id)
+                                val serverArticle = success.body()
+                                if(serverArticle != null){
                                 room.articleCompanyDao().insertSigleArticle(serverArticle.toArticleCompany(true))
-                                room.articleCompanyDao().insertSingleKey(remoteKeys)
+                                room.articleCompanyDao().insertSingleKey(remoteKey.copy(id = serverArticle.id!!))
+                                }
                             }
                             inventoryDao.getAllInventories().invalidate()
                             appViewModel.updateShow("article")
@@ -281,11 +283,9 @@ class ArticleViewModel @Inject constructor(
     }
 
         fun makeItAsFav(article: ArticleCompany) {
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.IO)  {
                     article.id?.let { repository.likeAnArticle(it, !article.isFav!!) }
                     room.articleCompanyDao().chageIsFav(article.id!!, !article.isFav!!)
-                }
             }
         }
 

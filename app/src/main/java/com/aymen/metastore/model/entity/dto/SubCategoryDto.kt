@@ -12,14 +12,15 @@ data class SubCategoryDto(
     var category : CategoryDto? = null,
     val company : CompanyDto? = null
 ){
-    fun toSubCategory() : SubCategory {
+    fun toSubCategory(isSubcategory : Boolean?) : SubCategory {
         return SubCategory(
             id = id,
             libelle = libelle,
             code = code,
             image = image,
             categoryId = category?.id,
-            companyId = company?.id
+            companyId = company?.id,
+            isSubcategory = isSubcategory
         )
     }
     fun toSubCategoryModel() : com.aymen.metastore.model.entity.model.SubCategory {

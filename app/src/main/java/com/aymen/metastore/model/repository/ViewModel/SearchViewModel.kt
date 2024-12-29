@@ -172,14 +172,14 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
                 val lastRemoteKey = searchDao.getLatestRemoteKey()
                 val searchId = if (lastRemoteKey == null) 1 else lastRemoteKey.id + 1
+            var newRemoteKey = AllSearchRemoteKeysEntity(0, null, null)
             if(search.id == null) {
                 val countRemoteKeys = searchDao.getRemoteKeysCount()
-                val page = if (lastRemoteKey?.prevPage == null) 0 else lastRemoteKey.prevPage + 1
-                val prevPage = if (page == 0) null else page - 1
+                val page = countRemoteKeys.div(PAGE_SIZE)
                 val remain = countRemoteKeys % PAGE_SIZE
-                val nextPage =
-                    if (remain < PAGE_SIZE - 1 && lastRemoteKey?.nextPage != null) page + 1 else null
-                val newRemoteKey = AllSearchRemoteKeysEntity(
+                val prevPage = if (page == 0) null else page - 1
+                val nextPage = if (remain == 0) page + 1 else null
+                 newRemoteKey = AllSearchRemoteKeysEntity(
                     id = searchId,
                     prevPage = prevPage,
                     nextPage = nextPage
@@ -223,17 +223,42 @@ class SearchViewModel @Inject constructor(
             }
             result.fold(
                 onSuccess = {success ->
-                    searchDao.deleteRemoteKeyById(searchId)
-                    searchDao.deleteSearchHistoryById(searchId)
+
                     val response = success.body()
                     if(success.isSuccessful){
                         if(response != null) {
+                    room.withTransaction {
+                    searchDao.deleteRemoteKeyById(searchId)
+                    searchDao.deleteSearchHistoryById(searchId)
                             searchDao.insertSingleRemoteKey(
-                                lastRemoteKey?.copy(id = response.id!!)
-                                    ?: AllSearchRemoteKeysEntity(response.id!!, null, null)
+                                newRemoteKey.copy(id = response.id!!)
                             )
+
+                        when (category) {
+                            SearchCategory.COMPANY -> {
+                                userDao.insertUser(listOf(response.company?.user?.toUser()))
+                                companyDao.insertCompany(listOf(response.company?.toCompany()))
+                            }
+                            SearchCategory.USER -> {
+                                userDao.insertUser(listOf(response.user?.toUser()))
+                            }
+                            SearchCategory.ARTICLE -> {
+                                userDao.insertUser(listOf(response.article?.company?.user?.toUser()))
+                                companyDao.insertCompany(listOf(response.article?.company?.toCompany()))
+                                articleDao.insertArticle(listOf(response.article?.article?.toArticle(
+                                    response.article.company?.id == sharedViewModel.company.value.id
+                                )))
+                                articleCompanyDao.insertArticle(
+                                    listOf(
+                                        response.article?.toArticleCompany(isRandom = false, isSearch = true)
+                                    )
+                                )
+                            }
+                            SearchCategory.OTHER -> TODO()
+                        }
                             searchDao.insertSearch(response.toSearchHistory())
                         }
+                    }
                     }else{
                         val errorBodyString = success.errorBody()?.string()
                         errorBlock(errorBodyString)

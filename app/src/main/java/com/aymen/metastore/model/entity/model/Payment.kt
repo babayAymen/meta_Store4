@@ -2,7 +2,6 @@ package com.aymen.metastore.model.entity.model
 
 import com.aymen.store.model.Enum.PaymentMode
 import com.aymen.store.model.Enum.Status
-import java.util.Date
 
 
 data class Payment (

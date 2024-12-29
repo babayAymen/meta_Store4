@@ -9,7 +9,9 @@ import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.aymen.metastore.MainActivity
+import com.aymen.metastore.dependencyInjection.TokenManager
 import com.aymen.metastore.model.ViewModelRunTracker
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User
@@ -39,7 +41,7 @@ class SharedViewModel @Inject constructor(
     private val room : AppDatabase,
     private  val context: Context,
     private val accountTypeDataStore: DataStore<AccountType>,
-    private val tracker: ViewModelRunTracker
+    private val tokenManager: TokenManager
 ): ViewModel() {
 
     private var _accountType = MutableStateFlow(AccountType.NULL)
@@ -137,6 +139,7 @@ class SharedViewModel @Inject constructor(
 
     fun logout(){
         viewModelScope.launch(Dispatchers.IO) {
+            tokenManager.clearToken()
                 authDataStore.updateData {
                     it.copy(token = "")
                 }
@@ -177,7 +180,9 @@ class SharedViewModel @Inject constructor(
                     AccountType.NULL
                 }
                 roomBlock()
+            withContext(Dispatchers.Main){
                 restartApp()
+            }
         }
     }
 
@@ -191,12 +196,18 @@ class SharedViewModel @Inject constructor(
 
             }
             roomBlock()
-            restartApp()
+            withContext(Dispatchers.Main){
+                restartApp()
+            }
         }
     }
 
     private fun roomBlock(){
-        room.clearAllTables()
+        viewModelScope.launch(Dispatchers.IO) {
+            room.withTransaction {
+                room.clearAllTables()
+            }
+        }
     }
     private fun restartApp(){
         val intent = Intent(context, MainActivity::class.java).apply {

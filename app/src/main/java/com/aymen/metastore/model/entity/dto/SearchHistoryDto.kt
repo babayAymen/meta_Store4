@@ -17,7 +17,7 @@ data class SearchHistoryDto(
     fun toSearchHistory() : SearchHistory {
 
         return SearchHistory (
-            id = id,
+        id = id,
         companyId = company?.id,
         articleId = article?.id,
         userId = user?.id,

@@ -47,6 +47,7 @@ import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
 import com.aymen.metastore.model.entity.room.entity.PurchaseOrderLine
 import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.metastore.model.entity.room.entity.Rating
+import com.aymen.metastore.model.entity.room.entity.ReglementForProvider
 import com.aymen.metastore.model.entity.room.entity.SearchHistory
 import com.aymen.metastore.model.entity.room.entity.SubCategory
 import com.aymen.metastore.model.entity.room.entity.User
@@ -84,12 +85,15 @@ import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentRemoteKeysE
 import com.aymen.metastore.model.entity.room.remoteKeys.ProviderProfitHistoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.RechargeRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.ReglementForProviderRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.SubCategoryRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.WorkerRemoteKeys
 
 @Database(entities = [PurchaseOrder::class, PurchaseOrderLine::class, Company::class, User::class,
     Article::class, RandomArticle::class, ArticleCompany::class, bankTransfer::class, Bill::class, Cash::class, CommandLine::class,
     Comment::class, Conversation::class, Category::class, SubCategory::class, Invoice::class, ClientProviderRelation::class,
                      SearchHistory::class, Inventory::class, Invitation::class, Message::class, PaymentForProviders::class, PointsPayment::class,
+    ReglementForProvider::class,
     PaymentForProviderPerDay::class, Rating::class, Worker::class, Payment::class, ArticleRemoteKeysEntity::class, CategoryRemoteKeysEntity::class, ClientProviderRemoteKeysEntity::class,
 ConversationRemoteKeysEntity::class, InventoryRemoteKeysEntity::class, InvitationRemoteKeysEntity::class, InvoiceRemoteKeysEntity::class, MessageRemoteKeysEntity::class,
  PointsPaymentRemoteKeysEntity::class, PointsPaymentForProviderRemoteKeysEntity::class, RechargeRemoteKeysEntity::class, SubCategoryRemoteKeysEntity::class,
@@ -97,8 +101,8 @@ ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRem
     OrderNotAcceptedKeysEntity::class, OrderLineKeysEntity::class, BuyHistoryRemoteKeysEntity::class, PayedRemoteKeysEntity::class, NotPayedRemoteKeysEntity::class, InCompleteRemoteKeysEntity::class,
 NotAcceptedRemoteKeysEntity::class, ProviderProfitHistoryRemoteKeysEntity::class, PointsPaymentPerDayRemoteKeysEntity::class, AllInvoiceRemoteKeysEntity::class,
     PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class, InvoicesAsClientAndStatusRemoteKeysEntity::class, CompanyArticleRemoteKeysEntity::class
-, CommandLineByInvoiceRemoteKeysEntity::class, CommentArticleRemoteKeys::class
-                     ], version = 84, exportSchema = false)
+, CommandLineByInvoiceRemoteKeysEntity::class, CommentArticleRemoteKeys::class, WorkerRemoteKeys::class, ReglementForProviderRemoteKeys::class
+                     ], version = 97, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

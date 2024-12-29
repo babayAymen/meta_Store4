@@ -5,7 +5,6 @@ import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
-import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepository
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepository
@@ -23,17 +22,23 @@ import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.dto.ConversationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.dto.SearchHistoryDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
+import com.aymen.metastore.model.entity.model.CommandLine
+import com.aymen.metastore.model.entity.model.Invitation
 import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.entity.model.PurchaseOrder
+import com.aymen.metastore.model.entity.model.ReglementForProviderModel
 import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.model.SubCategory
+import com.aymen.metastore.model.entity.model.Worker
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
@@ -41,7 +46,6 @@ import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOr
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.ConversationWithUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
-import com.aymen.metastore.model.entity.roomRelation.InvitationWithClientOrWorkerOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAndConversation
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
@@ -143,7 +147,7 @@ class GlobalRepositoryImpl  @Inject constructor
 
 
     override suspend fun addCompany(company: String, file : File) = companyRepository.addCompany(company, file)
-    override fun getAllMyProvider(companyId: Long): Flow<PagingData<CompanyWithCompanyOrUser>> {
+    override fun getAllMyProvider(companyId: Long): Flow<PagingData<ClientProviderRelation>> {
         TODO("Not yet implemented")
     }
 
@@ -258,7 +262,6 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun getAllMyOrdersLines(companyId: Long) = orderRepository.getAllMyOrdersLines((companyId))
     override suspend fun getAllMyOrdersLinesByOrderId(orderId: Long) = orderRepository.getAllMyOrdersLinesByOrderId(orderId)
-    override suspend fun getAllMyWorker(companyId : Long) = workerRepository.getAllMyWorker(companyId = companyId)
     override fun getAllMyInvoicesAsProvider(
         companyId: Long,
         isProvider: Boolean,
@@ -295,7 +298,7 @@ class GlobalRepositoryImpl  @Inject constructor
         commandLineDtos: List<CommandLine>,
         clientId: Long, invoiceCode: Long,
         discount: Double, clientType: AccountType,
-        invoiceMode: InvoiceMode) = invoiceRepository.addInvoice(commandLineDtos, clientId, invoiceCode,discount, clientType, invoiceMode)
+        invoiceMode: InvoiceMode): Response<List<CommandLineDto>> = invoiceRepository.addInvoice(commandLineDtos, clientId, invoiceCode,discount, clientType, invoiceMode)
     override suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status) = invoiceRepository.getAllMyInvoicesAsClientAndStatus(id , status)
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = invoiceRepository.accepteInvoice(invoiceId, status)
      override suspend fun getAllMyPaymentNotAccepted(companyId: Long) = invoiceRepository.getAllMyPaymentNotAccepted(companyId)
@@ -315,7 +318,7 @@ class GlobalRepositoryImpl  @Inject constructor
      override suspend fun sendOrder(orderList: List<PurchaseOrderLine>) = orderRepository.sendOrder(orderList)
     override suspend fun test(order: PurchaseOrderLineDto) = shoppingRepository.test(order)
     override suspend fun orderLineResponse(status: Status, id: Long, isAll: Boolean): Response<Double> = shoppingRepository.orderLineResponse(status,id, isAll)
-    override fun getAllMyInvetations(): Flow<PagingData<InvitationWithClientOrWorkerOrCompany>> {
+    override fun getAllMyInvetations(companyId: Long): Flow<PagingData<Invitation>> {
         TODO("Not yet implemented")
     }
 
@@ -324,6 +327,10 @@ class GlobalRepositoryImpl  @Inject constructor
         companyId: Long,
         invoiceId: Long
     ): Flow<PagingData<PurchaseOrderLine>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllMyWorker(companyId: Long): Flow<PagingData<Worker>> {
         TODO("Not yet implemented")
     }
 
@@ -344,6 +351,8 @@ class GlobalRepositoryImpl  @Inject constructor
     }
 
     override suspend fun sendPoints(pointsPayment: PointsPaymentDto) = pointPaymentRepository.sendPoints(pointsPayment)
+    override suspend fun sendReglement(reglement: ReglementFoProviderDto) = pointPaymentRepository.sendReglement(reglement)
+
     override fun getAllMyPaymentsEspece(companyId: Long): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
         TODO("Not yet implemented")
     }
@@ -358,6 +367,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
+    override fun getPaymentForProviderDetails(paymentId: Long) = pointPaymentRepository.getPaymentForProviderDetails(paymentId)
 
 
     override suspend fun getAllMyRating(id: Long, type: AccountType) = ratingRepository.getAllMyRating(id, type)
@@ -366,6 +376,8 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun enabledToCommentUser(userId: Long) = ratingRepository.enabledToCommentUser(userId)
     override suspend fun enabledToCommentArticle(companyId: Long) = ratingRepository.enabledToCommentArticle(companyId)
     override suspend fun makeAsPointSeller(status: Boolean, id: Long) = aymenRepository.makeAsPointSeller(status,id)
+    override suspend fun makeAsMetaSeller(status: Boolean, id: Long) = aymenRepository.makeAsMetaSeller(status, id)
+
     override suspend fun getAllCommandLinesByInvoiceId(invoiceId: Long): Response<List<CommandLineDto>> = commandLineRepository.getAllCommandLinesByInvoiceId(invoiceId)
     override suspend fun SignIn(authenticationRequest: AuthenticationRequest) = signInRepository.SignIn(authenticationRequest)
     override suspend fun SignUp(registerRequest: RegisterRequest) = signInRepository.SignUp(registerRequest)
@@ -415,7 +427,7 @@ class GlobalRepositoryImpl  @Inject constructor
         companyId: Long,
         categoryId: Long,
         subcategoryId: Long
-    ): Flow<PagingData<ArticleCompanyDto>> {
+    ): Flow<PagingData<ArticleCompany>> {
         TODO("Not yet implemented")
     }
 

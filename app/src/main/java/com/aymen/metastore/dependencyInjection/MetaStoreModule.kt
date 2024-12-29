@@ -110,10 +110,15 @@ import com.aymen.metastore.model.repository.remoteRepository.subCategoryReposito
 import com.aymen.metastore.model.usecase.GetAllCommandLineByInvoiceId
 import com.aymen.metastore.model.usecase.GetAllCompanyArticles
 import com.aymen.metastore.model.usecase.GetAllSubCategoriesByCompanyId
+import com.aymen.metastore.model.usecase.GetAllWorkers
 import com.aymen.metastore.model.usecase.GetArticleComment
 import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCategory
 import com.aymen.metastore.model.usecase.GetCategoryTemp
 import com.aymen.metastore.model.usecase.GetMyClientForAutocompleteClient
+import com.aymen.metastore.model.usecase.GetPaymentForProviderDetails
+import com.aymen.metastore.model.webSocket.ChatClient
+import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.DATABASE_NAME
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepository
 import com.aymen.store.model.repository.remoteRepository.workerRepository.WorkerRepositoryImpl
@@ -138,9 +143,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.Executors
 import javax.inject.Singleton
 
-const val BASE_URL = "http://192.168.1.5:8080/"
-//const val BASE_URL = "http://192.168.230.53:8080/"
-private const val DATABASE_NAME = "meta_stoèère_data_base"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -160,13 +162,18 @@ class MetaStoreModule {
             .build()
 
     }
-
+    @Provides
+    @Singleton
+    fun provideChatClient(): ChatClient {
+        return ChatClient()
+    }
     @Provides
     @Singleton
     fun provideMetaUseCases(categoryRepository: CategoryRepository, subCategoryRepository: SubCategoryRepository, articleRepository: ArticleRepository,
                             clientRepository: ClientRepository, companyRepository: CompanyRepository, messageRepository: MessageRepository,
                             invoiceRepository: InvoiceRepository, pointPaymentRepository: PointPaymentRepository,inventoryRepository: InventoryRepository,
-                            invetationRepository: InvetationRepository, orderRepository: OrderRepository, paymentRepository: PaymentRepository): MetaUseCases{
+                            invetationRepository: InvetationRepository, orderRepository: OrderRepository, paymentRepository: PaymentRepository,
+                            workerRepository : WorkerRepository): MetaUseCases{
         return MetaUseCases(
             getPagingCategoryByCompany = GetPagingCategoryByCompany(repository = categoryRepository),
             getPagingSubCategoryByCompany = GetPagingSubCategoryByCompany(repository = subCategoryRepository),
@@ -209,7 +216,9 @@ class MetaStoreModule {
             getAllCommandLineByInvoiceId = GetAllCommandLineByInvoiceId(repository = invoiceRepository),
             getMyClientForAutocompleteClient = GetMyClientForAutocompleteClient(repository = clientRepository),
             getCategoryTemp = GetCategoryTemp(repository = categoryRepository),
-            getArticleComment = GetArticleComment(repository = articleRepository)
+            getArticleComment = GetArticleComment(repository = articleRepository),
+            getAllWorkers = GetAllWorkers(repository = workerRepository),
+            getPaymentForProviderDetails = GetPaymentForProviderDetails(repository = pointPaymentRepository)
 
         )
     }
@@ -274,9 +283,8 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideCompanyViewModel(globalRepository: GlobalRepository, room : AppDatabase,
-                                companyDataStore: DataStore<Company>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel, useCases: MetaUseCases,
-                                viewModelRunTracker: ViewModelRunTracker): CompanyViewModel {
-        return CompanyViewModel(globalRepository,room,companyDataStore, appViewModel, sharedViewModel, useCases, viewModelRunTracker)
+                                companyDataStore: DataStore<Company>, appViewModel : AppViewModel, sharedViewModel: SharedViewModel, useCases: MetaUseCases, ): CompanyViewModel {
+        return CompanyViewModel(globalRepository,room,companyDataStore, appViewModel, sharedViewModel, useCases)
     }
 
     @Provides
@@ -292,16 +300,16 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providerInvoiceViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases, barcodeScanner: BarcodeScanner): InvoiceViewModel {
-        return InvoiceViewModel(repository, room, sharedViewModel, useCases, barcodeScanner)
+    fun providerInvoiceViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases, barcodeScanner: BarcodeScanner, context: Context): InvoiceViewModel {
+        return InvoiceViewModel(repository, room, sharedViewModel, useCases, barcodeScanner, context)
     }
     @Provides
     @Singleton
     fun provideSignInViewModel(repository: GlobalRepository, dataStore: DataStore<AuthenticationResponse>, appViewModel: AppViewModel, companyDataStore: DataStore<Company>, userDataStore: DataStore<User>,
                                sharedViewModel: SharedViewModel, accountTypeDataStore: DataStore<AccountType>,
-                               viewModelRunTracker: ViewModelRunTracker, room: AppDatabase
+                               room: AppDatabase, tokenManager: TokenManager
                                ): SignInViewModel {
-        return SignInViewModel(repository, dataStore, appViewModel, companyDataStore, userDataStore, sharedViewModel, accountTypeDataStore, viewModelRunTracker, room)
+        return SignInViewModel(repository, dataStore, appViewModel, companyDataStore, userDataStore, sharedViewModel, accountTypeDataStore, room, tokenManager)
     }
 
     @Provides
@@ -313,9 +321,9 @@ class MetaStoreModule {
         room: AppDatabase,
         context: Context,
         accountTypeDataStore: DataStore<AccountType>,
-        viewModelRunTracker: ViewModelRunTracker
+        tokenManager: TokenManager
                                ):SharedViewModel{
-        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context, accountTypeDataStore, viewModelRunTracker)
+        return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context, accountTypeDataStore,tokenManager)
     }
 
     @Provides
@@ -324,49 +332,36 @@ class MetaStoreModule {
         return appContext
     }
 
-        @SuppressLint("SuspiciousIndentation")
+
     @Provides
     @Singleton
-    fun provideServiceApi(
-            dataStore: DataStore<AuthenticationResponse>,
-            sharedViewModel: SharedViewModel,
-            context : Context
-    ): ServiceApi {
-        val scope = CoroutineScope(Dispatchers.IO)
-        var token = ""
-            scope.launch {
-                try {
-                    dataStore.data
-                        .catch { exception ->
-                            Log.e("getTokenError", "Error getting token: ${exception.message}")
-                        }
-                        .collect { authenticationResponse ->
-                            Log.e("accountTypeDataStore","account token is : $authenticationResponse")
-                            token = authenticationResponse.token
-                        }
-                } catch (e: Exception) {
-                    Log.e("getTokenError", "Error getting token: ${e.message}")
-                }
-        }
-        val retrofit: Retrofit = Retrofit.Builder()
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        networkInterceptor: NetworkInterceptor,
+        accountTypeInterceptor: AccountTypeInterceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .addInterceptor(networkInterceptor)
+            .addInterceptor(accountTypeInterceptor)
+            .build()
+    }
+    @Provides
+    @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
-            .client(
-                OkHttpClient.Builder()
-                    .addInterceptor { chain ->
-                        chain.proceed(chain.request().newBuilder().also {
-                            it.addHeader(
-                                "Authorization", "Bearer $token"
-                            )
-                        }
-                            .build())
-                    }
-                    .addInterceptor(NetworkInterceptor(context))
-                    .addInterceptor(AccountTypeInterceptor(sharedViewModel)) // Custom interceptor for Account-Type
-                    .build()
-            ).build()
+            .client(client)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideServiceApi(retrofit: Retrofit): ServiceApi {
         return retrofit.create(ServiceApi::class.java)
     }
+
 
     @Provides
     @Singleton
@@ -500,9 +495,10 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideWorkerRepository(
-        serviceApi: ServiceApi
+        serviceApi: ServiceApi,
+        room: AppDatabase
     ): WorkerRepository{
-        return WorkerRepositoryImpl(serviceApi)
+        return WorkerRepositoryImpl(serviceApi, room)
     }
 
     @Provides

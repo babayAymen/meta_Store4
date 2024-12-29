@@ -2,19 +2,19 @@ package com.aymen.metastore.model.entity.model
 
 data class BankTransfer(
 
-     var id : Long? = null,
+    var id : Long? = null,
 
-     var transactionId: String = "",
+    var transactionId: String = "",
 
-     var amount: Double? = null,
+    var amount: Double? = null,
 
-     var agency: String = "",
+    var agency: String = "",
 
-     var invoice: Invoice? = null,
+    var invoice: Invoice? = null,
 
-     var bankAccount: String = "",
+    var bankAccount: String = "",
 
-     var createdDate : String = "",
+    var createdDate : String = "",
 
-     var lastModifiedDate : String = "",
+    var lastModifiedDate : String = "",
 )

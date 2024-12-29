@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -29,13 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.aymen.metastore.dependencyInjection.BASE_URL
 import com.aymen.store.model.Enum.IconType
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
@@ -53,13 +50,13 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.util.BASE_URL
 
 @Composable
 fun UserScreen() {
 
     val appViewModel: AppViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
-    val messageViewModel : MessageViewModel = hiltViewModel()
     val ratingViewModel : RatingViewModel = hiltViewModel()
     val clientViewModel : ClientViewModel = hiltViewModel()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
@@ -67,7 +64,6 @@ fun UserScreen() {
         mutableStateOf(company.isPointsSeller)
     }
     val user by appViewModel.user.collectAsStateWithLifecycle()
-    Log.e("userrrr","user : $user")
     var rating by remember {
         mutableStateOf(false)
     }
@@ -111,8 +107,6 @@ fun UserScreen() {
                     modifier = Modifier.padding(2.dp)
                 ) {
                     UserDetails(
-                        messageViewModel,
-                        appViewModel,
                         clientViewModel,
                         ratingViewModel,
                         user,
@@ -142,7 +136,7 @@ fun UserScreen() {
 }
 
 @Composable
-fun UserDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel, clientViewModel: ClientViewModel,
+fun UserDetails( clientViewModel: ClientViewModel,
                 ratingViewModel : RatingViewModel, user: User, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     Row {
         Row(
@@ -153,24 +147,6 @@ fun UserDetails(messageViewModel: MessageViewModel, appViewModel: AppViewModel, 
             AddTypeDialog(isOpen = false, user.id!!, false) {
                 clientViewModel.sendClientRequest(user.id!!, it)
             }
-        }
-        Row(
-            modifier = Modifier.weight(1f)
-        ) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "send a message",
-                Modifier.clickable {
-//                            messageViewModel.senderId = company.user?.id!!
-//                            messageViewModel.getAllMyMessageByConversationId()
-//                            RouteController.navigateTo(Screen.HomeScreen)
-//                    messageViewModel.messageType = MessageType.COMPANY_SEND_USER
-                    messageViewModel.receiverAccountType = AccountType.USER
-                    messageViewModel.receiverUser = user
-                    messageViewModel.getAllMessageByCaleeId(user.id!!)// from user screen
-                    appViewModel.updateShow("message")
-                    appViewModel.updateScreen(IconType.MESSAGE)
-                }
-            )
         }
         if (isMePointSeller) {
             Row(

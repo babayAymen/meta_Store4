@@ -2,6 +2,7 @@ package com.aymen.metastore.model.repository.remoteRepository.invoiceRepository
 
 import androidx.paging.PagingData
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
@@ -27,7 +28,7 @@ interface InvoiceRepository {
                            invoiceCode : Long,
                            discount : Double,
                            clientType :  AccountType,
-                           invoiceMode: InvoiceMode):Response<Void>
+                           invoiceMode: InvoiceMode):Response<List<CommandLineDto>>
 
     suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status):Response<List<InvoiceDto>>
 

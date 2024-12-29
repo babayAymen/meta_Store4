@@ -1,5 +1,7 @@
 package com.aymen.metastore.model.entity.model
 
+import com.aymen.metastore.model.entity.room.entity.CommandLine
+
 data class CommandLine (
 
     val id : Long? = null,
@@ -11,4 +13,18 @@ data class CommandLine (
     var article : ArticleCompany? = null,
     var createdDate : String = "",
     var lastModifiedDate : String = "",
-)
+){
+    fun toCommandLineEntity() : CommandLine{
+        return CommandLine(
+            id = id,
+            quantity = quantity,
+            totTva = totTva,
+            prixArticleTot = prixArticleTot,
+            discount = discount,
+            invoiceId = invoice?.id,
+            articleId = article?.id,
+            createdDate = createdDate,
+            lastModifiedDate = lastModifiedDate
+        )
+    }
+}

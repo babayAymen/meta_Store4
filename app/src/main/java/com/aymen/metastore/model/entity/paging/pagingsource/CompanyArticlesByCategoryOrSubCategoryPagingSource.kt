@@ -25,7 +25,7 @@ class CompanyArticlesByCategoryOrSubCategoryPagingSource(
             LoadResult.Page(
                 data = response,
                 prevKey = if (currentPage == 0) null else currentPage - 1,
-                nextKey = if (endOfPaginationReached) null else currentPage + 1,
+                nextKey = if (endOfPaginationReached) null else currentPage + 1
             )
         }catch (ex : Exception){
             LoadResult.Error(ex)

@@ -54,10 +54,8 @@ class CompanyViewModel @Inject constructor(
     private val companyDataStore: DataStore<Company>,
     private val appViewModel: AppViewModel,
     private  val sharedViewModel: SharedViewModel,
-    private val useCases: MetaUseCases,
-    private val tracker: ViewModelRunTracker
+    private val useCases: MetaUseCases
 ) : ViewModel() {
-    val isFirstRun: Boolean
 
     var providerId by mutableLongStateOf(0)
     var parent by mutableStateOf(Company())
@@ -65,17 +63,12 @@ class CompanyViewModel @Inject constructor(
     var update by mutableStateOf(false)
 
     init {
-        isFirstRun = tracker.isFirstViewModelRun
-        if (isFirstRun) {
-            tracker.firstViewModelName = "company view"
-            tracker.isFirstViewModelRun = false
-            // Perform first-run initialization
-        }
-        Log.d("ViewModelA", "Initialized. First: ${tracker.firstViewModelName}")
-        Log.e("testtoviewmodel","company view model")
-        getMyCompany()
+
         getMyCompany {
-//            sharedViewModel.assignCompany(it ?: Company())
+        viewModelScope.launch(Dispatchers.IO) {
+            room.userDao().insertUser(listOf(it?.user!!.toUserEntity()))
+            room.companyDao().insertCompany(listOf(it.toCompanyEntity()))
+        }
         }
     }
 
@@ -104,20 +97,6 @@ class CompanyViewModel @Inject constructor(
         }
     }
 
-    fun getMyCompany() {
-//        viewModelScope.launch {
-//            withContext(Dispatchers.Main) {
-//                try {
-//                    val response = repository.getMeAsCompany()
-//                    if (response.isSuccessful) {
-//                        appViewModel.storeCompany(response.body()?.toCompanyModel()!!)
-//                    }
-//                } catch (ex: Exception) {
-//                    Log.e("aymenbabaycompany", "c bon error ${ex.message}")
-//                }
-//            }
-//        }
-    }
 
 
     fun getMyCompany(onCompanyRetrieved: (Company?) -> Unit) {
@@ -144,6 +123,15 @@ class CompanyViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 repository.makeAsPointSeller(status, id)
+            } catch (ex: Exception) {
+                Log.e("getTokenError", "Error getting token: ${ex.message}")
+            }
+        }
+    }
+    fun MakeAsMetaSeller(status: Boolean, id: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.makeAsMetaSeller(status, id)
             } catch (ex: Exception) {
                 Log.e("getTokenError", "Error getting token: ${ex.message}")
             }

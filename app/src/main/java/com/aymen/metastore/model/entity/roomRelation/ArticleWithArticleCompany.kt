@@ -10,7 +10,7 @@ import com.aymen.metastore.model.entity.room.entity.SubCategory
 import com.aymen.metastore.model.entity.room.entity.User
 
 data class ArticleWithArticleCompany(
-    @Embedded var articleCompany: ArticleCompany,
+    @Embedded val articleCompany: ArticleCompany,
 
     @Relation(
         parentColumn = "articleId",
@@ -29,7 +29,7 @@ data class ArticleWithArticleCompany(
         parentColumn = "categoryId",
         entityColumn = "id"
     )
-    val category : Category?,
+    val category : Category? = null,
 
     @Relation(
         parentColumn = "subCategoryId",

@@ -32,6 +32,7 @@ import com.aymen.metastore.model.entity.dto.InvitationDto
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.dto.MessageDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
+import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.dto.WorkerDto
@@ -72,13 +73,15 @@ import retrofit2.http.Query
 interface ServiceApi {
 
 
-    @GET("$META_BASE_URL/make_as_point_seller/{status}/{companyId}")
-    suspend fun makeAsPointSeller(@Path("status") status : Boolean,@Path("companyId") id : Long)
+    @GET("$META_BASE_URL/make_as_point_seller/{companyId}")
+    suspend fun makeAsPointSeller(@Path("companyId") id : Long,@Query("status") status : Boolean)
+    @GET("$META_BASE_URL/make_as_meta_seller/{companyId}")
+    suspend fun makeAsMetaSeller(@Path("companyId") id : Long, @Query("status") status : Boolean)
     @Multipart
     @PUT(UPDATE_IMAGE_URL)
     suspend fun updateImage(@Part image: MultipartBody.Part? = null):Response<Void>
     @GET("$WORKER_BASE_URL/getbycompany/{companyId}")
-    suspend fun getAllMyWorker(@Path("companyId") companyId: Long): Response<List<WorkerDto>>
+    suspend fun getAllMyWorker(@Path("companyId") companyId: Long, @Query("page") page : Int , @Query("pageSize") pageSize : Int): PaginatedResponse<WorkerDto>
      @GET("$LIKE_BASE_URL/{articleId}/{isFav}")
     suspend fun likeAnArticle(@Path("articleId") articleId : Long, @Path("isFav") isFav : Boolean):Response<Void>
     @GET("$RATE_BASE_URL/get_rate/{id}/{type}")
@@ -104,8 +107,8 @@ interface ServiceApi {
     suspend fun getAllMyMessageByConversationId(@Path("conversationId") conversationId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
     @GET("$INVENTORY_BASE_URL/getbycompany/{companyId}")
     suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InventoryDto>
-    @GET("$INVITATION_BASE_URL/get_invetation")
-    suspend fun getAllMyInvetations(@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvitationDto>
+    @GET("$INVITATION_BASE_URL/get_invetation/{companyId}")
+    suspend fun getAllMyInvetations(@Path("companyId") companyId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : PaginatedResponse<InvitationDto>
     @GET("$INVITATION_BASE_URL/send/{id}/{type}")
     suspend fun sendClientRequest(@Path("id") id : Long,@Path("type") type : Type):Response<Void>
     @GET("$INVITATION_BASE_URL/response/{status}/{id}")
@@ -130,7 +133,7 @@ interface ServiceApi {
                            @Query("clientType") clientType : AccountType,
                            @Query("invoiceMode") invoiceMode: InvoiceMode,
                            @Query("type") type: String
-    ):Response<Void>
+    ):Response<List<CommandLineDto>>
     @GET("$COMMANDLINE_BASE_URL/get_command_line/{companyId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("companyId") companyId : Long, @Query("invoiceId") invoiceId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<CommandLineDto>
     //////////////////////////////////////////////////////////////:order/////////////////////////////////////////////////////////////////
@@ -192,6 +195,10 @@ interface ServiceApi {
     suspend fun getMyHistoryProfitByDate(@Path("id") id : Long, @Query("beginday") beginDay : String, @Query("finalday") finalDay : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
     @POST("$POINT_BASE_URL/")
     suspend fun sendPoints(@Body pointsPayment: PointsPaymentDto):Response<Void>
+    @POST("$POINT_BASE_URL/send_reglement")
+    suspend fun sendReglement(@Body reglement : ReglementFoProviderDto): Response<Void>
+    @GET("$POINT_BASE_URL/get_all_my_reglement_by_payment_id/{paymentId}")
+    suspend fun getAllReglementHistoryByPaymentId(@Path("paymentId") paymentId : Long , @Query("page") page : Int , @Query("pageSize") pageSize : Int) : PaginatedResponse<ReglementFoProviderDto>
 ///////////////////////////////////////////////:article //////////////////////////////////////////////////////////////////////:
     @GET("$ARTICLE_BASE_URL/getrandom/{categname}")
     suspend fun getRandomArticlesByCompanyCategory(@Path("categname") categName : String): Response<List<ArticleCompanyDto>>
@@ -225,8 +232,6 @@ interface ServiceApi {
     suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
     @POST("$ARTICLE_BASE_URL/sendComment")
     suspend fun sendComment(@Body comment : CommentDto):Response<Void>
-    @GET("$ARTICLE_BASE_URL/get_comments/{articleId}")
-    suspend fun getComments(@Path("articleId") articleId : Long):Response<List<CommentDto>>
     @GET("$ARTICLE_BASE_URL/{articleId}/{quantity}")
     suspend fun addQuantityArticle(@Path("quantity") quantity : Double, @Path("articleId") articleId : Long ): Response<ArticleCompanyDto>
     @PUT("$ARTICLE_BASE_URL/update")

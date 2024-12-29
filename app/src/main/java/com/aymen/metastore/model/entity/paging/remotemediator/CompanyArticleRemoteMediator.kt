@@ -75,13 +75,13 @@ class CompanyArticleRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.company?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map {company -> company.company?.toCompany()!!})
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()!!})
-                    companyDao.insertCompany(response.map { company -> company.provider?.toCompany()!! })
-                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory(isCategory = false)!! })
-                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory()!! })
-                    articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true)!! })
+                    userDao.insertUser(response.map {user -> user.company?.user?.toUser()})
+                    companyDao.insertCompany(response.map {company -> company.company?.toCompany()})
+                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.map { company -> company.provider?.toCompany() })
+                    categoryDao.insertCategory(response.map {category -> category.category?.toCategory(isCategory = false)})
+                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.subCategory?.toSubCategory(isSubcategory = false) })
+                    articleDao.insertArticle(response.map {article -> article.article?.toArticle(isMy = true) })
                     articleCompanyDao.insertArticle(response.map { it.toArticleCompany(isRandom = false, isSearch = false) })
 
                 } catch (ex: Exception) {
