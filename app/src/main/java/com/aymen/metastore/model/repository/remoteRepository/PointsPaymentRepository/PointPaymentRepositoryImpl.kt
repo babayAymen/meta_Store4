@@ -11,7 +11,6 @@ import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.entity.model.ReglementForProviderModel
 import com.aymen.metastore.model.entity.paging.remotemediator.PointsEspeceByDateRemoteMediator
-import com.aymen.metastore.model.entity.paging.remotemediator.PointsEspeceRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProfitOfProviderMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProfitPerDayByDateRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProfitPerDayRemoteMediator
@@ -109,20 +108,6 @@ class PointPaymentRepositoryImpl @Inject constructor(
     override suspend fun sendPoints(pointsPayment: PointsPaymentDto) = api.sendPoints(pointsPayment)
     override suspend fun sendReglement(reglement: ReglementFoProviderDto) = api.sendReglement(reglement)
 
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyPaymentsEspece(companyId: Long) : Flow<PagingData<PaymentForProvidersWithCommandLine>>{
-        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-            remoteMediator = PointsEspeceRemoteMediator(
-                api = api, room = room, id = companyId
-            ),
-            pagingSourceFactory = { pointPaymentForProviderDao.getAllMyPaymentsEspece()}
-        ).flow.map {
-            it.map { article ->
-                article
-            }
-        }
-    }
     override suspend fun getMyProfitByDate(beginDate: String, finalDate: String) = api.getMyProfitByDate(beginDate, finalDate)
     override suspend fun getAllMyProfits() = api.getAllMyProfits()
 

@@ -112,7 +112,6 @@ import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
-import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.model.Enum.UnitArticle
@@ -349,6 +348,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
     val companyViewModel: CompanyViewModel = hiltViewModel()
     val categoryViewModel: CategoryViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
+    val sharedViewModel: SharedViewModel = hiltViewModel()
     Row {
         LazyColumn {
             items(
@@ -367,7 +367,8 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                                     .weight(0.8f)
                                     .clickable {
                                         categoryViewModel.setFilter(art.company?.id!!)
-                                        companyViewModel.myCompany = art.company!!
+//                                        companyViewModel.myCompany = art.company!!
+                                        sharedViewModel.setHisCompany(art.company!!)
                                         articleViewModel.companyId = it.company?.id!!
                                         RouteController.navigateTo(Screen.CompanyScreen)
                                     }
@@ -413,7 +414,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                         }
                         Column(
                             modifier = Modifier.clickable {
-                                companyViewModel.myCompany = art.company!!
+                                sharedViewModel.setHisCompany(art.company!!)
                                 articleViewModel.assignArticleCompany(art)
                                 RouteController.navigateTo(Screen.ArticleDetailScreen)
                             }
@@ -448,7 +449,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                                     "add to cart",
                                     isOpen = false,
                                     shoppingViewModel = shoppingViewModel
-                                )
+                                ){}
                             }
                         }
                     }
@@ -780,7 +781,7 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 }
 
 @Composable
-fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel) {
+fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel, onClose: (Boolean) -> Unit) {
     var openDialog by remember {
         mutableStateOf(isOpen)
     }
@@ -789,6 +790,9 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
         openDialog = true
     }
     }
+
+    var showFeesDialog by remember { mutableStateOf(false) }
+     var restBalance by remember { mutableStateOf(BigDecimal.ZERO) }
     if(openDialog){
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
@@ -799,49 +803,36 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
         mutableStateOf(false)
     }
 
-        var restBalance by remember { mutableStateOf(BigDecimal.ZERO) }
         LaunchedEffect(key1 = myUserBalance, key2 = myCompanyBalance) {
-            restBalance = if (isCompany) myCompanyBalance?.toBigDecimal()?.setScale(2, RoundingMode.HALF_UP)
-            else myUserBalance?.toBigDecimal()?.setScale(2, RoundingMode.HALF_UP)
+            restBalance = if (isCompany) BigDecimal(myCompanyBalance!!).setScale(2, RoundingMode.HALF_UP)
+            else BigDecimal(myUserBalance!!).setScale(2, RoundingMode.HALF_UP)
         }
     val gson = Gson()
 
-    var showFeesDialog by remember { mutableStateOf(false) }
     var balance by remember { mutableDoubleStateOf(0.0) }
 
-    var cost by remember {
-        mutableStateOf(BigDecimal(0.0))
-    }
-        LaunchedEffect(key1 = shoppingViewModel.qte) {
-            isCompany = accountType == AccountType.COMPANY
-            restBalance = if (isCompany) {
-                balance = myCompanyBalance!!
-                myCompanyBalance!!.toBigDecimal() - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
-            } else {
-                balance = myUserBalance!!
-                myUserBalance?.toBigDecimal()!! - shoppingViewModel.qte.toBigDecimal().multiply(article.sellingPrice!!.toBigDecimal())!!
-            }
+        var cost by remember {
+            mutableStateOf(BigDecimal(0.0))
         }
+        LaunchedEffect(key1 = shoppingViewModel.qte) {
+            cost = BigDecimal(shoppingViewModel.qte).multiply(BigDecimal(article.sellingPrice!!)).setScale(2, RoundingMode.HALF_UP)
+            isCompany = accountType == AccountType.COMPANY
+                restBalance =
+                    if (isCompany) {
+                        balance = myCompanyBalance!!
+                        BigDecimal(myCompanyBalance!!).subtract(cost).subtract(shoppingViewModel.cost)
+                            .setScale(2, RoundingMode.HALF_UP)
+                    } else {
+                        balance = myUserBalance!!
+                        BigDecimal(myUserBalance!!).subtract(cost).subtract(shoppingViewModel.cost).setScale(2, RoundingMode.HALF_UP)
 
-    LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
-        Log.e("qehsghdtg","user 1 already : ${shoppingViewModel.isAlready} cost ${shoppingViewModel.cost.add(cost)} delivery  ${shoppingViewModel.delivery}")
-
-        cost = BigDecimal(balance).subtract(restBalance)
-
-        restBalance = if(shoppingViewModel.isAlready && cost.add(shoppingViewModel.cost) > BigDecimal(30)) restBalance.add(BigDecimal(3)) else restBalance
-        shoppingViewModel.isAlready = shoppingViewModel.orderArray.any { order -> order.delivery == true } && shoppingViewModel.cost.add(cost) <= BigDecimal(30)
-        restBalance =
-            if (shoppingViewModel.delivery && shoppingViewModel.cost.add(cost) <= BigDecimal(30) && shoppingViewModel.qte != 0.0 && !shoppingViewModel.isAlready) {
-                Log.e("qehsghdtg","user already : ${shoppingViewModel.isAlready} cost ${shoppingViewModel.cost.add(cost)} delivery  ${shoppingViewModel.delivery} rest $restBalance")
-                restBalance.subtract(BigDecimal(3))
-            } else restBalance
-
-        Log.e("qehsghdtg","user already : ${shoppingViewModel.isAlready} cost ${shoppingViewModel.cost.add(cost)} delivery  ${shoppingViewModel.delivery}")
-    }
+                    }
+        }
 
         Dialog(
             onDismissRequest = {openDialog = false
                 shoppingViewModel.remiseAZero()
+                onClose(false)
             }
         ){
             Surface(
@@ -931,25 +922,31 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                                     enabled = true
                                 ) {
                                     openDialog = false
+                                    onClose(false)
                                     shoppingViewModel.randomArticle = article
-                                    shoppingViewModel.submitShopping(restBalance!!)
+                                    shoppingViewModel.submitShopping()
                                      gson.toJson(shoppingViewModel.orderArray)
                                 }
                             }
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
-
                                 ButtonSubmit(
                                     labelValue = "send",
                                     color = Color.Green,
                                     enabled = true
                                 ) {
                                     shoppingViewModel.randomArticle = article
-                                    shoppingViewModel.submitShopping(restBalance!!)
+                                    shoppingViewModel.submitShopping()
                                         openDialog = false
-                                        shoppingViewModel.sendOrder(-1)
+                                    if(shoppingViewModel.delivery && shoppingViewModel.cost.add(cost) <= BigDecimal(30)) {
+
+                                        showFeesDialog = true
+                                    }
+                                    else shoppingViewModel.sendOrder(-1,restBalance!!)
+
                                 }
+
                             }
                         }
                         Row (
@@ -958,6 +955,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
 
                             ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                                 openDialog = false
+                                onClose(false)
                                 shoppingViewModel.remiseAZero()
                             }
                         }
@@ -966,27 +964,27 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                         Row {
                             CheckBoxComp(
                                 value = "Delivery",
-                                free = if(cost>=BigDecimal(30))"free" else null,
+                                free = if(cost.add(shoppingViewModel.cost)>=BigDecimal(30))"free" else null,
                                 pay = if(cost.add(shoppingViewModel.cost)<BigDecimal(30) && shoppingViewModel.delivery && shoppingViewModel.qte != 0.0)" 3dt" else null,
                                 shoppingViewModel.delivery
                             ) { isChecked ->
                                 shoppingViewModel.delivery = isChecked
                             }
                         }
-                    if(showFeesDialog){
-                        ShowFeesDialog(isOpen = true){ submitfees ->
-                            if(submitfees){
-                                openDialog = false
-                                shoppingViewModel.sendOrder(-1)
-                            }else{
-                                showFeesDialog = false
-                            }
-                        }
-                    }
                     }
                 }
             }
         }
+    if(showFeesDialog){
+        ShowFeesDialog(isOpen = true) {submitfees ->
+            if(submitfees) {
+                val balance = restBalance.subtract(BigDecimal((3)))
+                shoppingViewModel.sendOrder(-1, balance)
+            }
+            
+            showFeesDialog = false
+        }
+    }
     }
 
 @Composable
@@ -1110,161 +1108,6 @@ fun UpdateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
 
 
 @Composable
-fun ConversationCard(conversations : LazyPagingItems<Conversation>) {
-
-    val messageViewModel : MessageViewModel = hiltViewModel()
-    val appViewModel : AppViewModel = hiltViewModel()
-    Row {
-        LazyColumn {
-            items(conversations.itemCount) {index ->
-                val conversation = conversations[index]
-                Card(
-                    elevation = CardDefaults.cardElevation(6.dp),
-                    modifier = Modifier.padding(8.dp),
-                    onClick = {
-                        appViewModel.updateShow("message")
-                        messageViewModel.fromConve = true
-                        messageViewModel.conversation = conversation!!
-                        messageViewModel.receiverCompany = conversation.company2?:conversation.company1!!
-                        messageViewModel.receiverUser = conversation.user2?:conversation.user1!!
-                        messageViewModel.messageType = conversation.type!!
-                        messageViewModel.receiverAccountType = AccountType.COMPANY
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(0.2f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(RoundedCornerShape(100.dp))
-                            ) {
-                                if (conversation?.company2?.id != null) {
-                                    if (conversation.company2?.logo != null) {
-                                        ShowImage(image = "${BASE_URL}werehouse/image/${conversation.company2?.logo}/company/${conversation.company2?.user?.id}")
-                                    } else {
-                                        val painter: Painter =
-                                            painterResource(id = R.drawable.emptyprofile)
-                                        Image(
-                                            painter = painter,
-                                            contentDescription = "empty photo profil",
-                                            modifier = Modifier
-                                                .size(30.dp)
-                                                .clip(
-                                                    RoundedCornerShape(10.dp)
-                                                )
-                                        )
-                                    }
-                                }
-                                if (conversation?.user2?.id != null) {
-                                    if (conversation.user2?.image != null) {
-                                        ShowImage(image = "${BASE_URL}werehouse/image/${conversation.user2?.image}/user/${conversation.user2?.id}")
-                                    } else {
-
-                                        val painter: Painter =
-                                            painterResource(id = R.drawable.emptyprofile)
-                                        Image(
-                                            painter = painter,
-                                            contentDescription = "empty photo profil",
-                                            modifier = Modifier
-                                                .size(30.dp)
-                                                .clip(
-                                                    RoundedCornerShape(10.dp)
-                                                )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 12.dp)
-                                .weight(1f)
-                        ) {
-                            conversation?.user2?.let {
-                                NormalText(
-                                    value = it.username!!,
-                                    aligne = TextAlign.Start
-                                )
-                            }
-                            conversation?.user1?.let {
-                                NormalText(
-                                    value = it.username!!,
-                                    aligne = TextAlign.End
-                                )
-                            }
-                            conversation?.company1?.let {
-                                NormalText(
-                                    value = it.name,
-                                    aligne = TextAlign.End
-                                )
-                            }
-                            conversation?.company2?.let {
-                                NormalText(
-                                    value = it.name,
-                                    aligne = TextAlign.End
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            val firstLine = conversation?.lastMessage?.takeWhile { it != '\n' }
-                            ConversationText(
-                                value = firstLine!!,
-                                aligne = TextAlign.Start,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(text = conversation.lastModifiedDate)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MessageCard(message: LazyPagingItems<Message>) {
-    val sharedViewModel: SharedViewModel = hiltViewModel()
-    val me by sharedViewModel.user.collectAsStateWithLifecycle()
-    val lazyListState = LazyListState()
-
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    rotationY = 180f
-                }
-                .background(Color.Green)
-        ) {
-            items(message.itemCount) { index ->
-                val msg = message[index]
-                Column(
-                    modifier = Modifier.graphicsLayer {
-                        rotationY = 180f
-                    }
-                ) {
-                    msg?.content?.let { content ->
-                        if (me.id != null) {
-                            MessageText(
-                                value = content,
-                                aligne = if (msg.createdBy == me.id) TextAlign.End else TextAlign.Start,
-                                color = if (msg.createdBy == me.id) Color.Blue else Color.Black
-                            )
-                        }
-                    }
-                    msg?.createdDate?.let { Text(text = it) }
-                }
-            }
-        }
-
-}
-
-@Composable
 fun OrderShow(order: PurchaseOrderLine) {
     val shoppingViewModel: ShoppingViewModel = hiltViewModel()
     var showDialog by remember { mutableStateOf(false) }
@@ -1282,14 +1125,17 @@ fun OrderShow(order: PurchaseOrderLine) {
             if (showDialog) {
                 shoppingViewModel.randomArticle = order.article!!
                 shoppingViewModel.qte = order.quantity!!
+                shoppingViewModel.rawInput = order.quantity.toString()
                 shoppingViewModel.comment = order.comment?:""
                 shoppingViewModel.delivery = order.delivery!!
                 ShoppingDialog(
                     article = order.article,
                     label = "",
-                    isOpen = true,
+                    isOpen = showDialog,
                     shoppingViewModel = shoppingViewModel
-                )
+                ){
+                    showDialog = it
+                }
             }
         }
     }

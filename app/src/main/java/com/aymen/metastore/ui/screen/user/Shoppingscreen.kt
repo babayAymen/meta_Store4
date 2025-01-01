@@ -55,6 +55,7 @@ import com.aymen.metastore.ui.component.ShowFeesDialog
 import com.aymen.metastore.ui.screen.admin.AddInvoiceScreen
 import com.aymen.metastore.ui.screen.admin.OrderScreen
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.util.Date
 
@@ -79,7 +80,13 @@ fun ShoppingScreen() {
     val show by appViewModel.show
 
     var showFeesDialog by remember { mutableStateOf(false) }
-    var balancee by remember { mutableStateOf(0.0) }
+
+    var isAll by remember {
+        mutableStateOf(false)
+    }
+    var restBalnace by remember {
+        mutableStateOf(BigDecimal.ZERO)
+    }
     when(show) {
         "add invoice" -> AddInvoiceScreen(InvoiceMode.VERIFY)
         "orderLine" -> OrderScreen()
@@ -109,31 +116,16 @@ fun ShoppingScreen() {
                                             Row(
                                                 modifier = Modifier.weight(0.8f)
                                             ) {
-
                                                 OrderShow(order = it)
                                             }
                                             Row(
                                                 modifier = Modifier.weight(0.1f)
                                             ) {
                                                 IconButton(onClick = {
-                                                        shoppingViewModel.beforSendOrder { isAccepted, balance ->
-
-                                                            if(it.delivery == true) {
-                                                            if (isAccepted) {
-                                                                shoppingViewModel.sendOrder(
-                                                                    index
-                                                                )
-                                                            } else {
-                                                                showFeesDialog = true
-                                                                balancee = balance
-                                                            }
-                                                        }else{
-                                                                shoppingViewModel.sendOrder(
-                                                                    index
-                                                                )
-                                                            }
-                                                            }
-
+                                                    if(it.delivery == true && (BigDecimal(it.article?.sellingPrice!!).multiply(BigDecimal(it.quantity!!)))<= BigDecimal(30)){
+                                                        restBalnace = BigDecimal(myCompany.balance!!).subtract(BigDecimal(it.article.sellingPrice!!).multiply(BigDecimal(it.quantity))).setScale(2, RoundingMode.HALF_UP)
+                                                        showFeesDialog = true
+                                                    }
                                                 }) {
                                                     Icon(
                                                         imageVector = Icons.Default.Check,
@@ -145,8 +137,11 @@ fun ShoppingScreen() {
                                             if(showFeesDialog){
                                                 ShowFeesDialog(isOpen = true) {submitfees ->
                                                     if(submitfees){
-                                                        shoppingViewModel.sendOrder(index
-                                                        )
+                                                            val balance = restBalnace.subtract(BigDecimal((3)))
+                                                        if(!isAll)
+                                                            shoppingViewModel.sendOrder(index, balance)
+                                                        else
+                                                            shoppingViewModel.sendOrder(-1, balance)
                                                     }else{
                                                         showFeesDialog = false
                                                     }
@@ -188,13 +183,10 @@ fun ShoppingScreen() {
                                             color = Color.Green,
                                             enabled = true
                                         ) {
-                                            shoppingViewModel.beforSendOrder {isAccepte , balance ->
-                                                if(isAccepte){
-                                                     shoppingViewModel.sendOrder(-1
-                                                     )
-                                                }else{
-                                                    showFeesDialog = true
-                                                }
+                                            if(shoppingViewModel.delivery && shoppingViewModel.cost <= BigDecimal(30)) {
+                                                restBalnace = BigDecimal(myCompany.balance!!).subtract(shoppingViewModel.cost).setScale(2,RoundingMode.HALF_UP)
+                                                isAll = true
+                                                showFeesDialog = true
                                             }
                                         }
                                     }

@@ -9,9 +9,6 @@ data class MetaUseCases(
     val getArticleDetails: GetArticleDetails,
     val getAllMyArticleContaining: GetAllMyArticleContaining,
     val getAllMyClient: GetAllMyClient,
-    val getAllMyClientContaining : GetAllMyClientContaining,
-    val getAllMessagesByConversation: GetAllMessagesByConversation,
-    val getAllConversation: GetAllConversation,
     val getAllInvoices: GetAllInvoices,
     val getAllRechargeHistory: GetAllRechargeHistory,
     val getAllInvoicesAsClient: GetAllInvoicesAsClient,
@@ -19,7 +16,6 @@ data class MetaUseCases(
     val getAllMyInventory : GetAllMyInventory,
     val getAllCompaniesContaining : GetAllCompaniesContaining,
     val getAllMyInvitations : GetAllMyInvitations,
-    val getAllMyPaymentsEspece : GetAllMyPaymentsEspece,
     val getAllMyPaymentsEspeceByDate : GetAllMyPaymentsEspeceByDate,
     val getAllMyPointsPaymentForProvider : GetAllMyPointsPaymentForPoviders,
     val getAllPersonContaining : GetAllPersonContaining,
@@ -28,10 +24,7 @@ data class MetaUseCases(
     val getAllMyOrdersNotAccepted : GetAllMyOrdersNotAccepted,
     val getPurchaseOrderDetails: GetPurchaseOrderDetails,
     val getAllMyBuyHistory : GetAllMyBuyHistory,
-    val getInCompleteInvoice: GetInCompleteInvoice,
     val getNotAcceptedInvoice: GetNotAcceptedInvoice,
-    val getNotPaidInvoice: GetNotPaidInvoice,
-    val getPaidInvoice: GetPaidInvoice,
     val getAllMyProfitsPerDay : GetAllMyProfitsPerDay,
     val getMyHistoryProfitByDate : GetMyHistoryProfitByDate,
     val getAllSearchHistory : GetAllSearchHistory,
@@ -44,5 +37,6 @@ data class MetaUseCases(
     val getMyClientForAutocompleteClient : GetMyClientForAutocompleteClient,
     val getArticleComment : GetArticleComment,
     val getAllWorkers: GetAllWorkers,
-    val getPaymentForProviderDetails : GetPaymentForProviderDetails
+    val getPaymentForProviderDetails : GetPaymentForProviderDetails,
+    val getRateeRating: GetRateeRating
 )

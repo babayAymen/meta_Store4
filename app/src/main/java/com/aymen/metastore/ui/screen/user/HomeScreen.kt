@@ -151,9 +151,6 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
                     }
                 IconType.NOTIFICATIONS -> {
                     NotificationScreen()
-                }           
-                IconType.MESSAGE -> {
-                    ConversationScreen()
                 }
                 IconType.COMPANY ->
                         DashBoardScreen()

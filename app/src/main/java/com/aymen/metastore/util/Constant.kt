@@ -2,8 +2,8 @@ package com.aymen.metastore.util
 
 const val PAGE_SIZE = 7
 const val PRE_FETCH_DISTANCE = 5
-const val BASE_URL = "http://192.168.1.5:8080/"
-//const val BASE_URL = "http://192.168.230.53:8080/"
+//const val BASE_URL = "http://192.168.1.5:8080/"
+const val BASE_URL = "http://192.168.230.53:8080/"
  const val DATABASE_NAME = "meta_store_data_base"
 const val META_BASE_URL = "werehouse/meta"
 const val CLIENT_BASE_URL = "werehouse/client"

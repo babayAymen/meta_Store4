@@ -22,8 +22,6 @@ class CommandLineByInvoiceRemoteMediator(
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
     private val invoiceDao = room.invoiceDao()
-    private val categoryDao = room.categoryDao()
-    private val subCategoryDao = room.subCategoryDao()
     private val articleCompanyDao = room.articleCompanyDao()
     private val articleDao = room.articleDao()
     private val commandLineDao = room.commandLineDao()

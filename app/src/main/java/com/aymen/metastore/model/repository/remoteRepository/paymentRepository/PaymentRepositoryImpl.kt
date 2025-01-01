@@ -8,8 +8,6 @@ import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.PaymentForProvidersDto
 import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.paging.remotemediator.BuyHistoryMediator
-import com.aymen.metastore.model.entity.paging.remotemediator.InCompleteRemoteMediator
-import com.aymen.metastore.model.entity.paging.remotemediator.NotPaidremoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.GetInvoicesByStatusPagingSource
 import com.aymen.metastore.model.entity.paging.pagingsource.PayedPagingSource
 import com.aymen.metastore.model.entity.room.AppDatabase
@@ -54,64 +52,6 @@ class PaymentRepositoryImpl @Inject constructor(
         }
     }
 
-//    @OptIn(ExperimentalPagingApi::class)
-    override fun getPaidInvoice(id: Long, isProvider: Boolean, paymentStatus: PaymentStatus): Flow<PagingData<Invoice>> {
-        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-//            remoteMediator = PayedRemoteMediator(
-//                api = api, room = room, id = id, isProvider = isProvider
-//            ),
-            pagingSourceFactory = {
-                PayedPagingSource(api, id , isProvider, paymentStatus)
-            }
-        ).flow.map {
-            it.map { article ->
-                article
-            }
-        }
-    }
-
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getNotPaidInvoice(id: Long, isProvider : Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
-        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-            remoteMediator = NotPaidremoteMediator(
-                api = api, room = room, id = id, isProvider = isProvider
-            ),
-            pagingSourceFactory = {
-                if(isProvider) {
-                    invoiceDao.getAllMyBuyHistoryFromPaidInvoiceAsProvider(id = id, paid = PaymentStatus.NOT_PAID)
-                }else{
-                    invoiceDao.getAllMyBuyHistoryFromPaidInvoiceAsClient(id = id, paid = PaymentStatus.NOT_PAID)
-                }
-            }
-        ).flow.map {
-            it.map { article ->
-                article
-            }
-        }
-    }
-
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getInCompleteInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
-        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-            remoteMediator = InCompleteRemoteMediator(
-                api = api, room = room, id = id, isProvider = isProvider
-            ),
-            pagingSourceFactory = {
-                if(isProvider) {
-                    invoiceDao.getAllMyBuyHistoryFromIncompleteInvoice(id = id, paid = PaymentStatus.INCOMPLETE)
-                }else{
-                    invoiceDao.getAllMyBuyHistoryFromIncompleteInvoiceAsClient(id = id, paid = PaymentStatus.INCOMPLETE)
-                }
-            }
-        ).flow.map {
-            it.map { article ->
-                article
-            }
-        }
-    }
 
     override fun getNotAcceptedInvoice(
         id: Long,

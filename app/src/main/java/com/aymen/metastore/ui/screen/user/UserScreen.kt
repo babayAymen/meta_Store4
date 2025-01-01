@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -33,9 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.aymen.store.model.Enum.IconType
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
-import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
 import com.aymen.metastore.ui.component.AddTypeDialog
 import com.aymen.metastore.ui.component.SendPointDialog
 import com.aymen.metastore.ui.component.ShowImage
@@ -63,7 +60,7 @@ fun UserScreen() {
     val isPointSeller by remember {
         mutableStateOf(company.isPointsSeller)
     }
-    val user by appViewModel.user.collectAsStateWithLifecycle()
+    val user by sharedViewModel.hisUser.collectAsStateWithLifecycle()
     var rating by remember {
         mutableStateOf(false)
     }

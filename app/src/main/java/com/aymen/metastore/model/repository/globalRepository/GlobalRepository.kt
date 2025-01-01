@@ -12,7 +12,6 @@ import com.aymen.store.model.repository.remoteRepository.clientRepository.Client
 import com.aymen.store.model.repository.remoteRepository.companyRepository.CompanyRepository
 import com.aymen.store.model.repository.remoteRepository.inventoryRepository.InventoryRepository
 import com.aymen.metastore.model.repository.remoteRepository.invoiceRepository.InvoiceRepository
-import com.aymen.metastore.model.repository.remoteRepository.messageRepository.MessageRepository
 import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepository
 import com.aymen.store.model.repository.remoteRepository.paymentRepository.PaymentRepository
 import com.aymen.store.model.repository.remoteRepository.providerRepository.ProviderRepository
@@ -27,8 +26,8 @@ interface GlobalRepository :
     InventoryRepository,
     ClientRepository, ProviderRepository,
         PaymentRepository, OrderRepository,
-        WorkerRepository, InvoiceRepository,
-    MessageRepository, ShoppingRepository,
+        WorkerRepository, InvoiceRepository
+    , ShoppingRepository,
     InvetationRepository, PointPaymentRepository,
         RatingRepository, AymenRepository,
         CommandLineRepository

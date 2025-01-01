@@ -8,7 +8,6 @@ import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.paging.pagingsource.AllCompaniesContainingPagingSource
-import com.aymen.metastore.model.entity.paging.remotemediator.CompanyRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
@@ -80,24 +79,6 @@ class CompanyRepositoryImpl @Inject constructor(
         ).flow
     }
 
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyClientContaining(
-        id: Long,
-        clientName: String
-    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
-        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
-            remoteMediator = CompanyRemoteMediator(
-                api = api, room = room, libelle = clientName, id = id
-            ),
-            pagingSourceFactory = {
-                searchHistoryDao.getAllSearchHistories()
-            }
-        ).flow.map {
-            it.map { article ->
-                article
-            }
-        }    }
 
     override suspend fun updateCompany(company: String, file: File) {
         withContext(Dispatchers.IO){

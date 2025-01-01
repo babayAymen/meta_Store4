@@ -29,8 +29,6 @@ class PointsEspeceByDateRemoteMediator(
     private val invoiceDao = room.invoiceDao()
     private val paymentForProvidersDao = room.paymentForProvidersDao()
     private val purchaseOrderDao = room.purchaseOrderDao()
-    private val categoryDao = room.categoryDao()
-    private val subCategoryDao = room.subCategoryDao()
 
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH

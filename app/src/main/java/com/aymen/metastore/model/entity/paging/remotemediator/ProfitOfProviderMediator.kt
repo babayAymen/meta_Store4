@@ -22,8 +22,6 @@ class ProfitOfProviderMediator(
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
     private val purchaseOrderDao = room.purchaseOrderDao()
-    private val subCategoryDao = room.subCategoryDao()
-    private val categoryDao = room.categoryDao()
     private val articleDao = room.articleDao()
     private val articleCompanyDao = room.articleCompanyDao()
     private val invoiceDao = room.invoiceDao()

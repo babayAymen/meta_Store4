@@ -22,6 +22,8 @@ interface SearchHistoryDao {
     suspend fun insertAllSearchKeys(keys : List<AllSearchRemoteKeysEntity>)
     @Upsert
     suspend fun insertSingleRemoteKey(keys : AllSearchRemoteKeysEntity)
+
+    //maybe not used
     @Transaction
     @Query("SELECT * FROM search_history ORDER BY lastModifiedDate DESC")
      fun getAllSearchHistories(): PagingSource<Int ,SearchHistoryWithClientOrProviderOrUserOrArticle>

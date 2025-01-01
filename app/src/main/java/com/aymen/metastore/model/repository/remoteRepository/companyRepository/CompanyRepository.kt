@@ -21,7 +21,6 @@ interface CompanyRepository {
     suspend fun getMeAsCompany(): Response<CompanyDto>
 
      fun getAllCompaniesContaining(search : String, searchType: SearchType, myId : Long): Flow<PagingData<CompanyDto>>
-    fun getAllMyClientContaining(id : Long , clientName : String): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>>
     suspend fun updateCompany(company: String , file : File)
 
     suspend fun updateImage(image : File) : Response<Void>

@@ -41,9 +41,6 @@ interface PaymentForProvidersDao {
     @Query("DELETE FROM provider_profit_history_remote_keys")
     suspend fun clearAllProvidersProfitHistoryRemoteKeysTable()
 
-    @Query("SELECT purchaseOrderLineId FROM payment_for_providers ")
-    suspend fun getAllProviderProfitIds(): List<Long>
-
     @Query("DELETE FROM payment_for_providers")
     suspend fun clearAllProvidersProfitHistoryTable()
 

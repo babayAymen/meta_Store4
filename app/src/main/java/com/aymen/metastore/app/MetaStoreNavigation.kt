@@ -16,8 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.metastore.ui.screen.admin.DashBoardScreen
@@ -28,7 +30,6 @@ import com.aymen.metastore.ui.screen.user.AddCompanyScreen
 import com.aymen.metastore.ui.screen.user.ArticleDetailsScreen
 import com.aymen.metastore.ui.screen.user.CompanyScreen
 import com.aymen.metastore.ui.screen.user.HomeScreen
-import com.aymen.metastore.ui.screen.user.ConversationScreen
 import com.aymen.store.ui.screen.user.NotificationScreen
 import com.aymen.metastore.ui.screen.user.PaymentScreen
 import com.aymen.metastore.ui.screen.user.ShoppingScreen
@@ -39,7 +40,7 @@ import com.aymen.metastore.ui.screen.user.UserScreen
 @Composable
 fun MetaStore (){
     val appViewModel  = hiltViewModel<AppViewModel>()
-    val companyViewModel = hiltViewModel<CompanyViewModel>()
+    val sharedViewModel = hiltViewModel<SharedViewModel>()
     var isLoggedIn by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
          appViewModel.isLoggedIn{
@@ -86,10 +87,6 @@ fun MetaStore (){
                     NotificationScreen()
                 }
 
-                is Screen.ConversationScreen -> {
-                    ConversationScreen()
-                }
-
                 is Screen.PaymentScreen -> {
                     PaymentScreen()
                 }
@@ -107,7 +104,7 @@ fun MetaStore (){
                 }
 
                 is Screen.CompanyScreen -> {
-                    val company = companyViewModel.myCompany
+                    val company by sharedViewModel.hisCompany.collectAsStateWithLifecycle()
                     CompanyScreen(company = company)
                 }
 

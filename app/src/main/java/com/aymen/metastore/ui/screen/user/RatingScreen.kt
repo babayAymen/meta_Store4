@@ -24,22 +24,28 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.ui.component.InputTextField
 import com.google.gson.Gson
 import android.net.Uri
+import android.util.Log
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.User
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
+import com.aymen.metastore.ui.component.DividerComponent
 import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.util.BASE_URL
 
 @Composable
 fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
-
-//    val current = LocalContext.current
-//    var height = LocalConfiguration.current.screenHeightDp.dp
     val ratingViewModel: RatingViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
     var id by remember { mutableLongStateOf(0) }
     val gson = Gson()
 
@@ -81,17 +87,25 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
                     .padding(bottom = 10.dp)
                     .fillMaxWidth()
             ) {
-                items(allRating.itemCount) { index ->
+                items(count = allRating.itemCount,
+                    key = allRating.itemKey{it.id!!}
+                ) { index ->
                     val rate = allRating[index]
-                    rate?.raterUser?.let { user ->
-                        ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
+                    if (rate != null) {
+                        rate.raterUser?.let { user ->
+                            if(user.image != null) ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
+                            else{}
+                        }
+                        rate.raterCompany?.let { company ->
+                            if(company.logo != null) {
+                                ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
+                            }else {}
+                        }
+                        Text(text = rate.raterUser?.username ?: rate.raterCompany?.name ?: "")
+                        Text(text = rate.comment ?: "")
+                        if(rate.photo != null) ShowImage(image = "${BASE_URL}werehouse/image/${rate.photo}/rating/${rate.raterCompany?.user?.id ?: rate.raterUser?.id}")
+                        DividerComponent()
                     }
-                    rate?.raterCompany?.let { company ->
-                        ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                    }
-                    Text(text = rate?.raterUser?.username ?: rate?.raterCompany?.name ?: "")
-                    Text(text = rate?.comment ?: "")
-                      ShowImage(image = "${BASE_URL}werehouse/image/${rate?.photo}/rating/${rate?.raterCompany?.user?.id?:rate?.raterUser?.id}")
                 }
             }
 
@@ -136,25 +150,35 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
                         ) {
                             rating.comment = comment
                             if (mode == AccountType.COMPANY) {
-                                if (appViewModel.userRole == RoleEnum.ADMIN) {
+                                if (accountType == AccountType.COMPANY) {
                                     rating.type = RateType.COMPANY_RATE_COMPANY
-                                    rating.rateeCompany?.id = company?.id
+                                    rating.raterCompany = myCompany
                                 } else {
                                     rating.type = RateType.USER_RATE_COMPANY
-                                    rating.rateeCompany?.id = company?.id
+                                    rating.raterUser = myUser
                                 }
+                                    rating.rateeCompany = company
                             } else {
-                                if (appViewModel.userRole == RoleEnum.ADMIN) {
-                                    rating.type = RateType.COMPANY_RATE_USER
-                                    rating.rateeUser?.id = user?.id
-                                } else {
-                                    rating.type = null
+                                when (accountType) {
+                                    AccountType.COMPANY -> {
+                                        rating.type = RateType.COMPANY_RATE_USER
+                                        rating.raterCompany = myCompany
+                                    }
+
+                                    AccountType.META -> {
+                                        rating.type = RateType.META_RATE_USER
+                                        rating.raterUser = myUser
+                                    }
+
+                                    else ->
+                                        rating.type = null
                                 }
+                                    rating.rateeUser = user
                             }
                             rating.rateValue = ratingViewModel.rate
                             ratingViewModel.enableToRating = false
                             val ratingJson = gson.toJson(rating)
-                            ratingViewModel.doRate(ratingJson, it)
+                            ratingViewModel.doRate(rating,ratingJson, it)
                             comment = ""
                             imageBitmap = null
                         }

@@ -34,6 +34,8 @@ interface CompanyDao {
     @Query("SELECT * FROM company WHERE companyId = :companyId")
     suspend fun getCompanyById(companyId: Long) : Company
 
+    @Query("UPDATE company SET rate = :rateValue WHERE companyId = :id")
+    suspend fun updateCompany(id : Long , rateValue : Double)
     @Transaction
     @Query("SELECT * FROM client_provider_relation WHERE createdDate = :search")// select from company where (name LIKE '%' || :search || '%' OR code LIKE '%' || :search || '%')
      fun getAllCompaniesContaining(search : String) : PagingSource<Int,CompanyWithCompanyClient>

@@ -198,7 +198,6 @@ class ProviderViewModel @Inject constructor(
             response.fold(
                 onSuccess = { success ->
                     val result = success.body()
-                            Log.e("providerCard","result : ")
                     if(success.isSuccessful) {
                         if (result != null) {
                             companyDao.insertSingleCompany(result.toCompany())
@@ -226,14 +225,7 @@ class ProviderViewModel @Inject constructor(
             )
         }
     }
-    fun addProviderWithoutImage(provider: String){
-        viewModelScope.launch {
-            try {
-//                repository.addProviderWithoutImage(provider)
-            }catch (_ex : Exception){}
-            getAllMyProviders()
-        }
-    }
+
 
     private fun errorBlock(error : String?){
         viewModelScope.launch{

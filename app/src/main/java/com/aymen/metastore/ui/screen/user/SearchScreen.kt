@@ -116,7 +116,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 CompanyCard(
                                                     company
                                                 ) {
-                                                    companyViewModel.myCompany = company
+                                                    sharedViewModel.setHisCompany(company)
                                                     search.company = company
                                                     RouteController.navigateTo(Screen.CompanyScreen)
                                                     searchViewModel.saveHitory(
@@ -135,7 +135,8 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                             val user = cli[index]
                                             if (user != null) {
                                                 UserCard(user, appViewModel) {
-                                                    appViewModel.assignUser(user)
+//                                                    appViewModel.assignUser(user)
+                                                    sharedViewModel.setHisUser(user)
                                                     search.user = user
                                                     RouteController.navigateTo(Screen.UserScreen)
                                                     searchViewModel.saveHitory(
@@ -154,7 +155,8 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                             val article = art[index]
                                             if(article != null){
                                             ArticleCardForSearch(article) {
-                                                companyViewModel.myCompany = article.company!!
+//                                                companyViewModel.myCompany = article.company!!
+                                                sharedViewModel.setHisCompany(article.company!!)
                                                 search.article = article
                                                 articleViewModel.assignArticleCompany(article)
                                                 RouteController.navigateTo(Screen.ArticleDetailScreen)
@@ -192,7 +194,8 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 CompanyCard(
                                                     history.company!!
                                                 ) {
-                                                    companyViewModel.myCompany = history.company!!
+//                                                    companyViewModel.myCompany = history.company!!
+                                                    sharedViewModel.setHisCompany(history.company!!)
                                                     articleViewModel.companyId = history.company?.id!!
                                                     RouteController.navigateTo(Screen.CompanyScreen)
                                                     searchViewModel.saveHitory(
@@ -213,7 +216,8 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 ) {item ->
 
                                                 UserCard(item, appViewModel) {
-                                                    appViewModel.assignUser(history.user!!)
+//                                                    appViewModel.assignUser(history.user!!)
+                                                    sharedViewModel.setHisUser(history.user!!)
                                                     RouteController.navigateTo(Screen.UserScreen)
                                                     searchViewModel.saveHitory(
                                                         history.searchCategory,
@@ -232,7 +236,8 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 ) {item ->
 
                                                 ArticleCardForSearch(item) {
-                                                    companyViewModel.myCompany = history.article?.company!!
+//                                                    companyViewModel.myCompany = history.article?.company!!
+                                                    sharedViewModel.setHisCompany(history.article?.company!!)
                                                     articleViewModel.assignArticleCompany( history.article!!)
                                                     RouteController.navigateTo(Screen.ArticleDetailScreen)
                                                     searchViewModel.saveHitory(

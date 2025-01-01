@@ -53,9 +53,6 @@ class ClientViewModel @Inject constructor(
     private val _myClients: MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val myClients: StateFlow<PagingData<ClientProviderRelation>> = _myClients
 
-    private val _myClientsContaining: MutableStateFlow<PagingData<SearchHistory>> = MutableStateFlow(PagingData.empty())
-    val myClientsContaining: StateFlow<PagingData<SearchHistory>> = _myClientsContaining
-
     private val _myClientsContainingForAutocomplete: MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val myClientsContainingForAutocomplete: StateFlow<PagingData<ClientProviderRelation>> = _myClientsContainingForAutocomplete
 
@@ -89,16 +86,6 @@ class ClientViewModel @Inject constructor(
     fun assignClientForUpdate(client : Company){
         update = true
         _clientForUpdate.value = client
-    }
-    fun getAllMyClientContaining(clientname: String) {
-        viewModelScope.launch {
-            useCases.getAllMyClientContaining(sharedViewModel.company.value.id!!, clientname)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect {
-                    _myClientsContaining.value = it.map { relation -> relation.toSearchHistoryModel() }
-                }
-        }
     }
 
     fun getMyClientForAutocompleteClient(clientName : String){
@@ -266,10 +253,6 @@ class ClientViewModel @Inject constructor(
     }
 
         fun sendClientRequest(id: Long, type: Type) {
-            Log.e(
-                "aymenbabayclient",
-                "id : $id type : $type in client view model send client request"
-            )
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
                     repository.sendClientRequest(id, type)

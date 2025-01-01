@@ -20,8 +20,6 @@ class OrderNotAcceptedRemoteMediator(
 
 
     private val articleCompanyDao = room.articleCompanyDao()
-//    private val categoryDao = room.categoryDao()
-//    private val subCategoryDao = room.subCategoryDao()
     private val companyDao = room.companyDao()
     private val userDao = room.userDao()
     private val articleDao = room.articleDao()

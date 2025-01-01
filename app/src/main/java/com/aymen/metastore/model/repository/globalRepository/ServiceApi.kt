@@ -84,27 +84,17 @@ interface ServiceApi {
     suspend fun getAllMyWorker(@Path("companyId") companyId: Long, @Query("page") page : Int , @Query("pageSize") pageSize : Int): PaginatedResponse<WorkerDto>
      @GET("$LIKE_BASE_URL/{articleId}/{isFav}")
     suspend fun likeAnArticle(@Path("articleId") articleId : Long, @Path("isFav") isFav : Boolean):Response<Void>
-    @GET("$RATE_BASE_URL/get_rate/{id}/{type}")
-    suspend fun getRate(@Path("id") id : Long, @Path("type") type : AccountType):Response<List<RatingDto>>
+    @GET("$RATE_BASE_URL/get_rate/{id}")
+    suspend fun getRate(@Path("id") id : Long, @Query("type") type : AccountType, @Query("page") page : Int , @Query("pageSize") pageSize : Int): PaginatedResponse<RatingDto>
     @Multipart
     @POST("$RATE_BASE_URL/do_rate")
-    suspend fun doRating(@Query("ratingDto") rating : String, @Part image: MultipartBody.Part? = null):Response<Void>
+    suspend fun doRating(@Query("ratingDto") rating : String, @Part image: MultipartBody.Part? = null):Response<RatingDto>
     @GET("$RATE_BASE_URL/enable_to_comment_company/{companyId}")
     suspend fun enabledToCommentCompany(@Path("companyId") companyId: Long):Response<Boolean>
     @GET("$RATE_BASE_URL/enable_to_comment_user/{userId}")
     suspend fun enabledToCommentUser(@Path("userId") userid: Long):Response<Boolean>
     @GET("$RATE_BASE_URL/enable_to_comment_article/{companyId}")
     suspend fun enabledToCommentArticle(@Path("companyId") companyId: Long):Response<Boolean>
-    @GET("$MESSAGE_BASE_URL/get_conversation")
-    suspend fun getAllMyConversations(@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ConversationDto>
-    @GET("$MESSAGE_BASE_URL/getconversation/{id}/{type}")
-    suspend fun getConversationByCaleeId(@Path("id") id : Long,@Path("type") type : MessageType): Response<ConversationDto>
-    @POST("$MESSAGE_BASE_URL/send")
-    suspend fun sendMessage( @Body conversation : ConversationDto):Response<Void>
-    @GET("$MESSAGE_BASE_URL/getmessage/{id}/{type}")
-    suspend fun getAllMessageByCaleeId(@Path("id") id : Long, @Path("type") type: AccountType, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
-    @GET("$MESSAGE_BASE_URL/get_message/{conversationId}")
-    suspend fun getAllMyMessageByConversationId(@Path("conversationId") conversationId : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<MessageDto>
     @GET("$INVENTORY_BASE_URL/getbycompany/{companyId}")
     suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InventoryDto>
     @GET("$INVITATION_BASE_URL/get_invetation/{companyId}")

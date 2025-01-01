@@ -62,26 +62,20 @@ import com.aymen.store.model.repository.remoteRepository.inventoryRepository.Inv
 import com.aymen.store.model.repository.remoteRepository.inventoryRepository.InventoryRepositoryImpl
 import com.aymen.metastore.model.repository.remoteRepository.invoiceRepository.InvoiceRepository
 import com.aymen.metastore.model.repository.remoteRepository.invoiceRepository.InvoiceRepositoryImpl
-import com.aymen.metastore.model.repository.remoteRepository.messageRepository.MessageRepository
 import com.aymen.metastore.model.usecase.GetAllCompaniesContaining
-import com.aymen.metastore.model.usecase.GetAllConversation
 import com.aymen.metastore.model.usecase.GetAllInvoices
 import com.aymen.metastore.model.usecase.GetAllInvoicesAsClient
 import com.aymen.metastore.model.usecase.GetAllInvoicesAsClientAndStatus
-import com.aymen.metastore.model.usecase.GetAllMessagesByConversation
 import com.aymen.metastore.model.usecase.GetAllMyArticleContaining
 import com.aymen.metastore.model.usecase.GetAllMyClient
-import com.aymen.metastore.model.usecase.GetAllMyClientContaining
 import com.aymen.metastore.model.usecase.GetAllMyInventory
 import com.aymen.metastore.model.usecase.GetAllMyInvitations
-import com.aymen.metastore.model.usecase.GetAllMyPaymentsEspece
 import com.aymen.metastore.model.usecase.GetAllMyPaymentsEspeceByDate
 import com.aymen.metastore.model.usecase.GetAllMyPointsPaymentForPoviders
 import com.aymen.metastore.model.usecase.GetAllMyProviders
 import com.aymen.metastore.model.usecase.GetAllPersonContaining
 import com.aymen.metastore.model.usecase.GetAllRechargeHistory
 import com.aymen.metastore.model.usecase.GetArticlesForCompanyByCompanyCategory
-import com.aymen.store.model.repository.remoteRepository.messageRepository.MessageRepositoryImpl
 import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepository
 import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepositoryImpl
 import com.aymen.metastore.model.usecase.GetAllMyBuyHistory
@@ -90,11 +84,8 @@ import com.aymen.metastore.model.usecase.GetAllMyProfitsPerDay
 import com.aymen.metastore.model.usecase.GetAllOrdersLineByInvoiceId
 import com.aymen.metastore.model.usecase.GetAllSearchHistory
 import com.aymen.metastore.model.usecase.GetAllSubCategoryByCategoryId
-import com.aymen.metastore.model.usecase.GetInCompleteInvoice
 import com.aymen.metastore.model.usecase.GetMyHistoryProfitByDate
 import com.aymen.metastore.model.usecase.GetNotAcceptedInvoice
-import com.aymen.metastore.model.usecase.GetNotPaidInvoice
-import com.aymen.metastore.model.usecase.GetPaidInvoice
 import com.aymen.metastore.model.usecase.GetPurchaseOrderDetails
 import com.aymen.metastore.util.BarcodeScanner
 import com.aymen.store.dependencyInjection.TokenSerializer
@@ -116,6 +107,7 @@ import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCat
 import com.aymen.metastore.model.usecase.GetCategoryTemp
 import com.aymen.metastore.model.usecase.GetMyClientForAutocompleteClient
 import com.aymen.metastore.model.usecase.GetPaymentForProviderDetails
+import com.aymen.metastore.model.usecase.GetRateeRating
 import com.aymen.metastore.model.webSocket.ChatClient
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.DATABASE_NAME
@@ -170,10 +162,10 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideMetaUseCases(categoryRepository: CategoryRepository, subCategoryRepository: SubCategoryRepository, articleRepository: ArticleRepository,
-                            clientRepository: ClientRepository, companyRepository: CompanyRepository, messageRepository: MessageRepository,
+                            clientRepository: ClientRepository, companyRepository: CompanyRepository,
                             invoiceRepository: InvoiceRepository, pointPaymentRepository: PointPaymentRepository,inventoryRepository: InventoryRepository,
                             invetationRepository: InvetationRepository, orderRepository: OrderRepository, paymentRepository: PaymentRepository,
-                            workerRepository : WorkerRepository): MetaUseCases{
+                            workerRepository : WorkerRepository, ratingRepository: RatingRepository): MetaUseCases{
         return MetaUseCases(
             getPagingCategoryByCompany = GetPagingCategoryByCompany(repository = categoryRepository),
             getPagingSubCategoryByCompany = GetPagingSubCategoryByCompany(repository = subCategoryRepository),
@@ -182,9 +174,6 @@ class MetaStoreModule {
             getArticleDetails = GetArticleDetails(repository = articleRepository),
             getAllMyArticleContaining = GetAllMyArticleContaining(repository = articleRepository),
             getAllMyClient = GetAllMyClient(repository = clientRepository),
-            getAllMyClientContaining = GetAllMyClientContaining(repository = companyRepository),
-            getAllMessagesByConversation = GetAllMessagesByConversation(repository = messageRepository),
-            getAllConversation = GetAllConversation(repository = messageRepository),
             getAllInvoices = GetAllInvoices(repository = invoiceRepository),
             getAllRechargeHistory = GetAllRechargeHistory(repository = pointPaymentRepository),
             getAllInvoicesAsClient = GetAllInvoicesAsClient(repository = invoiceRepository),
@@ -192,7 +181,6 @@ class MetaStoreModule {
             getAllMyInventory = GetAllMyInventory(repository = inventoryRepository),
             getAllCompaniesContaining = GetAllCompaniesContaining(repository = companyRepository),
             getAllMyInvitations = GetAllMyInvitations(repository = invetationRepository),
-            getAllMyPaymentsEspece = GetAllMyPaymentsEspece(repository = pointPaymentRepository),
             getAllMyPaymentsEspeceByDate = GetAllMyPaymentsEspeceByDate(repository = pointPaymentRepository),
             getAllMyPointsPaymentForProvider = GetAllMyPointsPaymentForPoviders(repository = pointPaymentRepository),
             getAllPersonContaining = GetAllPersonContaining(repository = clientRepository),
@@ -201,10 +189,7 @@ class MetaStoreModule {
             getAllMyOrdersNotAccepted = GetAllMyOrdersNotAccepted(repository = orderRepository),
             getPurchaseOrderDetails = GetPurchaseOrderDetails(repository = orderRepository),
             getAllMyBuyHistory = GetAllMyBuyHistory(repository = paymentRepository),
-            getPaidInvoice = GetPaidInvoice(repository = paymentRepository),
-            getNotPaidInvoice = GetNotPaidInvoice(repository = paymentRepository),
             getNotAcceptedInvoice = GetNotAcceptedInvoice(repository = paymentRepository),
-            getInCompleteInvoice = GetInCompleteInvoice(repository = paymentRepository),
             getAllMyProfitsPerDay = GetAllMyProfitsPerDay(repository = pointPaymentRepository),
             getMyHistoryProfitByDate = GetMyHistoryProfitByDate(repository = pointPaymentRepository),
             getAllSearchHistory = GetAllSearchHistory(repository = clientRepository),
@@ -218,7 +203,8 @@ class MetaStoreModule {
             getCategoryTemp = GetCategoryTemp(repository = categoryRepository),
             getArticleComment = GetArticleComment(repository = articleRepository),
             getAllWorkers = GetAllWorkers(repository = workerRepository),
-            getPaymentForProviderDetails = GetPaymentForProviderDetails(repository = pointPaymentRepository)
+            getPaymentForProviderDetails = GetPaymentForProviderDetails(repository = pointPaymentRepository),
+            getRateeRating = GetRateeRating(repository = ratingRepository)
 
         )
     }
@@ -401,7 +387,6 @@ class MetaStoreModule {
         orderRepository: OrderRepository,
         workerRepository: WorkerRepository,
         invoiceRepository: InvoiceRepository,
-        messageRepository: MessageRepository,
         shoppingRepository: ShoppingRepository,
         invetationRepository: InvetationRepository,
         pointPaymentRepository: PointPaymentRepository,
@@ -417,7 +402,7 @@ class MetaStoreModule {
             clientRepository, providerRepository,
             paymentRepository, orderRepository,
             workerRepository, invoiceRepository,
-            messageRepository, shoppingRepository,
+             shoppingRepository,
             invetationRepository, pointPaymentRepository,
             ratingRepository, aymenRepository,
             commandLineRepository
@@ -512,15 +497,6 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun provideMessageRepository(
-        serviceApi: ServiceApi,
-        room: AppDatabase
-    ): MessageRepository {
-        return MessageRepositoryImpl(serviceApi, room)
-    }
-
-    @Provides
-    @Singleton
     fun provideShoppingRepository(
         serviceApi: ServiceApi
     ): ShoppingRepository {
@@ -548,9 +524,10 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideRatingRepository(
-        serviceApi: ServiceApi
+        serviceApi: ServiceApi,
+        room: AppDatabase
     ): RatingRepository{
-        return RatingRepositoryImpl(serviceApi)
+        return RatingRepositoryImpl(serviceApi, room)
     }
 
     @Provides
@@ -574,11 +551,7 @@ class MetaStoreModule {
     fun provideTokenSerializer(): TokenSerializer {
         return TokenSerializer
     }
-//    @Provides
-//    @Singleton
-//    fun provideCompanySerializer(): CompanySerializer {
-//        return CompanySerializer
-//    }
+
     @Provides
     @Singleton
     fun providerCompanyDtoSerializer(): CompanyDtoSerializer{

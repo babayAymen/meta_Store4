@@ -15,7 +15,6 @@ sealed class Screen{
     data object PaymentScreen : Screen()
     data object MenuScreen : Screen()
     data object ShoppingScreen : Screen()
-    data object ConversationScreen : Screen()
     data object DashBoardScreen : Screen()
     data object CompanyScreen : Screen()
     data object ArticleDetailScreen : Screen()

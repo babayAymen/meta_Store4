@@ -66,8 +66,10 @@ class CompanyViewModel @Inject constructor(
 
         getMyCompany {
         viewModelScope.launch(Dispatchers.IO) {
-            room.userDao().insertUser(listOf(it?.user!!.toUserEntity()))
-            room.companyDao().insertCompany(listOf(it.toCompanyEntity()))
+            if(it?.id != null) {
+                room.userDao().insertUser(listOf(it.user!!.toUserEntity()))
+                room.companyDao().insertCompany(listOf(it.toCompanyEntity()))
+            }
         }
         }
     }

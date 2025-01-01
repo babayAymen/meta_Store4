@@ -6,7 +6,6 @@ enum class IconType {
     HOME,
     SHOPPING,
     USER,
-    MESSAGE,
     MENU,
     COMPANY,
     SEARCH

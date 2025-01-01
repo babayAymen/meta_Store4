@@ -22,14 +22,14 @@ data class RatingWithRater(
 
     @Relation(
         parentColumn = "rateeCompanyId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val rateeCompany : CompanyWithUser? = null,
 
     @Relation(
         parentColumn = "raterCompanyId",
-        entityColumn = "userId",
+        entityColumn = "companyId",
         entity = Company::class
     )
     val raterCompany : CompanyWithUser? = null

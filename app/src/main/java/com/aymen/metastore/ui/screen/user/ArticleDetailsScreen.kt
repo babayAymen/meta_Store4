@@ -38,7 +38,6 @@ import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
-import com.aymen.metastore.model.repository.ViewModel.MessageViewModel
 import com.aymen.metastore.ui.component.ArticleCardForAdmin
 import com.aymen.metastore.ui.component.DividerTextComponent
 import com.aymen.metastore.ui.component.InputTextField
@@ -59,7 +58,6 @@ import com.aymen.metastore.util.BASE_URL
 fun ArticleDetailsScreen() {
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val companyViewModel : CompanyViewModel = hiltViewModel()
-    val messageViewModel : MessageViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val clientViewModel : ClientViewModel = hiltViewModel()
@@ -67,7 +65,7 @@ fun ArticleDetailsScreen() {
     var myCompany by remember {
         mutableStateOf(Company())
     }
-    val company = companyViewModel.myCompany
+    val company by sharedViewModel.hisCompany.collectAsStateWithLifecycle()
     val article by articleViewModel.articleCompany.collectAsStateWithLifecycle()
     val userComment by articleViewModel.userComment.collectAsStateWithLifecycle()
     val companyComment by articleViewModel.companyComment.collectAsStateWithLifecycle()
@@ -105,7 +103,7 @@ fun ArticleDetailsScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                companyViewModel.myCompany = company
+                                sharedViewModel.setHisCompany(company)
                                 articleViewModel.companyId = company.id!!
                                 RouteController.navigateTo(Screen.CompanyScreen)
                             }
@@ -144,8 +142,10 @@ fun ArticleDetailsScreen() {
 
                  }
                     company.address?.let { it1 -> Text(text = it1) }
+                    Row {
                     company.phone?.let { it1 -> Text(text = it1) }
                     company.email?.let { Text(text = it) }
+                    }
                     company.code?.let { it1 -> Text(text = it1) }
                     company.matfisc?.let { it1 -> Text(text = it1) }
                     //to

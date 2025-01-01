@@ -53,6 +53,17 @@ class SharedViewModel @Inject constructor(
     private var _company = MutableStateFlow(Company())
     val company: StateFlow<Company> get() = _company
 
+    private var _hisCompany = MutableStateFlow(Company())
+    val hisCompany: StateFlow<Company> get() = _hisCompany
+    private var _hisUser = MutableStateFlow(User())
+    val hisUser: StateFlow<User> get() = _hisUser
+
+    fun setHisCompany(company : Company){
+        _hisCompany.value = company
+    }
+    fun setHisUser(user : User){
+        _hisUser.value = user
+    }
     fun assignAccountType(accountType: AccountType){
         _accountType.value = accountType
     }
@@ -87,6 +98,9 @@ class SharedViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 userDtoDatastore.updateData { currentUser ->
+                    assignUser(currentUser.copy(
+                        balance = newBalance
+                    ))
                     currentUser.copy(
                         balance = newBalance
                     )
@@ -101,6 +115,9 @@ class SharedViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 companyDtoDataStore.updateData { currentCompany ->
+                    assignCompanyy(currentCompany.copy (
+                        balance = newBalance
+                    ))
                     currentCompany.copy (
                         balance = newBalance
                         )

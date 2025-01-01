@@ -57,9 +57,6 @@ class ArticleViewModel @Inject constructor(
     private val _companyArticles : MutableStateFlow<PagingData<ArticleCompany>> = MutableStateFlow(PagingData.empty())
     var companyArticles : StateFlow<PagingData<ArticleCompany>> = _companyArticles
 
-//    private val _articlesByArticleId = MutableStateFlow<Map<Long, Article>>(emptyMap())
-//    val articlesByArticleId: StateFlow<Map<Long, Article>> = _articlesByArticleId
-
     private val _userComment = MutableStateFlow(User())
     val userComment: StateFlow<User> = _userComment
 
@@ -207,7 +204,6 @@ class ArticleViewModel @Inject constructor(
 
         fun addArticleCompany(articlee: ArticleCompany) {
             viewModelScope.launch(Dispatchers.IO) {
-//                var remoteKey = ArticleRemoteKeysEntity(0,0,0)
                  var id = 0L
                     val latestArticleId = articleCompanyDao.getLatestArticleId()
                  id = if (latestArticleId != null) {
@@ -256,9 +252,6 @@ class ArticleViewModel @Inject constructor(
                         }
                     },
                     onFailure = { exception ->
-//                        withContext(Dispatchers.IO){
-//                        Toast.makeText(context, "something went wrong : ${exception.message}", Toast.LENGTH_SHORT).show()
-//                        }
                     }
                 )
             }
@@ -291,7 +284,6 @@ class ArticleViewModel @Inject constructor(
 
         fun sendComment(comment : Comment) {
             viewModelScope.launch(Dispatchers.IO) {
-
                     repository.sendComment(comment.toCommentDto())
 
             }

@@ -2,7 +2,6 @@ package com.aymen.store.model.repository.globalRepository
 
 import androidx.paging.PagingData
 import com.aymen.metastore.model.Enum.InvoiceMode
-import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
@@ -20,8 +19,8 @@ import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
-import com.aymen.metastore.model.entity.dto.ConversationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
+import com.aymen.metastore.model.entity.dto.RatingDto
 import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.dto.SearchHistoryDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
@@ -35,7 +34,7 @@ import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.entity.model.PurchaseOrder
-import com.aymen.metastore.model.entity.model.ReglementForProviderModel
+import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.Worker
@@ -44,14 +43,11 @@ import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
 import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
 import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
-import com.aymen.metastore.model.entity.roomRelation.ConversationWithUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
-import com.aymen.metastore.model.entity.roomRelation.MessageWithCompanyAndUserAndConversation
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
-import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -62,7 +58,6 @@ import com.aymen.store.model.repository.remoteRepository.clientRepository.Client
 import com.aymen.store.model.repository.remoteRepository.companyRepository.CompanyRepository
 import com.aymen.store.model.repository.remoteRepository.inventoryRepository.InventoryRepository
 import com.aymen.metastore.model.repository.remoteRepository.invoiceRepository.InvoiceRepository
-import com.aymen.metastore.model.repository.remoteRepository.messageRepository.MessageRepository
 import com.aymen.metastore.util.Resource
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.metastore.model.repository.remoteRepository.orderRepository.OrderRepository
@@ -92,7 +87,6 @@ class GlobalRepositoryImpl  @Inject constructor
     private val orderRepository: OrderRepository,
     private val workerRepository: WorkerRepository,
     private val invoiceRepository: InvoiceRepository,
-    private val messageRepository: MessageRepository,
     private val shoppingRepository: ShoppingRepository,
     private val invetationRepository: InvetationRepository,
     private val pointPaymentRepository: PointPaymentRepository,
@@ -162,13 +156,6 @@ class GlobalRepositoryImpl  @Inject constructor
     }
 
 
-    override fun getAllMyClientContaining(
-        id: Long,
-        clientName: String
-    ): Flow<PagingData<SearchHistoryWithClientOrProviderOrUserOrArticle>> {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun updateCompany(company: String, file: File) = companyRepository.updateCompany(company,file)
     override suspend fun updateImage(image: File) = companyRepository.updateImage(image)
     override fun getInventory(companyId: Long): Flow<PagingData<InventoryWithArticle>> {
@@ -228,20 +215,20 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getPaidInvoice(id: Long, isProvider: Boolean, paymentStatus: PaymentStatus): Flow<PagingData<Invoice>> {
-        TODO("Not yet implemented")
-    }
+//    override fun getPaidInvoice(id: Long, isProvider: Boolean, paymentStatus: PaymentStatus): Flow<PagingData<Invoice>> {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun getNotPaidInvoice(
+//        id: Long,
+//        isProvider: Boolean
+//    ): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+//        TODO("Not yet implemented")
+//    }
 
-    override fun getNotPaidInvoice(
-        id: Long,
-        isProvider: Boolean
-    ): Flow<PagingData<InvoiceWithClientPersonProvider>> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getInCompleteInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
-        TODO("Not yet implemented")
-    }
+//    override fun getInCompleteInvoice(id: Long, isProvider: Boolean): Flow<PagingData<InvoiceWithClientPersonProvider>> {
+//        TODO("Not yet implemented")
+//    }
 
     override fun getNotAcceptedInvoice(
         id: Long,
@@ -302,18 +289,7 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status) = invoiceRepository.getAllMyInvoicesAsClientAndStatus(id , status)
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = invoiceRepository.accepteInvoice(invoiceId, status)
      override suspend fun getAllMyPaymentNotAccepted(companyId: Long) = invoiceRepository.getAllMyPaymentNotAccepted(companyId)
-    override suspend fun sendMessage(conversation: ConversationDto) = messageRepository.sendMessage(conversation)
-    override suspend fun getConversationByCaleeId(id: Long, messageType: MessageType) = messageRepository.getConversationByCaleeId(id,messageType)
-    override fun getAllConversation(): Flow<PagingData<ConversationWithUserOrCompany>> {
-        TODO("Not yet implemented")
-    }
 
-    override fun getAllMessagesByConversationId(
-        conversationId: Long,
-        accountType: AccountType
-    ): Flow<PagingData<MessageWithCompanyAndUserAndConversation>> {
-        TODO("Not yet implemented")
-    }
 
      override suspend fun sendOrder(orderList: List<PurchaseOrderLine>) = orderRepository.sendOrder(orderList)
     override suspend fun test(order: PurchaseOrderLineDto) = shoppingRepository.test(order)
@@ -353,10 +329,6 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun sendPoints(pointsPayment: PointsPaymentDto) = pointPaymentRepository.sendPoints(pointsPayment)
     override suspend fun sendReglement(reglement: ReglementFoProviderDto) = pointPaymentRepository.sendReglement(reglement)
 
-    override fun getAllMyPaymentsEspece(companyId: Long): Flow<PagingData<PaymentForProvidersWithCommandLine>> {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun getMyProfitByDate(beginDate: String, finalDate: String) = pointPaymentRepository.getMyProfitByDate(beginDate, finalDate)
     override suspend fun getAllMyProfits() = pointPaymentRepository.getAllMyProfits()
     override fun getMyHistoryProfitByDate(
@@ -370,8 +342,10 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getPaymentForProviderDetails(paymentId: Long) = pointPaymentRepository.getPaymentForProviderDetails(paymentId)
 
 
-    override suspend fun getAllMyRating(id: Long, type: AccountType) = ratingRepository.getAllMyRating(id, type)
-     override suspend fun doRating(rating : String, image : File?) = ratingRepository.doRating(rating, image)
+    override fun getAllMyRating(id: Long, type: AccountType) : Flow<PagingData<Rating>>{
+        TODO()
+    }
+     override suspend fun doRating(rating: String, image: File?): Response<RatingDto> = ratingRepository.doRating(rating, image)
     override suspend fun enabledToCommentCompany(companyId : Long) = ratingRepository.enabledToCommentCompany(companyId = companyId)
     override suspend fun enabledToCommentUser(userId: Long) = ratingRepository.enabledToCommentUser(userId)
     override suspend fun enabledToCommentArticle(companyId: Long) = ratingRepository.enabledToCommentArticle(companyId)

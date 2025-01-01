@@ -31,37 +31,8 @@ class PaymentViewModel @Inject constructor(
     val company by mutableStateOf(sharedViewModel.company.value)
     val user by mutableStateOf(sharedViewModel.user.value)
     val type by mutableStateOf(sharedViewModel.accountType)
-    private val _paymentsEspece : MutableStateFlow<PagingData<PaymentForProviders>> = MutableStateFlow(PagingData.empty())
-    val paymentsEspece: StateFlow<PagingData<PaymentForProviders>> get() = _paymentsEspece
   private val _paymentsEspeceByDate : MutableStateFlow<PagingData<PaymentForProviders>> = MutableStateFlow(PagingData.empty())
     val paymentsEspeceByDate: StateFlow<PagingData<PaymentForProviders>> get() = _paymentsEspeceByDate
-
-
-    init {
-        when(sharedViewModel.accountType.value){
-            AccountType.USER -> {
-                getAllMyPaymentsEspece(sharedViewModel.user.value.id!!)
-            }
-            AccountType.COMPANY -> {
-                getAllMyPaymentsEspece(sharedViewModel.company.value.id!!)
-
-            }
-            AccountType.META -> TODO()
-            AccountType.NULL -> TODO()
-            AccountType.SELLER -> {}
-        }
-    }
-
-    fun getAllMyPaymentsEspece(id : Long){
-        viewModelScope.launch(Dispatchers.IO) {
-            useCases.getAllMyPaymentsEspece(id)
-                .distinctUntilChanged()
-                .cachedIn(viewModelScope)
-                .collect{
-                    _paymentsEspece.value = it.map { roomPayment -> roomPayment.toPaymentForProvidersWithCommandLine() }
-                }
-        }
-    }
 
     fun getAllMyPaymentsEspeceFromMetaByDate( date : String, finDate : String){
         val id = sharedViewModel.company.value.id
@@ -76,15 +47,5 @@ class PaymentViewModel @Inject constructor(
     }
 
 
-//    @Transaction
-//    suspend fun insertPayment(payment : PaymentForProvidersDto){
-//        room.userDao().insertUser(mapUserToRoomUser(payment.purchaseOrderLine?.purchaseorder?.person))
-//        room.purchaseOrderDao().insertOrder(mapPurchaseOrderToRoomPurchaseOrder(payment.purchaseOrderLine?.purchaseorder!!))
-//        room.invoiceDao().insertInvoice(mapInvoiceToRoomInvoice(payment.purchaseOrderLine.invoice!!))
-//        room.purchaseOrderLineDao().insertOrderLine(mapPurchaseOrderLineToRoomPurchaseOrderLine(payment.purchaseOrderLine))
-//        room.paymentForProvidersDao().insertPaymentForProviders(
-//            mappaymentForProvidersToRoomPaymentForProviders(payment)
-//        )
-//    }
 
 }

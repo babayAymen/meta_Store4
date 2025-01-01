@@ -29,6 +29,7 @@ import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -108,17 +109,25 @@ init {
             val quantity = it[index].quantity
             val sellingPrice = it[index].article?.sellingPrice
             var price = BigDecimal(quantity!!).multiply(BigDecimal(sellingPrice!!))
-            if(delivery){
+            if(delivery && orderArray.size == 1 && restore){
                 price += BigDecimal(3)
             }
-            if(restore) {
-                sharedViewModel.returnThePrevioseBalance(price)
+            if(orderArray.size == 1){
+                delivery = false
             }
             it.removeAt(index)
+            qte = 0.0
+            rawInput = ""
         }
     }
-
-fun submitShopping(newBalance: BigDecimal) {
+//    private fun startTimer() {
+//        viewModelScope.launch {
+//            delay(1 * 60 * 1000) // 15 minutes in milliseconds
+//            delivery = false
+//            Log.e("starttimer","delivery is : $delivery")
+//        }
+//    }
+fun submitShopping() {
     val existingOrder = orderArray.find { it.article?.id == randomArticle.id }
 
     if (existingOrder != null) {
@@ -132,29 +141,14 @@ fun submitShopping(newBalance: BigDecimal) {
     }
 
     calculateCost()
-    sharedViewModel.updateBalance(newBalance)
     remiseAZero()
 }
 
 
-    fun beforSendOrder(onFinish : (Boolean, Double) -> Unit){
-        when(accountType.value){
-            AccountType.COMPANY -> if(cost < BigDecimal(30)){
-                    onFinish(false, myCompany.value?.balance!!)
-            }else{
-                onFinish(true, myCompany.value?.balance!!)
-            }
-            AccountType.USER -> if(cost < BigDecimal(30)){
-                onFinish(false, myUser.value?.balance!!)
-            }else{
-                onFinish(true, myUser.value?.balance!!)
-            }
-            AccountType.META -> TODO()
-            AccountType.NULL -> TODO()
-            AccountType.SELLER -> {}
+    fun sendOrder(index : Int, newBalance: BigDecimal){
+        calculateNotDiscountedArticlesCost(){// this implementation is for next app update
+            Log.e("costfromviemodel","is true or false : $it")
         }
-    }
-    fun sendOrder(index : Int){
         viewModelScope.launch (Dispatchers.IO){
             val listOfIds: MutableList<OrderNotAcceptedKeysEntity> = mutableListOf()
             if(orderArray.isNotEmpty() && index == -1){
@@ -205,11 +199,12 @@ fun submitShopping(newBalance: BigDecimal) {
                     }
                     result.fold(
                         onSuccess = {success ->
+                            delivery = false
+                            sharedViewModel.updateBalance(newBalance)
                             if(success.isSuccessful){
                                 val response = success.body()
                                 room.withTransaction {
                                     listOfIds.forEach{key ->
-
                                     purchaseOrderDao.deletePurchaseOrderById(key.id)
                                     purchaseOrderDao.deleteOrderNotAcceptedKeysById(key.id)
                                     purchaseOrderLineDao.deleteByPurchaseOrderId(key.id)
@@ -228,8 +223,7 @@ fun submitShopping(newBalance: BigDecimal) {
                         },
                         onFailure = {}
                     )
-
-                orderArray = emptyList()
+                returnAllMyMony()
             }else{
                 val newOrderArray = orderArray.toMutableList()
                 newOrderArray.retainAll { newOrderArray.indexOf(it) == index }
@@ -238,21 +232,33 @@ fun submitShopping(newBalance: BigDecimal) {
                     }
                     result.fold(
                         onSuccess = {
-
+                            sharedViewModel.updateBalance(newBalance)
                             removeOrderById(index, false)
                         },
                         onFailure = {
                         }
                     )
-
             }
             isAlready = false
         }
     }
 
+    fun calculateNotDiscountedArticlesCost(isAbove : (Boolean) -> Unit){
+        val notDiscountedArticlesCost = orderArray.filter { order -> order.article?.article?.isDiscounted == false }
+            .sumOf { order ->
+                val sellingPrice = order.article?.sellingPrice!!
+                val quantity = order.quantity!!
+                BigDecimal(sellingPrice).multiply(BigDecimal(quantity))
+            }
+        Log.e("costfromviemodel","cost : $cost discounted cost : $notDiscountedArticlesCost")
+
+        val threshold = BigDecimal("0.2").multiply(cost)
+        val isAbov = notDiscountedArticlesCost >= threshold
+        if(isAbov) isAbove(true)
+        else isAbove(false)
+    }
 
     fun remiseAZero(){
-        delivery = false
         order = PurchaseOrderLine()
         qte = 0.0
         rawInput = ""
@@ -262,13 +268,9 @@ fun submitShopping(newBalance: BigDecimal) {
 
     fun returnAllMyMony(){
         viewModelScope.launch {
-            calculateCost()
-            Log.e("qehsghdtg","after already : $isAlready cost $cost")
-             cost = cost.add(if(isAlready || delivery) BigDecimal(3) else BigDecimal.ZERO)
-            Log.e("qehsghdtg","before already : $isAlready cost $cost delivery : $delivery")
-            sharedViewModel.returnThePrevioseBalance(cost)
-            orderArray = emptyList()
+             orderArray = emptyList()
             isAlready = false
+            delivery = false
             cost = BigDecimal.ZERO
         }
     }
