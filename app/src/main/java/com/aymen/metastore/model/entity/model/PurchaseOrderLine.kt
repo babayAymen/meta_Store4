@@ -14,7 +14,9 @@ data class PurchaseOrderLine (
     val delivery: Boolean? = false,
     val createdDate : String? = null,
     val lastModifiedDate : String? = null,
-    val invoice : Invoice? = null
+    val invoice : Invoice? = null,
+    val totTva : Double? = null,
+    val prixArticleTot : Double? = null
 ){
     fun toPurchaseOrderLineEntity() : PurchaseOrderLine{
         return PurchaseOrderLine(
@@ -27,7 +29,9 @@ data class PurchaseOrderLine (
             delivery = delivery,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
-            invoiceId = invoice?.id
+            invoiceId = invoice?.id,
+            totTva = totTva,
+            prixArticleTot = prixArticleTot
         )
     }
 }

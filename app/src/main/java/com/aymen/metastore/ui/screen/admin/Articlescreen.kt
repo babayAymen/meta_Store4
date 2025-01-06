@@ -37,12 +37,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
@@ -84,8 +86,9 @@ fun ArticleScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    ButtonSubmit(labelValue = "Add New", color = Color.Green, enabled = true) {
-                        appViewModel.updateShow("ADD_ARTICLE")
+            val navText = stringResource(id = R.string.add_article)
+                    ButtonSubmit(labelValue = stringResource(id = R.string.add_new_article), color = Color.Green, enabled = true) {
+                        appViewModel.updateShow(navText)
                     }
                 }
             }
@@ -103,6 +106,7 @@ fun ArticleScreen() {
                             mutableStateOf(false)
                         }
                         if(articleCompany != null) {
+                                val navText = stringResource(id = R.string.add_article_for_company)
                             SwipeToDeleteContainer(
                                 articleCompany,
                                 onDelete = {item ->
@@ -110,13 +114,13 @@ fun ArticleScreen() {
                                 },
                                 onUpdate = {item ->
                                     articleViewModel.assignarticleCompany(item)
-                                    appViewModel.updateShow("ADD_ARTICLE_FOR_COMPANY")
+                                    appViewModel.updateShow(navText)
 
                                 }
                             ) { article ->
                                 ArticleCardForAdmin(
                                     articleCompany,
-                                    image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.article?.category!!.ordinal}"
+                                    image = stringResource(id = R.string.url_image_article, article.article?.image?:"", article.article?.category!!.ordinal)
                                 ) {
                                     art = article
                                     addQuantity = true
@@ -247,30 +251,26 @@ fun ShowConfirmDialog( onConfirm: (Boolean) -> Unit) {
     }
     AlertDialog(
         onDismissRequest = { showDialog = false },
-        title = { Text(text = "Confirm Deletion") },
-        text = { Text(text = "Are you sure to delete this item?") },
+        title = { Text(text = stringResource(id = R.string.confirm_delation)) },
+        text = { Text(text = stringResource(id = R.string.sure_delation) ) },
         confirmButton = {
             Button(
                 onClick = {
                     showDialog = false
-                    // Return true if user confirms deletion
-                    // This will trigger the deletion process in SwipeToDeleteContainer
                     onConfirm(true)
                 }
             ) {
-                Text(text = "Confirm")
+                Text(text = stringResource(id = R.string.confirm))
             }
         },
         dismissButton = {
             Button(
                 onClick = {
                     showDialog = false
-                    // Return false if user cancels deletion
-                    // This will cancel the deletion process in SwipeToDeleteContainer
                     onConfirm(false)
                 }
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel))
             }
         }
     )

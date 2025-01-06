@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -220,109 +221,21 @@ Log.e("testtoviewmodel","app view model")
         }
     }
 
-//    private fun storeAccountType(accountType : AccountType){
-//        viewModelScope.launch (Dispatchers.IO){
-//            try {
-//                accountTypeDataStore.updateData {
-//                    accountType
-//                }
-//                Log.e("storeAccount","account type : $accountType")
-//            }catch (ex : Exception){
-//                Log.e("errorStoreAccount","error is : $ex")
-//            }
-//        }
-//    }
-
-//    private fun storeUser(user: User) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            Log.e("storeUser", "storeUser image: ${user.image}")
-//            try {
-//                userDatastore.updateData{
-//                    User(
-//                        id = user.id,
-//                        username = user.username,
-//                        address = user.address,
-//                        phone = user.phone,
-//                        email = user.email,
-//                        image = user.image,
-//                        rate = user.rate,
-//                        rater = user.rater,
-//                        balance = user.balance,
-//                        longitude = user.longitude,
-//                        latitude = user.latitude
-//                    )
-//                }
-//            } catch (e: Exception) {
-//                Log.e("storeUserError", "Error storing token store user fun in app view model: ${e.message}")
-//            }
-//        }
-//    }
-
-//    @SuppressLint("SuspiciousIndentation")
-//     fun getMyCompany(){
-//        viewModelScope.launch(Dispatchers.IO) {
-//            try {
-//                val response = repository.getMeAsCompany()
-//                if(response.isSuccessful){
-//                    val company = response.body()!!.toCompanyModel()
-//                    storeCompany(company)
-//                    sharedViewModel.assignCompany( response.body()!!.toCompanyModel())
-//                    storeUser(company.user!!)
-//                }
-//            }catch (ex : Exception){
-//                Log.e("exeptions","error is : $ex")
-//            }
-//        }
-//    }
-
-//     fun storeCompany(company: Company) {
-//        viewModelScope.launch {
-//            try {
-//                companyDataStore.updateData{
-//                    Company(
-//                        id = company.id,
-//                        name = company.name,
-//                        code = company.code,
-//                        matfisc = company.matfisc,
-//                        address = company.address,
-//                        phone = company.phone,
-//                        bankaccountnumber = company.bankaccountnumber,
-//                        email = company.email,
-//                        capital = company.capital,
-//                        logo = company.logo,
-//                        workForce = company.workForce,
-//                        user = company.user!!,
-//                        rate = company.rate,
-//                        raters = company.raters,
-//                        category = company.category!!,
-//                        isPointsSeller = company.isPointsSeller,
-//                        balance = company.balance,
-//                        latitude = company.latitude,
-//                        longitude = company.longitude,
-//                        metaSeller = company.metaSeller,
-//                    )
-//                }
-//            } catch (e: Exception) {
-//                Log.e("storeTokenError", "Error storing token in store company fun app view model: ${e.message}")
-//            }
-//        }
-//    }
 
     fun updateCompanyName(newName: String, onUpdated: (Company) -> Unit) {
         viewModelScope.launch {
             try {
                 companyDataStore.updateData { currentCompany ->
-                    currentCompany.copy (
-                        logo = newName
-                    ).also {
-                        onUpdated(currentCompany)
-                    }
+                    currentCompany.copy(logo = newName)
                 }
+                val updatedCompany = companyDataStore.data.firstOrNull()
+                updatedCompany?.let { onUpdated(it) }
             } catch (e: Exception) {
                 Log.e("storeCompanyError", "Error storing company name: ${e.message}")
             }
         }
     }
+
 
     fun updateUserName(newName: String) {
         viewModelScope.launch(Dispatchers.Main) {
@@ -356,7 +269,6 @@ Log.e("testtoviewmodel","app view model")
                 if(response.isSuccessful){
                     when(sharedViewModel.accountType.value){
                         AccountType.COMPANY ->{
-
                             updateCompanyName(file.name){
                                 sharedViewModel.assignCompanyy(it)
                             }

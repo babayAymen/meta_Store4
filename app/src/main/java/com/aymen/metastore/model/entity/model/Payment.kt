@@ -7,13 +7,14 @@ import com.aymen.store.model.Enum.Status
 data class Payment (
 
     val id : Long? = null,
-    val amount : Double,
-    val delay : String,
-    val agency : String,
-    val bankAccount : String,
-    val number : String,
-    val transactionId : String,
+    val amount : Double? = null,
+    val delay : String? = null,
+    val agency : String? = null,
+    val bankAccount : String? = null,
+    val number : String? = null,
+    val transactionId : String? = null,
     val status : Status? = Status.INWAITING,
     val type : PaymentMode? = PaymentMode.CASH,
-    val invoice: Invoice
+    val invoice: Invoice? = null,
+    val lastModifiedDate : String? = null
 )

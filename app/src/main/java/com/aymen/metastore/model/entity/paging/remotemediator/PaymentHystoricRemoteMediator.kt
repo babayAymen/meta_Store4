@@ -6,39 +6,40 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
+import com.aymen.metastore.model.entity.model.Payment
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.remoteKeys.ArticleCompanyRandomRKE
-import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.model.entity.roomRelation.RandomArticleChild
+import com.aymen.metastore.model.entity.room.remoteKeys.PaymentRemoteKeys
+import com.aymen.metastore.model.entity.room.remoteKeys.SubCategoryRemoteKeysEntity
+import com.aymen.metastore.model.entity.roomRelation.PaymentWithInvoice
+import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
-import com.aymen.store.model.Enum.CompanyCategory
 
 @OptIn(ExperimentalPagingApi::class)
-class ArticleCompanyRandomMediator(
+class PaymentHystoricRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val category : CompanyCategory,
-    private val companyId : Long?
-):RemoteMediator<Int, ArticleWithArticleCompany>() {
-
-
-    private val articleCompanyDao = room.articleCompanyDao()
-    private val companyDao = room.companyDao()
+    private val invoiceId : Long
+): RemoteMediator<Int , PaymentWithInvoice> (){
     private val userDao = room.userDao()
-    private val articleDao = room.articleDao()
+    private val companyDao = room.companyDao()
+    private val invoiceDao = room.invoiceDao()
+    private val paymentDao = room.paymentDao()
+
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH
     }
 
+
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ArticleWithArticleCompany>
+        state: PagingState<Int, PaymentWithInvoice>
     ): MediatorResult {
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
                     0
                 }
+
                 LoadType.PREPEND -> {
                     val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
@@ -46,6 +47,7 @@ class ArticleCompanyRandomMediator(
                     )
                     previousePage
                 }
+
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
@@ -54,53 +56,51 @@ class ArticleCompanyRandomMediator(
                     nextePage
                 }
             }
-            val response = api.getRandomArticles(category,currentPage, state.config.pageSize)
+            val response = api.getPaymentHystoricByInvoiceId(invoiceId,currentPage, state.config.pageSize)
+
             val endOfPaginationReached = response.last
-            val prevPage = if (response.first) null else currentPage - 1
-            val nextPage = if (endOfPaginationReached) null else currentPage + 1
+            val prevPage = if (response.first) null else response.number - 1
+            val nextPage = if (endOfPaginationReached) null else response.number + 1
 
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    articleCompanyDao.insertArticleRandomKeys(response.content.map { article ->
-                        ArticleCompanyRandomRKE(
+                    paymentDao.insertKeys(response.content.map { article ->
+                        PaymentRemoteKeys(
                             id = article.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage
                         )
                     })
 
-                    response.content.map { article -> Log.e("logartilce","article category : ${article} and my company is : $companyId") }
-                    userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
-                    companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
-                    articleDao.insertArticle(response.content.map {article -> article.article?.toArticle(isMy = article.company?.id == companyId) })
-                        articleCompanyDao.insertOrUpdate(response.content.map { article -> article.toArticleCompany(isRandom = true, isMy = false) })
+                    paymentDao.insertPayment(response.content.map {payment -> payment.toPayment() })
 
                 } catch (ex: Exception) {
-                    Log.e("error", "articlecompany ${ex}")
+                    Log.e("errorsubcategory", ex.message.toString())
                 }
             }
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
-            Log.e("error", "articlecompany ${ex.message}")
+            Log.e("errorsubcategory", ex.message.toString())
             MediatorResult.Error(ex)
         }
     }
 
     private suspend fun getPreviousPageForTheFirstItem(): Int? {
-       return articleCompanyDao.getFirstRandomArticleCompanyRemoteKey()?.prevPage
+        return paymentDao.getFirstPaymentRemoteKey()?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem(): Int? {
-     return articleCompanyDao.getLatestRandomArticeCompanyRemoteKey()?.nextPage
+      return paymentDao.getLatestPaymentRemoteKey()?.nextPage
     }
 
 
     private suspend fun deleteCache(){
-        articleCompanyDao.clearAllRandomRemoteKeysTable()
-        articleCompanyDao.clearAllRandomArticleCompanyTable()
+        paymentDao.clearAllPaymentTable()
+        paymentDao.clearAllRemoteKeysTable()
     }
+
 }

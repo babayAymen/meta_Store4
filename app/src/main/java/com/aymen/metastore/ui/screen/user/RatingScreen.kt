@@ -25,6 +25,7 @@ import com.aymen.metastore.ui.component.InputTextField
 import com.google.gson.Gson
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.PagingData
@@ -36,13 +37,18 @@ import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.DividerComponent
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.store.model.repository.ViewModel.CategoryViewModel
+import com.aymen.store.ui.navigation.RouteController
+import com.aymen.store.ui.navigation.Screen
 
 @Composable
 fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
     val ratingViewModel: RatingViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
+    val categoryViewModel : CategoryViewModel = hiltViewModel()
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
@@ -94,14 +100,25 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
                     if (rate != null) {
                         rate.raterUser?.let { user ->
                             if(user.image != null) ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
-                            else{}
+                            else notImage()
                         }
                         rate.raterCompany?.let { company ->
                             if(company.logo != null) {
                                 ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                            }else {}
+                            }else notImage()
                         }
-                        Text(text = rate.raterUser?.username ?: rate.raterCompany?.name ?: "")
+                        Text(text = rate.raterUser?.username ?: rate.raterCompany?.name ?: "", modifier = Modifier.clickable {
+                            if(rate.raterUser != null){
+                                sharedViewModel.setHisUser(rate.raterUser!!)
+                            RouteController.navigateTo(Screen.UserScreen)
+                            }else{
+                                sharedViewModel.setHisCompany(rate.raterCompany!!)
+                                categoryViewModel.setFilter(rate.raterCompany?.id!!)
+                                appViewModel.updateView("COMPANY_CONTENT")
+                                ratingViewModel.rating = false
+                                RouteController.navigateTo(Screen.CompanyScreen)
+                            }
+                        })
                         Text(text = rate.comment ?: "")
                         if(rate.photo != null) ShowImage(image = "${BASE_URL}werehouse/image/${rate.photo}/rating/${rate.raterCompany?.user?.id ?: rate.raterUser?.id}")
                         DividerComponent()

@@ -78,6 +78,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.NotPayedRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.OrderLineKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.OrderNotAcceptedKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.PayedRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.PaymentRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentForProviderRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentPerDayByDateRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentPerDayRemoteKeysEntity
@@ -103,7 +104,8 @@ ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRem
 NotAcceptedRemoteKeysEntity::class, ProviderProfitHistoryRemoteKeysEntity::class, PointsPaymentPerDayRemoteKeysEntity::class, AllInvoiceRemoteKeysEntity::class,
     PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class, InvoicesAsClientAndStatusRemoteKeysEntity::class, CompanyArticleRemoteKeysEntity::class
 , CommandLineByInvoiceRemoteKeysEntity::class, CommentArticleRemoteKeys::class, WorkerRemoteKeys::class, ReglementForProviderRemoteKeys::class, RatingRemoteKeys::class
-                     ], version = 1, exportSchema = false)
+                   ,PaymentRemoteKeys::class
+                     ], version = 8, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

@@ -91,7 +91,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     LaunchedEffect(key1 = update) {
         if(clientType == AccountType.USER && update){
-        clientname = invoiceViewModel.clientUser.username!!
+        clientname = invoiceViewModel.clientUser.username?:""
         }
         if(clientType == AccountType.COMPANY && update){
             clientname = invoiceViewModel.clientCompany.name
@@ -174,7 +174,6 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 150.dp)
                     ) {
-                        Log.e("aymenbabay","clientname = ${clients.itemCount}")
                         if (clientname.isNotEmpty()) {
                             items(
                                 count = clients.itemCount,
@@ -184,7 +183,6 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                 if (client != null) {
                                 client.client?.let { clt ->
                                     ClientItem(client = clt) { selectedClient ->
-                                        Log.e("aymenbabayclient","company name = ${selectedClient}")
                                         clientname = selectedClient.name
                                         invoiceViewModel.clientCompany = selectedClient
                                         invoiceViewModel.clientType = AccountType.COMPANY
@@ -194,7 +192,6 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                 }
                                 client.person?.let { clt ->
                                     ClientUserItem(client = clt) { selectedClient ->
-                                        Log.e("aymenbabayclient","user name = ${selectedClient}")
                                         clientname = selectedClient.username!!
                                         invoiceViewModel.clientUser = selectedClient
                                         invoiceViewModel.clientType = AccountType.USER
@@ -206,6 +203,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                         }
                         } else {
                             expanded = false
+                            onClientSelected(false)
                         }
                     }
                 }
@@ -449,125 +447,6 @@ fun ArticleItem(
     }
 }
 
-////////////////////////////////
-
-//@Composable
-//fun AutoCompleteCompanyCategory() {
-//    var category by remember {
-//        mutableStateOf("")
-//    }
-//    val heigtTextField by remember {
-//        mutableStateOf(55.dp)
-//    }
-//    var textFieldSize by remember {
-//        mutableStateOf(Size.Zero)
-//    }
-//    var expanded by remember {
-//        mutableStateOf(false)
-//    }
-//    val interactionSource = remember {
-//        MutableInteractionSource()
-//    }
-//    Column(
-//        modifier = Modifier
-//            .padding(30.dp)
-//            .fillMaxWidth()
-//            .clickable(
-//                interactionSource = interactionSource,
-//                indication = null,
-//                onClick = {
-//                    expanded = false
-//                }
-//            )
-//    ) {
-//        Text(
-//            text = "com.aymen.metastore.model.entity.room.entity.Company com.aymen.metastore.model.entity.room.entity.Category",
-//            modifier = Modifier.padding(start = 3.dp, bottom = 2.dp),
-//            // fontSize = 16.dp,
-//            color = Color.Black,
-//            fontWeight = FontWeight.Medium
-//        )
-//        Column(
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Row (
-//                modifier = Modifier.fillMaxWidth()
-//            ){
-//                TextField(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(heigtTextField)
-//                        .border(
-//                            width = 1.8.dp,
-//                            color = Color.Black,
-//                            shape = RoundedCornerShape(15.dp)
-//                        )
-//                        .onGloballyPositioned {
-//                            textFieldSize = it.size.toSize()
-//                        },
-//                    value = category,
-//                    onValueChange ={
-//                        category = it
-//                        expanded = true
-//                    },
-//                    colors = TextFieldDefaults.colors(
-//                        focusedIndicatorColor = Color.Transparent,
-//                        unfocusedIndicatorColor = Color.Transparent,
-//                        cursorColor = Color.Black
-//                    ),
-//                    textStyle = TextStyle(
-//                        color = Color.Black,
-//                        fontSize = 16.sp
-//                    ),
-//                    keyboardOptions = KeyboardOptions(
-//                        keyboardType = KeyboardType.Text,
-//                        imeAction = ImeAction.Done
-//                    ),
-//                    singleLine = true,
-//                    trailingIcon = {
-//                        IconButton(onClick = { expanded = !expanded }) {
-//                            Icon(
-//                                imageVector = Icons.Rounded.ArrowDropDown,
-//                                contentDescription = null
-//                            )
-//                        }
-//                    }
-//                )
-//            }
-//
-//            AnimatedVisibility(visible = expanded) {
-//                Card(
-//                    modifier = Modifier
-//                        .padding(horizontal = 5.dp)
-//                        .width(textFieldSize.width.dp),
-//                    elevation = CardDefaults.cardElevation(10.dp)
-//                ) {
-//                    LazyColumn (
-//                        modifier = Modifier.heightIn(max = 150.dp)
-//                    ){
-//
-//                            items(
-//                                categories.filter {
-//
-//
-//
-//                                }
-//                                    .sortedBy {
-//                                        it.libelle
-//                                    }
-//                            ){
-//
-//                                    expanded = false
-//
-//                            }
-//
-//                    }
-//                }
-//            }
-//
-//        }
-//    }
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

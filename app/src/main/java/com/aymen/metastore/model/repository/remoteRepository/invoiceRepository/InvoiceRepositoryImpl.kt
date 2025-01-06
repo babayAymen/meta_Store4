@@ -6,10 +6,12 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.paging.pagingsource.SearchInvoicePagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.AllInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.CommandLineByInvoiceRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.InvoiceAsClientAndStatusRemoteMediator
@@ -114,7 +116,7 @@ class InvoiceRepositoryImpl @Inject constructor(
     override fun getAllCommandLineByInvoiceId(
         companyId: Long,
         invoiceId: Long
-    ): Flow<PagingData<CommandLineWithInvoiceAndArticle>> {
+    ): Flow<PagingData<CommandLine>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = CommandLineByInvoiceRemoteMediator(
@@ -125,13 +127,10 @@ class InvoiceRepositoryImpl @Inject constructor(
             }
         ).flow.map {
             it.map { article ->
-                article
+                article.toCommandLineModel()
             }
         }
     }
-
-
-    //    override suspend fun getAllMyInvoicesAsClient(companyId : Long) = api.getAllMyInvoicesAsClient(companyId = companyId)
     override suspend fun getLastInvoiceCode() = api.getLastInvoiceCode()
     override suspend fun addInvoice(
         commandLineDtos: List<CommandLine>,
@@ -140,18 +139,22 @@ class InvoiceRepositoryImpl @Inject constructor(
         invoiceMode: InvoiceMode,
         ): Response<List<CommandLineDto>> = api.addInvoice(commandLineDtos,clientId,invoiceCode,discount,
         clientType, invoiceMode,type = "pdf-save-client")
-
     override suspend fun getAllMyInvoicesAsClientAndStatus(
         id: Long,
         status: Status
     ): Response<List<InvoiceDto>> {
         TODO("Not yet implemented")
     }
-
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = api.acceptInvoice(invoiceId , status)
     override suspend fun getAllMyPaymentNotAccepted(companyId: Long): Response<List<InvoiceDto>> {
         TODO("Not yet implemented")
     }
-//    override suspend fun getAllMyInvoicesAsProviderAndStatus(companyId: Long, status: PaymentStatus) = api.getAllMyInvoicesAsProviderAndStatus(companyId, status)
-
+    override fun searchInvoice(type: SearchPaymentEnum, text: String, companyId : Long): Flow<PagingData<Invoice>> {
+        return Pager(
+            config = PagingConfig(pageSize = PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            pagingSourceFactory = {
+                SearchInvoicePagingSource(api = api, type = type , text = text, companyId = companyId)
+            }
+        ).flow
+    }
 }

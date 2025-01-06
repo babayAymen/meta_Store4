@@ -1,6 +1,8 @@
 package com.aymen.metastore.ui.screen.user
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +33,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.dependencyInjection.NetworkUtil
+import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
@@ -42,10 +45,13 @@ import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.BuyHistoryCard
 import com.aymen.metastore.ui.component.DateFilterUI
 import com.aymen.metastore.ui.component.InvoiceCard
+import com.aymen.metastore.ui.screen.admin.AddInvoiceScreen
+import com.aymen.metastore.ui.screen.admin.ReglementCompany
 import com.aymen.metastore.ui.screen.admin.SwipeToDeleteContainer
 import com.aymen.store.model.Enum.RoleEnum
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PaymentScreen() {
     val appViewModel: AppViewModel = hiltViewModel()
@@ -57,7 +63,7 @@ fun PaymentScreen() {
     val type by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
-    val show by appViewModel.show
+    val view by appViewModel.view
     var rechargeInabled by remember {
         mutableStateOf(false)
     }
@@ -67,24 +73,37 @@ fun PaymentScreen() {
     var buyInabled by remember {
         mutableStateOf(true)
     }
-    LaunchedEffect(key1 = show) {
-        when (show) {
+    var reglementInabled by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(key1 = view) {
+        when (view) {
             "payment" -> {
                 rechargeInabled = false
                 profitInabled = true
                 buyInabled = true
+                reglementInabled = true
             }
 
             "buyhistory" -> {
                 buyInabled = false
                 rechargeInabled = true
                 profitInabled = true
+                reglementInabled = true
             }
 
             "profit" -> {
                 profitInabled = false
                 rechargeInabled = true
                 buyInabled = true
+                reglementInabled = true
+            }
+            "reglement" ->{
+                reglementInabled = false
+                profitInabled = true
+                rechargeInabled = true
+                buyInabled = true
+
             }
         }
     }
@@ -107,7 +126,7 @@ fun PaymentScreen() {
                                     color = Color.Green,
                                     enabled = rechargeInabled
                                 ) {
-                                    appViewModel.updateShow("payment")
+                                    appViewModel.updateView("payment")
                                 }
                             }
                         Row( // buy history
@@ -119,8 +138,8 @@ fun PaymentScreen() {
                                 enabled = buyInabled
                             ) {
                                 invoiceViewModel.setFilter(PaymentStatus.ALL)
-                                appViewModel.updateShow("buyhistory")
-                                appViewModel.updateView("allHistory")
+                                appViewModel.updateView("buyhistory")
+                                appViewModel.updateShow("allHistory")
                             }
                         }
 
@@ -133,15 +152,20 @@ fun PaymentScreen() {
                                     color = Color.Green,
                                     enabled = profitInabled
                                 ) {
-                                    appViewModel.updateShow("profit")
-                                    appViewModel.updateView("all_histories_payment_for_provider")
+                                    appViewModel.updateView("profit")
+                                    appViewModel.updateShow("all_histories_payment_for_provider")
                                 }
+                            }
+                        }
+                        Row (modifier = Modifier.weight(1f)){
+                            ButtonSubmit(labelValue = "reglement", color = Color.Green, enabled =reglementInabled) {
+                                appViewModel.updateView("reglement")
                             }
                         }
                     }
                 }
             }
-            when (show) {
+            when (view) {
                 "payment" -> PaymentView(pointPaymentViewModel)
                 "buyhistory" -> {
                     BuyView(appViewModel, invoiceViewModel)
@@ -149,6 +173,7 @@ fun PaymentScreen() {
                 "profit" -> if (type == AccountType.COMPANY && company.metaSeller == true) {
                         ProfitView(pointPaymentViewModel, paymentViewModel, appViewModel)
                     }
+                "reglement" -> ReglementCompany()
             }
         }
     }
@@ -159,17 +184,17 @@ fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel) {
     val context = LocalContext.current
 
     // Observe network changes and trigger refresh
-    val isOnline by rememberUpdatedState(NetworkUtil.isOnline(context))
-    var isFirst by remember {
-        mutableStateOf(true)
-    }
-    LaunchedEffect(isOnline) {
-        Log.e("screenpaymeny","call")
-        if (isOnline && isFirst) {
-            pointPaymentViewModel.getAllMyPointsPaymentRecharge() // Force refresh when online
-        }
-            isFirst = false
-    }
+//    val isOnlinee by rememberUpdatedState(NetworkUtil.isOnline(context))
+//    var isFirst by remember {
+//        mutableStateOf(true)
+//    }
+//    LaunchedEffect(isOnline) {
+//        Log.e("screenpaymeny","call")
+//        if (isOnline && isFirst) {
+//            pointPaymentViewModel.getAllMyPointsPaymentRecharge() // Force refresh when online
+//        }
+//            isFirst = false
+//    }
     val allPaymentRecharge = pointPaymentViewModel.allMyPointsPaymentRecharge.collectAsLazyPagingItems()
     LazyColumn {
         items(count = allPaymentRecharge.itemCount,
@@ -194,9 +219,10 @@ fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
-    val view by appViewModel.view
+    val show by appViewModel.show
     var paidInabled by remember {
         mutableStateOf(false)
     }
@@ -212,7 +238,14 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
     var allHistoryInabled by remember {
         mutableStateOf(false)
     }
-    when (view) {
+    when (show) {
+        "add invoice" -> {
+            allHistoryInabled = true
+            paidInabled = true
+            inCompleteInabled = true
+            notPaidInabled = true
+            notAcceptedInabled = true
+        }
         "payed" -> {
             allHistoryInabled = true
             paidInabled = false
@@ -265,7 +298,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     enabled = allHistoryInabled
                 ) {
                     invoiceViewModel.setFilter(PaymentStatus.ALL)
-                    appViewModel.updateView("allHistory")
+                    appViewModel.updateShow("allHistory")
                 }
             }
             Row(
@@ -276,7 +309,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     color = Color.Green,
                     enabled = paidInabled
                 ) {
-                    appViewModel.updateView("payed")
+                    appViewModel.updateShow("payed")
                     invoiceViewModel.setFilter(PaymentStatus.PAID)
                 }
             }
@@ -288,7 +321,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     color = Color.Green,
                     enabled = inCompleteInabled
                 ) {
-                    appViewModel.updateView("incomplete")
+                    appViewModel.updateShow("incomplete")
                     invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
                 }
             }
@@ -300,7 +333,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     color = Color.Green,
                     enabled = notPaidInabled
                 ) {
-                    appViewModel.updateView("notpayed")
+                    appViewModel.updateShow("notpayed")
                     invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
                 }
             }
@@ -312,40 +345,44 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     color = Color.Green,
                     enabled = notAcceptedInabled
                 ) {
-                    appViewModel.updateView("notaccepted")
+                    appViewModel.updateShow("notaccepted")
                     invoiceViewModel.getAllMyPaymentNotAccepted(true)
                 }
             }
         }
-        when (view) {
+        when (show) {
+            "add invoice" ->{
+                AddInvoiceScreen(invoiceMode = InvoiceMode.VERIFY)
+            }
             "allHistory" -> {
-                val listState = invoiceViewModel.listState
-                LazyColumn(state = listState,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(count = myAllInvoice.itemCount,
-                        key = myAllInvoice.itemKey { it.id!! }
-                    ) { index ->
-                        val invoice = myAllInvoice[index]
-                        if (invoice != null) {
-                            InvoiceCard(
-                                invoice = invoice,
-                                appViewModel = appViewModel,
-                                invoiceViewModel = invoiceViewModel,
-                                asProvider = true
-                            )
-                            Row {
-                                Text(text = invoice.code.toString())
-                                Spacer(modifier = Modifier.padding(6.dp))
-                                Text(text = invoice.prix_invoice_tot.toString())
-                                Spacer(modifier = Modifier.padding(6.dp))
-                                Text(text = invoice.paid.toString())
-                                Spacer(modifier = Modifier.padding(6.dp))
-                                Text(text = if (invoice.paid == PaymentStatus.INCOMPLETE) invoice.rest.toString() else "")
+                        val listState = invoiceViewModel.listState
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(count = myAllInvoice.itemCount,
+                                key = myAllInvoice.itemKey { it.id!! }
+                            ) { index ->
+                                val invoice = myAllInvoice[index]
+                                if (invoice != null) {
+                                    InvoiceCard(
+                                        invoice = invoice,
+                                        appViewModel = appViewModel,
+                                        invoiceViewModel = invoiceViewModel,
+                                        asProvider = true
+                                    )
+                                    Row {
+                                        Text(text = invoice.code.toString())
+                                        Spacer(modifier = Modifier.padding(6.dp))
+                                        Text(text = invoice.prix_invoice_tot.toString())
+                                        Spacer(modifier = Modifier.padding(6.dp))
+                                        Text(text = invoice.paid.toString())
+                                        Spacer(modifier = Modifier.padding(6.dp))
+                                        Text(text = if (invoice.paid == PaymentStatus.INCOMPLETE) invoice.rest.toString() else "")
+                                    }
+                                }
                             }
                         }
-                    }
-                }
             }
             "payed" -> {
                 LazyColumn(
@@ -458,7 +495,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
     var finalDate by remember {
         mutableStateOf("")
     }
-    val view by appViewModel.view
+    val show by appViewModel.show
     var allHistoryInabled by remember {
         mutableStateOf(false)
     }
@@ -474,7 +511,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
     var sumProfitInabled by remember {
         mutableStateOf(false)
     }
-    when (view) {
+    when (show) {
         "all_histories_payment_for_provider" -> {
             allHistoryInabled = false
             allHistoryByDateInabled = true
@@ -521,7 +558,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                     color = Color.Green,
                     enabled = allHistoryInabled
                 ) {
-                    appViewModel.updateView("all_histories_payment_for_provider")
+                    appViewModel.updateShow("all_histories_payment_for_provider")
                 }
             }
             Row(
@@ -536,7 +573,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                         beginDate,
                         finalDate
                     )
-                    appViewModel.updateView("all_histories_payment_for_provider_by_date")
+                    appViewModel.updateShow("all_histories_payment_for_provider_by_date")
                 }
             }
             Row(
@@ -547,7 +584,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                     color = Color.Green,
                     enabled = allProfitInabled
                 ) {
-                    appViewModel.updateView("all_profit_payment_for_provider_per_day")
+                    appViewModel.updateShow("all_profit_payment_for_provider_per_day")
                 }
             }
             Row(
@@ -558,7 +595,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                     color = Color.Green,
                     enabled = allProfitByDateInabled
                 ) {
-                    appViewModel.updateView("profit_by_date")
+                    appViewModel.updateShow("profit_by_date")
                     pointPaymentViewModel.getMyHistoryProfitByDate(
                         beginDate,
                         finalDate
@@ -573,7 +610,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                     color = Color.Green,
                     enabled = sumProfitInabled
                 ) {
-                    appViewModel.updateView("sum_of_profit_by_date")
+                    appViewModel.updateShow("sum_of_profit_by_date")
                     pointPaymentViewModel.getMyProfitByDate(
                         beginDate,
                         finalDate
@@ -590,7 +627,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
         Column (
             modifier = Modifier.fillMaxWidth()
         ){
-            when (view) {
+            when (show) {
                 "all_histories_payment_for_provider" -> {
                     val listState = pointPaymentViewModel.listState
                             LazyColumn(state = listState,

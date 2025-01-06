@@ -18,7 +18,7 @@ data class CompanyDto(
     var bankaccountnumber: String? = "",
     var email: String? = "",
     var capital: String? = "",
-    val logo: String? = "",
+    val logo: String? = null,
     val workForce: Int? = 0,
     val virtual : Boolean? = false,
     val rate: Double? = 0.0,

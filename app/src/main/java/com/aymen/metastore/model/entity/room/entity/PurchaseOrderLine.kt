@@ -31,7 +31,9 @@ data class PurchaseOrderLine(
     val lastModifiedDate : String? = null,
     val purchaseOrderId: Long? = null,
     val invoiceId : Long? = null,
-    var articleId: Long? = null
+    var articleId: Long? = null,
+    val totTva : Double? = null,
+    val prixArticleTot : Double? = null
 ){
     fun toPurchaseOrderLine(purchaseOrder: com.aymen.metastore.model.entity.model.PurchaseOrder?,
                             invoice: com.aymen.metastore.model.entity.model.Invoice?,
@@ -47,6 +49,8 @@ data class PurchaseOrderLine(
             purchaseorder = purchaseOrder,
             invoice = invoice,
             article = article,
+            totTva = totTva,
+            prixArticleTot = prixArticleTot
         )
     }
 }

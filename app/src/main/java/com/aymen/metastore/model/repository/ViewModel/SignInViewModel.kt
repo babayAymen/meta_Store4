@@ -65,12 +65,11 @@ class SignInViewModel @Inject constructor(
 
     }
     fun signUp(registerRequest: RegisterRequest, onSignUpSuccess: (Boolean) -> Unit){
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO)  {
                 try {
                     val token = repository.SignUp(registerRequest)
-                    Log.e("token","token : ${token.body()}")
                     if (token.isSuccessful) {
+                        tokenManager.saveToken(token.body()?.token!!)
                         getUserRole(token.body()?.token!!)
                         storeToken(token.body()!!)
                         onSignUpSuccess(true)
@@ -80,7 +79,6 @@ class SignInViewModel @Inject constructor(
                 } catch (_: Exception) {
 
                 }
-            }
         }
     }
 

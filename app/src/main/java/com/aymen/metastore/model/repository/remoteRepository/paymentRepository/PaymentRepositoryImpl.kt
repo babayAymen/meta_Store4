@@ -5,11 +5,15 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.aymen.metastore.model.entity.dto.CashDto
+import com.aymen.metastore.model.entity.dto.PaymentDto
 import com.aymen.metastore.model.entity.dto.PaymentForProvidersDto
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.Payment
 import com.aymen.metastore.model.entity.paging.remotemediator.BuyHistoryMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.GetInvoicesByStatusPagingSource
 import com.aymen.metastore.model.entity.paging.pagingsource.PayedPagingSource
+import com.aymen.metastore.model.entity.paging.remotemediator.PaymentHystoricRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.util.PAGE_SIZE
@@ -22,12 +26,14 @@ import kotlinx.coroutines.flow.map
 import retrofit2.Response
 import javax.inject.Inject
 
+@OptIn(ExperimentalPagingApi::class)
 class PaymentRepositoryImpl @Inject constructor(
     private val api: ServiceApi,
     private val room : AppDatabase
 ) : PaymentRepository {
 
     private val invoiceDao = room.invoiceDao()
+    private val paymentDao = room.paymentDao()
     override suspend fun getAllMyPaymentsEspeceByDate(
         date: String,
         findate: String
@@ -35,7 +41,6 @@ class PaymentRepositoryImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    @OptIn(ExperimentalPagingApi::class)
     override fun getAllMyBuyHistory(id: Long): Flow<PagingData<InvoiceWithClientPersonProvider>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
@@ -60,13 +65,25 @@ class PaymentRepositoryImpl @Inject constructor(
     ): Flow<PagingData<Invoice>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-//            remoteMediator = NotAcceptedRemoteMediator(
-//                api = api, room = room, id = id, isProvider = isProvider
-//            ),
             pagingSourceFactory = {GetInvoicesByStatusPagingSource(api , id , isProvider , status) }
         ).flow.map {
             it.map { article ->
                 article
+            }
+        }
+    }
+
+    override suspend fun sendRaglement(companyId : Long , cashDto : CashDto) = api.sendRaglement(companyId , cashDto)
+    override fun getPaymentHystoricByInvoiceId(invoiceId: Long): Flow<PagingData<Payment>> {
+        return Pager(
+            config = PagingConfig(pageSize = PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = PaymentHystoricRemoteMediator(api, room, invoiceId),
+            pagingSourceFactory = {
+                paymentDao.getPaymentHystoricByInvoiceId(invoiceId)
+            }
+        ).flow.map{payment ->
+            payment.map{
+                it.toPaymentModel()
             }
         }
     }

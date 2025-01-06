@@ -253,10 +253,9 @@ class ClientViewModel @Inject constructor(
     }
 
         fun sendClientRequest(id: Long, type: Type) {
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.IO) {
+                Log.e("sendclientreqyuest","id : $id type : $type")
                     repository.sendClientRequest(id, type)
-                }
             }
         }
 

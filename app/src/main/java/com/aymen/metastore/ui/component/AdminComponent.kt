@@ -797,7 +797,10 @@ fun ProviderCard(provider: ClientProviderRelation, image : String) {
                         .weight(0.3f)
                         .align(Alignment.CenterVertically)
                 ) {
+                    if(provider.provider?.logo != null)
                     ShowImage(image = image)
+                    else
+                        notImage()
                 }
 
             }
@@ -842,7 +845,7 @@ fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: 
                 .padding(4.dp)
                 .clickable {
                     invoiceViewModel.invoice = invoice
-                    invoiceViewModel.discount = invoice.discount
+                    invoiceViewModel.discount = invoice.discount?:0.0
                     invoiceViewModel.invoiceMode = InvoiceMode.UPDATE
                     invoiceViewModel.invoiceType = invoice.type!!
                     if (invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.status == Status.ACCEPTED || !asProvider) {
@@ -921,6 +924,7 @@ fun ClientDialog(update : Boolean ,openDialoge : Boolean, onSubmit : () -> Unit)
         Dialog(
             onDismissRequest = {
                 openDialog = false
+                onSubmit()
             }
         ){
             Surface(
@@ -949,6 +953,7 @@ fun ClientDialog(update : Boolean ,openDialoge : Boolean, onSubmit : () -> Unit)
 
                         ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                            openDialog = false
+                            onSubmit()
                         }
                         }
                     }

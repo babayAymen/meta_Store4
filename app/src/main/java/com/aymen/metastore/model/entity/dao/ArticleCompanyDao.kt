@@ -28,7 +28,7 @@ interface ArticleCompanyDao {
     suspend fun insert(article: List<ArticleCompany>) : List<Long>
 
     suspend fun insertArticle(article: List<ArticleCompany?>){
-        article.filterNotNull()
+       article.filterNotNull()
             .takeIf { it.isNotEmpty() }
             ?.let {
                 insert(it)
@@ -57,7 +57,7 @@ interface ArticleCompanyDao {
         article.filterNotNull()
             .takeIf { it.isNotEmpty() }
             ?.let {
-                insertForSearch(it)
+                insertOrUpdate(it)
             }
     }
 
@@ -67,14 +67,17 @@ interface ArticleCompanyDao {
             val result = insert(listOf(article)).firstOrNull() ?: -1L
             if (result == -1L) { // Conflict occurred
                 val existingArticle = getArticleById(article.id!!) // Fetch the existing record
-
+                if(existingArticle != null && article.isFav != existingArticle.isFav){
+                    updateIsFav(article.id , isFav = article.isFav!!)
+                }
                 if (existingArticle != null && article.isRandom != existingArticle.isRandom) {
                     update(article.id, article.isRandom!!) // Update only if price differs
                 }
             }
         }
     }
-
+    @Query("UPDATE article_company SET isFav = :isFav WHERE id = :id")
+    suspend fun updateIsFav(id : Long , isFav : Boolean)
     @Query("UPDATE article_company SET isRandom = :isRandom WHERE id = :id")
     suspend fun update(id : Long, isRandom : Boolean)
 

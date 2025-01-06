@@ -26,6 +26,7 @@ import io.realm.kotlin.ext.realmSetOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -51,7 +52,7 @@ class SharedViewModel @Inject constructor(
     val user: StateFlow<User> get() = _user
 
     private var _company = MutableStateFlow(Company())
-    val company: StateFlow<Company> get() = _company
+    val company: StateFlow<Company> get() = _company.asStateFlow() // i thing asstateflow is unused
 
     private var _hisCompany = MutableStateFlow(Company())
     val hisCompany: StateFlow<Company> get() = _hisCompany
@@ -68,9 +69,7 @@ class SharedViewModel @Inject constructor(
         _accountType.value = accountType
     }
     fun assignCompanyy(company : Company){
-        Log.e("assigncompany","c bon company assigned ${company.id}")
         _company.value = company
-        Log.e("assigncompany","c bon company assigned value ${this.company.value.id}")
     }
     fun assignUser(user : User){
         _user.value = user
@@ -197,7 +196,7 @@ class SharedViewModel @Inject constructor(
                     AccountType.NULL
                 }
                 roomBlock()
-            withContext(Dispatchers.Main){
+            viewModelScope.launch(Dispatchers.Main) {
                 restartApp()
             }
         }
@@ -219,12 +218,10 @@ class SharedViewModel @Inject constructor(
         }
     }
 
-    private fun roomBlock(){
-        viewModelScope.launch(Dispatchers.IO) {
+    private suspend fun roomBlock(){
             room.withTransaction {
                 room.clearAllTables()
             }
-        }
     }
     private fun restartApp(){
         val intent = Intent(context, MainActivity::class.java).apply {

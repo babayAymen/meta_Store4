@@ -15,7 +15,10 @@ data class PurchaseOrderLineDto(
     val purchaseorder: PurchaseOrderDto? = null,
     val createdDate : String? = null,
     val lastModifiedDate : String? = null,
-    val invoice : InvoiceDto? = null
+    val invoice : InvoiceDto? = null,
+    val totTva : Double? = null,
+    val prixArticleTot : Double? = null
+
 ){
     fun toPurchaseOrderLine() : PurchaseOrderLine {
 
@@ -29,7 +32,9 @@ data class PurchaseOrderLineDto(
             purchaseOrderId = purchaseorder?.id,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
-            invoiceId = invoice?.id
+            invoiceId = invoice?.id,
+            totTva = totTva,
+            prixArticleTot = prixArticleTot
         )
     }
 
@@ -45,7 +50,9 @@ data class PurchaseOrderLineDto(
             purchaseorder = purchaseorder?.toPurchaseOrderModel(),
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
-            invoice = invoice?.toInvoiceModel()
+            invoice = invoice?.toInvoiceModel(),
+            totTva = totTva,
+            prixArticleTot = prixArticleTot
         )
     }
 }

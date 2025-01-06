@@ -12,7 +12,7 @@ data class Cash(
 
     val amount: Double? = null,
 
-    val status: String? = Status.INWAITING.toString(),
+    val status: Status? = Status.INWAITING,
 
     val invoiceId: Long? = null,
 

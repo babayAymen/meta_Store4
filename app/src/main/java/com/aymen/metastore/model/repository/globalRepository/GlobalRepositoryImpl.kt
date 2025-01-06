@@ -2,6 +2,7 @@ package com.aymen.store.model.repository.globalRepository
 
 import androidx.paging.PagingData
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
@@ -14,6 +15,7 @@ import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
+import com.aymen.metastore.model.entity.dto.CashDto
 import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
@@ -31,6 +33,7 @@ import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.Invitation
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.Payment
 import com.aymen.metastore.model.entity.model.PaymentForProviderPerDay
 import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.entity.model.PurchaseOrder
@@ -238,6 +241,15 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
+    override suspend fun sendRaglement(
+        companyId: Long,
+        cashDto: CashDto
+    ) = paymentRepository.sendRaglement(companyId,cashDto)
+
+    override fun getPaymentHystoricByInvoiceId(invoiceId: Long): Flow<PagingData<Payment>> {
+        TODO("Not yet implemented")
+    }
+
     override fun getAllMyOrdersNotAccepted(id: Long): Flow<PagingData<PurchaseOrder>> {
         TODO("Not yet implemented")
     }
@@ -275,7 +287,7 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllCommandLineByInvoiceId(
         companyId: Long,
         invoiceId: Long
-    ): Flow<PagingData<CommandLineWithInvoiceAndArticle>> {
+    ): Flow<PagingData<CommandLine>> {
         TODO("Not yet implemented")
     }
 
@@ -289,9 +301,16 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status) = invoiceRepository.getAllMyInvoicesAsClientAndStatus(id , status)
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = invoiceRepository.accepteInvoice(invoiceId, status)
      override suspend fun getAllMyPaymentNotAccepted(companyId: Long) = invoiceRepository.getAllMyPaymentNotAccepted(companyId)
+    override fun searchInvoice(
+        type: SearchPaymentEnum,
+        text: String,
+        companyId: Long
+    ): Flow<PagingData<Invoice>> {
+        TODO("Not yet implemented")
+    }
 
 
-     override suspend fun sendOrder(orderList: List<PurchaseOrderLine>) = orderRepository.sendOrder(orderList)
+    override suspend fun sendOrder(orderList: List<PurchaseOrderLine>) = orderRepository.sendOrder(orderList)
     override suspend fun test(order: PurchaseOrderLineDto) = shoppingRepository.test(order)
     override suspend fun orderLineResponse(status: Status, id: Long, isAll: Boolean): Response<Double> = shoppingRepository.orderLineResponse(status,id, isAll)
     override fun getAllMyInvetations(companyId: Long): Flow<PagingData<Invitation>> {

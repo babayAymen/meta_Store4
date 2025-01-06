@@ -21,12 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
@@ -111,7 +113,7 @@ fun AddProviderScreen() {
                 ) {
                     InputTextField(
                         labelValue = companyName,
-                        label = "name",
+                        label = stringResource(id = R.string.name),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -126,7 +128,7 @@ fun AddProviderScreen() {
                     }
                     InputTextField(
                         labelValue = companyCode,
-                        label = "code",
+                        label = stringResource(id = R.string.code),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -141,7 +143,7 @@ fun AddProviderScreen() {
                     }
                     InputTextField(
                         labelValue = companyMatriculeFiscal,
-                        label = "mat fisc",
+                        label = stringResource(id = R.string.mat_fisc),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -156,7 +158,7 @@ fun AddProviderScreen() {
                     }
                     InputTextField(
                         labelValue = companysector.toString(),
-                        label = "sector",
+                        label = stringResource(id = R.string.sector),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -177,7 +179,7 @@ fun AddProviderScreen() {
                 ) {
                     InputTextField(
                         labelValue = companycapital,
-                        label = "capital",
+                        label = stringResource(id = R.string.capital),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -192,7 +194,7 @@ fun AddProviderScreen() {
                     }
                     InputTextField(
                         labelValue = companyBankAccount,
-                        label = "bank account",
+                        label = stringResource(id = R.string.bank_account),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -207,7 +209,7 @@ fun AddProviderScreen() {
                     }
                     InputTextField(
                         labelValue = companyaddress,
-                        label = "address",
+                        label = stringResource(id = R.string.address),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -222,7 +224,7 @@ fun AddProviderScreen() {
                     }
                     InputTextField(
                         labelValue = companyPhone,
-                        label = "phone",
+                        label = stringResource(id = R.string.phone),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -237,7 +239,7 @@ fun AddProviderScreen() {
                     }
                     InputTextField(
                         labelValue = companyEmail,
-                        label = "email",
+                        label = stringResource(id = R.string.email),
                         singleLine = true,
                         maxLine = 1,
                         keyboardOptions = KeyboardOptions(
@@ -255,7 +257,7 @@ fun AddProviderScreen() {
             Row {
                 Column {
 
-                    ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
+                    ButtonSubmit(labelValue = stringResource(id = R.string.add_photo), color = Color.Cyan, enabled = true) {
                         singlePhotoPickerLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
@@ -268,6 +270,7 @@ fun AddProviderScreen() {
                     )
                 }
             }
+                        val navText = stringResource(id = R.string.provider)
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth()
@@ -275,16 +278,15 @@ fun AddProviderScreen() {
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-
-                        ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
-                            appViewModel.updateShow("provider")
+                        ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
+                            appViewModel.updateShow(navText)
                         }
                     }
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
 
-                        ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true) {
+                        ButtonSubmit(labelValue = stringResource(id = R.string.submit), color = Color.Green, enabled = true) {
                             provider.name = companyName
                             provider.code = companyCode
                             provider.matfisc = companyMatriculeFiscal
@@ -308,7 +310,7 @@ fun AddProviderScreen() {
                              else if(update) providerViewModel.updateProvider(provider, providerJsonString,null)
                                  else providerViewModel.addProvider(provider,providerJsonString, null)
                             providerViewModel.update = false
-                            appViewModel.updateShow("provider")
+                            appViewModel.updateShow(navText)
                         }
                     }
 

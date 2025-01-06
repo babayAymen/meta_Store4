@@ -8,15 +8,16 @@ import java.util.Date
 data class PaymentDto(
 
     val id : Long? = null,
-    val amount : Double,
-    val delay : String,
-    val agency : String,
-    val bankAccount : String,
-    val number : String,
-    val transactionId : String,
-    val status : Status,
-    val type : PaymentMode,
-    val invoice: InvoiceDto
+    val amount : Double? = null,
+    val delay : String? = null,
+    val agency : String? = null,
+    val bankAccount : String? = null,
+    val number : String? = null,
+    val transactionId : String? = null,
+    val status : Status? = Status.INWAITING,
+    val type : PaymentMode? = PaymentMode.CASH,
+    val invoice: InvoiceDto? = null,
+    val lastModifiedDate : String? = null
 ){
     fun toPayment() : Payment {
 
@@ -30,7 +31,8 @@ data class PaymentDto(
             transactionId = transactionId,
             status = status,
             type = type,
-            invoiceId = invoice.id
+            invoiceId = invoice?.id,
+            lastModifiedDate = lastModifiedDate
         )
     }
 }

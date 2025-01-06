@@ -71,7 +71,7 @@ fun ShoppingScreen() {
     val allMyOrdersNotAccepted = shoppingViewModel.allMyOrdersNotAccepted.collectAsLazyPagingItems()
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val myInvoicesAccepted = if(accountType == AccountType.USER)invoiceViewModel.invoicesAsClient.collectAsLazyPagingItems()else null
-    val invoicesNotAccepted = if(accountType == AccountType.USER)invoiceViewModel.invoicesNotAccepted.collectAsLazyPagingItems()else null
+//    val invoicesNotAccepteds = if(accountType == AccountType.USER)invoiceViewModel.invoicesNotAccepted.collectAsLazyPagingItems()else null
 
     var order by remember {
         mutableStateOf(PurchaseOrder())
@@ -201,11 +201,11 @@ fun ShoppingScreen() {
                         LazyColumn {
 
                             if(accountType == AccountType.USER) {
-                                items(count = invoicesNotAccepted?.itemCount!!,
-                                    key = invoicesNotAccepted.itemKey{it.id!!}
+                                items(count = myInvoicesAccepted?.itemCount!!,
+                                    key = myInvoicesAccepted.itemKey{it.id!!}
                                     ) { index ->
-                                    val invoice = invoicesNotAccepted[index]
-                                    if(invoice != null) {
+                                    val invoice = myInvoicesAccepted[index]
+                                    if(invoice != null && invoice.status == Status.INWAITING) {
                                         InvoiceCard(
                                             invoice = invoice,
                                             appViewModel = appViewModel,
@@ -263,7 +263,7 @@ fun ShoppingScreen() {
                                 items(count = myInvoicesAccepted?.itemCount!!,
                                     key = myInvoicesAccepted.itemKey { it.id!! }) { index ->
                                     val invoice = myInvoicesAccepted[index]
-                                    if(invoice != null) {
+                                    if(invoice != null && invoice.status == Status.ACCEPTED) {
                                         InvoiceCard(
                                             invoice = invoice,
                                             appViewModel = appViewModel,

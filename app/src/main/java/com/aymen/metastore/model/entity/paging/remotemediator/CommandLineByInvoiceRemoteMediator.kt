@@ -58,7 +58,6 @@ class CommandLineByInvoiceRemoteMediator(
                 }
             }
             val response = api.getAllCommandLinesByInvoiceId(companyId , invoiceId , currentPage, state.config.pageSize)
-            Log.e("getAllOrdersLineByInvoiceId", "begin in viewmodel response $response")
             val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
             val prevPage = if (currentPage == 0) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
@@ -79,11 +78,6 @@ class CommandLineByInvoiceRemoteMediator(
 
                     userDao.insertUser(response.map {user -> user.article?.company?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.article?.company?.toCompany()})
-//                    userDao.insertUser(response.map {user -> user.article?.provider?.user?.toUser()})
-//                    companyDao.insertCompany(response.map { company -> company.article?.provider?.toCompany() })
-//                    categoryDao.insertCategory(response.map {category -> category.article?.category?.toCategory(isCategory = false) })
-//                    categoryDao.insertCategory(response.map {category -> category.article?.subCategory?.category?.toCategory(isCategory = false) })
-//                    subCategoryDao.insertSubCategory(response.map {subCategory -> subCategory.article?.subCategory?.toSubCategory() })
                     articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true)!! })
                     articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(false)})
 
@@ -92,7 +86,7 @@ class CommandLineByInvoiceRemoteMediator(
                     userDao.insertUser(response.map {user -> user.invoice?.provider?.user?.toUser()})
                     companyDao.insertCompany(response.map {company -> company.invoice?.client?.toCompany()})
                     companyDao.insertCompany(response.map {company -> company.invoice?.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {invoice -> invoice.invoice?.toInvoice(isInvoice = false) })
+                    invoiceDao.insertInvoice(response.map {invoice -> invoice.invoice?.toInvoice(isInvoice = true) })
 
                     commandLineDao.insertCommandLine(response.map { line -> line.toCommandLine() })
 

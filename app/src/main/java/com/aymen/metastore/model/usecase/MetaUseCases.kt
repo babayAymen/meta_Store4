@@ -38,5 +38,8 @@ data class MetaUseCases(
     val getArticleComment : GetArticleComment,
     val getAllWorkers: GetAllWorkers,
     val getPaymentForProviderDetails : GetPaymentForProviderDetails,
-    val getRateeRating: GetRateeRating
+    val getRateeRating: GetRateeRating,
+    val searchInvoice : SearchInvoice,
+    val getPaymentHystoricByInvoiceId : GetPaymentHystoricByInvoiceId,
+
 )

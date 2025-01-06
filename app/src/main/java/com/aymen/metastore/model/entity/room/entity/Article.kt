@@ -15,7 +15,7 @@ data class Article(
     val discription: String? = "",
     val barcode: String? = null,
     val tva: Double? = 0.0,
-    val image: String? = "",
+    val image: String? = null,
     val isDiscounted : Boolean? = false,
     val category : CompanyCategory? = CompanyCategory.DAIRY,
     val isMy : Boolean? = true,

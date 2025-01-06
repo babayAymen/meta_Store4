@@ -121,7 +121,9 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
     val triggerLocationCheck2 by appViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
 
     if(triggerLocationCheck || triggerLocationCheck2) {
-        CheckLocation(type, user, company, context)
+        if(type != AccountType.NULL) {
+            CheckLocation(type, user, company, context)
+        }
     }
     LaunchedEffect(key1 = Unit) {
         if(randomArticles.itemCount == 0) {
@@ -241,7 +243,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         }
                         if (isCompany) {
                             Row {
-                            if (company.logo != null && company.logo != "" ) {
+                            if (company.logo != null ) {
                                 ShowImage(
                                     image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}",
                                     35.dp
@@ -253,7 +255,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             }
                         } else {
                             Row {
-                            if (user.image != null && user.image != "") {
+                            if (user.image != null) {
                                 ShowImage(
                                     image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}",
                                     35.dp
@@ -364,9 +366,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         onClick = {
                             viewModel.updateScreen(IconType.WALLET)
                             if(accountType == AccountType.COMPANY && user.role == RoleEnum.WORKER){
-                                viewModel.updateShow("buyhistory")
-                                viewModel.updateView("allHistory")
-                            }else viewModel.updateShow("payment")
+                                viewModel.updateView("buyhistory")
+                                viewModel.updateShow("allHistory")
+                            }else viewModel.updateView("payment")
                         },
                         description = "wallet"
                     )
@@ -434,6 +436,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                     viewModel.updateShow("subCategory")
                 }
                 "add invoice" -> {
+                    if(viewModel.view.value == "buyhistory")
+                    viewModel.updateShow("allHistory")
+                    else
                     viewModel.updateShow("invoice")
                 }"add worker" -> {
                 viewModel.updateShow("worker")

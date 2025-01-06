@@ -17,7 +17,7 @@ data class Company (
     var bankaccountnumber: String? = "",
     var email: String? = "",
     var capital: String? = "",
-    var logo: String? = "",
+    var logo: String? = null,
     val workForce: Int? = 0,
     var virtual : Boolean? = false,
     val rate: Double? = 0.0,

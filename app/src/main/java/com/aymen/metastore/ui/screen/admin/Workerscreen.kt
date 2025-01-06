@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.admin
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,16 +21,21 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.entity.model.Worker
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.repository.ViewModel.WorkerViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.store.ui.navigation.RouteController
+import com.aymen.store.ui.navigation.Screen
 
 
 @Composable
 fun WorkerScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val workerViewModel : WorkerViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     val workers = workerViewModel.workers.collectAsLazyPagingItems()
     Surface(
         modifier = Modifier
@@ -66,7 +72,7 @@ fun WorkerScreen() {
 
                                 }
                             ) {
-                                WorkerCard(it)
+                                WorkerCard(it, sharedViewModel = sharedViewModel)
                             }
                         }
                     }
@@ -80,15 +86,24 @@ fun WorkerScreen() {
 
 
 @Composable
-fun WorkerCard(worker: Worker) {
+fun WorkerCard(worker: Worker, sharedViewModel: SharedViewModel) {
     Card(
 
         elevation = CardDefaults.cardElevation(6.dp),
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .padding(8.dp)
+            .clickable {
+//                if(worker.is)
+                sharedViewModel.setHisUser(worker.user)
+                RouteController.navigateTo(Screen.UserScreen)
+            }
     ) {
         Column {
             Row {
+                if(worker.user.image != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${worker.user.image}/user/${worker.user.id}")
+                else
+                    notImage()
                 Text(text = worker.user.username!!)
             }
             Row {

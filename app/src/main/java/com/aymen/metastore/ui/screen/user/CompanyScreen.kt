@@ -68,6 +68,7 @@ import com.aymen.metastore.ui.component.ArticleCardForSearch
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.SendPointDialog
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.ui.screen.admin.ReglementScreen
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.ui.navigation.RouteController
@@ -105,7 +106,7 @@ fun CompanyScreen(company: Company) {
             subCategoryViewModel.setSubCategory()
         }
     }
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = company) {
         appViewModel.updateView("COMPANY_CONTENT")
         articleViewModel.getAllCompanyArticles(companyId = company.id?:0)
         ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
@@ -137,21 +138,10 @@ fun CompanyScreen(company: Company) {
                 ) {
                     item {
                         Row {
-                            if (company.logo == "" || company.logo == null) {
-                                val painter: Painter =
-                                    painterResource(id = R.drawable.emptyprofile)
-                                Image(
-                                    painter = painter,
-                                    contentDescription = "empty photo profil",
-                                    modifier = Modifier
-                                        .size(30.dp)
-                                        .clip(
-                                            RoundedCornerShape(10.dp)
-                                        )
-                                )
-                            } else {
+                            if (company.logo != null)
                                 ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                            }
+                                else
+                                notImage()
                             Icon(
                                 imageVector = Icons.Default.Verified,
                                 contentDescription = "verification account",
@@ -299,7 +289,7 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
                 clientViewModel.sendClientRequest(company.id!!, it)
             }
         }
-        if (isPointsSeller) {
+        if (accountType == AccountType.COMPANY && isPointsSeller) {
             Row(
                 modifier = Modifier.weight(1f)
             ) {

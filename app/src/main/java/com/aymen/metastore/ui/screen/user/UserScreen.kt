@@ -47,6 +47,7 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
 
 @Composable
@@ -74,37 +75,23 @@ fun UserScreen() {
     ) {
             Column {
                 Row {
-                    if (user.image == "" || user.image == null) {
-                        val painter: Painter = painterResource(id = R.drawable.emptyprofile)
-                        Image(
-                            painter = painter,
-                            contentDescription = "empty photo profil",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(
-                                    RoundedCornerShape(10.dp)
-                                )
-                        )
-                    } else {
-                        if (user.id != null) {
-                            ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
-                        }
-                    }
+                    if (user.image != null)
+                        ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
+                    else
+                        notImage()
 //                    Icon(
 //                        imageVector = Icons.Default.Verified,
 //                        contentDescription = "verification account",
 //                        tint = Color.Green
 //                    )
-                    if (user.id != null) {
-                        Text(text = user.username!!)
-                    }
-
+                    user.username?.let { Text(text = it) }
                 }
                 Row(
                     modifier = Modifier.padding(2.dp)
                 ) {
                     UserDetails(
                         clientViewModel,
+                        sharedViewModel,
                         ratingViewModel,
                         user,
                         isPointSeller!!
@@ -133,19 +120,21 @@ fun UserScreen() {
 }
 
 @Composable
-fun UserDetails( clientViewModel: ClientViewModel,
+fun UserDetails( clientViewModel: ClientViewModel, sharedViewModel: SharedViewModel,
                 ratingViewModel : RatingViewModel, user: User, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
+    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     Row {
         Row(
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 2.dp)
         ) {
+            if (accountType != AccountType.USER)
             AddTypeDialog(isOpen = false, user.id!!, false) {
                 clientViewModel.sendClientRequest(user.id!!, it)
             }
         }
-        if (isMePointSeller) {
+        if (accountType == AccountType.COMPANY &&  isMePointSeller) {
             Row(
                 modifier = Modifier.weight(1f)
             ) {

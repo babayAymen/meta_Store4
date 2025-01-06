@@ -16,7 +16,9 @@ import androidx.paging.map
 import androidx.room.withTransaction
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.CommandLineDto
+import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.Company
@@ -65,6 +67,8 @@ class InvoiceViewModel @Inject constructor(
     val ordersLine: StateFlow<PagingData<PurchaseOrderLine>> get() = _ordersLine
     private val _commandLineInvoice : MutableStateFlow<PagingData<CommandLine>> = MutableStateFlow(PagingData.empty())
     val commandLineInvoice: StateFlow<PagingData<CommandLine>> get() = _commandLineInvoice
+    private val _invoiceForSerch : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
+    val invoiceForSearch : StateFlow<PagingData<Invoice>> = _invoiceForSerch
     private val _allMyInvoiceNotAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val allMyInvoiceNotAccepted: StateFlow<PagingData<Invoice>> get() = _allMyInvoiceNotAccepted
     var invoice by mutableStateOf(Invoice())
@@ -107,7 +111,6 @@ class InvoiceViewModel @Inject constructor(
     }
 
     fun remiseOrderLineToZero(){
-        _ordersLine.value = PagingData.empty()
         _commandLineInvoice.value = PagingData.empty()
         _ordersLine.value = PagingData.empty()
         clientCompany = Company()
@@ -290,10 +293,11 @@ class InvoiceViewModel @Inject constructor(
                         .distinctUntilChanged()
                         .cachedIn(viewModelScope)
                         .collect{
-                            _commandLineInvoice.value = it.map { line ->  line.toCommandLineModel() }
+                            _commandLineInvoice.value = it
                         }
                 }
                 InvoiceDetailsType.ORDER_LINE -> {
+                    _commandLineInvoice.value = PagingData.empty()
                     useCases.getAllOrdersLineByInvoiceId(id!! ,invoice.id!!)
                         .distinctUntilChanged()
                         .cachedIn(viewModelScope)
@@ -321,6 +325,16 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
+    fun searchInvoice(type : SearchPaymentEnum, text : String){
+        viewModelScope.launch {
+            useCases.searchInvoice(type, text, sharedViewModel.company.value.id?:0)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _invoiceForSerch.value = it
+                }
+        }
+    }
 
 
 

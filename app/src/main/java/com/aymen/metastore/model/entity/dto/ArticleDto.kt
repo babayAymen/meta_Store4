@@ -12,7 +12,7 @@ data class ArticleDto(
     var discription: String? = "",
     var barcode: String? = null,
     var tva: Double? = 0.0,
-    var image: String? = "",
+    var image: String? = null,
     var isDiscounted : Boolean? = false,
     var category : CompanyCategory? = CompanyCategory.DAIRY
 ) {

@@ -23,12 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
+import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.model.Category
@@ -92,7 +94,7 @@ fun AddSubCategoryScreen() {
 
             InputTextField(
                 labelValue = libelle,
-                label = "libel",
+                label = stringResource(id = R.string.label),
                 singleLine = true,
                 maxLine = 1,
                 keyboardOptions = KeyboardOptions(
@@ -107,7 +109,7 @@ fun AddSubCategoryScreen() {
             }
             InputTextField(
                 labelValue = code,
-                label = "code",
+                label = stringResource(id = R.string.code),
                 singleLine = true,
                 maxLine = 1,
                 keyboardOptions = KeyboardOptions(
@@ -125,7 +127,7 @@ fun AddSubCategoryScreen() {
                     category = it
                 }
             }
-            ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true) {
+            ButtonSubmit(labelValue = stringResource(id = R.string.add_photo), color = Color.Cyan, enabled = true) {
                 singlePhotoPickerLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                 )
@@ -140,6 +142,7 @@ fun AddSubCategoryScreen() {
                     contentScale = ContentScale.Crop
                 )
             }
+                val navText = stringResource(id = R.string.subcategory)
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -147,15 +150,15 @@ fun AddSubCategoryScreen() {
                     modifier = Modifier.weight(1f)
                 ) {
 
-                    ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
-                        appViewModel.updateShow("subcategory")
+                    ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
+                        appViewModel.updateShow(navText)
                     }
                 }
                 Column (
                     modifier = Modifier.weight(1f)
                 ){
 
-                    ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true){
+                    ButtonSubmit(labelValue = stringResource(id = R.string.submit), color = Color.Green, enabled = true){
                         subCategory.libelle = libelle
                         subCategory.code = code
                         subCategory.category = category
@@ -171,7 +174,7 @@ fun AddSubCategoryScreen() {
                            if(update) subCategoryViewModel.updateSubCategory(subCategory, subCategoryJsonString, null)
                             else subCategoryViewModel.addSubCategory(subCategory,subCategoryJsonString, null)
                         subCategoryViewModel.update = false
-                        appViewModel.updateShow("subcategory")
+                        appViewModel.updateShow(navText)
                     }
                 }
 

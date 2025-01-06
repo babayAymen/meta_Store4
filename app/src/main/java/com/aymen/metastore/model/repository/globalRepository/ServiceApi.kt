@@ -2,6 +2,7 @@ package com.aymen.metastore.model.repository.globalRepository
 
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.MessageType
+import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.ArticleDto
 import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
@@ -20,6 +21,7 @@ import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.dto.CashDto
 import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.dto.ConversationDto
@@ -31,6 +33,7 @@ import com.aymen.metastore.model.entity.dto.InventoryDto
 import com.aymen.metastore.model.entity.dto.InvitationDto
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.dto.MessageDto
+import com.aymen.metastore.model.entity.dto.PaymentDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
 import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
@@ -50,6 +53,7 @@ import com.aymen.metastore.util.LIKE_BASE_URL
 import com.aymen.metastore.util.MESSAGE_BASE_URL
 import com.aymen.metastore.util.META_BASE_URL
 import com.aymen.metastore.util.ORDER_BASE_URL
+import com.aymen.metastore.util.PAYMENT_BASE_URL
 import com.aymen.metastore.util.POINT_BASE_URL
 import com.aymen.metastore.util.PROVIDER_BASE_URL
 import com.aymen.metastore.util.RATE_BASE_URL
@@ -112,6 +116,8 @@ interface ServiceApi {
                                        @Path("searchCategory")  searchCategory: SearchCategory):Response<List<CompanyDto>>
     @GET("$SEARCH_BASE_URL/save_history/{category}/{id}")
     suspend fun saveHistory(@Path("category") category : SearchCategory, @Path("id") id : Long):Response<SearchHistoryDto>
+    @GET("$SEARCH_BASE_URL/search_invoice/{id}")
+    suspend fun searchInvoice(@Path("id") id : Long, @Query("type") type : SearchPaymentEnum, @Query("text") text : String, @Query("page") page : Int , @Query("pageSize") pageSize : Int):List<InvoiceDto>
     @DELETE("$SEARCH_BASE_URL/delete_history/{id}")
     suspend fun deleteSearch( @Path("id") id : Long):Response<Void>
     ///////////////////////////////////////////////////////////////:command line ////////////////////////////////////////////////////////////////////::
@@ -342,8 +348,11 @@ suspend fun getMeAsCompany(): Response<CompanyDto>
     @GET("$ARTICLE_BASE_URL/get_comments/{articleId}")
     suspend fun getArticleComments(@Path("articleId") articleId : Long , @Query("page") page : Int , @Query("pageSize") pageSize : Int) : PaginatedResponse<CommentDto>
 
-
-
+//////////////////////////////////////////////////////////////////////// payment ////////////////////////////////////////////////
+   @POST("$PAYMENT_BASE_URL/cash/{companyId}")
+    suspend fun sendRaglement(@Path("companyId") companyId : Long,@Body cashDto : CashDto) : Response<PaymentDto>
+    @GET("$PAYMENT_BASE_URL/get_payment_by_invoice_id/{invoiceId}")
+    suspend fun getPaymentHystoricByInvoiceId(@Path("invoiceId") invoiceId : Long, @Query("page") page : Int , @Query("pageSize") pageSize : Int) : PaginatedResponse<PaymentDto>
 
 
 }

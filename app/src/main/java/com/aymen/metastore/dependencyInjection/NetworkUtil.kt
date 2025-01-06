@@ -8,17 +8,21 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 
 object NetworkUtil {
     private var isConnected = false
     private var initialToastDisplayed = false
+    private var networkCallbackRegistered = false
 
+    @RequiresApi(Build.VERSION_CODES.N)
+    @Synchronized
     fun isOnline(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork
         val capabilities = network?.let { connectivityManager.getNetworkCapabilities(it) }
 
-        // Check the initial network state
+        // Check the current network state
         val hasNetworkConnection = when {
             capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> true
             capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> true
@@ -26,36 +30,38 @@ object NetworkUtil {
             else -> false
         }
 
-        if (!hasNetworkConnection  && !initialToastDisplayed) {
+        if (!hasNetworkConnection && !initialToastDisplayed) {
             // Notify the user about no initial network connection
             initialToastDisplayed = true
-
-            Handler(Looper.getMainLooper()).post {
-                Toast.makeText(context, "No network connection!", Toast.LENGTH_SHORT).show()
-            }
+            showToast(context, "No network connection!")
         }
         isConnected = hasNetworkConnection
 
-        // Register the callback for future network changes
-        val networkCallback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                if (!isConnected) {
-                    isConnected = true
-                    Handler(Looper.getMainLooper()).post {
-                        Toast.makeText(context, "Network connection is back!", Toast.LENGTH_SHORT).show()
+        // Register the callback for future network changes, if not already registered
+        if (!networkCallbackRegistered) {
+            val networkCallback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    if (!isConnected) {
+                        isConnected = true
+                        showToast(context, "Network connection is back!")
                     }
                 }
-            }
 
-            override fun onLost(network: Network) {
-                isConnected = false
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, "No network connection!", Toast.LENGTH_SHORT).show()
+                override fun onLost(network: Network) {
+                    isConnected = false
+                    showToast(context, "No network connection!")
                 }
             }
+            connectivityManager.registerDefaultNetworkCallback(networkCallback)
+            networkCallbackRegistered = true
         }
-        connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
         return hasNetworkConnection
+    }
+
+    private fun showToast(context: Context, message: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 }

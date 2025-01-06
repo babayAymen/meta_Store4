@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.user
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,15 +22,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.entity.model.Invitation
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvetationViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
+import com.aymen.store.ui.navigation.RouteController
+import com.aymen.store.ui.navigation.Screen
 
 @Composable
 fun InvetationScreen(modifier: Modifier = Modifier) {
@@ -47,6 +52,7 @@ LaunchedEffect(key1 = Unit) {
                 val invitation = invitations[index]
                 if(invitation != null) {
                     InvetationCard(invitation) { status ->
+                        Log.e("requestResponse","status : $status id ${invitation.id}")
                         invetationViewModel.RequestResponse(status, invitation.id!!)
                     }
                 }
@@ -80,6 +86,7 @@ fun InvetationCard(invetation : Invitation,onClicked: (Status) -> Unit) {
         when (invetation.type) {
             Type.USER_SEND_CLIENT_COMPANY ->
                 InvitationTypeClient(invetation, companyId){
+                    Log.e("requestResponse","status : $it id ${invetation.id}")
                     onClicked(it)
                 }
             Type.COMPANY_SEND_CLIENT_COMPANY ->
@@ -139,7 +146,10 @@ fun CancelTypeWorker(invetation: Invitation, role : AccountType) {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -189,7 +199,10 @@ fun RefuseTypeWorker(invetation: Invitation, role : AccountType) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -208,10 +221,15 @@ fun RefuseTypeWorker(invetation: Invitation, role : AccountType) {
                     modifier = Modifier.weight(1f)
                 ){
                     if(invetation.type == Type.USER_SEND_WORKER_COMPANY){
+                        if(invetation.companyReceiver?.logo != null)
                         ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                        else
+                            notImage()
                     }else{
+                        if(invetation.companySender?.logo != null)
                         ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-
+                        else
+                            notImage()
                     }
                 }
                 Row (
@@ -240,7 +258,10 @@ fun InWaitingTypeWorker(invetation: Invitation, role: AccountType,onClicked: (St
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -296,9 +317,15 @@ fun InWaitingTypeWorker(invetation: Invitation, role: AccountType,onClicked: (St
                     modifier = Modifier.weight(1f)
                 ) {
                     if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
+                        if(invetation.companyReceiver?.logo != null)
                         ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                        else
+                            notImage()
                     } else
+                        if(invetation.companySender?.logo != null)
                         ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -351,21 +378,31 @@ fun InWaitingTypeWorker(invetation: Invitation, role: AccountType,onClicked: (St
 }
 @Composable
 fun AcceptTypeWorker(invetation: Invitation, role: AccountType) {
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     when (role) {
         AccountType.COMPANY -> {
             Row {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
                 ) {
                     if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-                        Text(text = "you have accepted a worker invitation from ${invetation.client?.username}")
+                        Text(text = "you have accepted a worker invitation from ${invetation.client?.username}", modifier = Modifier.clickable {
+                            sharedViewModel.setHisUser(invetation.client!!)
+                            RouteController.navigateTo(Screen.UserScreen)
+                        })
                     } else {
-                        Text(text = "${invetation.client?.username} has accepted your worker invitation")
+                        Text(text = "${invetation.client?.username} has accepted your worker invitation", modifier = Modifier.clickable {
+                            sharedViewModel.setHisUser(invetation.client!!)
+                            RouteController.navigateTo(Screen.UserScreen)
+                        })
                     }
                 }
             }
@@ -377,13 +414,24 @@ fun AcceptTypeWorker(invetation: Invitation, role: AccountType) {
                     modifier = Modifier.weight(1f)
                 ) {
                     if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
+                        if(invetation.companyReceiver?.logo != null)
                         ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                        else
+                            notImage()
                     } else {
+                        if(invetation.companySender?.logo != null)
                         ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                        else
+                            notImage()
                     }
                 }
                 Row(
-                    modifier = Modifier.weight(3f)
+                    modifier = Modifier
+                        .weight(3f)
+                        .clickable {
+                                sharedViewModel.setHisCompany(invetation.companyReceiver?:invetation.companySender!!)
+                                RouteController.navigateTo(Screen.CompanyScreen)
+                        }
                 ) {
                     if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
                         Text(text = "${invetation.companyReceiver?.name} has accepted your worker invitation")
@@ -399,6 +447,7 @@ fun AcceptTypeWorker(invetation: Invitation, role: AccountType) {
         }
     }
 }
+
 @Composable
 fun InvitationTypeParent(invetation : Invitation, companyId : Long, onClicked: (Status) -> Unit) {
     when (invetation.status){
@@ -423,7 +472,10 @@ fun CancelTypeParent(invetation: Invitation, companyId: Long) {
             Row(
                 modifier = Modifier.weight(1f)
             ) {
+                if(invetation.companySender?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                else
+                    notImage()
             }
             Row(
                 modifier = Modifier.weight(3f)
@@ -437,7 +489,10 @@ fun CancelTypeParent(invetation: Invitation, companyId: Long) {
             Row(
                 modifier = Modifier.weight(1f)
             ) {
+                if(invetation.companyReceiver?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                else
+                    notImage()
             }
             Row(
                 modifier = Modifier.weight(3f)
@@ -455,7 +510,10 @@ fun RefuseTypeParent(invetation: Invitation, companyId: Long) {
             Row (
                 modifier = Modifier.weight(1f)
             ){
+                if(invetation.companySender?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                else
+                    notImage()
             }
             Row (
                 modifier = Modifier.weight(3f)
@@ -470,7 +528,10 @@ fun RefuseTypeParent(invetation: Invitation, companyId: Long) {
             Row (
                 modifier = Modifier.weight(1f)
             ){
+                if(invetation.companyReceiver?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                else
+                    notImage()
             }
             Row (
                 modifier = Modifier.weight(3f)
@@ -488,7 +549,10 @@ fun InWaitingTypeParent(invetation: Invitation , companyId: Long, onClicked: (St
             Row (
                 modifier = Modifier.weight(1f)
             ){
+                if(invetation.companySender?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                else
+                    notImage()
             }
             Row (
                 modifier = Modifier.weight(3f)
@@ -525,7 +589,10 @@ fun InWaitingTypeParent(invetation: Invitation , companyId: Long, onClicked: (St
             Row (
                 modifier = Modifier.weight(1f)
             ){
+                if(invetation.companyReceiver?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                else
+                    notImage()
             }
             Row (
                 modifier = Modifier.weight(3f)
@@ -550,7 +617,10 @@ fun AcceptTypeParent(invetation: Invitation,companyId: Long) {
             Row (
                 modifier = Modifier.weight(1f)
             ){
+                if(invetation.companySender?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                else
+                    notImage()
             }
             Row (
                 modifier = Modifier.weight(3f)
@@ -565,7 +635,10 @@ fun AcceptTypeParent(invetation: Invitation,companyId: Long) {
             Row (
                 modifier = Modifier.weight(1f)
             ){
+                if(invetation.companyReceiver?.logo != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                else
+                    notImage()
             }
             Row (
                 modifier = Modifier.weight(3f)
@@ -575,6 +648,7 @@ fun AcceptTypeParent(invetation: Invitation,companyId: Long) {
         }
     }
 }
+
 @Composable
 fun InvitationTypeProvider(invetation : Invitation, companyId : Long, role : AccountType,onClicked: (Status) -> Unit){
     when (invetation.status){
@@ -600,7 +674,10 @@ fun CancelTypeProvider(invetation: Invitation, companyId: Long, role: AccountTyp
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -614,7 +691,10 @@ fun CancelTypeProvider(invetation: Invitation, companyId: Long, role: AccountTyp
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -630,7 +710,10 @@ fun CancelTypeProvider(invetation: Invitation, companyId: Long, role: AccountTyp
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -644,7 +727,10 @@ fun CancelTypeProvider(invetation: Invitation, companyId: Long, role: AccountTyp
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -664,7 +750,9 @@ fun RefuseTypeProvider(invetation: Invitation, companyId: Long, role : AccountTy
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -678,7 +766,10 @@ fun RefuseTypeProvider(invetation: Invitation, companyId: Long, role : AccountTy
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -708,7 +799,10 @@ fun RefuseTypeProvider(invetation: Invitation, companyId: Long, role : AccountTy
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -730,7 +824,10 @@ fun InWaitingTypeProvider(invetation: Invitation , companyId: Long, onClicked: (
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -765,7 +862,10 @@ fun InWaitingTypeProvider(invetation: Invitation , companyId: Long, onClicked: (
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -787,7 +887,10 @@ fun InWaitingTypeProvider(invetation: Invitation , companyId: Long, onClicked: (
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -809,7 +912,10 @@ fun InWaitingTypeProvider(invetation: Invitation , companyId: Long, onClicked: (
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -848,9 +954,15 @@ fun AcceptTypeProvider(invetation: Invitation,companyId: Long) {
             ){
 
                 if(invetation.companyReceiver?.id == companyId) {
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }else{
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
             }
             Row (
@@ -870,10 +982,16 @@ fun AcceptTypeProvider(invetation: Invitation,companyId: Long) {
             ) {
 
                 if(invetation.companySender?.id != companyId){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 else {
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
 
             }
@@ -889,11 +1007,13 @@ fun AcceptTypeProvider(invetation: Invitation,companyId: Long) {
         }
     }
 }
+
 @Composable
 fun InvitationTypeClient(invetation : Invitation, companyId : Long, onClicked: (Status) -> Unit){
     when (invetation.status){
         Status.INWAITING ->
             InWaitingTypeClient(invetation = invetation, companyId = companyId){
+                Log.e("requestResponse","status : $it id ${invetation.id}")
                 onClicked(it)
             }
         Status.ACCEPTED ->
@@ -914,7 +1034,10 @@ fun CancelTypeClient(invetation: Invitation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -928,7 +1051,10 @@ fun CancelTypeClient(invetation: Invitation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -945,7 +1071,10 @@ fun CancelTypeClient(invetation: Invitation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -960,7 +1089,10 @@ fun CancelTypeClient(invetation: Invitation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -983,7 +1115,10 @@ fun RefuseTypeClient(invetation: Invitation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -997,7 +1132,10 @@ fun RefuseTypeClient(invetation: Invitation, companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -1013,7 +1151,10 @@ fun RefuseTypeClient(invetation: Invitation, companyId: Long) {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -1028,7 +1169,10 @@ fun RefuseTypeClient(invetation: Invitation, companyId: Long) {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -1050,7 +1194,10 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -1064,6 +1211,7 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
                                 modifier = Modifier.weight(1f)
                             ){
                                 ButtonSubmit(labelValue = "accept", color = Color.Green, enabled = true) {
+                                    Log.e("requestResponse"," id ${invetation.id}")
                                     onClicked(Status.ACCEPTED)
                                 }
                             }
@@ -1085,8 +1233,10 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
 
                 Row (
                     modifier = Modifier.weight(1f)
-                ){Log.e("azertyuio","receiver : ${invetation.companyReceiver}, sender : ${invetation.companySender}")
+                ){
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -1108,7 +1258,10 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -1121,7 +1274,7 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
                                 modifier = Modifier.weight(1f)
                             ){
                                 ButtonSubmit(labelValue = "accept", color = Color.Green, enabled = true) {
-
+                                    onClicked(Status.ACCEPTED)
                                 }
                             }
                             Row (
@@ -1129,7 +1282,7 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
                             ){
 
                                 ButtonSubmit(labelValue = "refuse", color = Color.Red, enabled = true) {
-
+                                    onClicked(Status.REFUSED)
                                 }
                             }
                         }
@@ -1143,7 +1296,10 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -1163,6 +1319,7 @@ fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (St
 }
 @Composable
 fun AcceptTypeClient(invetation: Invitation,companyId: Long) {
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
         if(invetation.companyReceiver?.id == companyId){
             Row {
@@ -1170,7 +1327,10 @@ fun AcceptTypeClient(invetation: Invitation,companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companySender?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -1184,7 +1344,10 @@ fun AcceptTypeClient(invetation: Invitation,companyId: Long) {
                 Row (
                     modifier = Modifier.weight(1f)
                 ){
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row (
                     modifier = Modifier.weight(3f)
@@ -1200,7 +1363,10 @@ fun AcceptTypeClient(invetation: Invitation,companyId: Long) {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.client?.image != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
@@ -1215,12 +1381,18 @@ fun AcceptTypeClient(invetation: Invitation,companyId: Long) {
                 Row(
                     modifier = Modifier.weight(1f)
                 ) {
+                    if(invetation.companyReceiver?.logo != null)
                     ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
+                    else
+                        notImage()
                 }
                 Row(
                     modifier = Modifier.weight(3f)
                 ) {
-                    Text(text = invetation.companyReceiver?.name!! + " has accepted your client invitation ")
+                    Text(text = invetation.companyReceiver?.name!! + " has accepted your client invitation ", modifier = Modifier.clickable {
+                        sharedViewModel.setHisCompany(invetation.companyReceiver!!)
+                        RouteController.navigateTo(Screen.CompanyScreen)
+                    })
                 }
             }
         }

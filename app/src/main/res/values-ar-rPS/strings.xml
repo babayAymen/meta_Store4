@@ -49,6 +49,30 @@
     <string name="invoice_date">invoice date:</string>
     <string name="send">send</string>
     <string name="barcode_notfound">this barcode not found</string>
+    <string name="Favorite">Favorite</string>
+    <string name="pdf">pdf</string>
+    <string name="accept">accept</string>
+    <string name="waiting_for_accept">waiting for accept</string>
+    <string name="unit">U</string>
+    <string name="prix_unit">P/U</string>
+    <string name="tot_tva">tot tva</string>
+    <string name="prix_article_tot">price article tot</string>
+    <string name="discount">discount</string>
+    <string name="total_tva">Total TVA: %1$s Dt</string>
+    <string name="total_price">Total price: %1$s Dt</string>
+    <string name="total_general">Total general: %1$s Dt</string>
+    <string name="url_image_company">werehouse/image/%s/company/%s</string>
+    <string name="confirm">confirm</string>
+    <string name="add_new_article">add new article</string>
+    <string name="confirm_delation">confirm delation</string>
+    <string name="sure_delation">Are you sure to delete this item?</string>
+    <string name="url_image_article">werehouse/image/%s/article/%s</string>
+    <!--show item -->
+    <string name="invoice">invoice</string>
+    <string name="provider">provider</string>
+    <string name="subcategory">subcategory</string>
+    <string name="add_article">ADD_ARTICLE</string>
+    <string name="add_article_for_company">ADD_ARTICLE_FOR_COMPANY</string>
 
 </resources>
 

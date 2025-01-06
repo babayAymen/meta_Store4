@@ -367,7 +367,6 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                                     .weight(0.8f)
                                     .clickable {
                                         categoryViewModel.setFilter(art.company?.id!!)
-//                                        companyViewModel.myCompany = art.company!!
                                         sharedViewModel.setHisCompany(art.company!!)
                                         articleViewModel.companyId = it.company?.id!!
                                         RouteController.navigateTo(Screen.CompanyScreen)
@@ -379,17 +378,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                                         30.dp
                                     )
                                 } else {
-                                    val painter: Painter =
-                                        painterResource(id = R.drawable.emptyprofile)
-                                    Image(
-                                        painter = painter,
-                                        contentDescription = "empty photo profil",
-                                        modifier = Modifier
-                                            .size(30.dp)
-                                            .clip(
-                                                RoundedCornerShape(10.dp)
-                                            )
-                                    )
+                                   notImage()
                                 }
                                 Icon(
                                     imageVector = Icons.Default.Verified,
@@ -459,6 +448,20 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
     }
 }
 
+@Composable
+fun notImage(modifier: Modifier = Modifier) {
+    val painter: Painter =
+        painterResource(id = R.drawable.emptyprofile)
+    Image(
+        painter = painter,
+        contentDescription = "empty photo profil",
+        modifier = Modifier
+            .size(30.dp)
+            .clip(
+                RoundedCornerShape(10.dp)
+            )
+    )
+}
 @Composable
 fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
     Card(
@@ -576,9 +579,9 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                             color = Color.Green,
                             enabled = true
                         ) {
-                            selected = true
+                            subType = SubType.CLIENT
                             openDialog = false
-                            subType = SubType.PROVIDER
+                            selected = true
                         }
                     } else {
                         if (isCompany) {
@@ -587,18 +590,18 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                                 color = Color.Green,
                                 enabled = true
                             ) {
-                                selected = true
-                                openDialog = false
                                 subType = SubType.PROVIDER
+                                openDialog = false
+                                selected = true
                             }
                             ButtonSubmit(
                                 labelValue = "add as parent",
                                 color = Color.Green,
                                 enabled = true
                             ) {
-                                selected = true
-                                openDialog = false
                                 subType = SubType.PARENT
+                                openDialog = false
+                                selected = true
                             }
                         } else {
                             ButtonSubmit(
@@ -606,9 +609,9 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                                 color = Color.Green,
                                 enabled = true
                             ) {
-                                selected = true
-                                openDialog = false
                                 subType = SubType.WORKER
+                                openDialog = false
+                                selected = true
                             }
                         }
                         ButtonSubmit(
@@ -616,9 +619,9 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                             color = Color.Green,
                             enabled = true
                         ) {
-                            selected = true
-                            openDialog = false
                             subType = SubType.CLIENT
+                            openDialog = false
+                            selected = true
                         }
                     }
                 }
@@ -1051,7 +1054,7 @@ fun UpdateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
             ) {
                 Column {
                     if(image == null){
-                        ShowImage(image = "$BASE_URL/${company.logo}/company/${user.id}",35.dp)
+                        ShowImage(image = "$BASE_URL/${company.logo}/company/${company.user?.id}",35.dp)
                 Text(text = "update your photo?", modifier = Modifier.clickable {
                     singlePhotoPickerLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -1222,86 +1225,96 @@ fun LocationServiceDialog(
 
 @Composable
 fun CheckLocation(type: AccountType, user: User?, company: Company, context: Context) {
-    var isGpsEnabled by remember { mutableStateOf(context.isGpsEnabled()) }
-    var dialogGps by remember { mutableStateOf(false) }
-    var dialogLocation by remember { mutableStateOf(false) }
-    var isLocationGranted by remember { mutableStateOf(context.hasLocationPermission()) }
-
-    // Handle location permission launcher
-    val launcherLocation = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        isLocationGranted = isGranted
-        if (isGranted && !isGpsEnabled) {
-            dialogGps = true
-        }
+    var isOk by remember {
+        mutableStateOf(false)
     }
-
-    // Handle GPS settings launcher
-    val locationSettingsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
+    if ((type == AccountType.USER && (user?.latitude == 0.0 || user?.longitude == 0.0)) ||
+        (type == AccountType.COMPANY && (company.latitude == 0.0 || company.longitude == 0.0))
     ) {
-        isGpsEnabled = context.isGpsEnabled()
-        if (isGpsEnabled) {
-            dialogGps = false
-        }
+        isOk = true
     }
+    if (isOk) {
+        var isGpsEnabled by remember { mutableStateOf(context.isGpsEnabled()) }
+        var dialogGps by remember { mutableStateOf(false) }
+        var dialogLocation by remember { mutableStateOf(false) }
+        var isLocationGranted by remember { mutableStateOf(context.hasLocationPermission()) }
+        // Handle location permission launcher
+        val launcherLocation = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            isLocationGranted = isGranted
+            if (isGranted && !isGpsEnabled) {
+                dialogGps = true
+            }
+        }
 
-    // Register GPS status changes dynamically
-    val gpsStatusReceiver = remember {
-        GpsStatusReceiver { isEnabled ->
-            isGpsEnabled = isEnabled
-            if (isEnabled) {
+        // Handle GPS settings launcher
+        val locationSettingsLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) {
+            isGpsEnabled = context.isGpsEnabled()
+            if (isGpsEnabled) {
                 dialogGps = false
-                // Start location service if necessary
-                if (isLocationGranted) {
-                    Intent(context, LocationService::class.java).apply {
-                        action = LocationService.ACTION_START
-                        context.startService(this)
+            }
+        }
+
+        // Register GPS status changes dynamically
+        val gpsStatusReceiver = remember {
+            GpsStatusReceiver { isEnabled ->
+                isGpsEnabled = isEnabled
+                if (isEnabled) {
+                    dialogGps = false
+                    // Start location service if necessary
+                    if (isLocationGranted) {
+                        Intent(context, LocationService::class.java).apply {
+                            action = LocationService.ACTION_START
+                            context.startService(this)
+                        }
                     }
                 }
             }
         }
-    }
 
-    DisposableEffect(Unit) {
-        val intentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
-        context.registerReceiver(gpsStatusReceiver, intentFilter)
+        DisposableEffect(Unit) {
+            val intentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
+            context.registerReceiver(gpsStatusReceiver, intentFilter)
 
-        onDispose {
-            context.unregisterReceiver(gpsStatusReceiver)
+            onDispose {
+                context.unregisterReceiver(gpsStatusReceiver)
+            }
         }
-    }
 
-    // Handle location permission and GPS dialogs
-    if (dialogLocation) {
-        PermissionSettingsDialog {
-            dialogLocation = false
+        // Handle location permission and GPS dialogs
+        if (dialogLocation) {
+            PermissionSettingsDialog {
+                dialogLocation = false
+            }
         }
-    }
 
-    if (dialogGps && !isGpsEnabled) {
-        LocationServiceDialog(onDismiss = { dialogGps = false }) {
-            locationSettingsLauncher.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        if (dialogGps && !isGpsEnabled) {
+            LocationServiceDialog(onDismiss = { dialogGps = false }) {
+                locationSettingsLauncher.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
         }
-    }
 
-    // Initial check for location permissions and GPS
-    LaunchedEffect(isGpsEnabled, isLocationGranted) {
-        if ((type == AccountType.USER && (user?.latitude == 0.0 || user?.longitude == 0.0)) ||
-            (type == AccountType.COMPANY && (company.latitude == 0.0 || company.longitude == 0.0))) {
-            if (isLocationGranted) {
-                if (isGpsEnabled) {
-                    Intent(context, LocationService::class.java).apply {
-                        action = LocationService.ACTION_START
-                        context.startService(this)
+        // Initial check for location permissions and GPS
+        LaunchedEffect(isGpsEnabled, isLocationGranted) {
+            if ((type == AccountType.USER && (user?.latitude == 0.0 || user?.longitude == 0.0)) ||
+                (type == AccountType.COMPANY && (company.latitude == 0.0 || company.longitude == 0.0))
+            ) {
+                if (isLocationGranted) {
+                    if (isGpsEnabled) {
+                        Intent(context, LocationService::class.java).apply {
+                            action = LocationService.ACTION_START
+                            context.startService(this)
+                        }
+                    } else {
+                        dialogGps = true
                     }
                 } else {
-                    dialogGps = true
+                    launcherLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    dialogLocation = true
                 }
-            } else {
-                launcherLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                dialogLocation = true
             }
         }
     }

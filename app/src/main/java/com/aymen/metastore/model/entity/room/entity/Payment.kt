@@ -17,15 +17,16 @@ data class Payment(
 
     @PrimaryKey
     val id : Long? = null,
-    val amount : Double,
-    val delay : String,
-    val agency : String,
-    val bankAccount : String,
-    val number : String,
-    val transactionId : String,
+    val amount : Double? = null,
+    val delay : String? = null,
+    val agency : String? = null,
+    val bankAccount : String? = null,
+    val number : String? = null,
+    val transactionId : String? = null,
     val status : Status? = Status.INWAITING,
     val type : PaymentMode? = PaymentMode.CASH,
     val invoiceId : Long? = null,
+    val lastModifiedDate : String? = null
 ){
     fun toPayment(invoice : com.aymen.metastore.model.entity.model.Invoice): Payment{
         return Payment(
@@ -38,7 +39,8 @@ data class Payment(
             transactionId = transactionId,
             status = status,
             type = type,
-            invoice = invoice
+            invoice = invoice,
+            lastModifiedDate = lastModifiedDate
         )
     }
 }

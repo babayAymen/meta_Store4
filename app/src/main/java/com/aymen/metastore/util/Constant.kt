@@ -2,8 +2,8 @@ package com.aymen.metastore.util
 
 const val PAGE_SIZE = 7
 const val PRE_FETCH_DISTANCE = 5
-//const val BASE_URL = "http://192.168.1.5:8080/"
-const val BASE_URL = "http://192.168.230.53:8080/"
+const val BASE_URL = "http://192.168.1.5:8080/"
+//const val BASE_URL = "http://192.168.230.53:8080/"
  const val DATABASE_NAME = "meta_store_data_base"
 const val META_BASE_URL = "werehouse/meta"
 const val CLIENT_BASE_URL = "werehouse/client"
@@ -13,6 +13,7 @@ const val COMPANY_BASE_URL = "werehouse/company"
 const val CATEGORY_BASE_URL = "werehouse/category"
 const val SUBCATEGORY_BASE_URL = "werehouse/subcategory"
 const val POINT_BASE_URL = "werehouse/point"
+const val PAYMENT_BASE_URL = "werehouse/payment"
 const val INVOICE_BASE_URL = "werehouse/invoice"
 const val ORDER_BASE_URL = "werehouse/order"
 const val COMMANDLINE_BASE_URL = "werehouse/commandline"
@@ -25,3 +26,4 @@ const val WORKER_BASE_URL = "werehouse/worker"
 const val LIKE_BASE_URL = "werehouse/like"
 const val UPDATE_IMAGE_URL = "werehouse/image/update"
 const val AUTH_BASE_URL = "api/auth"
+const val IMAGE_URL_COMPANY = "${BASE_URL}werehouse/image/%s/company/%s"

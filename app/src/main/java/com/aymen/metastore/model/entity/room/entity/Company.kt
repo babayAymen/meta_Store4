@@ -34,7 +34,7 @@ data class Company(
     val bankaccountnumber: String? = "",
     val email: String? = "",
     val capital: String? = "",
-    val logo: String? = "",
+    val logo: String? = null,
     val workForce: Int? = 0,
     val virtual : Boolean? = false,
     val rate: Double? = 0.0,

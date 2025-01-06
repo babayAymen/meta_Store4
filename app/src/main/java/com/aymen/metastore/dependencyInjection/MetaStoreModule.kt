@@ -107,7 +107,9 @@ import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCat
 import com.aymen.metastore.model.usecase.GetCategoryTemp
 import com.aymen.metastore.model.usecase.GetMyClientForAutocompleteClient
 import com.aymen.metastore.model.usecase.GetPaymentForProviderDetails
+import com.aymen.metastore.model.usecase.GetPaymentHystoricByInvoiceId
 import com.aymen.metastore.model.usecase.GetRateeRating
+import com.aymen.metastore.model.usecase.SearchInvoice
 import com.aymen.metastore.model.webSocket.ChatClient
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.DATABASE_NAME
@@ -204,7 +206,9 @@ class MetaStoreModule {
             getArticleComment = GetArticleComment(repository = articleRepository),
             getAllWorkers = GetAllWorkers(repository = workerRepository),
             getPaymentForProviderDetails = GetPaymentForProviderDetails(repository = pointPaymentRepository),
-            getRateeRating = GetRateeRating(repository = ratingRepository)
+            getRateeRating = GetRateeRating(repository = ratingRepository),
+            searchInvoice = SearchInvoice(repository = invoiceRepository),
+            getPaymentHystoricByInvoiceId = GetPaymentHystoricByInvoiceId(repository = paymentRepository)
 
         )
     }

@@ -123,9 +123,9 @@ fun DashBoardScreen() {
         "payment" -> {
             viewModel.updateScreen(IconType.WALLET)
             if(user.role == RoleEnum.WORKER){
-                viewModel.updateShow("buyhistory")
-                viewModel.updateView("allHistory")
-            }else viewModel.updateShow("payment")
+                viewModel.updateView("buyhistory")
+                viewModel.updateShow("allHistory")
+            }else viewModel.updateView("payment")
             PaymentScreen()
         }
         "order" -> {
