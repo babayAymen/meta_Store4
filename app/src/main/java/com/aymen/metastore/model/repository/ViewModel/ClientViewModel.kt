@@ -17,13 +17,13 @@ import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.ErrorResponse
-import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.ClientRemoteKeysEntity
 import com.aymen.metastore.model.usecase.MetaUseCases
 import com.aymen.metastore.util.PAGE_SIZE
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import com.google.gson.Gson
@@ -48,6 +48,7 @@ class ClientViewModel @Inject constructor(
 ): ViewModel() {
 
     private val companyDao = room.companyDao()
+    private val userDao = room.userDao()
     private val clientProviderRelationDao = room.clientProviderRelationDao()
 
     private val _myClients: MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
@@ -156,8 +157,7 @@ class ClientViewModel @Inject constructor(
                                 client = relation.copy(id = companyId),
                                 provider = sharedViewModel.company.value,
                                 mvt = 0.0,
-                                credit = 0.0,
-                                advance = 0.0
+                                credit = 0.0
                             ).toClientProviderRelationEntity()
                         )
                        val remoteKey = ClientRemoteKeysEntity(
@@ -259,6 +259,25 @@ class ClientViewModel @Inject constructor(
             }
         }
 
+    fun addAsDelivery(userId : Long){
+        viewModelScope.launch(Dispatchers.IO) {
+            val result : Result<Response<AccountType>> = runCatching {
+                repository.addAsDelivery(userId)
+            }
+            result.fold(
+                onSuccess = {success ->
+                    if(success.isSuccessful){
+                        val response = success.body()!!
+                    userDao.updateUserAccountType(userId , response)
+                    }
+                },
+                onFailure = {failure ->
+
+                }
+            )
+
+        }
+    }
 
 
 

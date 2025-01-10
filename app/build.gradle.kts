@@ -5,11 +5,13 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.aymen.metastore"
     compileSdk = 34
+
 
     defaultConfig {
         applicationId = "com.aymen.metastore"
@@ -119,7 +121,10 @@ dependencies {
     implementation (libs.stompprotocolandroid)
 
 
-
+    // firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.messaging.ktx)
 }
 
 

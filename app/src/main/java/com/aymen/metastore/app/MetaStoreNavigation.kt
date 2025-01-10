@@ -1,6 +1,7 @@
 package com.aymen.metastore.app
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aymen.metastore.model.Enum.NotificationType
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
@@ -38,7 +40,7 @@ import com.aymen.metastore.ui.screen.user.UserScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MetaStore (){
+fun MetaStore (extra :  Map<String, Any?>){
     val appViewModel  = hiltViewModel<AppViewModel>()
     val sharedViewModel = hiltViewModel<SharedViewModel>()
     var isLoggedIn by remember { mutableStateOf(false) }
@@ -51,6 +53,7 @@ fun MetaStore (){
          }
 
     }
+Log.e("devicetoken","extra from meta store : $extra")
 
     Surface(
         modifier = Modifier
@@ -76,7 +79,7 @@ fun MetaStore (){
                 }
 
                 is Screen.HomeScreen -> {
-                    HomeScreen()
+                    HomeScreen(extra)
                 }
 
                 is Screen.AddCompanyScreen -> {

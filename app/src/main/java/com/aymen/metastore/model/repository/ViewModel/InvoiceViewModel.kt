@@ -158,8 +158,6 @@ class InvoiceViewModel @Inject constructor(
         }
     }
     init {
-
-        Log.e("testtoviewmodel","invoice view model")
         viewModelScope.launch {
 
         sharedViewModel.accountType.collect {type ->
@@ -172,6 +170,7 @@ class InvoiceViewModel @Inject constructor(
             AccountType.META -> {}
             AccountType.NULL -> {}
             AccountType.SELLER -> {}
+            AccountType.DELIVERY -> TODO()
         }
         }
 
@@ -180,7 +179,6 @@ class InvoiceViewModel @Inject constructor(
 
     fun getAllMyInvoiceAsClientAndStatus(status : Status, id : Long){
         viewModelScope.launch {
-            Log.e("laucnhcrd","launched")
                 useCases.getAllInvoicesAsClientAndStatus(id, status)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
@@ -203,47 +201,62 @@ class InvoiceViewModel @Inject constructor(
             }
             }
     }
-    fun addInvoice(){
+    fun addInvoice(invoiceMode : InvoiceMode){
         viewModelScope.launch(Dispatchers.IO) {
-            val lastInvoiceRemoteKey = invoiceDao.getLatestInvoiceRemoteKey()
-            val id = if (lastInvoiceRemoteKey == null) 1 else lastInvoiceRemoteKey.id + 1
-            val invoiceCount = invoiceDao.getInvoiceCountBySource(true)
-            val page = invoiceCount.div(PAGE_SIZE)
-            val remain = invoiceCount % PAGE_SIZE
-            val invoiceRemoteKey = InvoiceRemoteKeysEntity(
-                id = id,
-                prevPage = if (page == 0) null else page - 1,
-                nextPage = if (remain == 0) page + 1 else null
-            )
-            val invoice = Invoice(
-                id = id,
-                code = lastInvoiceCode,
-                tot_tva_invoice = commandLine.value[0].invoice?.tot_tva_invoice ?: 0.0,
-                prix_invoice_tot = commandLine.value[0].invoice?.prix_invoice_tot ?: 0.0,
-                prix_article_tot = commandLine.value[0].invoice?.prix_article_tot ?: 0.0,
-                discount = discount,
-                status = commandLine.value[0].invoice?.status,
-                paid = commandLine.value[0].invoice?.paid,
-                type = InvoiceDetailsType.COMMAND_LINE,
-                rest = commandLine.value[0].invoice?.rest ?: 0.0,
-                person = clientUser,
-                client = clientCompany,
-                provider = company,
-                isInvoice = true
-            )
+            var id = 0L
+            var invoiceRemoteKey = InvoiceRemoteKeysEntity(0,null,null)
+            Log.e("veftiondazncj","called 1")
+            if(invoiceMode == InvoiceMode.CREATE) {
+                val lastInvoiceRemoteKey = invoiceDao.getLatestInvoiceRemoteKey()
+                 id = if (lastInvoiceRemoteKey == null) 1 else lastInvoiceRemoteKey.id + 1
+                val invoiceCount = invoiceDao.getInvoiceCountBySource(true)
+                val page = invoiceCount.div(PAGE_SIZE)
+                val remain = invoiceCount % PAGE_SIZE
+                 invoiceRemoteKey = InvoiceRemoteKeysEntity(
+                    id = id,
+                    prevPage = if (page == 0) null else page - 1,
+                    nextPage = if (remain == 0) page + 1 else null
+                )
+                Log.e("veftiondazncj", "befrore invoice assignment")
+                val invoice = Invoice(
+                    id = id,
+                    code = lastInvoiceCode,
+                    tot_tva_invoice = commandLine.value[0].invoice?.tot_tva_invoice ?: 0.0,
+                    prix_invoice_tot = commandLine.value[0].invoice?.prix_invoice_tot ?: 0.0,
+                    prix_article_tot = commandLine.value[0].invoice?.prix_article_tot ?: 0.0,
+                    discount = discount,
+                    status = commandLine.value[0].invoice?.status,
+                    paid = commandLine.value[0].invoice?.paid,
+                    type = InvoiceDetailsType.COMMAND_LINE,
+                    rest = commandLine.value[0].invoice?.rest ?: 0.0,
+                    person = clientUser,
+                    client = clientCompany,
+                    provider = company,
+                    isInvoice = true
+                )
 
-            room.withTransaction {
-                userDao.insertUser(listOf(clientUser.toUserEntity()))
-                companyDao.insertCompany(listOf(clientCompany.toCompanyEntity()))
-                invoiceDao.insertKeys(listOf(invoiceRemoteKey))
-                invoiceDao.insertInvoice(listOf(invoice.toInvoiceEntity()))
+                Log.e("veftiondazncj", "before calling room ${commandLine.value[0].invoice}")
+                room.withTransaction {
+                    try {
 
-                commandLine.value.map { line ->
-                    commandLineDao.insertCommandLine(listOf(line.toCommandLineEntity()))
+                        userDao.insertUser(listOf(clientUser.toUserEntity()))
+                        companyDao.insertCompany(listOf(clientCompany.toCompanyEntity()))
+                        invoiceDao.insertKeys(listOf(invoiceRemoteKey))
+                        invoiceDao.insertInvoice(listOf(invoice.toInvoiceEntity()))
+
+                        commandLine.value.map { line ->
+                            line.invoice = invoice
+                            commandLineDao.insertCommandLine(listOf(line.toCommandLineEntity()))
+                        }
+                    } catch (ex: Exception) {
+                        Log.e("veftiondazncj", "exception : $ex")
+                    }
                 }
             }
+            Log.e("veftiondazncj","before calling repo")
                 val result : Result<Response<List<CommandLineDto>>> = runCatching {
                     (clientCompany.id ?: clientUser.id)?.let {
+                        Log.e("veftiondazncj","called")
                         repository.addInvoice(
                             commandLineDtos = commandLine.value,
                             clientId = it,
@@ -256,14 +269,18 @@ class InvoiceViewModel @Inject constructor(
                 }
             result.fold(
                 onSuccess = {success ->
+                    Log.e("veftiondazncj","success")
                     if(success.isSuccessful){
                         val response = success.body()
                         if(response != null) {
                             room.withTransaction {
-                                invoiceDao.deleteInvoiceById(id)
-                                invoiceDao.deleteInvoiceRemoteKeyById(id)
-                                commandLine.value.map { line ->
-                                    commandLineDao.deleteCommandLineById(line.id!!)
+
+                                if(invoiceMode == InvoiceMode.CREATE) {
+                                    invoiceDao.deleteInvoiceById(id)
+                                    invoiceDao.deleteInvoiceRemoteKeyById(id)
+                                    commandLine.value.map { line ->
+                                        commandLineDao.deleteCommandLineById(line.id!!)
+                                    }
                                 }
                                 invoiceDao.insertInvoice(listOf(response[0].invoice?.toInvoice(true)))
                                     invoiceDao.insertKeys(listOf(invoiceRemoteKey.copy(id = response[0].invoice?.id!!)))
@@ -276,6 +293,11 @@ class InvoiceViewModel @Inject constructor(
                 },
                 onFailure = { failure ->
 
+                    Log.e("veftiondazncj", "Operation failed: ${failure.message}", failure)
+                    Log.e("veftiondazncj","failure ${failure}")
+                    Log.e("veftiondazncj","failure ${failure.cause}")
+                    Log.e("veftiondazncj","failure ${failure.cause?.message}")
+                    Log.e("veftiondazncj","failure ${failure.localizedMessage}")
                 }
             )
         }

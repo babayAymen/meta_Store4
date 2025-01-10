@@ -26,6 +26,7 @@ import com.aymen.metastore.model.entity.dto.RatingDto
 import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.dto.SearchHistoryDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
+import com.aymen.metastore.model.entity.dto.TokenDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Category
@@ -43,7 +44,6 @@ import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.Worker
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
 import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
@@ -52,6 +52,7 @@ import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithComm
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
+import com.aymen.metastore.model.repository.remoteRepository.DeliveryRepository.DeliveryRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
 import com.aymen.store.model.repository.remoteRepository.shoppingRepository.ShoppingRepository
@@ -96,6 +97,7 @@ class GlobalRepositoryImpl  @Inject constructor
     private val ratingRepository: RatingRepository,
     private val aymenRepository: AymenRepository,
     private val commandLineRepository: CommandLineRepository,
+    private val deliveryRepository: DeliveryRepository
 
     ) : GlobalRepository {
     override suspend fun addArticle(article: String, file: File):Response<Void> {
@@ -372,9 +374,13 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun makeAsMetaSeller(status: Boolean, id: Long) = aymenRepository.makeAsMetaSeller(status, id)
 
     override suspend fun getAllCommandLinesByInvoiceId(invoiceId: Long): Response<List<CommandLineDto>> = commandLineRepository.getAllCommandLinesByInvoiceId(invoiceId)
+    override suspend fun addAsDelivery(userId: Long): Response<AccountType> = deliveryRepository.addAsDelivery(userId)
+
     override suspend fun SignIn(authenticationRequest: AuthenticationRequest) = signInRepository.SignIn(authenticationRequest)
     override suspend fun SignUp(registerRequest: RegisterRequest) = signInRepository.SignUp(registerRequest)
     override suspend fun refreshToken(token: String) = signInRepository.refreshToken(token)
+    override suspend fun sendMyDeviceToken(token: TokenDto) = signInRepository.sendMyDeviceToken(token)
+
     override suspend fun getMyUserDetails() = signInRepository.getMyUserDetails()
     override suspend fun updateLocations(latitude: Double, logitude: Double) = signInRepository.updateLocations(latitude, logitude)
     override suspend fun getRandomArticlesByCompanyCategory(categName : String) = articleRepository.getRandomArticlesByCompanyCategory(categName)

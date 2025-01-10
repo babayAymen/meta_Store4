@@ -86,20 +86,24 @@ init {
             val id = when (sharedViewModel.accountType.value) {
                 AccountType.COMPANY -> sharedViewModel.company.value.id
                 AccountType.USER -> sharedViewModel.user.value.id
+                AccountType.DELIVERY -> sharedViewModel.user.value.id
                 else -> 0
             }
 
-            when (sharedViewModel.accountType.value) {
-                AccountType.COMPANY -> {
                     getAllMyOrdersNotAccepted(id ?: 0)
-                }
-                AccountType.USER -> {
-                    getAllMyOrdersNotAccepted(id ?: 0)
-                }
-                AccountType.META -> {}
-                AccountType.NULL -> {}
-                AccountType.SELLER -> {}
-            }
+//            when (sharedViewModel.accountType.value) {
+//                AccountType.COMPANY -> {
+//                }
+//                AccountType.USER -> {
+//                    getAllMyOrdersNotAccepted(id ?: 0)
+//                }
+//                AccountType.META -> {}
+//                AccountType.NULL -> {}
+//                AccountType.SELLER -> {}
+//                AccountType.DELIVERY -> {
+//                    getAllMyOrdersNotAccepted(id ?: 0)
+//                }
+//            }
         }
     }
 
@@ -298,7 +302,6 @@ fun submitShopping() {
 
     fun getAllMyOrdersNotAccepted(id : Long) {
         viewModelScope.launch {
-            Log.e("getallordernotaccepted","company id : $id")
                 useCases.getAllMyOrdersNotAccepted(id)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
@@ -311,12 +314,14 @@ fun submitShopping() {
 
 
 
-    fun orderLineResponse(status: Status, id : Long, isAll : Boolean){
+    fun orderLineResponse(status: Status, id : Long, isAll : Boolean, price : Double){
         viewModelScope.launch(Dispatchers.IO) {
+            appViewModel.addCompanyBalance(price)
             if (isAll) {
-                room.purchaseOrderLineDao().deleteByPurchaseOrderId(id)
+                purchaseOrderDao.deleteByPurchaseOrderId(id)
+                 purchaseOrderDao.deleteOrderNotAcceptedKeysById(id)
             } else {
-                        room.purchaseOrderDao().deleteOrderNotAcceptedKeysById(id)
+                purchaseOrderLineDao.changeStatusByLine(status,id)
             }
             val result : Result<Response<Double>> = runCatching{
                 repository.orderLineResponse(status,id,isAll)
@@ -327,11 +332,6 @@ fun submitShopping() {
                     val order = success.body()
                     if(order != null) {
                         appViewModel.updateCompanyBalance(order)
-                        if (isAll) {
-                            room.purchaseOrderLineDao().deleteByPurchaseOrderId(id)
-                        } else {
-                            room.purchaseOrderDao().deletePurchaseOrderById(id)
-                        }
                     }
 
                 },

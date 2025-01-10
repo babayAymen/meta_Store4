@@ -71,10 +71,10 @@ class SearchViewModel @Inject constructor(
             AccountType.COMPANY -> sharedViewModel.company.value.id
             AccountType.META -> sharedViewModel.user.value.id
             AccountType.NULL -> TODO()
-            AccountType.SELLER -> TODO()
+            AccountType.SELLER -> sharedViewModel.company.value.id
+            AccountType.DELIVERY -> sharedViewModel.user.value.id
         }
         viewModelScope.launch {
-            Log.e("srhsrth","idd $id")
             useCases.getAllSearchHistory(id!!)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
@@ -123,6 +123,7 @@ class SearchViewModel @Inject constructor(
             AccountType.META -> sharedViewModel.user.value.id
             AccountType.NULL -> TODO()
             AccountType.SELLER -> TODO()
+            AccountType.DELIVERY -> sharedViewModel.user.value.id
         }
         viewModelScope.launch {
             useCases.getAllCompaniesContaining(search, searchType,id!!)
@@ -145,6 +146,7 @@ class SearchViewModel @Inject constructor(
                 AccountType.META -> sharedViewModel.user.value.id
                 AccountType.NULL -> TODO()
                 AccountType.SELLER -> TODO()
+                AccountType.DELIVERY -> sharedViewModel.user.value.id
             }
             useCases.getAllPersonContaining(id!!,personName, searchType)
                 .distinctUntilChanged()

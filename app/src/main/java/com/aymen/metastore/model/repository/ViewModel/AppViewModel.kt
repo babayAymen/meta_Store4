@@ -22,6 +22,7 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.dto.TokenDto
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,8 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 
@@ -123,6 +126,7 @@ Log.e("testtoviewmodel","app view model")
                 AccountType.META -> {}
                 AccountType.NULL -> {}
                 AccountType.SELLER -> {}
+                AccountType.DELIVERY -> TODO()
             }
         }
         }
@@ -142,7 +146,6 @@ Log.e("testtoviewmodel","app view model")
     init {
         viewModelScope.launch {
             accountTypeDataStore.data.collect{item ->
-                    authsize = 2
                     sharedViewModel.assignAccountType( item)
                     when(item){
                         AccountType.COMPANY -> {
@@ -156,8 +159,6 @@ Log.e("testtoviewmodel","app view model")
                         }
                         AccountType.USER -> {
                             launch {
-
-                                Log.e("osihvoh","acount type user ")
                                 userDatastore.data.collect {
                                     if (it.longitude == 0.0 || it.latitude == 0.0) {
                                         _showCheckLocationDialog.value = true
@@ -166,8 +167,9 @@ Log.e("testtoviewmodel","app view model")
                             }
                         }
                         AccountType.META -> {}
-                        AccountType.NULL -> {}
                         AccountType.SELLER -> {}
+                        AccountType.DELIVERY -> {}
+                        AccountType.NULL -> {}
                     }
             }
         }
@@ -254,8 +256,24 @@ Log.e("testtoviewmodel","app view model")
     fun updateCompanyBalance(blc : Double){
         viewModelScope.launch {
             companyDataStore.updateData { currentCompany ->
+                sharedViewModel.assignCompanyy( currentCompany.copy (
+                    balance = blc
+                ) )
                 currentCompany.copy (
                     balance = blc
+                )
+            }
+        }
+    }
+    fun addCompanyBalance(blc : Double){
+        viewModelScope.launch {
+            companyDataStore.updateData { currentCompany ->
+                val newBalance = BigDecimal(currentCompany.balance!!).add(BigDecimal(blc)).setScale(2,RoundingMode.HALF_UP)
+            sharedViewModel.assignCompanyy( currentCompany.copy (
+                balance = newBalance.toDouble()
+            ) )
+                currentCompany.copy (
+                    balance = newBalance.toDouble()
                 )
             }
         }
@@ -309,6 +327,15 @@ Log.e("testtoviewmodel","app view model")
                     Log.e("refreshTokenError", "Error refreshing token: ${_ex.message}")
                 }
             }
+        }
+    }
+
+
+    fun sendDeviceToken(tok : String){
+        Log.e("devicetoken","token is : $tok")
+        val token = TokenDto(tok)
+        viewModelScope.launch(Dispatchers.IO) {
+        repository.sendMyDeviceToken(token)
         }
     }
 

@@ -24,14 +24,21 @@ interface PaymentDao {
     @Query("SELECT * FROM payment_remote_keys ORDER BY id DESC LIMIT 1")
     suspend fun getLatestPaymentRemoteKey() : PaymentRemoteKeys?
 
-    @Query("DELETE FROM payment")
-    suspend fun clearAllPaymentTable()
+    @Query("SELECT id FROM payment WHERE invoiceId = :invoiceId")
+    suspend fun getPaymentIdsByInvoiceId(invoiceId: Long): List<Long>
 
-    @Query("DELETE FROM payment_remote_keys")
-    suspend fun clearAllRemoteKeysTable()
+    @Query("DELETE FROM payment WHERE invoiceId = :invoiceId")
+    suspend fun deletePaymentsByInvoiceId(invoiceId: Long)
+
+    @Query("DELETE FROM payment_remote_keys WHERE id = :id")
+    suspend fun clearAllRemoteKeysTableById(id : Long)
     @Transaction
     @Query("SELECT * FROM payment WHERE invoiceId = :invoiceId ORDER BY id DESC ")
     fun getPaymentHystoricByInvoiceId(invoiceId : Long): PagingSource<Int,PaymentWithInvoice>
+    @Query("SELECT COUNT(*) FROM payment_remote_keys")
+    suspend fun getPaymentRemoteKeysCount() : Int
+    @Query("DELETE FROM payment WHERE id = :id")
+    suspend fun deletePaymentById(id : Long)
 }
 
 

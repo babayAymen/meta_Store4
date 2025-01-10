@@ -74,7 +74,7 @@ fun PaymentScreen() {
         mutableStateOf(true)
     }
     var reglementInabled by remember {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
     LaunchedEffect(key1 = view) {
         when (view) {
@@ -183,18 +183,6 @@ fun PaymentScreen() {
 fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel) {
     val context = LocalContext.current
 
-    // Observe network changes and trigger refresh
-//    val isOnlinee by rememberUpdatedState(NetworkUtil.isOnline(context))
-//    var isFirst by remember {
-//        mutableStateOf(true)
-//    }
-//    LaunchedEffect(isOnline) {
-//        Log.e("screenpaymeny","call")
-//        if (isOnline && isFirst) {
-//            pointPaymentViewModel.getAllMyPointsPaymentRecharge() // Force refresh when online
-//        }
-//            isFirst = false
-//    }
     val allPaymentRecharge = pointPaymentViewModel.allMyPointsPaymentRecharge.collectAsLazyPagingItems()
     LazyColumn {
         items(count = allPaymentRecharge.itemCount,

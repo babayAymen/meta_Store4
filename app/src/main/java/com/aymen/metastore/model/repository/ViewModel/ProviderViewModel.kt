@@ -135,8 +135,7 @@ class ProviderViewModel @Inject constructor(
                         client = sharedViewModel.company.value,
                         provider = relation.copy(id = companyId),
                         mvt = 0.0,
-                        credit = 0.0,
-                        advance = 0.0
+                        credit = 0.0
                     ).toClientProviderRelationEntity()
                 )
                 val remoteKey = ProviderRemoteKeysEntity(

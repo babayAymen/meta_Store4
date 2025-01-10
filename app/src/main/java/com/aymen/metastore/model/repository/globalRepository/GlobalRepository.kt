@@ -1,6 +1,7 @@
 package com.aymen.store.model.repository.globalRepository
 
 import com.aymen.metastore.model.repository.remoteRepository.CommandLineRepository.CommandLineRepository
+import com.aymen.metastore.model.repository.remoteRepository.DeliveryRepository.DeliveryRepository
 import com.aymen.metastore.model.repository.remoteRepository.aymenRepository.AymenRepository
 import com.aymen.metastore.model.repository.remoteRepository.ratingRepository.RatingRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
@@ -30,6 +31,6 @@ interface GlobalRepository :
     , ShoppingRepository,
     InvetationRepository, PointPaymentRepository,
         RatingRepository, AymenRepository,
-        CommandLineRepository
+        CommandLineRepository, DeliveryRepository
 {
 }

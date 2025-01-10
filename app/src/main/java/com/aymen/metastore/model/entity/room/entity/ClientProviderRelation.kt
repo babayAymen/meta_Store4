@@ -46,8 +46,6 @@ data class ClientProviderRelation(
 
     val credit: Double? = null,
 
-    val advance: Double? = null,
-
     val createdDate : String? = "",
 
     val lastModifiedDate : String? = "",
@@ -62,7 +60,6 @@ data class ClientProviderRelation(
             provider = provider,
             mvt = mvt,
             credit = credit,
-            advance = advance,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate
         )

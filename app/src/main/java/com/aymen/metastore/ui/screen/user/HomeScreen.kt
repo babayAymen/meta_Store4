@@ -53,6 +53,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,12 +61,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.LanguageSwither
+import com.aymen.metastore.model.Enum.NotificationType
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
@@ -85,11 +88,15 @@ import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.ui.screen.admin.DashBoardScreen
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.ui.screen.user.NotificationScreen
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.math.RoundingMode
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(extra : Map<String , Any?>) {
     val context = LocalContext.current
     val sharedViewModel : SharedViewModel = hiltViewModel()
     Surface(
@@ -97,7 +104,7 @@ fun HomeScreen() {
             .fillMaxSize()
             .background(color = Color.White)
     ){
-        MyScaffold(context, sharedViewModel)
+        MyScaffold(context, sharedViewModel, extra)
     }
 }
 
@@ -106,7 +113,7 @@ fun HomeScreen() {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
+fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<String , Any?>) {
     val signInViewModel : SignInViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
@@ -125,12 +132,29 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel) {
             CheckLocation(type, user, company, context)
         }
     }
+//    val clipboardManager = LocalClipboardManager.current on cas ou i need clipboard
+    val scope = rememberCoroutineScope()
     LaunchedEffect(key1 = Unit) {
+        scope.launch{
+            val token = Firebase.messaging.token.await()
+            appViewModel.sendDeviceToken(token)
+        }
         if(randomArticles.itemCount == 0) {
             articleViewModel.fetchRandomArticlesForHomePage(categoryName = CompanyCategory.DAIRY)
         }
     }
+   LaunchedEffect(key1 = extra) {
+        val notificationType = extra["notificationType"]
+        if (notificationType == NotificationType.PAYMENT.name) {
+            appViewModel.updateView("payment")
+            appViewModel.updateScreen(IconType.WALLET)
+        }
 
+        if (notificationType == NotificationType.INVITATION.name) {
+            appViewModel.updateScreen(IconType.USER)
+        }
+
+    }
     Scaffold (
         modifier = Modifier
             .fillMaxSize()
@@ -287,11 +311,27 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         DropdownMenu(
                             expanded = isPopupVisible,
                             onDismissRequest = { isPopupVisible = false }) {
-                            if (accountType == AccountType.USER && company.id == 0L) {
+                            if(accountType == AccountType.DELIVERY){
+                                DropdownMenuItem(text = { Text(text = user.username!!) },
+                                    onClick = {
+                                        isPopupVisible = false
+                                        sharedViewModel.changeAccountType(AccountType.USER)
+                                    })
+                            }
+                            else if (accountType == AccountType.USER && user.accountType == AccountType.DELIVERY){
+                                DropdownMenuItem(text = { Text(text = user.username!!) },
+                                    onClick = {
+                                        isPopupVisible = false
+                                        sharedViewModel.changeAccountType(AccountType.DELIVERY)
+                                    })
+                            }
+                            else if (accountType == AccountType.USER && user.role == RoleEnum.USER) {
                                 DropdownMenuItem(
                                     text = { Text(text = "add company") },
                                     onClick = { RouteController.navigateTo(Screen.AddCompanyScreen) })
-                            } else {
+                            }
+
+                            else {
                                 DropdownMenuItem(text = { Text(text = if (!isCompany) company.name else user.username!!) },
                                     onClick = {
                                         isPopupVisible = false

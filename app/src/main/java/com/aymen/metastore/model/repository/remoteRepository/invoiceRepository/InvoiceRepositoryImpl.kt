@@ -86,6 +86,7 @@ class InvoiceRepositoryImpl @Inject constructor(
                     AccountType.META -> TODO()
                     AccountType.NULL -> TODO()
                     AccountType.SELLER -> TODO()
+                    AccountType.DELIVERY -> TODO()
                 }
             }
         ).flow.map {

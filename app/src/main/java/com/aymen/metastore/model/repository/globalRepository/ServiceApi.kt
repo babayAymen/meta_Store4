@@ -37,9 +37,11 @@ import com.aymen.metastore.model.entity.dto.PaymentDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
 import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
+import com.aymen.metastore.model.entity.dto.TokenDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.dto.WorkerDto
 import com.aymen.metastore.model.entity.model.PaginatedResponse
+import com.aymen.metastore.model.webSocket.fcm.SendMessageDto
 import com.aymen.metastore.util.ARTICLE_BASE_URL
 import com.aymen.metastore.util.AUTH_BASE_URL
 import com.aymen.metastore.util.CATEGORY_BASE_URL
@@ -62,6 +64,7 @@ import com.aymen.metastore.util.SUBCATEGORY_BASE_URL
 import com.aymen.metastore.util.UPDATE_IMAGE_URL
 import com.aymen.metastore.util.WORKER_BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
+import io.ktor.client.plugins.api.Send
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -77,6 +80,8 @@ import retrofit2.http.Query
 interface ServiceApi {
 
 
+    @GET("$META_BASE_URL/make_as_delivery/{userId}")
+    suspend fun addAsDelivery(@Path("userId") userId : Long) : Response<AccountType>
     @GET("$META_BASE_URL/make_as_point_seller/{companyId}")
     suspend fun makeAsPointSeller(@Path("companyId") id : Long,@Query("status") status : Boolean)
     @GET("$META_BASE_URL/make_as_meta_seller/{companyId}")
@@ -176,7 +181,7 @@ interface ServiceApi {
     @GET("$POINT_BASE_URL/get_all_my_as_company/{id}")
     suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<PaymentForProvidersDto>
     @GET("$POINT_BASE_URL/get_all_my/{id}")
-    suspend fun getRechargeHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PointsPaymentDto>
+    suspend fun getRechargeHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): PaginatedResponse<PointsPaymentDto>
     @GET("$POINT_BASE_URL/get_all_my/{companyId}")
     suspend fun getAllMyPointsPayment(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PointsPaymentDto>
     @GET("$POINT_BASE_URL/get_my_profit_by_date/{beginDate}/{finalDate}")
@@ -300,6 +305,8 @@ suspend fun getMeAsCompany(): Response<CompanyDto>
     suspend fun signIn(@Body authenticationRequest: AuthenticationRequest): Response<AuthenticationResponse>
     @POST("$AUTH_BASE_URL/refresh")
     suspend fun refreshToken(@Body token: String): Response<AuthenticationResponse>
+    @POST("$AUTH_BASE_URL/save_my_device")
+    suspend fun sendMyDeviceToken(@Body token : TokenDto) : Response<Void>
     @GET("$AUTH_BASE_URL/myuser")
     suspend fun getMyUserDetails():Response<UserDto>
     @POST("$AUTH_BASE_URL/register")
@@ -353,6 +360,11 @@ suspend fun getMeAsCompany(): Response<CompanyDto>
     suspend fun sendRaglement(@Path("companyId") companyId : Long,@Body cashDto : CashDto) : Response<PaymentDto>
     @GET("$PAYMENT_BASE_URL/get_payment_by_invoice_id/{invoiceId}")
     suspend fun getPaymentHystoricByInvoiceId(@Path("invoiceId") invoiceId : Long, @Query("page") page : Int , @Query("pageSize") pageSize : Int) : PaginatedResponse<PaymentDto>
+/////////////////////////////////////////////////////////////// fcm ////////////////////////////////////////////////////////////////////
 
+    @POST("send")
+    suspend fun sendMessage(@Body message : SendMessageDto)
+    @POST("brodcast")
+    suspend fun brodcast(@Body message : SendMessageDto)
 
 }

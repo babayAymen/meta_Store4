@@ -9,6 +9,7 @@ enum class AccountType {
 
     SELLER ,
 
+    DELIVERY,
 //    PARENT,
 //
 //    WORKER,

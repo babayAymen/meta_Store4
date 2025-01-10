@@ -15,8 +15,6 @@ data class ClientProviderRelationDto(
 
     val credit: Double? = null,
 
-    val advance: Double? = null,
-
     val createdDate : String? = "",
 
     val lastModifiedDate : String? = "",
@@ -29,7 +27,6 @@ data class ClientProviderRelationDto(
             providerId = provider?.id,
             mvt = mvt,
             credit = credit,
-            advance = advance,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate
         )
@@ -42,7 +39,6 @@ data class ClientProviderRelationDto(
             provider = provider?.toCompanyModel(),
             mvt = mvt,
             credit = credit,
-            advance = advance,
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate
         )

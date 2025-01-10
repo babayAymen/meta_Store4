@@ -36,7 +36,8 @@ data class User (
             balance,
             image,
             rate,
-            rater
+            rater,
+            accountType
         )
     }
     fun toUserEntity(): User{
@@ -53,7 +54,8 @@ data class User (
             balance,
             image,
             rate,
-            rater
+            rater,
+            accountType
         )
     }
 }

@@ -1,11 +1,15 @@
 package com.aymen.metastore
 
+import android.Manifest
 import android.app.Activity
 import android.app.LocaleManager
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.LocaleList
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,8 +22,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
@@ -48,29 +56,59 @@ val Context.accounttypedtodatastore: DataStore<AccountType> by dataStore("accoun
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-
     @Inject
     lateinit var chatClient: ChatClient
 
+    private var extrasState = mutableStateOf<Map<String, Any?>>(emptyMap())
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NetworkUtil.isOnline(this)
         val languageCode = getSavedLanguage(this)?: "en"
         setLanguage(this, languageCode)
+        requestNotificationPermission()
         enableEdgeToEdge()
         setContent {
             MetaStoreTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "META",
+                        extrasState = extrasState.value,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        updateExtras(intent)
+    }
 
+    private fun updateExtras(intent: Intent) {
+        val extras = intent.extras
+        if (extras != null) {
+            val map = extras.keySet().associateWith { extras.getString(it) }
+            extrasState.value = map
+        } else {
+            extrasState.value = emptyMap()
+        }
+    }
+    private fun requestNotificationPermission() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            val hasPermission = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if(!hasPermission){
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    0
+                )
+            }
+        }
+    }
 
 
 }
@@ -97,11 +135,10 @@ private fun saveLanguage(context: Context, languageCode: String){
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-     val socket : WebSocketViewModel = hiltViewModel()
+fun Greeting(name: String,extrasState :  Map<String, Any?> , modifier: Modifier = Modifier) {
     Column {
-        MetaStore()
-//            socket.connectToWebSocket()
+        Log.e("device","balance from main activity $extrasState")
+        MetaStore(extrasState)
     }
 }
 
@@ -128,7 +165,7 @@ fun LanguageSwither() {
         Button(onClick = {
             setLanguage(context, "fr")
             (context as? Activity)?.recreate() }) {
-            Text(text = "Fransh")
+            Text(text = "French")
         }
     }
 }

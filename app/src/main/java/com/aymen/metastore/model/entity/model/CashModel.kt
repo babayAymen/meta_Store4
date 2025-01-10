@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.model
 
 import com.aymen.metastore.model.entity.dto.CashDto
+import com.aymen.metastore.model.entity.room.entity.Payment
 import com.aymen.store.model.Enum.Status
 data class CashModel (
 
@@ -27,6 +28,16 @@ data class CashModel (
             invoice = invoice?.toInvoiceDto(),
             createdDate,
             lastModifiedDate
+        )
+    }
+
+    fun toPaymentEntity() : Payment{
+        return Payment(
+            id = id,
+            amount = amount,
+            status = status,
+            invoiceId = invoice?.id,
+            lastModifiedDate = lastModifiedDate
         )
     }
 }

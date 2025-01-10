@@ -99,8 +99,11 @@ class PaymentHystoricRemoteMediator(
 
 
     private suspend fun deleteCache(){
-        paymentDao.clearAllPaymentTable()
-        paymentDao.clearAllRemoteKeysTable()
+       val ids = paymentDao.getPaymentIdsByInvoiceId(invoiceId)
+           paymentDao.deletePaymentsByInvoiceId(invoiceId)
+        ids.forEach {
+        paymentDao.clearAllRemoteKeysTableById(it)
+        }
     }
 
 }

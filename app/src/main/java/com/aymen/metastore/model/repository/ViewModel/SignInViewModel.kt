@@ -152,6 +152,7 @@ class SignInViewModel @Inject constructor(
                 val response = repository.getMyUserDetails()
                 if (response.isSuccessful) {
                     val user = response.body()?.toUserModel()
+                    Log.e("userdelevery","user: $user")
                     sharedViewModel.assignAccountType(user?.accountType!!)
                     storeAccountType(user.accountType)
                     checkLocation(null, user){

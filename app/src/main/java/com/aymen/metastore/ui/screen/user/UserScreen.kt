@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,7 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
+import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
 
@@ -139,6 +141,11 @@ fun UserDetails( clientViewModel: ClientViewModel, sharedViewModel: SharedViewMo
                 modifier = Modifier.weight(1f)
             ) {
                 SendPointDialog(isOpen = false, user, Company())
+            }
+        }
+        if(accountType == AccountType.META){
+            ButtonSubmit(labelValue = if(user.accountType == AccountType.USER) "add as delivery" else "remove as delivery", color = Color.Green, enabled = true) {
+                clientViewModel.addAsDelivery(user.id!!)
             }
         }
         Column (

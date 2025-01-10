@@ -112,6 +112,7 @@ class SharedViewModel @Inject constructor(
 
     fun updateCompanyBalance(newBalance : Double){
         viewModelScope.launch {
+            Log.e("device","updated company balance")
             try {
                 companyDtoDataStore.updateData { currentCompany ->
                     assignCompanyy(currentCompany.copy (
@@ -138,17 +139,6 @@ class SharedViewModel @Inject constructor(
             updateUserBalance(balancee.toDouble())
         }
         if(accountType.value == AccountType.COMPANY){
-            updateCompanyBalance(balancee.toDouble())
-        }
-    }
-
-    fun returnThePrevioseBalance(newBalance : BigDecimal){
-        if(accountType.value == AccountType.USER){
-            val balancee = BigDecimal(_user.value.balance!!) + newBalance
-            updateUserBalance(balancee.toDouble())
-        }
-        if(accountType.value == AccountType.COMPANY){
-            val balancee = BigDecimal(_company.value.balance!!) + newBalance
             updateCompanyBalance(balancee.toDouble())
         }
     }
@@ -233,6 +223,5 @@ class SharedViewModel @Inject constructor(
         Runtime.getRuntime().exit(0)
 
     }
-
 
 }

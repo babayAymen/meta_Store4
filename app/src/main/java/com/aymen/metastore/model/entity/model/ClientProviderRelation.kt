@@ -9,7 +9,6 @@ data class ClientProviderRelation(
     val provider: Company? = null,
     val mvt: Double? = null,
     val credit: Double? = null,
-    val advance: Double? = null,
     val createdDate : String? = "",
     val lastModifiedDate : String? = "",
 ){
@@ -21,7 +20,6 @@ data class ClientProviderRelation(
             providerId = provider?.id,
             mvt,
             credit,
-            advance,
             createdDate,
             lastModifiedDate
         )

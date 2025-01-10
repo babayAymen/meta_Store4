@@ -1,5 +1,6 @@
 package com.aymen.metastore.ui.screen.user
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +29,8 @@ import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Composable
 fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: ShoppingViewModel) {
@@ -38,12 +41,29 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
     var hasWaitingStatus by remember {
         mutableStateOf(true)
     }
-    LaunchedEffect(Unit) {
-        shoppingViewModel.getAllMyOrdersLine(order.id!!)
-
+    var price by remember {
+        mutableStateOf(BigDecimal.ZERO)
     }
+
     val allMyOrdersLineDetails = shoppingViewModel.allMyOrdersLineDetails.collectAsLazyPagingItems()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    LaunchedEffect(key1 = allMyOrdersLineDetails.itemCount) {
+        shoppingViewModel.getAllMyOrdersLine(order.id!!)
+        if (allMyOrdersLineDetails.itemCount != 0) {
+            Log.e("pricetotal", "price $price")
+            val snapshot = allMyOrdersLineDetails.itemSnapshotList.items
+            snapshot.forEach {line ->
+                val prixArticle = BigDecimal(line.prixArticleTot!!)
+                val tva = BigDecimal(line.totTva!!)
+
+                Log.e("pricetotal", "price line $price")
+                price = price.add(prixArticle).add(tva)
+                Log.e("pricetotal", "p :   pr : $  price $price prixarticle : ${line.prixArticleTot} tva ${line.totTva}")
+            }
+            price = price.multiply(BigDecimal(0.9)).multiply(BigDecimal(0.2)).setScale(2,RoundingMode.HALF_UP)
+            Log.e("pricetotal", "price line $price")
+        }
+    }
 
     Surface(
         modifier = Modifier
@@ -69,7 +89,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                         shoppingViewModel.orderLineResponse(
                                             status = Status.ACCEPTED,
                                             id = shoppingViewModel.Order.id!!,
-                                            isAll = true
+                                            isAll = true,
+                                            price.toDouble()
                                         )
                                         hasWaitingStatus = false
                                     }
@@ -85,7 +106,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                         shoppingViewModel.orderLineResponse(
                                             status = Status.REFUSED,
                                             id = shoppingViewModel.Order.id!!,
-                                            isAll = true
+                                            isAll = true,
+                                            price.toDouble()
                                         )
                                         hasWaitingStatus = false
                                     }
@@ -105,7 +127,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                     shoppingViewModel.orderLineResponse(
                                         status = Status.CANCELLED,
                                         id = shoppingViewModel.Order.id!!,
-                                        isAll = true
+                                        isAll = true,
+                                        price.toDouble()
                                     )
                                     hasWaitingStatus = false
                                 }
@@ -118,6 +141,7 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                 ) {index : Int ->
                     val line = allMyOrdersLineDetails[index]
                     if(line != null) {
+
                         Column(modifier = Modifier.padding(8.dp)) {
                             Text(text = line.quantity.toString())
                             Text(text = line.delivery.toString())
@@ -128,6 +152,7 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                             when (line.status) {
                                 Status.INWAITING -> {
                                     if (line.purchaseorder?.company?.id == myCompany.id) {
+
                                         Row {
                                             Row(
                                                 modifier = Modifier.weight(1f)
@@ -137,10 +162,17 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                                     color = Color.Green,
                                                     enabled = true,
                                                 ) {
+                                                    price = BigDecimal(line.prixArticleTot!!).multiply(BigDecimal(0.9)).multiply(BigDecimal(0.2)).setScale(2,RoundingMode.HALF_UP)
+                                                    val pa = BigDecimal(line.prixArticleTot)
+                                                    val pra = pa.multiply(BigDecimal(0.9))
+                                                    val pria = pra.multiply(BigDecimal(0.2))
+                                                    Log.e("pricetotal","p : $pa pr : $pra pri : $pria price $price")
                                                     shoppingViewModel.orderLineResponse(
                                                         status = Status.ACCEPTED,
                                                         id = line.id!!,
-                                                        isAll = false
+                                                        isAll = false,
+                                                        price.toDouble()
+
                                                     )
                                                 }
                                             }
@@ -156,7 +188,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                                     shoppingViewModel.orderLineResponse(
                                                         status = Status.REFUSED,
                                                         id = line.id!!,
-                                                        isAll = false
+                                                        isAll = false,
+                                                        price.toDouble()
                                                     )
                                                 }
                                             }
@@ -170,7 +203,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                             shoppingViewModel.orderLineResponse(
                                                 status = Status.CANCELLED,
                                                 id = line.id!!,
-                                                isAll = false
+                                                isAll = false,
+                                                price.toDouble()
                                             )
                                         }
                                     }

@@ -143,8 +143,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val ordersLineInvoice = invoiceViewModel.ordersLine.collectAsLazyPagingItems()
     val commandLineInvoice = invoiceViewModel.commandLineInvoice.collectAsLazyPagingItems()
     val paymentHistoric = paymentViewModel.paymentHistoric.collectAsLazyPagingItems()
-    val invoice =
-        if (invoiceViewModel.invoice.type == InvoiceDetailsType.ORDER_LINE) ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
+    var invoice =
+        if (invoiceViewModel.invoice.type == InvoiceDetailsType.ORDER_LINE)
+            ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
         else
             commandLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
     DisposableEffect(key1 = Unit) {
@@ -252,14 +253,16 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 FeatureIcons(
                                     invoiceViewModel,
                                     context,
-                                    invoiceMode
-                                ) { paymentDailog, articleDailog, pdfDailog ->
+                                    invoiceMode,
+                                    invoice?.paid,
+                                ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
                                     showPaymentDailog = paymentDailog
                                     showArticleDialog = articleDailog
                                     showDialog = pdfDailog
+                                    showPaymentDialog = beforeSending
                                 }
                                 if (showDialog) generatePDF(context, commandsLine)
-                                if (showPaymentDailog) {
+                                if (showPaymentDialog) {
                                     val invoiceText = stringResource(id = R.string.invoice)
                                     ShowPaymentDailog(totgen, openDailog = true) { mony, payed ->
                                         paid = if (payed) {
@@ -283,7 +286,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         }
 
                                         generatePDF(context, commandsLine)
-                                        invoiceViewModel.addInvoice()
+                                        invoiceViewModel.addInvoice(invoiceMode)
                                         appViewModel.updateShow(invoiceText)
                                     }
                                 }
@@ -342,7 +345,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
             if (invoice != null) {
                 LazyColumn {
                     item {
-                        MyCompanyDetails(myCompany = invoice.provider!!)
+                        MyCompanyDetails(myCompany = invoice?.provider!!)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -350,7 +353,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         ) {
                             Column {
                                 Text(
-                                    text = invoice.code.toString(),
+                                    text = invoice?.code.toString(),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentWidth(Alignment.CenterHorizontally)
@@ -358,7 +361,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 Text(
                                     text = stringResource(
                                         id = R.string.invoice_date,
-                                        invoice.createdDate!!
+                                        invoice?.createdDate!!
                                     ),
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -367,14 +370,32 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                 FeatureIcons(
                                     invoiceViewModel = invoiceViewModel,
                                     context = context,
-                                    invoiceMode = invoiceMode
-                                ) { paymentDailog, articleDailog, pdfDailog ->
+                                    invoiceMode = invoiceMode,
+                                    invoice?.paid,
+                                ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
                                     showPaymentDailog = paymentDailog
                                     showArticleDialog = articleDailog
                                     showDialog = pdfDailog
+                                    showPaymentDialog = beforeSending
                                 }
                                 if (showDialog) generatePDF(context, commandsLine)
                                 if (showPaymentDailog) {
+                                    PaymentDailog(isOpen = true) { amount ->
+                                        showPaymentDailog = false
+                                        if (amount != 0.0) {
+                                            val cash = CashModel()
+                                            cash.amount = amount
+                                            cash.invoice = invoice
+                                            paymentViewModel.sendRaglement(
+                                                invoice?.provider?.id!!,
+                                                cash
+                                            ){
+                                                invoice = it
+                                            }
+                                        }
+                                    }
+                                }
+                                if (showPaymentDialog) {
                                     val invoiceText = stringResource(id = R.string.invoice)
                                     ShowPaymentDailog(
                                         totgen,
@@ -394,7 +415,11 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                                     PaymentStatus.NOT_PAID
                                             }
                                         }
-                                        invoiceViewModel.addInvoice()
+                                        if(invoiceViewModel.clientUser == User() && invoiceViewModel.clientCompany == Company()) {
+                                            invoiceViewModel.clientUser = invoice?.person ?: User()
+                                            invoiceViewModel.clientCompany = invoice?.client ?: Company()
+                                        }
+                                        invoiceViewModel.addInvoice(invoiceMode)
                                         appViewModel.updateShow(invoiceText)
                                     }
                                 }
@@ -402,8 +427,8 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                         }
                         ClientDetails(
                             clientType = clientType,
-                            clientCompany = invoice.client,
-                            clientUser = invoice.person
+                            clientCompany = invoice?.client,
+                            clientUser = invoice?.person
                         )
 
                         if (commandsLine.isNotEmpty()) {
@@ -488,14 +513,14 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
                             if (invoice?.status == Status.INWAITING) {
-                                if (invoice.provider?.id != myCompany.id) {
+                                if (invoice?.provider?.id != myCompany.id) {
                                     ButtonSubmit(
                                         labelValue = stringResource(id = R.string.accept),
                                         color = Color.Green,
                                         enabled = true
                                     ) {
                                         invoiceViewModel.accepteInvoice(
-                                            invoice.id!!,
+                                            invoice?.id!!,
                                             Status.ACCEPTED
                                         )
                                     }
@@ -513,17 +538,21 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         paymentViewModel.sendRaglement(
                                             invoice?.provider?.id!!,
                                             cash
-                                        )
+                                        ){
+                                            invoice = it
+                                        }
                                     }
                                 }
                             }
                             FeatureIcons(
                                 invoiceViewModel = invoiceViewModel,
                                 context = context,
-                                invoiceMode
-                            ) { paymentDailog, articleDailog, pdfDailog ->
+                                invoiceMode,
+                                invoice?.paid,
+                            ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
                                 showDialog = pdfDailog
                                 showPaymentDailog = paymentDailog
+                                showArticleDialog = beforeSending
                             }
                         }
                     }
@@ -733,7 +762,7 @@ fun TableHeader(labels : List<Int>) {
     }
 }
 @Composable
-fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMode : InvoiceMode, onSubmit: (Boolean, Boolean, Boolean) -> Unit) {
+fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMode : InvoiceMode, invoiceStatus : PaymentStatus?, onSubmit: (Boolean, Boolean, Boolean, Boolean) -> Unit) {
     var article by remember {
         mutableStateOf(ArticleCompany())
     }
@@ -747,11 +776,11 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
     ) {
         if(invoiceMode != InvoiceMode.VERIFY) {
         ArticleDialog(update = false, openDialo = false) {
-            onSubmit(false, false, false)
+            onSubmit(false, false, false, false)
         }
             IconButton(
                 onClick = {
-                    onSubmit(true, false, false)
+                    onSubmit(false, false, false, true)
                 }
             ) {
                 Icon(
@@ -788,14 +817,15 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
                 }
             }
         }
-        IconButton(onClick = { onSubmit(false, false,true) }
+        IconButton(onClick = { onSubmit(false, false,true, false) }
         ) {
             Icon(
                 Icons.AutoMirrored.Outlined.InsertDriveFile,
                 contentDescription = stringResource(id = R.string.pdf)
             )
         }
-        IconButton(onClick = { onSubmit(true, false, false) }) {
+        if(invoiceStatus != PaymentStatus.PAID && invoiceMode != InvoiceMode.CREATE)
+        IconButton(onClick = { onSubmit(true, false, false, false) }) {
             Icon(imageVector = Icons.Outlined.AccountBalanceWallet,
                 contentDescription = "payment icon")
         }

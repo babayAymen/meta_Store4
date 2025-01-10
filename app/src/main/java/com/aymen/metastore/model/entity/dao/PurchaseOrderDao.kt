@@ -46,6 +46,9 @@ interface PurchaseOrderDao {
      @Query("DELETE FROM purchase_order_line WHERE purchaseOrderLineId = :id")
      suspend fun deleteOrderNotAcceptedKeysById(id : Long)
 
+     @Query("DELETE FROM purchase_order WHERE purchaseOrderId = :id")
+     suspend fun deleteByPurchaseOrderId(id : Long)
+
      @Query("SELECT * FROM order_not_accepted_keys_entity ORDER BY id DESC LIMIT 1")
      suspend fun getLatestOrderRemoteKey() : OrderNotAcceptedKeysEntity?
     @Query("SELECT COUNT(*) FROM order_not_accepted_keys_entity")

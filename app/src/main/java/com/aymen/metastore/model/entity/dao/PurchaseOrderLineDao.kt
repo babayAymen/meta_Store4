@@ -38,14 +38,6 @@ interface PurchaseOrderLineDao {
 
     @Query("SELECT * FROM order_line_keys WHERE id = :id")
     suspend fun getAllOrderLineRemoteKeys(id : Long) : OrderLineKeysEntity
-//
-//    @Transaction
-//    @Query("SELECT * FROM purchase_order_line WHERE id = :orderId")
-//    fun getPurchaseOrderDetails(orderId : Long) : List<Flow<PurchaseOrderLineWithPurchaseOrderOrInvoice>>
-
-
-    @Query("SELECT * FROM purchase_order_line")
-    suspend fun getAllOrdersLine(): List<PurchaseOrderLine>
 
     @Query("SELECT * FROM purchase_order_line WHERE purchaseOrderId = :orderId")
      fun getAllMyOrdersLinesByOrderId(orderId : Long) : PagingSource<Int,PurchaseOrderLineWithPurchaseOrderOrInvoice>
@@ -64,7 +56,6 @@ interface PurchaseOrderLineDao {
 
      @Query("DELETE FROM purchase_order_line WHERE purchaseOrderId = :purchaseOrderId")
      suspend fun deleteByPurchaseOrderId(purchaseOrderId : Long)
-
 
 
 }

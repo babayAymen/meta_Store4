@@ -113,7 +113,7 @@ fun getAllCategories(){
             val remoteKey = CategoryRemoteKeysEntity(
                 id = id,
                 prevPage = if(page == 0)null else page-1,
-                nextPage = if(remainder!=0) 1 else page+1,
+                nextPage = if(remainder!=0) null else page+1,
                 lastUpdated = null
             )
             room.withTransaction {

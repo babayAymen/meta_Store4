@@ -98,7 +98,6 @@ class ArticleViewModel @Inject constructor(
 
      fun fetchAllMyArticlesApi(companyId: Long) {
         viewModelScope.launch {
-            Log.e("getallmyarticle","id : $companyId")
             useCases.getPagingArticleCompanyByCompany(companyId)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
@@ -110,7 +109,6 @@ class ArticleViewModel @Inject constructor(
 
      fun fetchRandomArticlesForHomePage(categoryName : CompanyCategory) {
          val companyId = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value.id else null
-         Log.e("token","companyid : $companyId and account type : ${sharedViewModel.accountType.value}")
         viewModelScope.launch{
             useCases.getRandomArticle(categoryName = categoryName, companyId)
                 .distinctUntilChanged()

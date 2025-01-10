@@ -4,6 +4,7 @@ import com.aymen.metastore.model.entity.room.entity.User
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
+import com.aymen.store.model.Enum.AccountType
 
 @Dao
 interface UserDao {
@@ -21,6 +22,8 @@ interface UserDao {
     }
 
 
+    @Query("UPDATE user SET accountType = :accountType WHERE id = :id")
+    suspend fun updateUserAccountType(id : Long ,accountType: AccountType)
 
     @Query("SELECT username FROM user WHERE id = :userId")
     suspend fun getUserNameById(userId : Long): String

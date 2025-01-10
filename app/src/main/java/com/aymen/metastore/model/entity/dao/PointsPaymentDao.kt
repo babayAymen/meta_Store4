@@ -46,4 +46,9 @@ interface PointsPaymentDao {
      @Query("SELECT * FROM points_payment WHERE (clientCompanyId = :id OR providerId = :id OR clientUserId = :id) ORDER BY lastModifiedDate DESC")
      fun getAllRechargeHistory(id : Long) : PagingSource<Int, PointsWithProviderclientcompanyanduser>
 
+     @Query("SELECT * FROM rechage_remote_keys_table ORDER BY id DESC LIMIT 1")
+     suspend fun getFirstPointsPaymentRemoteKey() : RechargeRemoteKeysEntity?
+
+     @Query("SELECT * FROM rechage_remote_keys_table ORDER BY id ASC LIMIT 1")
+     suspend fun getLatestPointsPaymentRemoteKey() : RechargeRemoteKeysEntity?
 }

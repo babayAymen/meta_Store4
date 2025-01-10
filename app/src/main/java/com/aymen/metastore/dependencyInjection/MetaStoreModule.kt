@@ -42,6 +42,8 @@ import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
 import com.aymen.store.model.repository.globalRepository.GlobalRepositoryImpl
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.model.repository.remoteRepository.DeliveryRepository.DeliveryRepository
+import com.aymen.metastore.model.repository.remoteRepository.DeliveryRepository.DeliveryRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepositoryImpl
 import com.aymen.store.model.repository.remoteRepository.invetationRepository.InvetationRepository
@@ -397,6 +399,7 @@ class MetaStoreModule {
         ratingRepository: RatingRepository,
         aymenRepository: AymenRepository,
         commandLineRepository: CommandLineRepository,
+        deliveryRepository: DeliveryRepository
     ): GlobalRepository {
         return GlobalRepositoryImpl(
             signInRepository,
@@ -409,7 +412,8 @@ class MetaStoreModule {
              shoppingRepository,
             invetationRepository, pointPaymentRepository,
             ratingRepository, aymenRepository,
-            commandLineRepository
+            commandLineRepository, deliveryRepository
+
         )
     }
     @Provides
@@ -420,6 +424,13 @@ class MetaStoreModule {
         sharedViewModel: SharedViewModel
     ): ArticleRepository {
         return  ArticleRepositoryImpl(serviceApi,sharedViewModel,room)
+    }
+    @Provides
+    @Singleton
+    fun provideDeliveryRepository(
+        serviceApi: ServiceApi
+    ): DeliveryRepository{
+        return DeliveryRepositoryImpl(serviceApi)
     }
     @Provides
     @Singleton

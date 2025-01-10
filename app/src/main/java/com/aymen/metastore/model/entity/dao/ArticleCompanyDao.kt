@@ -180,13 +180,23 @@ interface ArticleCompanyDao {
     @Query("DELETE FROM article_company_random_remote_keys")
     suspend fun clearAllRandomRemoteKeysTable()
 
+    @Query("DELETE FROM article_company_random_remote_keys WHERE id = :id")
+    suspend fun clearRandomRemoteKeysTableById(id : Long)
+
     @Query("DELETE FROM article_company WHERE isRandom = 0 AND isSearch = 0 AND companyId = :companyId")
     suspend fun clearAllArticleCompanyTable(companyId: Long)
 
 
-    @Query("DELETE FROM article_company WHERE isRandom = 1 AND isSearch = 0 AND isMy = 0")
-    suspend fun clearAllRandomArticleCompanyTable()
+    @Query("DELETE FROM article_company " +
+            "WHERE companyId IN (" +
+            "    SELECT c.companyId " +
+            "    FROM company AS c" +
+            "    WHERE c.category = :category" +
+            ") AND isRandom = 1 AND isSearch = 0 AND isMy = 0")
+    suspend fun clearAllRandomArticleCompanyTable(category: CompanyCategory)
 
+    @Query("SELECT ac.id FROM article_company AS ac JOIN company AS c ON ac.companyId = c.companyId WHERE c.category = :category")
+    suspend fun getAllIdsByCategory(category: CompanyCategory) : List<Long>
     @Query("DELETE FROM article_containing_remote_keys")
     suspend fun clearAllArticleContainingRemoteKeysTable()
 
@@ -212,8 +222,10 @@ interface ArticleCompanyDao {
     suspend fun getFirstArticleCompanyRemoteKey() : ArticleRemoteKeysEntity?
     @Query("SELECT * FROM article_remote_keys_table ORDER BY id ASC LIMIT 1")
     suspend fun getLatestArticleCompanyRemoteKey() : ArticleRemoteKeysEntity?
+
     @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id DESC LIMIT 1")
     suspend fun getFirstRandomArticleCompanyRemoteKey() : ArticleCompanyRandomRKE?
+
     @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id ASC LIMIT 1")
     suspend fun getLatestRandomArticeCompanyRemoteKey() : ArticleCompanyRandomRKE?
 

@@ -72,7 +72,6 @@ class ArticleCompanyRandomMediator(
                         )
                     })
 
-                    response.content.map { article -> Log.e("logartilce","article category : ${article} and my company is : $companyId") }
                     userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
                     articleDao.insertArticle(response.content.map {article -> article.article?.toArticle(isMy = article.company?.id == companyId) })
@@ -100,7 +99,10 @@ class ArticleCompanyRandomMediator(
 
 
     private suspend fun deleteCache(){
-        articleCompanyDao.clearAllRandomRemoteKeysTable()
-        articleCompanyDao.clearAllRandomArticleCompanyTable()
+        val ids = articleCompanyDao.getAllIdsByCategory(category)
+        articleCompanyDao.clearAllRandomArticleCompanyTable(category)
+        ids.forEach {
+        articleCompanyDao.clearRandomRemoteKeysTableById(it)
+        }
     }
 }

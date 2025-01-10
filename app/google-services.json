@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "888141769275",
+    "project_id": "hstore-464f4",
+    "storage_bucket": "hstore-464f4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:888141769275:android:0b95b5a5468a7beac18a1e",
+        "android_client_info": {
+          "package_name": "com.aymen.metastore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAprY4aT14ukNsjSLH4BZmPTN9QKBDr_xw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -221,5 +221,7 @@ interface InvoiceDao {
      @Query("SELECT * FROM invoice WHERE status = :status")
      fun getAllMyBuyHistoryFromNotAcceptedInvoice(status : Status) : PagingSource<Int, InvoiceWithClientPersonProvider>
 
+     @Query("UPDATE invoice SET paid = :paid , rest = :rest  WHERE id = :id")
+     suspend fun updateInvoicePaidAndRest(id : Long, paid : PaymentStatus , rest : Double)
 
 }
