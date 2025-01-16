@@ -18,13 +18,13 @@ interface InvetationDao {
     @Upsert
     suspend fun insertInvitationKeys(keys : List<InvitationRemoteKeysEntity>)
 
-    @Query("SELECT * FROM inventory_remote_keys_entity WHERE id = :id")
+    @Query("SELECT * FROM invitation_remote_keys_table WHERE id = :id")
     suspend fun getInvitationRemoteKey(id : Long) : InvitationRemoteKeysEntity
 
-    @Query("DELETE FROM inventory_remote_keys_entity")
+    @Query("DELETE FROM invitation_remote_keys_table")
     suspend fun clearAllRemoteKeysTables()
 
-    @Query("DELETE FROM inventory")
+    @Query("DELETE FROM invitation")
     suspend fun clearAllInvitationTables()
 
     @Query("SELECT * FROM invitation")
@@ -32,5 +32,10 @@ interface InvetationDao {
 
     @Query("UPDATE invitation SET status = :status WHERE id = :id")
     suspend fun requestResponse(status: Status , id : Long)
+
+    @Query("SELECT * FROM invitation_remote_keys_table ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstInvitationRemoteKey() : InvitationRemoteKeysEntity?
+    @Query("SELECT * FROM invitation_remote_keys_table ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestInvitationRemoteKey() : InvitationRemoteKeysEntity?
 
 }

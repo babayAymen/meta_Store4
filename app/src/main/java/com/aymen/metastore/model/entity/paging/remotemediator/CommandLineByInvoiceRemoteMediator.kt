@@ -38,28 +38,28 @@ class CommandLineByInvoiceRemoteMediator(
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                     0
                 }
 
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     previousePage
                 }
 
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     nextePage
                 }
             }
             val response = api.getAllCommandLinesByInvoiceId(companyId , invoiceId , currentPage, state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             room.withTransaction {
@@ -67,7 +67,7 @@ class CommandLineByInvoiceRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    commandLineDao.insertCommandLineByInvoiceKeys(response.map { article ->
+                    commandLineDao.insertCommandLineByInvoiceKeys(response.content.map { article ->
                         CommandLineByInvoiceRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
@@ -76,19 +76,19 @@ class CommandLineByInvoiceRemoteMediator(
                     })
 
 
-                    userDao.insertUser(response.map {user -> user.article?.company?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.article?.company?.toCompany()})
-                    articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true)!! })
-                    articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(false)})
+                    userDao.insertUser(response.content.map {user -> user.article?.company?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.article?.company?.toCompany()})
+                    articleDao.insertArticle(response.content.map {article -> article.article?.article?.toArticle(isMy = true)!! })
+                    articleCompanyDao.insertArticle(response.content.map { it.article?.toArticleCompany(false)})
 
-                    userDao.insertUser(response.map {user -> user.invoice?.person?.toUser()})
-                    userDao.insertUser(response.map {user -> user.invoice?.client?.user?.toUser()})
-                    userDao.insertUser(response.map {user -> user.invoice?.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.invoice?.client?.toCompany()})
-                    companyDao.insertCompany(response.map {company -> company.invoice?.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {invoice -> invoice.invoice?.toInvoice(isInvoice = true) })
+                    userDao.insertUser(response.content.map {user -> user.invoice?.person?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.invoice?.client?.user?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.invoice?.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.invoice?.client?.toCompany()})
+                    companyDao.insertCompany(response.content.map {company -> company.invoice?.provider?.toCompany()})
+                    invoiceDao.insertInvoice(response.content.map {invoice -> invoice.invoice?.toInvoice(isInvoice = true) })
 
-                    commandLineDao.insertCommandLine(response.map { line -> line.toCommandLine() })
+                    commandLineDao.insertCommandLine(response.content.map { line -> line.toCommandLine() })
 
                 } catch (ex: Exception) {
                     Log.e("getAllOrdersLineByInvoiceId", ex.toString())
@@ -102,25 +102,12 @@ class CommandLineByInvoiceRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, CommandLineWithInvoiceAndArticle>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        val reomteKey = entity?.let { commandLineDao.getCommandLineByInvoiceRemoteKey(it.commandLine.id!!) }
-        return reomteKey?.prevPage
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+       return commandLineDao.getFirstInvoiceRemoteKey()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, CommandLineWithInvoiceAndArticle>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        val reomteKey = entity?.let { commandLineDao.getCommandLineByInvoiceRemoteKey(it.commandLine.id!!) }
-        return reomteKey?.nextPage
-    }
-
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, CommandLineWithInvoiceAndArticle>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        val reomteKey = entity?.commandLine?.id?.let { commandLineDao.getCommandLineByInvoiceRemoteKey(it) }
-        return reomteKey?.nextPage
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+       return commandLineDao.getLatestInvoiceRemoteKey()?.nextPage
     }
 
     private suspend fun deleteCache(){

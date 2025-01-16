@@ -1,7 +1,6 @@
 package com.aymen.metastore.ui.screen.user
 
-import android.util.Log
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,8 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,25 +23,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.entity.model.Invitation
-import com.aymen.metastore.model.repository.ViewModel.AppViewModel
-import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvetationViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.ui.component.notImage
-import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
+import com.aymen.metastore.util.IMAGE_URL_USER
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
-import com.aymen.store.ui.navigation.RouteController
-import com.aymen.store.ui.navigation.Screen
 
 @Composable
 fun InvetationScreen(modifier: Modifier = Modifier) {
     val invetationViewModel : InvetationViewModel = hiltViewModel()
+    val sharedViewModel : SharedViewModel = hiltViewModel()
     val invitations = invetationViewModel.myAllInvetation.collectAsLazyPagingItems()
-
+    sharedViewModel.setInvitationCountNotification(true)
 LaunchedEffect(key1 = Unit) {
     invetationViewModel.getAllMyInvetations()
 }
@@ -52,7 +51,6 @@ LaunchedEffect(key1 = Unit) {
                 val invitation = invitations[index]
                 if(invitation != null) {
                     InvetationCard(invitation) { status ->
-                        Log.e("requestResponse","status : $status id ${invitation.id}")
                         invetationViewModel.RequestResponse(status, invitation.id!!)
                     }
                 }
@@ -64,1337 +62,205 @@ LaunchedEffect(key1 = Unit) {
 
 
 @Composable
-fun InvetationCard(invetation : Invitation,onClicked: (Status) -> Unit) {
-    val companyViewModel : CompanyViewModel = hiltViewModel()
-    val sharedViewModel : SharedViewModel = hiltViewModel()
-    var companyId by remember {
+fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
+    val sharedViewModel: SharedViewModel = hiltViewModel()
+    val company by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myAccountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    val companyId by remember {
+        mutableLongStateOf(company.id ?: 0)
+    }
+    var actionaireName by remember {
+        mutableStateOf("")
+    }
+    var adverbe by remember {
+        mutableStateOf("")
+    }
+    var adverbType by remember {
+        mutableStateOf(AccountType.NULL)
+    }
+    var adverbImage by remember {
+        mutableStateOf("")
+    }
+    var adverbId by remember {
         mutableLongStateOf(0)
     }
-    val role by sharedViewModel.accountType.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        companyViewModel.getMyCompany {
-            if (it != null) {
-                companyId = it.id!!
-            }
-        }
-    }
-    Row (
+    Row(
         modifier = Modifier.fillMaxWidth()
     )
     {
-        when (invetation.type) {
-            Type.USER_SEND_CLIENT_COMPANY ->
-                InvitationTypeClient(invetation, companyId){
-                    Log.e("requestResponse","status : $it id ${invetation.id}")
-                    onClicked(it)
+
+        val type = when (invitation.type) {
+            Type.USER_SEND_CLIENT_COMPANY -> {
+                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
+                    actionaireName = invitation.companyReceiver?.name ?: ""
+                    adverbe = invitation.client?.username ?: ""
+                    adverbType = AccountType.USER
+                    adverbImage = invitation.client?.image ?: ""
+                    adverbId = invitation.client?.id ?: 0
+                } else {
+                    actionaireName = invitation.client?.username ?: ""
+                    adverbe = invitation.companyReceiver?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companyReceiver?.logo ?: ""
+                    adverbId = invitation.companyReceiver?.user?.id ?: 0
                 }
-            Type.COMPANY_SEND_CLIENT_COMPANY ->
-                InvitationTypeClient(invetation, companyId){
-                    onClicked(it)
+                "client"
+            }
+
+            Type.COMPANY_SEND_CLIENT_COMPANY -> {
+                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
+                    actionaireName = invitation.companyReceiver?.name ?: ""
+                    adverbe = invitation.companySender?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companySender?.logo ?: ""
+                    adverbId = invitation.companySender?.user?.id ?: 0
+                } else {
+                    actionaireName = invitation.companySender?.name ?: ""
+                    adverbe = invitation.companyReceiver?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companyReceiver?.logo ?: ""
+                    adverbId = invitation.companyReceiver?.user?.id ?: 0
                 }
-            Type.COMPANY_SEND_PROVIDER_USER ->
-                InvitationTypeProvider(invetation, companyId,role){
-                    onClicked(it)
+                "client"
+            }
+
+            Type.COMPANY_SEND_PROVIDER_USER -> {
+                if (invitation.companySender?.id == companyId && myAccountType == AccountType.COMPANY) {
+                    actionaireName = invitation.companySender?.name ?: ""
+                    adverbe = invitation.client?.username ?: ""
+                    adverbType = AccountType.USER
+                    adverbImage = invitation.client?.image ?: ""
+                    adverbId = invitation.client?.id ?: 0
+                } else {
+                    actionaireName = invitation.client?.username ?: ""
+                    adverbe = invitation.companySender?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companySender?.logo ?: ""
+                    adverbId = invitation.companySender?.user?.id ?: 0
                 }
-            Type.COMPANY_SEND_PROVIDER_COMPANY ->
-                InvitationTypeProvider(invetation, companyId,role){
-                    onClicked(it)
+                "provider"
+            }
+
+            Type.COMPANY_SEND_PROVIDER_COMPANY -> {
+                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
+                    actionaireName = invitation.companyReceiver?.name ?: ""
+                    adverbe = invitation.companySender?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companySender?.logo ?: ""
+                    adverbId = invitation.companySender?.user?.id ?: 0
+                } else {
+                    actionaireName = invitation.companySender?.name ?: ""
+                    adverbe = invitation.companyReceiver?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companyReceiver?.logo ?: ""
+                    adverbId = invitation.companyReceiver?.user?.id ?: 0
                 }
+                "provider"
+            }
+
             Type.COMPANY_SEND_PARENT_COMPANY ->
-                InvitationTypeParent(invetation = invetation, companyId){
-                    onClicked(it)
+                "parent"
+
+            Type.COMPANY_SEND_WORKER_USER -> {
+                if (invitation.companySender?.id == companyId && myAccountType == AccountType.COMPANY) {
+                    actionaireName = invitation.companySender?.name ?: ""
+                    adverbe = invitation.client?.username ?: ""
+                    adverbType = AccountType.USER
+                    adverbImage = invitation.client?.image ?: ""
+                    adverbId = invitation.client?.id ?: 0
+                } else {
+                    actionaireName = invitation.client?.username ?: ""
+                    adverbe = invitation.companySender?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companySender?.logo ?: ""
+                    adverbId = invitation.companySender?.user?.id ?: 0
                 }
-            Type.COMPANY_SEND_WORKER_USER ->
-                InvitationTypeWorker(invetation = invetation,role){
-                    onClicked(it)
+                "worker"
+            }
+
+            Type.USER_SEND_WORKER_COMPANY -> {
+                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
+                    actionaireName = invitation.companyReceiver?.name ?: ""
+                    adverbe = invitation.client?.username ?: ""
+                    adverbType = AccountType.USER
+                    adverbImage = invitation.client?.image ?: ""
+                    adverbId = invitation.client?.id ?: 0
+                } else {
+                    actionaireName = invitation.client?.username ?: ""
+                    adverbe = invitation.companyReceiver?.name ?: ""
+                    adverbType = AccountType.COMPANY
+                    adverbImage = invitation.companyReceiver?.logo ?: ""
+                    adverbId = invitation.companyReceiver?.user?.id ?: 0
                 }
-            Type.USER_SEND_WORKER_COMPANY ->
-                InvitationTypeWorker(invetation = invetation,role){
-                    onClicked(it)
-                }
+                "worker"
+            }
 
             Type.OTHER -> TODO()
             null -> TODO()
         }
-    }
-
-}
-
-@Composable
-fun InvitationTypeWorker(invetation: Invitation, role : AccountType,onClicked: (Status) -> Unit) {
-    when (invetation.status){
-        Status.INWAITING ->
-            InWaitingTypeWorker(invetation = invetation, role = role){
-                onClicked(it)
+        val image = String.format(
+            if (adverbType == AccountType.USER) IMAGE_URL_USER else IMAGE_URL_COMPANY,
+            adverbImage,
+            adverbId
+        )
+        Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Row(modifier = Modifier.weight(0.2f)) {
+                if (adverbImage != "")
+                    ShowImage(image)
+                else
+                    notImage()
             }
-        Status.ACCEPTED ->
-            AcceptTypeWorker(invetation = invetation, role = role)
-        Status.REFUSED ->
-            RefuseTypeWorker(invetation = invetation, role = role)
-        Status.CANCELLED ->
-            CancelTypeWorker(invetation = invetation, role = role)
-
-        null -> TODO()
-    }
-}
-@Composable
-fun CancelTypeWorker(invetation: Invitation, role : AccountType) {
-    when (role) {
-        AccountType.COMPANY -> {
-            Row {
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-                        Text(text = "${invetation.client?.username} has canceled a worker invitation")
-                    } else {
-                        Text(text = "you have canceled a worker invitation to ${invetation.client?.username}")
-                    }
-                }
-            }
-        }
-        AccountType.USER ->{
-            Row{
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    }else{
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    }
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY){
-                        Text(text = "you have canceled a worker invitation to ${invetation.companyReceiver?.name}")
-                    }
-                    else{
-                        Text(text = "${invetation.companySender?.name} has cnceled a worker invitation")
-                    }
-                }
-            }
-        }
-        else -> {
-
-        }
-    }
-
-}
-@Composable
-fun RefuseTypeWorker(invetation: Invitation, role : AccountType) {
-    when (role){
-        AccountType.COMPANY -> {
-            Row {
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY){
-                        Text(text = "you have refused a worker invitation from ${invetation.client?.username}")
-                    }else{
-                        Text(text = "${invetation.client?.username} has refused your worker invitation")
-                    }
-                }
-            }
-        }
-        AccountType.USER -> {
-            Row {
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY){
-                        if(invetation.companyReceiver?.logo != null)
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                        else
-                            notImage()
-                    }else{
-                        if(invetation.companySender?.logo != null)
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                        else
-                            notImage()
-                    }
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    if(invetation.type == Type.USER_SEND_WORKER_COMPANY){
-                        Text(text = "${invetation.companyReceiver?.name} has refused your worker invitation")
-                    }
-                    else{
-                        Text(text = "you have refused a worker invitation from ${invetation.companySender?.name}")
-
-                    }
-                }
-            }
-        }
-        else ->{
-
-        }
-    }
-}
-@Composable
-fun InWaitingTypeWorker(invetation: Invitation, role: AccountType,onClicked: (Status) -> Unit) {
-    when (role) {
-        AccountType.COMPANY -> {
-            Row {
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Column {
-                        if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-                            Text(text = "${invetation.client?.username} has sent a worker invitation")
-                            Row {
-                                Row(
-                                    modifier = Modifier.weight(1f)
-                                ) {
+            Row(modifier = Modifier.weight(0.8f)) {
+                when (invitation.status) {
+                    Status.ACCEPTED -> Text("$actionaireName accepted $adverbe $type invitation")
+                    Status.REFUSED -> Text("$actionaireName refused $adverbe $type invitation")
+                    Status.CANCELLED -> Text("$actionaireName cancelled $adverbe $type invitation")
+                    Status.INWAITING -> {
+                        Row {
+                            if (actionaireName == company.name) {
+                                Column {
+                                    Text("you have sent $type invitation to $adverbe ")
                                     ButtonSubmit(
-                                        labelValue = "accept",
-                                        color = Color.Green,
-                                        enabled = true
-                                    ) {
-                                    }
-                                    onClicked(Status.ACCEPTED)
-                                }
-                                Row(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    ButtonSubmit(
-                                        labelValue = "refuse",
+                                        labelValue = "cacel",
                                         color = Color.Red,
                                         enabled = true
                                     ) {
-                                        onClicked(Status.REFUSED)
+                                        onClicked(Status.CANCELLED)
                                     }
                                 }
-                            }
-                        } else {
-                            Column {
+                            } else {
+                                Column {
 
-                                Text(text = "you have sent a worker invitation to ${invetation.client?.username}")
-                                ButtonSubmit(
-                                    labelValue = "cancel",
-                                    color = Color.Red,
-                                    enabled = true
-                                ) {
-                                    onClicked(Status.CANCELLED)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        AccountType.USER -> {
-            Row {
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-                        if(invetation.companyReceiver?.logo != null)
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                        else
-                            notImage()
-                    } else
-                        if(invetation.companySender?.logo != null)
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Column {
-                        if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-
-                            Text(text = " you have sent a worker invitation to ${invetation.companyReceiver?.name}")
-                            ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                                onClicked(Status.CANCELLED)
-                            }
-                        } else {
-
-                            Text(text = "  ${invetation.companySender?.name} has sent a worker invitation")
-                            Row {
-                                Row(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    ButtonSubmit(
-                                        labelValue = "accept",
-                                        color = Color.Green,
-                                        enabled = true
-                                    ) {
-                                        onClicked(Status.ACCEPTED)
-                                    }
-                                }
-                                Row(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    ButtonSubmit(
-                                        labelValue = "refuse",
-                                        color = Color.Red,
-                                        enabled = true
-                                    ) {
-                                        onClicked(Status.REFUSED)
+                                    Text("$adverbe has sent $type invitation ")
+                                    Row {
+                                        Row(modifier = Modifier.weight(1f)) {
+                                            ButtonSubmit(
+                                                labelValue = "accept",
+                                                color = Color.Green,
+                                                enabled = true
+                                            ) {
+                                                onClicked(Status.ACCEPTED)
+                                            }
+                                        }
+                                        Row(modifier = Modifier.weight(1f)) {
+                                            ButtonSubmit(
+                                                labelValue = "refuse",
+                                                color = Color.Red,
+                                                enabled = true
+                                            ) {
+                                                onClicked(Status.REFUSED)
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
-
                     }
+
+                    null -> TODO()
                 }
             }
         }
 
-        else -> {
-            Text(text = "salem")
-        }
-    }
-}
-@Composable
-fun AcceptTypeWorker(invetation: Invitation, role: AccountType) {
-    val sharedViewModel : SharedViewModel = hiltViewModel()
-    when (role) {
-        AccountType.COMPANY -> {
-            Row {
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-                        Text(text = "you have accepted a worker invitation from ${invetation.client?.username}", modifier = Modifier.clickable {
-                            sharedViewModel.setHisUser(invetation.client!!)
-                            RouteController.navigateTo(Screen.UserScreen)
-                        })
-                    } else {
-                        Text(text = "${invetation.client?.username} has accepted your worker invitation", modifier = Modifier.clickable {
-                            sharedViewModel.setHisUser(invetation.client!!)
-                            RouteController.navigateTo(Screen.UserScreen)
-                        })
-                    }
-                }
-            }
-        }
-
-        AccountType.USER -> {
-            Row {
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-                        if(invetation.companyReceiver?.logo != null)
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                        else
-                            notImage()
-                    } else {
-                        if(invetation.companySender?.logo != null)
-                        ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                        else
-                            notImage()
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .weight(3f)
-                        .clickable {
-                                sharedViewModel.setHisCompany(invetation.companyReceiver?:invetation.companySender!!)
-                                RouteController.navigateTo(Screen.CompanyScreen)
-                        }
-                ) {
-                    if (invetation.type == Type.USER_SEND_WORKER_COMPANY) {
-                        Text(text = "${invetation.companyReceiver?.name} has accepted your worker invitation")
-                    } else {
-                        Text(text = "you have accepted a worker invitation from ${invetation.companySender?.name}")
-                    }
-                }
-            }
-        }
-
-        else -> {
-
-        }
-    }
-}
-
-@Composable
-fun InvitationTypeParent(invetation : Invitation, companyId : Long, onClicked: (Status) -> Unit) {
-    when (invetation.status){
-        Status.INWAITING ->
-            InWaitingTypeParent(invetation = invetation, companyId = companyId){
-                onClicked(it)
-            }
-        Status.ACCEPTED ->
-            AcceptTypeParent(invetation = invetation, companyId = companyId)
-        Status.REFUSED ->
-            RefuseTypeParent(invetation = invetation, companyId = companyId)
-        Status.CANCELLED ->
-            CancelTypeParent(invetation = invetation, companyId = companyId)
-        null -> TODO()
-    }
-}
-@Composable
-fun CancelTypeParent(invetation: Invitation, companyId: Long) {
-    if (invetation.companyReceiver?.id == companyId) {
-
-        Row {
-            Row(
-                modifier = Modifier.weight(1f)
-            ) {
-                if(invetation.companySender?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                else
-                    notImage()
-            }
-            Row(
-                modifier = Modifier.weight(3f)
-            ) {
-                Text(text = "${invetation.companySender?.name} has canceled a parent invitation")
-            }
-        }
-
-    } else {
-        Row {
-            Row(
-                modifier = Modifier.weight(1f)
-            ) {
-                if(invetation.companyReceiver?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                else
-                    notImage()
-            }
-            Row(
-                modifier = Modifier.weight(3f)
-            ) {
-                Text(text = " you have canceled a parent invitation to ${invetation.companyReceiver?.name}")
-            }
-        }
-    }
-}
-@Composable
-fun RefuseTypeParent(invetation: Invitation, companyId: Long) {
-    if(invetation.companyReceiver?.id == companyId){
-        Row {
-
-            Row (
-                modifier = Modifier.weight(1f)
-            ){
-                if(invetation.companySender?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                else
-                    notImage()
-            }
-            Row (
-                modifier = Modifier.weight(3f)
-            ){
-                Text(text = " you have refused a parent invitation from ${invetation.companySender?.name}")
-            }
-        }
-    }
-    else{
-        Row {
-
-            Row (
-                modifier = Modifier.weight(1f)
-            ){
-                if(invetation.companyReceiver?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                else
-                    notImage()
-            }
-            Row (
-                modifier = Modifier.weight(3f)
-            ){
-                Text(text = "${invetation.companyReceiver?.name} has refused your parent invitation")
-            }
-        }
-    }
-}
-@Composable
-fun InWaitingTypeParent(invetation: Invitation , companyId: Long, onClicked: (Status) -> Unit) {
-    if(invetation.companyReceiver?.id == companyId){
-        Row {
-
-            Row (
-                modifier = Modifier.weight(1f)
-            ){
-                if(invetation.companySender?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                else
-                    notImage()
-            }
-            Row (
-                modifier = Modifier.weight(3f)
-            ){
-
-                Column {
-
-                    Text(text = "${invetation.companySender?.name} has sent a parent invitation")
-                    Row {
-                        Row (
-                            modifier = Modifier.weight(1f)
-                        ){
-
-                            ButtonSubmit(labelValue = "accept", color = Color.Green, enabled = true) {
-                                onClicked(Status.ACCEPTED)
-                            }
-                        }
-                        Row (
-                            modifier = Modifier.weight(1f)
-                        ){
-
-                            ButtonSubmit(labelValue = "refuse", color = Color.Red, enabled = true) {
-                                onClicked(Status.REFUSED)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    else{
-        Row {
-
-            Row (
-                modifier = Modifier.weight(1f)
-            ){
-                if(invetation.companyReceiver?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                else
-                    notImage()
-            }
-            Row (
-                modifier = Modifier.weight(3f)
-            ){
-
-                Column {
-
-                    Text(text = " you have sent a parent invitation to ${invetation.companyReceiver?.name}")
-                    ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                        onClicked(Status.CANCELLED)
-                    }
-                }
-            }
-        }
-    }
-}
-@Composable
-fun AcceptTypeParent(invetation: Invitation,companyId: Long) {
-    if(invetation.companyReceiver?.id == companyId){
-        Row {
-
-            Row (
-                modifier = Modifier.weight(1f)
-            ){
-                if(invetation.companySender?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                else
-                    notImage()
-            }
-            Row (
-                modifier = Modifier.weight(3f)
-            ){
-                Text(text = " you have accepted a parent invitation from ${invetation.companySender?.name}")
-            }
-        }
-    }
-    else{
-        Row {
-
-            Row (
-                modifier = Modifier.weight(1f)
-            ){
-                if(invetation.companyReceiver?.logo != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                else
-                    notImage()
-            }
-            Row (
-                modifier = Modifier.weight(3f)
-            ){
-                Text(text = "${invetation.companyReceiver?.name} has accepted your parent invitation")
-            }
-        }
-    }
-}
-
-@Composable
-fun InvitationTypeProvider(invetation : Invitation, companyId : Long, role : AccountType,onClicked: (Status) -> Unit){
-    when (invetation.status){
-        Status.INWAITING ->
-            InWaitingTypeProvider(invetation = invetation, companyId = companyId){
-                onClicked(it)
-            }
-        Status.ACCEPTED ->
-            AcceptTypeProvider(invetation = invetation, companyId = companyId)
-        Status.REFUSED ->
-            RefuseTypeProvider(invetation = invetation, companyId = companyId, role = role)
-        Status.CANCELLED ->
-            CancelTypeProvider(invetation = invetation, companyId = companyId, role = role)
-
-        null -> TODO()
-    }
-}
-@Composable
-fun CancelTypeProvider(invetation: Invitation, companyId: Long, role: AccountType) {
-    if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY){
-        if(invetation.companyReceiver?.id == companyId){
-            Row {
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text =  invetation.companySender?.name!! + " has canceled a provider invitation")
-                }
-            }
-        }else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have canceled a provider invitation to " + invetation.companyReceiver?.name!!)
-                }
-            }
-        }
-    }else{
-        if(role == AccountType.COMPANY){
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have canceled a provider invitation to " + invetation.client?.username!!)
-                }
-            }
-        }else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have canceled a provider invitation to " + invetation.companyReceiver?.name!!)
-                }
-            }
-        }
-    }
-}
-@Composable
-fun RefuseTypeProvider(invetation: Invitation, companyId: Long, role : AccountType) {
-    if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY){
-        if(invetation.companyReceiver?.id == companyId){
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have refused a provider invitation from " + invetation.companySender?.name!!)
-                }
-            }
-        }else {
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Text(text = " you have refused a provider invitation from " + invetation.companyReceiver?.name!!)
-                }
-            }
-        }
-    }else {
-        if (role == AccountType.COMPANY) {
-            Row {
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Text(text = invetation.client?.username!! + " has refused your provider invitation")
-                }
-            }
-
-        } else {
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Text(text = "you have refused a provider invitation from ${invetation.companySender?.name!!}")
-                }
-            }
-        }
-    }
-
-}
-@Composable
-fun InWaitingTypeProvider(invetation: Invitation , companyId: Long, onClicked: (Status) -> Unit) {
-
-    if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY ){
-        if(invetation.companyReceiver?.id == companyId){
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Column {
-
-                        Text(text = "${invetation.companySender?.name} has sent a provider invitation")
-                        Row {
-
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(labelValue = "accept", color = Color.Green, enabled = true) {
-                                    onClicked(Status.ACCEPTED)
-                                }
-
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ){
-                                ButtonSubmit(labelValue = "refuse", color = Color.Red, enabled = true) {
-                                    onClicked(Status.REFUSED)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }else{
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Column {
-
-                        Text(text = "you have sent a provider invitation to ${invetation.companyReceiver?.name}")
-                        ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                            onClicked(Status.CANCELLED)
-                        }
-                    }
-                }
-            }
-        }
-    }else{
-        if(invetation.companySender?.id == companyId){
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Column {
-
-                        Text(text = " you have sent a provider invitation to " + invetation.client?.username!!)
-                        ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                            onClicked(Status.CANCELLED)
-                        }
-
-                    }
-                }
-            }
-
-        }else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Column {
-                        Text(text = "${invetation.companySender?.name!!} has sent a provider invitation")
-                        Row {
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                ButtonSubmit(labelValue = "accept", color = Color.Green, enabled = true) {
-                                    onClicked(Status.ACCEPTED)
-                                }
-                            }
-                            Row (
-                                modifier = Modifier.weight(1f)
-                            ){
-                                ButtonSubmit(labelValue = "refuse", color = Color.Red, enabled = true) {
-                                    onClicked(Status.REFUSED)
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-}
-@Composable
-fun AcceptTypeProvider(invetation: Invitation,companyId: Long) {
-    if(invetation.type == Type.COMPANY_SEND_PROVIDER_COMPANY){
-        Row {
-            Row (
-                modifier = Modifier.weight(1f)
-            ){
-
-                if(invetation.companyReceiver?.id == companyId) {
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }else{
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-            }
-            Row (
-                modifier = Modifier.weight(3f)
-            ){
-                if(invetation.companyReceiver?.id == companyId){
-                    Text(text = " you have accepted a provider invitation from " + invetation.companySender?.name!!)
-                }else{
-                    Text(text = invetation.companyReceiver?.name!! + " has accepted your provider invitation")
-                }
-            }
-        }
-    }else {
-        Row {
-            Row(
-                modifier = Modifier.weight(1f)
-            ) {
-
-                if(invetation.companySender?.id != companyId){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                else {
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-
-            }
-            Row(
-                modifier = Modifier.weight(3f)
-            ) {
-                if (invetation.companySender?.id == companyId) {
-                    Text(text = invetation.client?.username!! + " has accepted your provider invitation ")
-                } else {
-                    Text(text = "you have accepted a provider invitation from ${invetation.companySender?.name!!}")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun InvitationTypeClient(invetation : Invitation, companyId : Long, onClicked: (Status) -> Unit){
-    when (invetation.status){
-        Status.INWAITING ->
-            InWaitingTypeClient(invetation = invetation, companyId = companyId){
-                Log.e("requestResponse","status : $it id ${invetation.id}")
-                onClicked(it)
-            }
-        Status.ACCEPTED ->
-            AcceptTypeClient(invetation = invetation, companyId = companyId)
-        Status.REFUSED ->
-            RefuseTypeClient(invetation = invetation, companyId = companyId)
-        Status.CANCELLED ->
-            CancelTypeClient(invetation = invetation, companyId = companyId)
-        null -> TODO()
-    }
-}
-@Composable
-fun CancelTypeClient(invetation: Invitation, companyId: Long) {
-    if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
-        if(invetation.companyReceiver?.id == companyId){
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text =  "${invetation.companySender?.name!!} has canceled a client invitation")
-                }
-            }
-        }else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have canceled a client invitation to  ${invetation.companyReceiver?.name!!}")
-                }
-            }
-        }
-    }else{
-        if(invetation.companyReceiver?.id == companyId){
-
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = "${invetation.client?.username!!} has canceled a client invitation")
-                }
-            }
-        }
-        else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have canceled a client invitation to ${invetation.companyReceiver?.name!!}")
-                }
-            }
-        }
-    }
-
-
-}
-@Composable
-fun RefuseTypeClient(invetation: Invitation, companyId: Long) {
-
-    if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
-        if(invetation.companyReceiver?.id == companyId){
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have refused a client invitation from ${invetation.companySender?.name!!}")
-                }
-            }
-        }else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = invetation.companyReceiver?.name!! + " has refused your client invitation")
-                }
-            }
-        }
-    }else{
-        if(invetation.companyReceiver?.id == companyId) {
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Text(text = "you have refused a client invitation from ${invetation.client?.username!!}")
-                }
-            }
-        }
-        else{
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Text(text = invetation.companyReceiver?.name!! + " has refused your client invitation")
-                }
-            }
-        }
-    }
-
-
-}
-@Composable
-fun InWaitingTypeClient(invetation: Invitation , companyId: Long, onClicked: (Status) -> Unit) {
-    if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
-        if(invetation.companyReceiver?.id == companyId){
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Column {
-
-                        Text(text =  "${invetation.companySender?.name!!} has sent a client invitation")
-                        Row {
-
-                            Row (
-                                modifier = Modifier.weight(1f)
-                            ){
-                                ButtonSubmit(labelValue = "accept", color = Color.Green, enabled = true) {
-                                    Log.e("requestResponse"," id ${invetation.id}")
-                                    onClicked(Status.ACCEPTED)
-                                }
-                            }
-                            Row (
-                                modifier = Modifier.weight(1f)
-                            ){
-
-                                ButtonSubmit(labelValue = "refuse", color = Color.Red, enabled = true) {
-                                    onClicked(Status.REFUSED)
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
-        }else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Column {
-
-                        Text(text = " you have sent a client invitation to ${invetation.companyReceiver?.name?:""}")
-                        ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                            onClicked(Status.CANCELLED)
-                        }
-                    }
-                }
-            }
-        }
-    }else{
-        if(invetation.companyReceiver?.id == companyId) {
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Column {
-
-                        Text(text = "${invetation.client?.username!!} has sent a client invitation ")
-                        Row {
-                            Row (
-                                modifier = Modifier.weight(1f)
-                            ){
-                                ButtonSubmit(labelValue = "accept", color = Color.Green, enabled = true) {
-                                    onClicked(Status.ACCEPTED)
-                                }
-                            }
-                            Row (
-                                modifier = Modifier.weight(1f)
-                            ){
-
-                                ButtonSubmit(labelValue = "refuse", color = Color.Red, enabled = true) {
-                                    onClicked(Status.REFUSED)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else{
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Column {
-
-                        Text(text = " you have sent a client invitation to " + invetation.companyReceiver?.name!!)
-                        ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                            onClicked(Status.CANCELLED)
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-}
-@Composable
-fun AcceptTypeClient(invetation: Invitation,companyId: Long) {
-    val sharedViewModel : SharedViewModel = hiltViewModel()
-    if(invetation.type == Type.COMPANY_SEND_CLIENT_COMPANY){
-        if(invetation.companyReceiver?.id == companyId){
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companySender?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companySender?.logo}/company/${invetation.companySender?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = " you have accepted a client invitation from ${invetation.companySender?.name!!}")
-                }
-            }
-        }else{
-            Row {
-
-                Row (
-                    modifier = Modifier.weight(1f)
-                ){
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row (
-                    modifier = Modifier.weight(3f)
-                ){
-                    Text(text = invetation.companyReceiver?.name!! + " has accepted your client invitation")
-                }
-            }
-        }
-    }else {
-        if (invetation.companyReceiver?.id == companyId) {
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.client?.image != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.client?.image}/user/${invetation.client?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Text(text = invetation.client?.username!! + " has accepted your client invitation ")
-                }
-            }
-        }
-        else{
-            Row {
-
-                Row(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if(invetation.companyReceiver?.logo != null)
-                    ShowImage(image = "${BASE_URL}werehouse/image/${invetation.companyReceiver?.logo}/company/${invetation.companyReceiver?.user?.id}")
-                    else
-                        notImage()
-                }
-                Row(
-                    modifier = Modifier.weight(3f)
-                ) {
-                    Text(text = invetation.companyReceiver?.name!! + " has accepted your client invitation ", modifier = Modifier.clickable {
-                        sharedViewModel.setHisCompany(invetation.companyReceiver!!)
-                        RouteController.navigateTo(Screen.CompanyScreen)
-                    })
-                }
-            }
-        }
     }
 }

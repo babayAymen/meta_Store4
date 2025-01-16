@@ -63,6 +63,7 @@ fun PaymentScreen() {
     val type by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
+    sharedViewModel.setPaymentCountNotification(true)
     val view by appViewModel.view
     var rechargeInabled by remember {
         mutableStateOf(false)
@@ -664,7 +665,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                                     val profitPerDay = allMyProfitsPerDay[index]
                                     if(profitPerDay != null) {
                                         Row(
-                                            modifier = Modifier.background(if(profitPerDay.isPayed== true)Color.Green else Color.Red)
+                                            modifier = Modifier.background( if(profitPerDay.isPayed== true)Color.Green else if(profitPerDay.rest != 0.0 && profitPerDay.rest != profitPerDay.amount ) Color.Blue else Color.Red)
                                         ) {
                                             profitPerDay.lastModifiedDate?.let { Text(text = it) }
                                             Spacer(modifier = Modifier.width(20.dp))

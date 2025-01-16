@@ -48,6 +48,22 @@ interface ArticleCompanyDao {
         }
     }
 
+    suspend fun insertOrUpdateIsSearch(articles : List<ArticleCompany>){
+        articles.forEach { article ->
+            val result = insert(listOf(article)).firstOrNull() ?: -1L
+            if(result == -1L){
+                val existsArticle = getArticleById(article.id!!)
+                if(existsArticle != null && existsArticle.isSearch != article.isSearch){
+                    updateForSearch(article.id , true)
+                }
+            }
+
+        }
+    }
+
+    @Query("UPDATE article_company SET isSearch = :isSearch WHERE id = :id")
+    suspend fun updateForSearch(id : Long , isSearch : Boolean)
+
     @Query("UPDATE article_company SET isMy = :isMy WHERE id = :id")
     suspend fun updateMy(id : Long , isMy : Boolean)
     @Upsert
@@ -122,6 +138,9 @@ interface ArticleCompanyDao {
     @Query("SELECT r.* FROM article_company AS r JOIN article AS a ON r.articleId = a.id WHERE a.category = :category AND isRandom = 1")
      fun getRandomArticles(category : CompanyCategory): PagingSource<Int, ArticleWithArticleCompany>
 
+     @Transaction
+     @Query("SELECT * FROM article_company WHERE isRandom = 1 ORDER BY id DESC")
+     fun getRandomArticlesWithouCategory(): PagingSource<Int, ArticleWithArticleCompany>
     @Transaction
     @Query("SELECT ac.* FROM article_company AS ac JOIN article AS a ON ac.articleId = a.id WHERE isRandom = 1 AND a.category = :categoryName")
      fun testGetRandomArticles(categoryName : CompanyCategory) : List<ArticleWithArticleCompany>
@@ -205,7 +224,10 @@ interface ArticleCompanyDao {
 
     @Query("DELETE FROM company_article_remote_keys")
     suspend fun clearAllCompanyArticleRemoteKeysTable()
-
+    @Query("SELECT * FROM company_article_remote_keys ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstAllCompanyArticleRemotyeKey() : CompanyArticleRemoteKeysEntity?
+    @Query("SELECT * FROM company_article_remote_keys ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestAllCompanyArticleRemoteKey() : CompanyArticleRemoteKeysEntity?
     @Upsert
     suspend fun insertKeys(articleRemoteKeysEntity: List<ArticleRemoteKeysEntity>)
 
@@ -223,10 +245,10 @@ interface ArticleCompanyDao {
     @Query("SELECT * FROM article_remote_keys_table ORDER BY id ASC LIMIT 1")
     suspend fun getLatestArticleCompanyRemoteKey() : ArticleRemoteKeysEntity?
 
-    @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id DESC LIMIT 1")
+    @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id ASC LIMIT 1")
     suspend fun getFirstRandomArticleCompanyRemoteKey() : ArticleCompanyRandomRKE?
 
-    @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id ASC LIMIT 1")
+    @Query("SELECT * FROM article_company_random_remote_keys ORDER BY id DESC LIMIT 1")
     suspend fun getLatestRandomArticeCompanyRemoteKey() : ArticleCompanyRandomRKE?
 
 

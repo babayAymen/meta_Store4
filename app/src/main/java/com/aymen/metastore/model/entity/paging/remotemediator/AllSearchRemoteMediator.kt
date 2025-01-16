@@ -37,29 +37,28 @@ class AllSearchRemoteMediator(
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1)?:0
+                    0
                 }
 
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     previousePage
                 }
 
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     nextePage
                 }
             }
             val response = api.getAllHistory(id!!,currentPage, state.config.pageSize)
-            Log.e("srhsrth","idd $id ${response.content.size}")
             val endOfPaginationReached = response.last
-            val prevPage = if (currentPage == 0) null else currentPage - 1
+            val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             room.withTransaction {
@@ -94,25 +93,12 @@ class AllSearchRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        val remoteKey = entity?.let { searchHistoryDao.getSearchHistoryRemoteKey(it.searchHistory.id!!) }
-        return remoteKey?.prevPage
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return searchHistoryDao.getFirstSearchRemoteKey()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        val remoteKey = entity?.let { searchHistoryDao.getSearchHistoryRemoteKey(it.searchHistory.id!!) }
-        return remoteKey?.nextPage
-    }
-
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, SearchHistoryWithClientOrProviderOrUserOrArticle>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        val remoteKey = entity?.searchHistory?.id?.let { searchHistoryDao.getSearchHistoryRemoteKey(it) }
-        return remoteKey?.nextPage
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+        return searchHistoryDao.getLatestRemoteKey()?.nextPage
     }
 
     private suspend fun deleteCache(){

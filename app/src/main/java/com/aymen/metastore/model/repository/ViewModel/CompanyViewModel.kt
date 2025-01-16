@@ -62,6 +62,7 @@ class CompanyViewModel @Inject constructor(
     var myCompany by mutableStateOf(sharedViewModel.company.value)
     var update by mutableStateOf(false)
 
+
     init {
 
         getMyCompany {
@@ -156,6 +157,7 @@ class CompanyViewModel @Inject constructor(
             }
         }
     }
+
 
 
 

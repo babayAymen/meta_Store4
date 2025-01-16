@@ -75,6 +75,61 @@ class SharedViewModel @Inject constructor(
         _user.value = user
     }
 
+
+    private val _invoiceNotificationCount = MutableStateFlow(0)
+    val invoiceNotificationCount: StateFlow<Int> = _invoiceNotificationCount
+
+    private val _orderNotificationCount = MutableStateFlow(0)
+    val orderNotificationCount: StateFlow<Int> = _orderNotificationCount
+
+    private val _invitationNotificationCount = MutableStateFlow(0)
+    val invitationNotificationCount: StateFlow<Int> = _invitationNotificationCount
+
+    private val _paymentNotificationCount = MutableStateFlow(0)
+    val paymentNotificationCount: StateFlow<Int> = _paymentNotificationCount
+
+    private val _reglementNotificationCount = MutableStateFlow(0)
+    val reglementNotificationCount: StateFlow<Int> = _reglementNotificationCount
+
+    private val _invoiceAsClientNotificationCount = MutableStateFlow(0)
+    val invoiceAsClientNotificationCount: StateFlow<Int> = _invoiceAsClientNotificationCount
+
+    fun setInvoiceCountNotification(isDelate : Boolean){
+        if(isDelate)
+            _invoiceNotificationCount.value = 0
+        else
+            _invoiceNotificationCount.value += 1
+    }
+    fun setInvoiceAsClientCountNotification(isDelate : Boolean){
+        if(isDelate)
+            _invoiceAsClientNotificationCount.value = 0
+        else
+            _invoiceAsClientNotificationCount.value += 1
+    }
+    fun setOrderCountNotification(isDelate : Boolean){
+        if(isDelate)
+            _orderNotificationCount.value = 0
+        else
+            _orderNotificationCount.value += 1
+    }
+    fun setInvitationCountNotification(isDelate : Boolean){
+        if(isDelate)
+            _invitationNotificationCount.value = 0
+        else
+            _invitationNotificationCount.value += 1
+    }
+    fun setPaymentCountNotification(isDelate : Boolean){
+        if(isDelate)
+            _paymentNotificationCount.value = 0
+        else
+            _paymentNotificationCount.value += 1
+    }
+    fun setReglementCountNotification(isDelate : Boolean){
+        if(isDelate)
+            _reglementNotificationCount.value = 0
+        else
+            _reglementNotificationCount.value += 1
+    }
     init {
         viewModelScope.launch {
 

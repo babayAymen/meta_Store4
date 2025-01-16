@@ -26,6 +26,11 @@ interface CommanLineDao {
 
     @Query("DELETE FROM command_line_by_invoice_remote_keys_entity")
     suspend fun clearInvoiceRemoteKeysTable()
+    @Query("SELECT * FROM command_line_by_invoice_remote_keys_entity ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstInvoiceRemoteKey() : CommandLineByInvoiceRemoteKeysEntity?
+
+    @Query("SELECT * FROM command_line_by_invoice_remote_keys_entity ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestInvoiceRemoteKey() : CommandLineByInvoiceRemoteKeysEntity?
 
     @Transaction
     @Query("SELECT * FROM command_line WHERE invoiceId = :invoiceId")

@@ -68,7 +68,6 @@ class WorkerRemoteMediator(
                         )
                     })
 
-                    response.content.map { article -> Log.e("logartilce","article company : ${article.company.id} and my company is : $companyId") }
                     userDao.insertUser(response.content.map {user -> user.user.toUser()})
                     workerDao.insertWorker(response.content.map { worker -> worker.toWorker() })
 

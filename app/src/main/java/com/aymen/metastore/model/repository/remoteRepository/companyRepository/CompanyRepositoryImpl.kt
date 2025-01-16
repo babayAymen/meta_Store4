@@ -6,14 +6,15 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.dto.InvitationDto
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.paging.pagingsource.AllCompaniesContainingPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.ProviderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.SearchType
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.repository.remoteRepository.companyRepository.CompanyRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -103,6 +104,8 @@ class CompanyRepositoryImpl @Inject constructor(
                 )
         )
     }
+
+    override suspend fun checkRelation(id: Long, accountType: AccountType): Response<List<InvitationDto>> = api.checkRelation(id, accountType)
 
 
 }

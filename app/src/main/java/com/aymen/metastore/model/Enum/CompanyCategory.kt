@@ -1,6 +1,8 @@
 package com.aymen.store.model.Enum
 
 enum class CompanyCategory {
+    ALL,
+
     DAIRY ,
 
     BUTCHER,
@@ -11,5 +13,4 @@ enum class CompanyCategory {
 
     GROCER,
 
-    NULL
 }

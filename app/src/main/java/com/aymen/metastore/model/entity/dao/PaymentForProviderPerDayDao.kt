@@ -60,9 +60,17 @@ interface PaymentForProviderPerDayDao {
     @Query("DELETE FROM points_payment_per_day_remote_keys")
     suspend fun clearAllpaymentForProviderPerDayRemoteKeysTable()
 
+    @Query("SELECT * FROM points_payment_per_day_remote_keys ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstPaymentForProviderPerDayRemoteKeys() : PointsPaymentPerDayRemoteKeysEntity?
+    @Query("SELECT * FROM points_payment_per_day_remote_keys ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestPaymentForProviderPerDayRemoteKeys() : PointsPaymentPerDayRemoteKeysEntity?
     @Query("DELETE FROM points_payment_per_day_by_date_remote_keys_entity")
     suspend fun clearAllpaymentForProviderPerDayByDateRemoteKeysTable()
 
+    @Query("SELECT * FROM points_payment_per_day_by_date_remote_keys_entity ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstAllPaymentForProviderRemoteKey() : PointsPaymentPerDayByDateRemoteKeysEntity?
+    @Query("SELECT * FROM points_payment_per_day_by_date_remote_keys_entity ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestAllPaymentForProviderRemoteKey() : PointsPaymentPerDayByDateRemoteKeysEntity?
     @Query("DELETE FROM payment_for_provider_per_day")
     suspend fun clearAllpaymentForProviderPerDayTable()
 

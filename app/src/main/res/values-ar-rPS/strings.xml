@@ -67,7 +67,13 @@
     <string name="confirm_delation">confirm delation</string>
     <string name="sure_delation">Are you sure to delete this item?</string>
     <string name="url_image_article">werehouse/image/%s/article/%s</string>
+    <string name="payment">payment</string>
+    <string name="refuse">refuse</string>
+    <string name="add_category">"Add Category"</string>
+
+
     <!--show item -->
+    <string name="category_screen">add category</string>
     <string name="invoice">invoice</string>
     <string name="provider">provider</string>
     <string name="subcategory">subcategory</string>

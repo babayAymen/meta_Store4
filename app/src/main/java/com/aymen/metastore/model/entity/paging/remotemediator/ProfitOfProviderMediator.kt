@@ -41,26 +41,26 @@ class ProfitOfProviderMediator(
 
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                    0
                 }
                 LoadType.PREPEND -> {
-                    val previousePage = getPreviousPageForTheFirstItem(state)
+                    val previousePage = getPreviousPageForTheFirstItem()
                     val prevPage = previousePage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     prevPage
                 }
                 LoadType.APPEND -> {
-                    val nextePage = getNextPageForTheLastItem(state)
+                    val nextePage = getNextPageForTheLastItem()
                     val nextPage = nextePage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     nextPage
                 }
             }
             val response = api.getAllProvidersProfit(id,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.last
-            val prevPage = if(response.number== 0) null else response.number -1
+            val prevPage = if(response.first) null else response.number -1
             val nextPage = if(response.last) null else response.number +1
 
             val empty = paymentForProvidersDao.existRecords() == 0
@@ -107,29 +107,12 @@ class ProfitOfProviderMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PaymentForProvidersWithCommandLine>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        val remoteKey = entity?.let { paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it.paymentForProviders.id?:0) }
-        return remoteKey?.prevPage
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+       return paymentForProvidersDao.getFirstAllProvidersProfitRemoteKey()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLastItem(state: PagingState<Int, PaymentForProvidersWithCommandLine>): Int? {
-        val lastItem = state.pages.lastOrNull { it.data.isNotEmpty() }
-            val entity = lastItem?.data?.lastOrNull()
-        val remoteKey = entity?.let {
-            paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it.paymentForProviders.id!!)
-        }
-        return remoteKey?.nextPage
-    }
-
-
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PaymentForProvidersWithCommandLine>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        val remoteKey =  entity?.paymentForProviders?.id?.let { paymentForProvidersDao.getProvidersProfitHistoryRemoteKey(it) }
-        return remoteKey?.nextPage
-
+    private suspend fun getNextPageForTheLastItem(): Int? {
+      return paymentForProvidersDao.getLatestAllProviderProfitRemoteKey()?.nextPage
     }
 
     private suspend fun deleteCache(){

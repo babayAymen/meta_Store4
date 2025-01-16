@@ -48,6 +48,7 @@
     <string name="Favorite">Favorite</string>
     <string name="pdf">pdf</string>
     <string name="payment">payment</string>
+    <string name="refuse">refuse</string>
     <string name="accept">accept</string>
     <string name="waiting_for_accept">waiting for accept</string>
     <string name="unit">U</string>
@@ -56,6 +57,7 @@
     <string name="prix_article_tot">tot article</string>
     <string name="discount">discount</string>
     <string name="confirm">confirm</string>
+    <string name="add_category">"Add Category"</string>
     <string name="add_new_article">add new article</string>
     <string name="confirm_delation">confirm delation</string>
     <string name="sure_delation">Are you sure to delete this item?</string>
@@ -69,6 +71,7 @@
     <string name="invoice">invoice</string>
     <string name="provider">provider</string>
     <string name="subcategory">subcategory</string>
+    <string name="category_screen">add category</string>
     <string name="add_article">ADD_ARTICLE</string>
     <string name="add_article_for_company">ADD_ARTICLE_FOR_COMPANY</string>
 

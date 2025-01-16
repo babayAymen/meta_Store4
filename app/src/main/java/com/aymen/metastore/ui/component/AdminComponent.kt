@@ -848,7 +848,7 @@ fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: 
                     invoiceViewModel.discount = invoice.discount?:0.0
                     invoiceViewModel.invoiceMode = InvoiceMode.UPDATE
                     invoiceViewModel.invoiceType = invoice.type!!
-                    if (invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.status == Status.ACCEPTED || !asProvider) {
+                    if (invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.status != Status.INWAITING || !asProvider) {
                         invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
                     }
                     appViewModel.updateShow("add invoice")

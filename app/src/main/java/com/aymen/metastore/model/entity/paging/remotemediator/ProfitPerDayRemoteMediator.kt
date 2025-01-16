@@ -35,36 +35,36 @@ class ProfitPerDayRemoteMediator(
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1)?:0
+                    0
                 }
 
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     previousePage
                 }
 
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
-                        endOfPaginationReached = false
+                        endOfPaginationReached = true
                     )
                     nextePage
                 }
             }
             val response = api.getAllProfitPerDay(id!!,currentPage, state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
-            val nextPage = if (endOfPaginationReached) null else currentPage + 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else response.number - 1
+            val nextPage = if (response.last) null else response.number + 1
 
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    paymentForProviderPerDayDao.insertPointsPaymentKeys(response.map { article ->
+                    paymentForProviderPerDayDao.insertPointsPaymentKeys(response.content.map { article ->
                        PointsPaymentPerDayRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
@@ -72,9 +72,9 @@ class ProfitPerDayRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.receiver?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.receiver?.toCompany()})
-                    paymentForProviderPerDayDao.insertPaymentForProviderPerDay(response.map { payment -> payment.toPaymentForProviderPerDay() })
+                    userDao.insertUser(response.content.map {user -> user.receiver?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.receiver?.toCompany()})
+                    paymentForProviderPerDayDao.insertPaymentForProviderPerDay(response.content.map { payment -> payment.toPaymentForProviderPerDay() })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -87,25 +87,13 @@ class ProfitPerDayRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PaymentPerDayWithProvider>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        val remoteKey = entity?.let { paymentForProviderPerDayDao.getPaymentForProviderPerDayRemoteKey(it.paymentForProviderPerDay.id!!) }
-        return remoteKey?.prevPage
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return paymentForProviderPerDayDao.getFirstPaymentForProviderPerDayRemoteKeys()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, PaymentPerDayWithProvider>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        val remoteKey = entity?.let { paymentForProviderPerDayDao.getPaymentForProviderPerDayRemoteKey(it.paymentForProviderPerDay.id!!) }
-        return remoteKey?.nextPage
-    }
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+        return paymentForProviderPerDayDao.getLatestPaymentForProviderPerDayRemoteKeys()?.nextPage
 
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PaymentPerDayWithProvider>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        val remoteKey = entity?.paymentForProviderPerDay?.id?.let { paymentForProviderPerDayDao.getPaymentForProviderPerDayRemoteKey(it) }
-        return remoteKey?.nextPage
     }
 
     private suspend fun deleteCache(){

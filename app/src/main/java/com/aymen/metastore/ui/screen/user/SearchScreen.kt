@@ -135,7 +135,6 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                             val user = cli[index]
                                             if (user != null) {
                                                 UserCard(user, appViewModel) {
-//                                                    appViewModel.assignUser(user)
                                                     sharedViewModel.setHisUser(user)
                                                     search.user = user
                                                     RouteController.navigateTo(Screen.UserScreen)
@@ -155,7 +154,6 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                             val article = art[index]
                                             if(article != null){
                                             ArticleCardForSearch(article) {
-//                                                companyViewModel.myCompany = article.company!!
                                                 sharedViewModel.setHisCompany(article.company!!)
                                                 search.article = article
                                                 articleViewModel.assignArticleCompany(article)

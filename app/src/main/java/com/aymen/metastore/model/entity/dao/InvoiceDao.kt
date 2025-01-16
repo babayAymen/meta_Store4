@@ -107,11 +107,18 @@ interface InvoiceDao {
      @Query("SELECT * FROM INVOICE_AS_CLIENT_AND_STATUS_REMOTE_KEYS WHERE id = :id")
      suspend fun getInvoiceAsClientAnStatusRemoteKey(id : Long) : InvoicesAsClientAndStatusRemoteKeysEntity
 
-     @Query("SELECT * FROM invoice_remote_keys_table ORDER BY id DESC LIMIT 1")
+     @Query("SELECT * FROM invoice_remote_keys_table ORDER BY id ASC LIMIT 1")
      suspend fun getFirstInvoiceRemoteKey(): InvoiceRemoteKeysEntity?
 
-     @Query("SELECT * FROM invoice_remote_keys_table ORDER BY id ASC LIMIT 1")
+     @Query("SELECT * FROM all_invoice_remote_keys ORDER BY id ASC LIMIT 1")
+     suspend fun getFirstAllInvoiceRemoteKey(): AllInvoiceRemoteKeysEntity?
+
+
+     @Query("SELECT * FROM invoice_remote_keys_table ORDER BY id DESC LIMIT 1")
      suspend fun getLatestInvoiceRemoteKey() : InvoiceRemoteKeysEntity?
+
+     @Query("SELECT * FROM all_invoice_remote_keys ORDER BY id DESC LIMIT 1")
+     suspend fun getLatestAllInvoiceRemoteKey() : AllInvoiceRemoteKeysEntity?
 
      @Query("Delete FROM all_invoice_remote_keys")
      suspend fun clearAllRemoteKeysTable()
@@ -123,6 +130,10 @@ interface InvoiceDao {
      @Query("DELETE FROM buy_history_remote_keys_table")
      suspend fun clearAllBuyHistoryRemoteKeysTable()
 
+     @Query("SELECT * FROM buy_history_remote_keys_table ORDER BY id ASC LIMIT 1")
+     suspend fun getFirstBuyHistoryRemoteKey(): BuyHistoryRemoteKeysEntity?
+     @Query("SELECT * FROM buy_history_remote_keys_table ORDER BY id DESC LIMIT 1")
+     suspend fun getLatestBuyHistoryRemoteKeys(): BuyHistoryRemoteKeysEntity?
      @Query("DELETE FROM `payed_remote-keys_entity`")
      suspend fun clearAllBuyHistoryPaidRemoteKeysTable()
 
@@ -164,7 +175,10 @@ interface InvoiceDao {
 
      @Query("DELETE FROM invoice_as_client_and_status_remote_keys")
      suspend fun clearInvoicesAsClientAndStatusRemoteKeysTable()
-
+     @Query("SELECT * FROM invoice_as_client_and_status_remote_keys ORDER BY id ASC LIMIT 1")
+     suspend fun getFirstInvoiceAsClientRemoteKey() : InvoicesAsClientAndStatusRemoteKeysEntity?
+     @Query("SELECT * FROM invoice_as_client_and_status_remote_keys ORDER BY id DESC LIMIT 1 ")
+     suspend fun getLatestInvoiceAsClientRemoteKey() : InvoicesAsClientAndStatusRemoteKeysEntity?
      @Transaction
      @Query("SELECT * FROM invoice WHERE providerId = :companyId ORDER BY lastModifiedDate DESC")
      fun getAllMyInvoiceAsProvider(companyId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>

@@ -44,4 +44,22 @@ interface ArticleDao {
 
     @Query("UPDATE article SET isMy = :isMy WHERE id = :id")
     suspend fun updateArticleById(isMy : Boolean, id : Long)
+
+    @Query("SELECT * FROM art_remote_keys_entity ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstArticleRemoteKey() : ArtRemoteKeysEntity?
+    @Query("SELECT * FROM art_remote_keys_entity ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestArticleRemoteKey() : ArtRemoteKeysEntity?
+
 }
+
+
+
+
+
+
+
+
+
+
+
+

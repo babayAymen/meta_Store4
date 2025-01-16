@@ -17,6 +17,7 @@ import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.ErrorResponse
+import com.aymen.metastore.model.entity.model.Invitation
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.room.AppDatabase
@@ -58,13 +59,17 @@ class ClientViewModel @Inject constructor(
     val myClientsContainingForAutocomplete: StateFlow<PagingData<ClientProviderRelation>> = _myClientsContainingForAutocomplete
 
 
-
     private val _clientForUpdate : MutableStateFlow<Company?> = MutableStateFlow(Company())
     val clientForUpdate : StateFlow<Company?> get() = _clientForUpdate
 
     var update by mutableStateOf(false)
     val company: StateFlow<Company?> = sharedViewModel.company
     val user: StateFlow<User?> = sharedViewModel.user
+    private val _relationList : MutableStateFlow<List<Invitation>> = MutableStateFlow(emptyList())
+    val relationList : StateFlow<List<Invitation>> = _relationList
+    fun setRelationList(){
+        _relationList.value = emptyList()
+    }
     init {
 
         Log.e("testtoviewmodel","client view model")
@@ -252,10 +257,10 @@ class ClientViewModel @Inject constructor(
         }
     }
 
-        fun sendClientRequest(id: Long, type: Type) {
+        fun sendClientRequest(id: Long, type: Type, isDeleted : Boolean) {
             viewModelScope.launch(Dispatchers.IO) {
-                Log.e("sendclientreqyuest","id : $id type : $type")
-                    repository.sendClientRequest(id, type)
+
+                    repository.sendClientRequest(id, type, isDeleted)
             }
         }
 
@@ -279,7 +284,20 @@ class ClientViewModel @Inject constructor(
         }
     }
 
-
+    fun checkRelation(id: Long, accountType: AccountType){
+        viewModelScope.launch {
+            val result = repository.checkRelation(id, accountType)
+            if(result.isSuccessful){
+                val response = result.body()!!
+                if(response.isNotEmpty()){
+                    Log.e("testrelation","response : $response")
+                    _relationList.value = response.map {
+                        it.toInvitationModel()
+                    }
+                }
+            }
+        }
+    }
 
 
 }

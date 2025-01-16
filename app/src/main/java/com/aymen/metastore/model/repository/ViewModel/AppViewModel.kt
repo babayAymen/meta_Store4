@@ -61,8 +61,7 @@ class AppViewModel @Inject constructor(
     val historySelected: State<IconType> get() = _historySelected
 
     var userRole by mutableStateOf(sharedViewModel.user.value.role)
-    var authsize by mutableIntStateOf(1)
-
+    var asClient by mutableStateOf(false)
     private val _location = MutableLiveData<Pair<Double, Double>>()
     val location: LiveData<Pair<Double, Double>> get() = _location
     init {  isFirstRun = tracker.isFirstViewModelRun

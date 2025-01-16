@@ -54,6 +54,8 @@ import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.LodingShape
 import com.aymen.metastore.ui.component.addQuantityDailog
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_ARTICLE
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
 import com.aymen.store.model.Enum.RoleEnum
 import kotlinx.coroutines.delay
 
@@ -120,7 +122,7 @@ fun ArticleScreen() {
                             ) { article ->
                                 ArticleCardForAdmin(
                                     articleCompany,
-                                    image = stringResource(id = R.string.url_image_article, article.article?.image?:"", article.article?.category!!.ordinal)
+                                    image = String.format (IMAGE_URL_ARTICLE,article.article?.image, article.article?.category!!.ordinal)
                                 ) {
                                     art = article
                                     addQuantity = true

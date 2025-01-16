@@ -13,6 +13,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -45,6 +48,7 @@ fun DashBoardScreen() {
     val invoiceType = invoiceViewModel.invoiceMode
     val context = LocalContext.current
     val show by viewModel.show
+    val asClient = viewModel.asClient
     when (show) {
         "dash" -> {
             Surface(
@@ -148,7 +152,7 @@ fun DashBoardScreen() {
                 }
             }
         "invoice" -> {
-            InvoiceScreenAsProvider()
+            InvoiceScreenAsProvider(asClient)
         }
         "add invoice" -> {
             AddInvoiceScreen(invoiceType)

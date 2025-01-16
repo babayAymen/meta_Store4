@@ -158,4 +158,6 @@ class InvoiceRepositoryImpl @Inject constructor(
             }
         ).flow
     }
+
+    override suspend fun deleteInvoiceById(invoiceId: Long) = api.deleteInvoiceById(invoiceId)
 }

@@ -9,9 +9,11 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.aymen.metastore.MainActivity
+import com.aymen.metastore.model.Enum.NotificationType
 import com.aymen.metastore.model.entity.model.NotificationMessage
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.screen.user.UserScreen
+import com.aymen.store.model.Enum.AccountType
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,38 +32,33 @@ class PushNotificationService  : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        Log.e("devicetoken","token is : ${message.messageId}")
         val notificationMessage = NotificationMessage()
-        var notificationType = ""
-        var show = ""
-        var title = ""
-        var body = ""
-        var balance = ""
-            // Alternatively, handle data messages
         if (message.data.isNotEmpty()) {
-            notificationType = message.data["type"] ?: "Default Title"
-             show = message.data["show"] ?: "Default Body"
+            notificationMessage.notificationType = message.data["type"] ?: "Default Title"
             notificationMessage.balnce = message.data["balance"]?.toDouble() ?: 0.0
-            if(notificationMessage.balnce != 0.0){
+            notificationMessage.orderOrInvoiceId = message.data["id"]?.toLong()?:0
+            notificationMessage.clientType = AccountType.valueOf( message.data["clientType"]?:"NULL")
+            notificationMessage.isSend = ( message.data["isSend"]?:"false").toBoolean()
+            notificationMessage.isMeta = ( message.data["isMeta"]?:"false").toBoolean()
+            if(notificationMessage.balnce != 0.0 && notificationMessage.isMeta == false){
                 sharedViewModel.updateBalance(notificationMessage.balnce!!.toBigDecimal())
             }
-            Log.e("devicetoken","token is : $notificationType")
-            Log.e("devicetoken","balance is : $balance")
-            // Show the notification
+            when(notificationMessage.notificationType){
+                NotificationType.INVOICE.name -> if(notificationMessage.isSend == true) sharedViewModel.setInvoiceCountNotification(false) else sharedViewModel.setInvoiceAsClientCountNotification(false)
+                NotificationType.ORDER.name -> sharedViewModel.setOrderCountNotification(false)
+                NotificationType.INVITATION.name -> sharedViewModel.setInvitationCountNotification(false)
+                NotificationType.PAYMENT.name -> if(notificationMessage.isMeta != true) sharedViewModel.setPaymentCountNotification(false) else sharedViewModel.setReglementCountNotification(false)
+            }
         }
         if (message.notification != null) {
             notificationMessage.title = message.notification!!.title ?: "Default Title"
             notificationMessage.body = message.notification!!.body ?: "Default Body"
 
-            Log.e("devicetoken","token is : $title")
-            Log.e("devicetoken","token is : $body")
-            // Show the notification
-            showNotification(notificationMessage,notificationType)
+            showNotification(notificationMessage)
         }
-        // response to the received message
     }
 
-private fun showNotification(notificationMessage : NotificationMessage, notificationType : String) {
+private fun showNotification(notificationMessage : NotificationMessage) {
     val channelId = "default_channel_id"
     val channelName = "Default Channel"
 
@@ -78,10 +75,11 @@ private fun showNotification(notificationMessage : NotificationMessage, notifica
 
     val intent = Intent(this, MainActivity::class.java).apply {
 
-        Log.e("devicetoken","view abd show is : $notificationType ${notificationMessage.balnce}")
         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        putExtra("notificationType", notificationType)
+        putExtra("notificationType", notificationMessage.notificationType)
         putExtra("balance", notificationMessage.balnce.toString())
+        putExtra("isSend", notificationMessage.isSend.toString())
+        putExtra("clientType", notificationMessage.clientType.toString())
     }
     val pendingIntent = PendingIntent.getActivity(
         this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

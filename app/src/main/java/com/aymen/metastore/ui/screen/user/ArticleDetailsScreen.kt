@@ -1,5 +1,6 @@
 package com.aymen.metastore.ui.screen.user
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,7 +54,13 @@ import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
+import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_ARTICLE
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
+import com.aymen.store.model.Enum.RoleEnum
+import com.aymen.store.model.Enum.Type
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun ArticleDetailsScreen() {
@@ -62,10 +70,10 @@ fun ArticleDetailsScreen() {
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val clientViewModel : ClientViewModel = hiltViewModel()
     val ratingViewModel : RatingViewModel = hiltViewModel()
-    var myCompany by remember {
-        mutableStateOf(Company())
-    }
+    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     val company by sharedViewModel.hisCompany.collectAsStateWithLifecycle()
+    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
+    val myAccountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val article by articleViewModel.articleCompany.collectAsStateWithLifecycle()
     val userComment by articleViewModel.userComment.collectAsStateWithLifecycle()
     val companyComment by articleViewModel.companyComment.collectAsStateWithLifecycle()
@@ -73,11 +81,60 @@ fun ArticleDetailsScreen() {
     var showComment by remember {
         mutableStateOf(false)
     }
+    var hisParent by remember {
+        mutableStateOf(false)
+    }
+    var hisWorker by remember {
+        mutableStateOf(false)
+    }
+    var hisClient by remember {
+        mutableStateOf(false)
+    }
+    var hisProvider by remember {
+        mutableStateOf(false)
+    }
+    var creditAsClient by remember {
+        mutableDoubleStateOf(0.0)
+    }
+    var creditAsProvider by remember {
+        mutableDoubleStateOf(0.0)
+    }
+    val relationList = clientViewModel.relationList
+        .map { list ->
+            list.map { invitation ->
+                invitation.client?.let {cli ->
+                    if(myAccountType == AccountType.USER) {
+                        if(invitation.type == Type.USER_SEND_CLIENT_COMPANY || invitation.type == Type.COMPANY_SEND_PROVIDER_USER)
+                            hisProvider = true
+                        else
+                            hisWorker = true
+//                        creditAsProvider = invitation.credit!!
+                    }
+                }
+                invitation.companyReceiver?.let {pro ->
+                    if(pro.id == company.id) {
+                        if(invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY)
+                            hisClient = true
+                        if(invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY)
+                            hisProvider = true
+//                        creditAsClient = invitation.credit!!
+                    }
+                }
+                invitation.companySender?.let {pro ->
+                    if(pro.id == company.id) {
+                        if(invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY)
+                            hisClient = true
+                        if(invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY)
+                            hisProvider = true
+                    }
+                }
+
+            }
+        }.collectAsStateWithLifecycle(emptyList())
+
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentArticle(company.id!!)
-        if (sharedViewModel.accountType.value == AccountType.COMPANY) {
-            myCompany = sharedViewModel.company.value
-        }
+        clientViewModel.checkRelation(id = company.id!!, AccountType.COMPANY)
     }
     LaunchedEffect(articleViewModel.articleCompany) {
         articleViewModel.getAllArticleComments()
@@ -108,19 +165,10 @@ fun ArticleDetailsScreen() {
                                 RouteController.navigateTo(Screen.CompanyScreen)
                             }
                     ) {
-                        if (company.logo == null) {
-                            val painter: Painter = painterResource(id = R.drawable.emptyprofile)
-                            Image(
-                                painter = painter,
-                                contentDescription = "empty photo profil",
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(
-                                        RoundedCornerShape(10.dp)
-                                    )
-                            )
+                        if (company.logo != null) {
+                            ShowImage(image = String.format(IMAGE_URL_COMPANY,company.logo, company.user?.id))
                         } else {
-                            ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
+                            notImage()
                         }
                         Icon(
                             imageVector = Icons.Default.Verified,
@@ -134,6 +182,10 @@ fun ArticleDetailsScreen() {
                      sharedViewModel = sharedViewModel,
                      clientViewModel = clientViewModel,
                      companyViewModel = companyViewModel,
+                     hisClient = hisClient,
+                     hisProvider = hisProvider,
+                     hisParent = hisParent,
+                     hisWorker = hisWorker,
                      ratingViewModel = ratingViewModel,
                      company = company,
                      isPointsSeller = myCompany.isPointsSeller!!,
@@ -151,7 +203,7 @@ fun ArticleDetailsScreen() {
                     //to
                     ArticleCardForAdmin(
                         article!!,
-                        image = "${BASE_URL}werehouse/image/${article!!.article?.image}/article/${article!!.company?.category?.ordinal}"
+                        image = String.format(IMAGE_URL_ARTICLE,article!!.article?.image,article!!.company?.category?.ordinal)
                     ) {}
                 }
                     items(count = comments.itemCount,

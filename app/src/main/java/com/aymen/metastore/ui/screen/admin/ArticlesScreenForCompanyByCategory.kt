@@ -11,10 +11,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
@@ -47,7 +49,7 @@ val articles = articleViewModel.articles.collectAsLazyPagingItems()
                     }
                     if (add) {
                         articleViewModel.upDate = false
-                        appViewModel.updateShow("ADD_ARTICLE_FOR_COMPANY")
+                        appViewModel.updateShow(stringResource(id = R.string.add_article_for_company))
                     }
                 }
             }

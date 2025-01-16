@@ -1,7 +1,6 @@
 package com.aymen.metastore.model.repository.globalRepository
 
 import com.aymen.metastore.model.Enum.InvoiceMode
-import com.aymen.metastore.model.Enum.MessageType
 import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.ArticleDto
@@ -24,7 +23,6 @@ import com.aymen.metastore.model.entity.dto.AuthenticationResponse
 import com.aymen.metastore.model.entity.dto.CashDto
 import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
-import com.aymen.metastore.model.entity.dto.ConversationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.metastore.model.entity.dto.CategoryDto
@@ -32,7 +30,6 @@ import com.aymen.metastore.model.entity.dto.CompanyDto
 import com.aymen.metastore.model.entity.dto.InventoryDto
 import com.aymen.metastore.model.entity.dto.InvitationDto
 import com.aymen.metastore.model.entity.dto.InvoiceDto
-import com.aymen.metastore.model.entity.dto.MessageDto
 import com.aymen.metastore.model.entity.dto.PaymentDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
 import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
@@ -52,7 +49,6 @@ import com.aymen.metastore.util.INVENTORY_BASE_URL
 import com.aymen.metastore.util.INVITATION_BASE_URL
 import com.aymen.metastore.util.INVOICE_BASE_URL
 import com.aymen.metastore.util.LIKE_BASE_URL
-import com.aymen.metastore.util.MESSAGE_BASE_URL
 import com.aymen.metastore.util.META_BASE_URL
 import com.aymen.metastore.util.ORDER_BASE_URL
 import com.aymen.metastore.util.PAYMENT_BASE_URL
@@ -64,7 +60,6 @@ import com.aymen.metastore.util.SUBCATEGORY_BASE_URL
 import com.aymen.metastore.util.UPDATE_IMAGE_URL
 import com.aymen.metastore.util.WORKER_BASE_URL
 import com.aymen.store.model.Enum.CompanyCategory
-import io.ktor.client.plugins.api.Send
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -105,11 +100,11 @@ interface ServiceApi {
     @GET("$RATE_BASE_URL/enable_to_comment_article/{companyId}")
     suspend fun enabledToCommentArticle(@Path("companyId") companyId: Long):Response<Boolean>
     @GET("$INVENTORY_BASE_URL/getbycompany/{companyId}")
-    suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InventoryDto>
+    suspend fun getInventory(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<InventoryDto>
     @GET("$INVITATION_BASE_URL/get_invetation/{companyId}")
     suspend fun getAllMyInvetations(@Path("companyId") companyId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : PaginatedResponse<InvitationDto>
-    @GET("$INVITATION_BASE_URL/send/{id}/{type}")
-    suspend fun sendClientRequest(@Path("id") id : Long,@Path("type") type : Type):Response<Void>
+    @GET("$INVITATION_BASE_URL/send/{id}")
+    suspend fun sendClientRequest(@Path("id") id : Long,@Query("type") type : Type, @Query("isDeleted") isDeleted : Boolean):Response<Void>
     @GET("$INVITATION_BASE_URL/response/{status}/{id}")
     suspend fun requestResponse(@Path("status") status : Status, @Path("id") id : Long) : Response<Void>
     @GET("$INVITATION_BASE_URL/cancel/{id}")
@@ -136,12 +131,12 @@ interface ServiceApi {
                            @Query("type") type: String
     ):Response<List<CommandLineDto>>
     @GET("$COMMANDLINE_BASE_URL/get_command_line/{companyId}")
-    suspend fun getAllCommandLinesByInvoiceId(@Path("companyId") companyId : Long, @Query("invoiceId") invoiceId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<CommandLineDto>
+    suspend fun getAllCommandLinesByInvoiceId(@Path("companyId") companyId : Long, @Query("invoiceId") invoiceId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<CommandLineDto>
     //////////////////////////////////////////////////////////////:order/////////////////////////////////////////////////////////////////
     @GET("$ORDER_BASE_URL/get_purchaseorder_line_by_invoice_id/{companyId}")
     suspend fun getAllMyOrdersLinesByInvoiceId(@Path("companyId") companyId : Long , @Query("invoiceId") invoiceId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
     @GET("$ORDER_BASE_URL/get_all_my_orders_not_accepted/{id}")
-    suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<PurchaseOrderLineDto>
+    suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<PurchaseOrderLineDto>
     @POST("$ORDER_BASE_URL/")
     suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<List<PurchaseOrderLineDto>>
     @POST("$ORDER_BASE_URL/test")
@@ -155,10 +150,12 @@ interface ServiceApi {
     @GET("$ORDER_BASE_URL/get_lines/{orderId}")
     suspend fun getAllMyOrdersLineByOrderId(@Path("orderId") orderId : Long) : Response<List<PurchaseOrderLineDto>>
     @GET("$ORDER_BASE_URL/get_by_order_id/{orderId}")
-    suspend fun getOrdersLineDetails(@Path("orderId") orderId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
+    suspend fun getOrdersLineDetails(@Path("orderId") orderId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): PaginatedResponse<PurchaseOrderLineDto>
     /////////////////////////////////////////////////////////////invoice////////////////////////////////////////////////////////////////
-    @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{id}")
-    suspend fun getAllBuyHistory(@Path("id")id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{id}") // a verfier maybe i donty use it
+    suspend fun getAllBuyHistory(@Path("id")id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<InvoiceDto>
+    @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{companyId}")
+    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<InvoiceDto>
     @GET("$INVOICE_BASE_URL/get_by_payment_paid_status/{id}")
     suspend fun getAllBuyHistoryByPaidStatusAsProvider(@Path("id") id : Long, @Query("status") status: PaymentStatus, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/get_by_payment_paid_status_as_client/{id}")
@@ -167,19 +164,19 @@ interface ServiceApi {
     suspend fun getAllBuyHistoryByStatus(@Path("id") id : Long, @Query("status") status: Status, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/get_all_my_invoices_not_accepted_as_client/{id}")
     suspend fun getAllMyInvoicesNotAccepted(@Path("id") id : Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
-    @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{companyId}")
-    suspend fun getAllMyInvoicesAsProvider(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getMyInvoiceAsClient/{companyId}")
     suspend fun getAllMyInvoicesAsClient(@Path("companyId") companyId: Long, @Query("status") status: PaymentStatus,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : PaginatedResponse<InvoiceDto>
     @GET("$INVOICE_BASE_URL/get_by_status_as_client/{id}")
-    suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : List<InvoiceDto>
+    suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : PaginatedResponse<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getlastinvoice")
     suspend fun getLastInvoiceCode():Response<Long>
+    @DELETE("$INVOICE_BASE_URL/delete_by_id/{invoiceId}")
+    suspend fun deleteInvoiceById(@Path("invoiceId") invoiceId : Long):Response<Void>
     @GET("$INVOICE_BASE_URL/response/{invoiceId}/{status}")
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
     ////////////////////////////////////////////////////////////:point//////////////////////////////////////////////////////////:::
     @GET("$POINT_BASE_URL/get_all_my_as_company/{id}")
-    suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):List<PaymentForProvidersDto>
+    suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):PaginatedResponse<PaymentForProvidersDto>
     @GET("$POINT_BASE_URL/get_all_my/{id}")
     suspend fun getRechargeHistory(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ): PaginatedResponse<PointsPaymentDto>
     @GET("$POINT_BASE_URL/get_all_my/{companyId}")
@@ -191,9 +188,9 @@ interface ServiceApi {
     @GET("$POINT_BASE_URL/get_all_my_payment/{id}")
     suspend fun getAllProvidersProfit(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<PaymentForProvidersDto>
     @GET("$POINT_BASE_URL/get_all_my_profits/{id}")
-    suspend fun getAllProfitPerDay(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
+    suspend fun getAllProfitPerDay(@Path("id") id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<PaymentForProviderPerDayDto>
     @GET("$POINT_BASE_URL/get_all_my_profits_per_day/{id}")
-    suspend fun getMyHistoryProfitByDate(@Path("id") id : Long, @Query("beginday") beginDay : String, @Query("finalday") finalDay : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<PaymentForProviderPerDayDto>
+    suspend fun getMyHistoryProfitByDate(@Path("id") id : Long, @Query("beginday") beginDay : String, @Query("finalday") finalDay : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<PaymentForProviderPerDayDto>
     @POST("$POINT_BASE_URL/")
     suspend fun sendPoints(@Body pointsPayment: PointsPaymentDto):Response<Void>
     @POST("$POINT_BASE_URL/send_reglement")
@@ -218,7 +215,7 @@ interface ServiceApi {
     @POST("$ARTICLE_BASE_URL/add/{id}")
     suspend fun addArticleWithoutImage(@Path("id") articleId : Long, @Body article: ArticleCompanyDto):Response<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/get_company_article_by_company_id/{companyId}")
-    suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : List<ArticleCompanyDto>
+    suspend fun getAllCompanyArticles(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/get_company_article_by_category_or_subcategory/{companyId}")
     suspend fun companyArticlesByCategoryOrSubCategory(@Path("companyId") companyId : Long, @Query("categoryId") categoryId : Long, @Query("subCategoryId") subcategoryId: Long , @Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/get_all_my_article/{companyId}")
@@ -228,7 +225,7 @@ interface ServiceApi {
     @GET("$ARTICLE_BASE_URL/my_article/{id}")
     suspend fun getArticleDetails(@Path("id") id : Long) : List<ArticleCompanyDto>
     @GET("$ARTICLE_BASE_URL/get_articles_by_category/{id}")
-    suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<ArticleDto>
+    suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): PaginatedResponse<ArticleDto>
     @GET("$ARTICLE_BASE_URL/search/{id}")
     suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
     @POST("$ARTICLE_BASE_URL/sendComment")
@@ -257,7 +254,7 @@ interface ServiceApi {
     @GET("$CLIENT_BASE_URL/get_all_my_client_containing/{companyId}")
     suspend fun getAllMyClientContaining( @Path("companyId") companyId: Long,@Query("searchType") searchType : SearchType,@Query("search") clientName : String,  @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
     @GET("$CLIENT_BASE_URL/get_all_my/{companyId}")
-    suspend fun getAllMyClient(@Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+    suspend fun getAllMyClient(@Path("companyId") companyId: Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<ClientProviderRelationDto>
     @GET("$CLIENT_BASE_URL/get_all_client_person_containing/{companyId}")
     suspend fun getAllClientsPersonContaining(@Path("companyId") companyId: Long,@Query("searchType")searchType : SearchType, @Query("search") libelle : String, @Query("page") page : Int, @Query("pageSize") pageSize : Int): List<UserDto>
 ////////////////////////////////////////////////////////////////////////:provider///////////////////////////////////////////////////////////////////////////////////////:
@@ -280,10 +277,13 @@ interface ServiceApi {
     @DELETE("$PROVIDER_BASE_URL/delete/{relationId}")
     suspend fun deleteProvider(@Path("relationId")relationId : Long) : Response<Void>
     @GET("$PROVIDER_BASE_URL/get_all_my/{companyId}")
-    suspend fun getAllMyProvider(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): List<ClientProviderRelationDto>
+    suspend fun getAllMyProvider(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<ClientProviderRelationDto>
 /////////////////////////////////////////////////////////////////////////////company///////////////////////////////////////////////////////////////////////////////::
-@GET("$COMPANY_BASE_URL/me")
-suspend fun getMeAsCompany(): Response<CompanyDto>
+    @GET("$COMPANY_BASE_URL/me")
+    suspend fun getMeAsCompany(): Response<CompanyDto>
+    @GET("$COMPANY_BASE_URL/check_relation/{id}")
+    suspend fun checkRelation(@Path("id") id : Long, @Query("accountType") accountType: AccountType) : Response<List<InvitationDto>>
+
     @Multipart
     @POST("$COMPANY_BASE_URL/add")
     suspend fun addCompany(

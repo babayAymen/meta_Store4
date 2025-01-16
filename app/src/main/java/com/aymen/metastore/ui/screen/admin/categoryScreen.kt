@@ -12,12 +12,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
@@ -45,13 +47,14 @@ fun CategoryScreen() {
                 modifier = Modifier.align(Alignment.Center)
             )
         } else {
+            val categoryScreen = stringResource(id = R.string.category_screen)
 
              LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 item {
-                    ButtonSubmit(labelValue = "Add Category", color = Color.Green, enabled = true) {
-                        appViewModel.updateShow("add category")
+                    ButtonSubmit(labelValue = stringResource(id = R.string.add_category), color = Color.Green, enabled = true) {
+                        appViewModel.updateShow(categoryScreen)
                     }
                 }
                 items(
@@ -69,7 +72,7 @@ fun CategoryScreen() {
                             onUpdate = {item ->
                                 categoryViewModel.update = true
                                 categoryViewModel.assignCategoryForUpdate(item)
-                                appViewModel.updateShow("add category")
+                                appViewModel.updateShow(categoryScreen)
                             }
                         ) { categoryItem ->
                             CategoryCardForAdmin(

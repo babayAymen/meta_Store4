@@ -22,6 +22,10 @@ interface PaymentForProvidersDao {
     @Upsert
     fun insertKeys(keys : List<PointsPaymentForProviderRemoteKeysEntity>)
 
+    @Query("SELECT * FROM points_payment_for_provider_remote_keys_entity ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstRemoteKey() : PointsPaymentForProviderRemoteKeysEntity?
+    @Query("SELECT * FROM points_payment_for_provider_remote_keys_entity ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestRemoteKey() : PointsPaymentForProviderRemoteKeysEntity?
     @Query("SELECT * FROM points_payment_for_provider_remote_keys_entity WHERE id = :id")
     suspend fun getRemoteKeys(id : Long) : PointsPaymentForProviderRemoteKeysEntity?
 
@@ -40,7 +44,10 @@ interface PaymentForProvidersDao {
 
     @Query("DELETE FROM provider_profit_history_remote_keys")
     suspend fun clearAllProvidersProfitHistoryRemoteKeysTable()
-
+    @Query("SELECT * FROM provider_profit_history_remote_keys ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstAllProvidersProfitRemoteKey() : ProviderProfitHistoryRemoteKeysEntity?
+    @Query("SELECT * FROM provider_profit_history_remote_keys ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestAllProviderProfitRemoteKey() : ProviderProfitHistoryRemoteKeysEntity?
     @Query("DELETE FROM payment_for_providers")
     suspend fun clearAllProvidersProfitHistoryTable()
 

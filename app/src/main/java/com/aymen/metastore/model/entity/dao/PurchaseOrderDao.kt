@@ -30,6 +30,10 @@ interface PurchaseOrderDao {
 
     @Query("DELETE FROM order_not_accepted_keys_entity")
     suspend fun clearAllOrderNotAcceptedKeys()
+    @Query("SELECT * FROM order_not_accepted_keys_entity ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstAllPurchaseOrderNotAcceptedKey() : OrderNotAcceptedKeysEntity?
+    @Query("SELECT * FROM order_not_accepted_keys_entity ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestAllOrderNotAcceptedKey() : OrderNotAcceptedKeysEntity?
     @Query("DELETE FROM purchase_order")
     suspend fun clearAllPurchaseOrderNotAccepted()
     @Query("SELECT * FROM order_not_accepted_keys_entity WHERE id = :id")

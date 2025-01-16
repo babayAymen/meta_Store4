@@ -56,7 +56,6 @@ class CategoryRemoteMediator(
                 }
             }
             val response = api.getAllCategoryByCompany(id!!,currentPage, state.config.pageSize)
-            Log.e("categorylogger","response ${response.content.size} company id $id")
             val endOfPaginationReached = response.last
             val prevPage = if (response.first) null else response.number - 1
             val nextPage = if (endOfPaginationReached) null else response.number + 1

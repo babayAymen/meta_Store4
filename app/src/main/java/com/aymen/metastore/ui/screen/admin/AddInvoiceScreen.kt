@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -148,12 +149,17 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
             ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
         else
             commandLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
+    var isMe by remember {
+        mutableStateOf(true)
+    }
     DisposableEffect(key1 = Unit) {
         onDispose {
             invoiceViewModel.remiseOrderLineToZero()
             tottva = BigDecimal.ZERO
             totprice = BigDecimal.ZERO
             totgen = BigDecimal.ZERO
+            if(invoice?.status == Status.REFUSED && isMe)
+                invoiceViewModel.deleteInvoiceByIdLocally(invoice?.id!!)
         }
     }
     LaunchedEffect(key1 = ordersLineInvoice.itemCount, key2 = commandLineInvoice.itemCount) {
@@ -204,8 +210,9 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     var paid by remember {
         mutableStateOf(PaymentStatus.NOT_PAID)
     }
-    var discount by remember {
-        mutableStateOf("")
+
+    var showButton by remember {
+        mutableStateOf(true)
     }
 
     val labels = listOf(
@@ -255,6 +262,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     context,
                                     invoiceMode,
                                     invoice?.paid,
+                                    isMe
                                 ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
                                     showPaymentDailog = paymentDailog
                                     showArticleDialog = articleDailog
@@ -372,6 +380,7 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     context = context,
                                     invoiceMode = invoiceMode,
                                     invoice?.paid,
+                                    isMe
                                 ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
                                     showPaymentDailog = paymentDailog
                                     showArticleDialog = articleDailog
@@ -513,19 +522,37 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                     .wrapContentWidth(Alignment.CenterHorizontally)
                             )
                             if (invoice?.status == Status.INWAITING) {
-                                if (invoice?.provider?.id != myCompany.id) {
-                                    ButtonSubmit(
-                                        labelValue = stringResource(id = R.string.accept),
-                                        color = Color.Green,
-                                        enabled = true
-                                    ) {
-                                        invoiceViewModel.accepteInvoice(
-                                            invoice?.id!!,
-                                            Status.ACCEPTED
-                                        )
+                                if (invoice?.provider?.id != myCompany.id && showButton) {
+                                    isMe = false
+                                    Row {
+                                        Row(modifier = Modifier.weight(1f)) {
+                                            ButtonSubmit(
+                                                labelValue = stringResource(id = R.string.refuse),
+                                                color = Color.Red,
+                                                enabled = true
+                                            ) {
+                                                showButton = false
+                                                invoiceViewModel.accepteInvoice(
+                                                    invoice?.id!!,
+                                                    Status.REFUSED
+                                                )
+                                            }
+                                        }
+                                        Row(modifier = Modifier.weight(1f)) {
+
+                                            ButtonSubmit(
+                                                labelValue = stringResource(id = R.string.accept),
+                                                color = Color.Green,
+                                                enabled = true
+                                            ) {
+                                                showButton = false
+                                                invoiceViewModel.accepteInvoice(
+                                                    invoice?.id!!,
+                                                    Status.ACCEPTED
+                                                )
+                                            }
+                                        }
                                     }
-                                } else {
-                                    Text(stringResource(id = R.string.waiting_for_accept))
                                 }
                             }
                             if (showPaymentDailog) {
@@ -538,21 +565,28 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
                                         paymentViewModel.sendRaglement(
                                             invoice?.provider?.id!!,
                                             cash
-                                        ){
+                                        ) {
                                             invoice = it
                                         }
                                     }
                                 }
                             }
+                            if(invoice?.status != Status.REFUSED)
                             FeatureIcons(
                                 invoiceViewModel = invoiceViewModel,
                                 context = context,
                                 invoiceMode,
                                 invoice?.paid,
+                                isMe
                             ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
                                 showDialog = pdfDailog
                                 showPaymentDailog = paymentDailog
                                 showArticleDialog = beforeSending
+                            }
+                            else {
+                                Text(text = invoice?.status.toString())
+                                Toast.makeText(context, "this invoice is deleted", Toast.LENGTH_SHORT).show()
+                                invoiceViewModel.deleteInvoiceById(invoice?.id!!)
                             }
                         }
                     }
@@ -762,7 +796,7 @@ fun TableHeader(labels : List<Int>) {
     }
 }
 @Composable
-fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMode : InvoiceMode, invoiceStatus : PaymentStatus?, onSubmit: (Boolean, Boolean, Boolean, Boolean) -> Unit) {
+fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMode : InvoiceMode, invoiceStatus : PaymentStatus?, isMe : Boolean, onSubmit: (Boolean, Boolean, Boolean, Boolean) -> Unit) {
     var article by remember {
         mutableStateOf(ArticleCompany())
     }
@@ -820,11 +854,11 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
         IconButton(onClick = { onSubmit(false, false,true, false) }
         ) {
             Icon(
-                Icons.AutoMirrored.Outlined.InsertDriveFile,
+                painter = painterResource(R.drawable.baseline_picture_as_pdf_24),
                 contentDescription = stringResource(id = R.string.pdf)
             )
         }
-        if(invoiceStatus != PaymentStatus.PAID && invoiceMode != InvoiceMode.CREATE)
+        if(invoiceStatus != PaymentStatus.PAID && invoiceMode != InvoiceMode.CREATE && isMe)
         IconButton(onClick = { onSubmit(true, false, false, false) }) {
             Icon(imageVector = Icons.Outlined.AccountBalanceWallet,
                 contentDescription = "payment icon")

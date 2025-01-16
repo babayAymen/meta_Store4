@@ -12,7 +12,7 @@ import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProv
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
-class BuyHistoryMediator(
+class BuyHistoryMediator( // a verifier maybe i dont use it
     private val api : ServiceApi,
     private val room : AppDatabase,
     private val id : Long
@@ -34,11 +34,11 @@ class BuyHistoryMediator(
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1)?:0
+                    0
                 }
 
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -46,7 +46,7 @@ class BuyHistoryMediator(
                 }
 
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -54,8 +54,8 @@ class BuyHistoryMediator(
                 }
             }
             val response = api.getAllBuyHistory(id,currentPage, state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             room.withTransaction {
@@ -63,7 +63,7 @@ class BuyHistoryMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    invoiceDao.insertBuyHistoryKeys(response.map { article ->
+                    invoiceDao.insertBuyHistoryKeys(response.content.map { article ->
                         BuyHistoryRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
@@ -71,12 +71,12 @@ class BuyHistoryMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.person?.toUser()})
-                    userDao.insertUser(response.map {user -> user.client?.user?.toUser()})
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
-                    companyDao.insertCompany(response.map {company -> company.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.map {category -> category.toInvoice(isInvoice = true) })
+                    userDao.insertUser(response.content.map {user -> user.person?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.client?.user?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.client?.toCompany()})
+                    companyDao.insertCompany(response.content.map {company -> company.provider?.toCompany()})
+                    invoiceDao.insertInvoice(response.content.map {category -> category.toInvoice(isInvoice = true) })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -89,22 +89,12 @@ class BuyHistoryMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { invoiceDao.getBuyHistoryRemoteKey(it.invoice.id!!).prevPage }
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return invoiceDao.getFirstBuyHistoryRemoteKey()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { invoiceDao.getBuyHistoryRemoteKey(it.invoice.id!!).nextPage }
-    }
-
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, InvoiceWithClientPersonProvider>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.invoice?.id?.let { invoiceDao.getBuyHistoryRemoteKey(it).nextPage }
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+        return invoiceDao.getLatestBuyHistoryRemoteKeys()?.nextPage
     }
 
     private suspend fun deleteCache(){

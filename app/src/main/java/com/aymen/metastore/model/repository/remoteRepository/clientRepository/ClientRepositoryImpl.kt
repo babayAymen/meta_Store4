@@ -107,7 +107,7 @@ class ClientRepositoryImpl  @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    override suspend fun sendClientRequest(id: Long, type: Type) = api.sendClientRequest(id,type)
+    override suspend fun sendClientRequest(id: Long, type: Type, isDeleted: Boolean) = api.sendClientRequest(id,type, isDeleted)
 
     override suspend fun getAllClientContaining(
         search: String,

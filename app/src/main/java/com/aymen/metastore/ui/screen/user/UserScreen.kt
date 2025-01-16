@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,8 @@ import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.store.model.Enum.Type
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun UserScreen() {
@@ -67,10 +70,40 @@ fun UserScreen() {
     var rating by remember {
         mutableStateOf(false)
     }
+    var hisClient by remember {
+        mutableStateOf(false)
+    }
+    var hisWorker by remember {
+        mutableStateOf(false)
+    }
+    val relationList = clientViewModel.relationList
+        .map { list ->
+            list.map { invitation ->
+                invitation.companyReceiver?.let {pro ->
+                    if(invitation.type == Type.USER_SEND_CLIENT_COMPANY || invitation.type == Type.COMPANY_SEND_PROVIDER_USER)
+                        hisClient = true
+                    else
+                        hisWorker = true
+                }
+                invitation.companySender?.let {pro ->
+                    if(invitation.type == Type.USER_SEND_CLIENT_COMPANY || invitation.type == Type.COMPANY_SEND_PROVIDER_USER)
+                        hisClient = true
+                    else
+                        hisWorker = true
+                }
+Log.e("afzgsfvsds","aze : $invitation")
+            }
+        }.collectAsStateWithLifecycle(emptyList())
+
     LaunchedEffect(key1 = Unit) {
         ratingViewModel.enabledToCommentUser(user.id!!)
+        clientViewModel.checkRelation(user.id!!, AccountType.USER)
     }
-    val listState = rememberLazyListState()
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            clientViewModel.setRelationList()
+        }
+    }
     Surface(modifier = Modifier
         .fillMaxSize()
         .padding(3.dp, 36.dp, 3.dp, 3.dp)
@@ -96,6 +129,8 @@ fun UserScreen() {
                         sharedViewModel,
                         ratingViewModel,
                         user,
+                        hisClient,
+                        hisWorker,
                         isPointSeller!!
                     ) {
                     }
@@ -123,7 +158,7 @@ fun UserScreen() {
 
 @Composable
 fun UserDetails( clientViewModel: ClientViewModel, sharedViewModel: SharedViewModel,
-                ratingViewModel : RatingViewModel, user: User, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
+                ratingViewModel : RatingViewModel, user: User, hisClient : Boolean, hisWorker : Boolean, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     Row {
         Row(
@@ -131,9 +166,9 @@ fun UserDetails( clientViewModel: ClientViewModel, sharedViewModel: SharedViewMo
                 .weight(1f)
                 .padding(end = 2.dp)
         ) {
-            if (accountType != AccountType.USER)
-            AddTypeDialog(isOpen = false, user.id!!, false) {
-                clientViewModel.sendClientRequest(user.id!!, it)
+            if (accountType != AccountType.USER)//il faux regleé as well
+            AddTypeDialog(isOpen = false, user.id!!, false, hisClient, false, false , hisWorker) {type , isDeleted ->
+                clientViewModel.sendClientRequest(user.id!!, type , isDeleted)
             }
         }
         if (accountType == AccountType.COMPANY &&  isMePointSeller) {

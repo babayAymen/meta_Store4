@@ -20,9 +20,6 @@ class PaymentHystoricRemoteMediator(
     private val room : AppDatabase,
     private val invoiceId : Long
 ): RemoteMediator<Int , PaymentWithInvoice> (){
-    private val userDao = room.userDao()
-    private val companyDao = room.companyDao()
-    private val invoiceDao = room.invoiceDao()
     private val paymentDao = room.paymentDao()
 
     override suspend fun initialize(): InitializeAction {
@@ -100,10 +97,10 @@ class PaymentHystoricRemoteMediator(
 
     private suspend fun deleteCache(){
        val ids = paymentDao.getPaymentIdsByInvoiceId(invoiceId)
-           paymentDao.deletePaymentsByInvoiceId(invoiceId)
         ids.forEach {
         paymentDao.clearAllRemoteKeysTableById(it)
         }
+        paymentDao.deletePaymentsByInvoiceId(invoiceId)
     }
 
 }

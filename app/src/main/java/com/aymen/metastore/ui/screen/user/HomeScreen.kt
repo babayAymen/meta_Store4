@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +52,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,15 +61,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.LanguageSwither
+import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.NotificationType
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
@@ -126,7 +132,12 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
 
     val triggerLocationCheck by signInViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
     val triggerLocationCheck2 by appViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
-
+    val invoiceNotificationCount by sharedViewModel.invoiceNotificationCount.collectAsStateWithLifecycle()
+    val orderNotificationCount by sharedViewModel.orderNotificationCount.collectAsStateWithLifecycle()
+    val invitationNotificationCount by sharedViewModel.invitationNotificationCount.collectAsStateWithLifecycle()
+    val paymentNotificationCount by sharedViewModel.paymentNotificationCount.collectAsStateWithLifecycle()
+    val reglementNotificationCount by sharedViewModel.reglementNotificationCount.collectAsStateWithLifecycle()
+    val invoiceAsClientNotificationCount by sharedViewModel.invoiceAsClientNotificationCount.collectAsStateWithLifecycle()
     if(triggerLocationCheck || triggerLocationCheck2) {
         if(type != AccountType.NULL) {
             CheckLocation(type, user, company, context)
@@ -140,28 +151,39 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
             appViewModel.sendDeviceToken(token)
         }
         if(randomArticles.itemCount == 0) {
-            articleViewModel.fetchRandomArticlesForHomePage(categoryName = CompanyCategory.DAIRY)
+            articleViewModel.fetchRandomArticlesForHomePage(categoryName = CompanyCategory.ALL)
         }
     }
    LaunchedEffect(key1 = extra) {
-        val notificationType = extra["notificationType"]
-        if (notificationType == NotificationType.PAYMENT.name) {
-            appViewModel.updateView("payment")
-            appViewModel.updateScreen(IconType.WALLET)
-        }
-
-        if (notificationType == NotificationType.INVITATION.name) {
-            appViewModel.updateScreen(IconType.USER)
-        }
-
-    }
+       val notificationType = extra["notificationType"]
+       val clientType = extra["clientType"]
+       val isSend = extra["isSend"]
+       if (notificationType == NotificationType.PAYMENT.name) {
+           appViewModel.updateView("payment")
+           appViewModel.updateScreen(IconType.WALLET)
+       }
+       if (notificationType == NotificationType.INVITATION.name)
+           appViewModel.updateScreen(IconType.USER)
+       if (notificationType == NotificationType.ORDER.name)
+           appViewModel.updateScreen(IconType.SHOPPING)
+       if (notificationType == NotificationType.INVOICE.name) {
+           if(clientType == AccountType.COMPANY.name){
+               if(isSend == "false")
+                    appViewModel.asClient = true
+               appViewModel.updateShow("invoice")
+               appViewModel.updateScreen(IconType.COMPANY)
+           }else
+               appViewModel.updateScreen(IconType.SHOPPING)
+       }
+   }
     Scaffold (
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection)
         ,
         topBar = {
-            MyTopBar(scrollBehavior, context, sharedViewModel)
+            MyTopBar(scrollBehavior, context, sharedViewModel,invoiceNotificationCount,orderNotificationCount,
+                invitationNotificationCount, paymentNotificationCount, reglementNotificationCount,invoiceAsClientNotificationCount)
         }
     ){value ->
         Column (
@@ -199,7 +221,8 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedViewModel : SharedViewModel)   {
+fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedViewModel : SharedViewModel, invoiceCount : Int,
+             orderCount : Int, invitationCount : Int, paymentCount : Int, reglementCount : Int, invoiceAsClientCount : Int)   {
     val viewModel : AppViewModel = hiltViewModel()
     val selectedIcon by viewModel.currentScreen
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
@@ -210,11 +233,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     var isPopupVisible by remember {
         mutableStateOf(false)
     }
-
     var isAdmin by remember {
         mutableStateOf(false)
     }
-
     LaunchedEffect(key1 = userRole) {
         isAdmin = userRole == RoleEnum.ADMIN
     }
@@ -227,7 +248,6 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     } else {
         user.balance!!.toBigDecimal().setScale(2, RoundingMode.HALF_UP)
     }
-
     var opDialog by remember {
     mutableStateOf(false)
     }
@@ -365,7 +385,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         selectedIcon = selectedIcon,
                         iconSelected = Icons.Default.Home,
                         iconUnselected = Icons.Outlined.Home,
-                        badgeCount = 0, // Example of a message badge
+                        badgeCount = 0,
                         onClick = {
                             viewModel.updateScreen(IconType.HOME)
                         },
@@ -378,7 +398,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             selectedIcon = selectedIcon,
                             iconSelected = Icons.Default.HomeWork,
                             iconUnselected = Icons.Outlined.HomeWork,
-                            badgeCount = 1,
+                            badgeCount = invoiceCount+invoiceAsClientCount,
                             onClick = {
                                 viewModel.updateShow("dash")
                                 viewModel.updateScreen(IconType.COMPANY)
@@ -391,7 +411,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         selectedIcon = selectedIcon,
                         iconSelected = Icons.Default.ShoppingCart,
                         iconUnselected = Icons.Outlined.ShoppingCart,
-                        badgeCount = 0, // Example of a message badge
+                        badgeCount = orderCount,
                         onClick = {
                             viewModel.updateScreen(IconType.SHOPPING)
                         },
@@ -402,7 +422,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         selectedIcon = selectedIcon,
                         iconSelected = Icons.Default.AccountBalanceWallet,
                         iconUnselected = Icons.Outlined.AccountBalanceWallet,
-                        badgeCount = 0, // Example of a message badge
+                        badgeCount = paymentCount+reglementCount,
                         onClick = {
                             viewModel.updateScreen(IconType.WALLET)
                             if(accountType == AccountType.COMPANY && user.role == RoleEnum.WORKER){
@@ -429,7 +449,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             selectedIcon = selectedIcon,
                             iconSelected = Icons.Default.GroupAdd,
                             iconUnselected = Icons.Outlined.GroupAdd,
-                            badgeCount = 0,
+                            badgeCount = invitationCount,
                             onClick = {
                                 viewModel.updateScreen(IconType.USER)
                             },
@@ -556,17 +576,53 @@ fun IconWithBadge(
 
 @Composable
 fun ScreenByCategory(articleViewModel: ArticleViewModel) {
-    LazyRow {
-        items(CompanyCategory.entries){ categ ->
-            Card(onClick = {
-                Log.e("categoryarticle","category : ${categ.ordinal}")
-                articleViewModel.fetchRandomArticlesForHomePage(categ)
-                           },
-                modifier = Modifier.height(50.dp))
-            {
-            Text(text = categ.name)
+
+    LazyRow (
+        modifier = Modifier.padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp)
+    ){
+        items(CompanyCategory.entries) { categ ->
+            val imageResId = when (categ) {
+                CompanyCategory.DAIRY -> R.drawable.attar
+                CompanyCategory.FISH -> R.drawable.hout
+                CompanyCategory.GROCER -> R.drawable.boukoul
+                CompanyCategory.VEGETABLE -> R.drawable.khodhra
+                CompanyCategory.BUTCHER -> R.drawable.jazzar
+                CompanyCategory.ALL -> R.drawable.hstore
             }
-            Spacer(modifier = Modifier.size(6.dp))
+
+            val imagePainter: Painter = painterResource(id = imageResId)
+            Card(
+                onClick = {
+                    articleViewModel.fetchRandomArticlesForHomePage(categ)
+                },
+                modifier = Modifier
+                    .size(90.dp, 70.dp),
+            )
+            {
+                Column (
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+
+                    Image(
+                        painter = imagePainter,
+                        contentDescription = "category image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .clip(
+                                RoundedCornerShape(5.dp)
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Spacer(modifier = Modifier.height(1.dp))
+                Text(text = categ.name)
+
+                }
+            }
+            Spacer(modifier = Modifier.size(1.dp))
         }
     }
 }

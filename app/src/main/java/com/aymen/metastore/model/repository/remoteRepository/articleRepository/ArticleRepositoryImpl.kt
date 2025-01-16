@@ -58,7 +58,10 @@ class ArticleRepositoryImpl @Inject constructor
     api = api, room = room, category = categoryName, companyId = companyId
     ),
     pagingSourceFactory = {
-        articleCompanyDao.getRandomArticles(categoryName)
+        if(categoryName != CompanyCategory.ALL)
+             articleCompanyDao.getRandomArticles(categoryName)
+        else
+            articleCompanyDao.getRandomArticlesWithouCategory()
     }
     ).flow.map {
                 it.map { article ->

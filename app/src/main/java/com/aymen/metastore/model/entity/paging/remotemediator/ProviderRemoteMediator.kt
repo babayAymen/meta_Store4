@@ -33,11 +33,11 @@ class ProviderRemoteMediator(
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                    0
                 }
 
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -45,7 +45,7 @@ class ProviderRemoteMediator(
                 }
 
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -54,8 +54,8 @@ class ProviderRemoteMediator(
             }
 
             val response = api.getAllMyProvider(id , currentPage , state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             room.withTransaction {
@@ -63,7 +63,7 @@ class ProviderRemoteMediator(
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    companyClientRelationDao.insertProviderKeys(response.map { article ->
+                    companyClientRelationDao.insertProviderKeys(response.content.map { article ->
                         ProviderRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
@@ -71,12 +71,12 @@ class ProviderRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.person?.toUser()})
-                    userDao.insertUser(response.map {user -> user.client?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.client?.toCompany()})
-                    userDao.insertUser(response.map {user -> user.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.map { company -> company.provider?.toCompany()})
-                    companyClientRelationDao.insertClientProviderRelation(response.map { relation -> relation.toClientProviderRelation() })
+                    userDao.insertUser(response.content.map {user -> user.person?.toUser()})
+                    userDao.insertUser(response.content.map {user -> user.client?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.client?.toCompany()})
+                    userDao.insertUser(response.content.map {user -> user.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map { company -> company.provider?.toCompany()})
+                    companyClientRelationDao.insertClientProviderRelation(response.content.map { relation -> relation.toClientProviderRelation() })
 
                 } catch (ex: Exception) {
                     Log.e("errorprovider", "$ex")
@@ -89,22 +89,13 @@ class ProviderRemoteMediator(
             MediatorResult.Error(ex)
         }
     }
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, CompanyWithCompanyOrUser>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { companyClientRelationDao.getProviderRemoteKey(it.relation.id!!).prevPage }
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return companyClientRelationDao.getFirstProviderRemoteKey()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, CompanyWithCompanyOrUser>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { companyClientRelationDao.getProviderRemoteKey(it.relation.id!!).nextPage }
-    }
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+        return companyClientRelationDao.getLatestProviderRemoteKey()?.nextPage
 
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, CompanyWithCompanyOrUser>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.relation?.id?.let { companyClientRelationDao.getProviderRemoteKey(it).nextPage }
     }
 
     private suspend fun deleteCache(){

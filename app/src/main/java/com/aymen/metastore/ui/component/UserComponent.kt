@@ -113,7 +113,11 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
+import com.aymen.metastore.util.ARTICLE_BASE_URL
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_ARTICLE
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
+import com.aymen.metastore.util.MESSAGE_BASE_URL
 import com.aymen.store.model.Enum.UnitArticle
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
@@ -139,8 +143,10 @@ fun LodingShape(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ShowImage(image: String, size: Dp? = null){
-    val imageSize = size ?: 50.dp
+fun ShowImage(image: String, height: Dp? = null, width : Dp? = null, shape : RoundedCornerShape? = null){
+    val imageHeight = height ?: 30.dp
+    val imageWidth = width ?: 30.dp
+    val imageShape = shape ?: CircleShape
     AsyncImage(
         model = image,
         contentDescription = "article image",
@@ -149,13 +155,12 @@ fun ShowImage(image: String, size: Dp? = null){
         onError = {Log.e("showimage","error")},
         modifier = Modifier
             .padding(5.dp)
-            .size(imageSize)
-            .clip(CircleShape)
+            .size(height = imageHeight, width = imageWidth)
+            .clip(imageShape)
         ,
         contentScale = ContentScale.Crop,
 
     )
-    Log.e("showimage","inside show image $image")
 }
 
 
@@ -374,8 +379,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                             ) {
                                 if (art.company?.logo != null ) {
                                     ShowImage(
-                                        image = "${BASE_URL}werehouse/image/${art.company?.logo}/company/${art.company?.user?.id}",
-                                        30.dp
+                                        image = String.format(IMAGE_URL_COMPANY,art.company?.logo,art.company?.user?.id)
                                     )
                                 } else {
                                    notImage()
@@ -408,13 +412,14 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                                 RouteController.navigateTo(Screen.ArticleDetailScreen)
                             }
                         ) {
-                            if ( art.article?.image?.isBlank() == true) {
+                            if ( art.article?.image == "" || art.article?.image == null) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Article,
                                     contentDescription = "article photo"
                                 )
                             } else {
-                                ShowImage(image = "${BASE_URL}werehouse/image/${art.article?.image}/article/${art.article?.category?.ordinal}")
+                                ShowImage(image = String.format(IMAGE_URL_ARTICLE,art.article?.image,art.article?.category?.ordinal), 70.dp,240.dp,
+                                    RoundedCornerShape(10.dp))
                             }
                                 NormalText(value = art.article?.libelle!!, aligne = TextAlign.Start)
                             Row(
@@ -489,7 +494,7 @@ fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
 }
 
 @Composable
-fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(Type) -> Unit) {
+fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean,hisClient : Boolean, hisProvider : Boolean,hisParent : Boolean , hisWorker : Boolean ,  onSelected :(Type, Boolean) -> Unit) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     var openDialog by remember {
         mutableStateOf(isOpen)
@@ -501,6 +506,9 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
         mutableStateOf(Type.OTHER)
     }
     var selected by remember {
+        mutableStateOf(false)
+    }
+    var isDeleted by remember {
         mutableStateOf(false)
     }
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
@@ -551,7 +559,7 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                 }
             }
 
-        onSelected(type)
+        onSelected(type, isDeleted)
     }
 }
     Icon(imageVector = Icons.Default.AddBusiness,
@@ -575,54 +583,69 @@ fun AddTypeDialog(isOpen : Boolean,id : Long,isCompany : Boolean, onSelected :(T
                 ) {
                     if (accountType == AccountType.USER) {
                         ButtonSubmit(
-                            labelValue = "add as provider",
+                            labelValue = if(!hisProvider)"add as provider" else "delete as provider",
                             color = Color.Green,
                             enabled = true
                         ) {
+                            isDeleted = hisProvider
                             subType = SubType.CLIENT
+                            openDialog = false
+                            selected = true
+                        }
+                        ButtonSubmit(
+                            labelValue = if(!hisWorker)"add as worker" else "delete as worker",
+                            color = Color.Green,
+                            enabled = true
+                        ) {
+                            isDeleted = hisWorker
+                            subType = SubType.WORKER
                             openDialog = false
                             selected = true
                         }
                     } else {
                         if (isCompany) {
+                                ButtonSubmit(
+                                    labelValue = if (!hisProvider)"add as provider" else "delete as provider",
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    isDeleted = hisProvider
+                                    subType = SubType.PROVIDER
+                                    openDialog = false
+                                    selected = true
+                                }
                             ButtonSubmit(
-                                labelValue = "add as provider",
+                                labelValue = if(!hisParent)"add as parent" else "delete as parent",
                                 color = Color.Green,
                                 enabled = true
                             ) {
-                                subType = SubType.PROVIDER
-                                openDialog = false
-                                selected = true
-                            }
-                            ButtonSubmit(
-                                labelValue = "add as parent",
-                                color = Color.Green,
-                                enabled = true
-                            ) {
+                                isDeleted = hisParent
                                 subType = SubType.PARENT
                                 openDialog = false
                                 selected = true
                             }
                         } else {
                             ButtonSubmit(
-                                labelValue = "add as worker",
+                                labelValue = if(!hisWorker)"add as worker" else "delete as worker",
                                 color = Color.Green,
                                 enabled = true
                             ) {
+                                isDeleted = hisWorker
                                 subType = SubType.WORKER
                                 openDialog = false
                                 selected = true
                             }
                         }
-                        ButtonSubmit(
-                            labelValue = "add as client",
-                            color = Color.Green,
-                            enabled = true
-                        ) {
-                            subType = SubType.CLIENT
-                            openDialog = false
-                            selected = true
-                        }
+                            ButtonSubmit(
+                                labelValue = if(!hisClient)"add as client" else "delete as client",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                isDeleted = hisClient
+                                subType = SubType.CLIENT
+                                openDialog = false
+                                selected = true
+                            }
                     }
                 }
                 }

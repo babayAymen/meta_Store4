@@ -65,6 +65,9 @@ interface SearchHistoryDao {
      @Query("SELECT * FROM all_search_remote_keys ORDER BY id DESC LIMIT 1")
      suspend fun getLatestRemoteKey() : AllSearchRemoteKeysEntity?
 
+     @Query("SELECT * FROM all_search_remote_keys ORDER BY id ASC LIMIT 1")
+     suspend fun getFirstSearchRemoteKey() : AllSearchRemoteKeysEntity?
+
      @Query("SELECT COUNT(*) FROM all_search_remote_keys")
      suspend fun getRemoteKeysCount() : Int
 

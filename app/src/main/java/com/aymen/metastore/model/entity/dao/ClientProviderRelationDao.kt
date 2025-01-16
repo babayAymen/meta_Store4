@@ -28,12 +28,20 @@ interface ClientProviderRelationDao {
     suspend fun getClientRemoteKey(id : Long): ClientRemoteKeysEntity
     @Query("DELETE FROM client_remote_keys")
     suspend fun clearClientRemoteKeysTable()
+    @Query("SELECT * FROM client_remote_keys ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstClientRemoteKey() : ClientRemoteKeysEntity?
+    @Query("SELECT * FROM client_remote_keys ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestClientRemoteKey() : ClientRemoteKeysEntity?
     @Query("DELETE FROM client_provider_relation WHERE providerId = :id")
     suspend fun clearAllClientTable(id : Long)
     @Query("SELECT * FROM provider_remote_keys WHERE id = :id")
     suspend fun getProviderRemoteKey(id : Long): ProviderRemoteKeysEntity
     @Query("DELETE FROM provider_remote_keys")
     suspend fun clearProviderRemoteKeysTable()
+    @Query("SELECT * FROM provider_remote_keys ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstProviderRemoteKey() : ProviderRemoteKeysEntity?
+    @Query("SELECT * FROM provider_remote_keys ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestProviderRemoteKey() : ProviderRemoteKeysEntity?
     @Query("DELETE FROM client_provider_relation WHERE (clientId = :id OR userId = :id)")
     suspend fun clearAllProviderTable(id : Long)
 

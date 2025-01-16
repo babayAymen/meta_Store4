@@ -36,5 +36,5 @@ interface InvoiceRepository {
     suspend fun accepteInvoice(invoiceId : Long, status : Status): Response<Void>
     suspend fun getAllMyPaymentNotAccepted(companyId : Long) : Response<List<InvoiceDto>>
     fun searchInvoice(type : SearchPaymentEnum, text : String, companyId : Long) : Flow<PagingData<Invoice>>
-
+    suspend fun deleteInvoiceById(invoiceId : Long) : Response<Void>
 }

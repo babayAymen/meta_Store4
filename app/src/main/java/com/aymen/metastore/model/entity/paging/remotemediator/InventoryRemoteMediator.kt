@@ -39,11 +39,11 @@ class InventoryRemoteMediator(
         return try {
             val currentPage = when (loadType) {
                 androidx.paging.LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                     0
                 }
 
                 androidx.paging.LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -51,7 +51,7 @@ class InventoryRemoteMediator(
                 }
 
                 androidx.paging.LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -59,8 +59,8 @@ class InventoryRemoteMediator(
                 }
             }
             val response = api.getInventory(id,currentPage, PAGE_SIZE)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             room.withTransaction {
@@ -68,7 +68,7 @@ class InventoryRemoteMediator(
                     if(loadType == androidx.paging.LoadType.REFRESH){
                         deleteCache()
                     }
-                    inventoryDao.insertRemoteKeys(response.map { article ->
+                    inventoryDao.insertRemoteKeys(response.content.map { article ->
                         InventoryRemoteKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
@@ -76,11 +76,11 @@ class InventoryRemoteMediator(
                         )
                     })
 
-                    userDao.insertUser(response.map {user -> user.company?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.company?.toCompany()})
-                    articleDao.insertArticle(response.map { article -> article.article?.article?.toArticle(isMy = true) })
-                    articleCompanyDao.insertArticle(response.map { article -> article.article?.toArticleCompany(false)})
-                    inventoryDao.insertInventory(response.map {inventory -> inventory.toInventory() })
+                    userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
+                    articleDao.insertArticle(response.content.map { article -> article.article?.article?.toArticle(isMy = true) })
+                    articleCompanyDao.insertArticle(response.content.map { article -> article.article?.toArticleCompany(false)})
+                    inventoryDao.insertInventory(response.content.map {inventory -> inventory.toInventory() })
 
                 } catch (ex: Exception) {
                     Log.e("error", ex.message.toString())
@@ -93,22 +93,12 @@ class InventoryRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, InventoryWithArticle>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { inventoryDao.getInventoryRemoteKey(it.inventory.id!!).prevPage }
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return inventoryDao.getFirstAllRemoteKey()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, InventoryWithArticle>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { inventoryDao.getInventoryRemoteKey(it.inventory.id!!).nextPage }
-    }
-
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, InventoryWithArticle>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.inventory?.id?.let { inventoryDao.getInventoryRemoteKey(it).nextPage }
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+       return inventoryDao.getLatestAllRemoteKey()?.nextPage
     }
 
     private suspend fun deleteCache(){

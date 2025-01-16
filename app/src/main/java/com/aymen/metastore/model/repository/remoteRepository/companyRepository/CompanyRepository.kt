@@ -1,10 +1,13 @@
 package com.aymen.store.model.repository.remoteRepository.companyRepository
 
 import androidx.paging.PagingData
+import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.dto.InvitationDto
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.SearchHistoryWithClientOrProviderOrUserOrArticle
+import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.SearchType
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
@@ -24,5 +27,5 @@ interface CompanyRepository {
     suspend fun updateCompany(company: String , file : File)
 
     suspend fun updateImage(image : File) : Response<Void>
-
+    suspend fun checkRelation(id : Long, accountType: AccountType) : Response<List<InvitationDto>>
 }

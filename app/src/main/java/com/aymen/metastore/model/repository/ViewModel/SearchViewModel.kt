@@ -193,11 +193,9 @@ class SearchViewModel @Inject constructor(
                             userDao.insertUser(listOf(search.company?.user?.toUserEntity()))
                             companyDao.insertSingleCompany(search.company?.toCompanyEntity()!!)
                         }
-
                         SearchCategory.USER -> {
                             userDao.insertUser(listOf(search.user?.toUserEntity()))
                         }
-
                         SearchCategory.ARTICLE -> {
                             articleDao.insertArticle(listOf(search.article?.article?.toArticleEntity()))
                             articleCompanyDao.insertArticle(
@@ -208,7 +206,6 @@ class SearchViewModel @Inject constructor(
                                 )
                             )
                         }
-
                         SearchCategory.OTHER -> TODO()
                     }
                     searchDao.insertSearch(
@@ -225,17 +222,15 @@ class SearchViewModel @Inject constructor(
             }
             result.fold(
                 onSuccess = {success ->
-
                     val response = success.body()
                     if(success.isSuccessful){
                         if(response != null) {
                     room.withTransaction {
-                    searchDao.deleteRemoteKeyById(searchId)
-                    searchDao.deleteSearchHistoryById(searchId)
-                            searchDao.insertSingleRemoteKey(
-                                newRemoteKey.copy(id = response.id!!)
-                            )
-
+                        searchDao.deleteRemoteKeyById(searchId)
+                        searchDao.deleteSearchHistoryById(searchId)
+                        searchDao.insertSingleRemoteKey(
+                            newRemoteKey.copy(id = response.id!!)
+                        )
                         when (category) {
                             SearchCategory.COMPANY -> {
                                 userDao.insertUser(listOf(response.company?.user?.toUser()))
@@ -247,26 +242,30 @@ class SearchViewModel @Inject constructor(
                             SearchCategory.ARTICLE -> {
                                 userDao.insertUser(listOf(response.article?.company?.user?.toUser()))
                                 companyDao.insertCompany(listOf(response.article?.company?.toCompany()))
-                                articleDao.insertArticle(listOf(response.article?.article?.toArticle(
-                                    response.article.company?.id == sharedViewModel.company.value.id
-                                )))
-                                articleCompanyDao.insertArticle(
+                                articleDao.insertArticle(
                                     listOf(
-                                        response.article?.toArticleCompany(isRandom = false, isSearch = true)
+                                        response.article?.article?.toArticle(
+                                            response.article.company?.id == sharedViewModel.company.value.id
+                                        )
+                                    )
+                                )
+                                articleCompanyDao.insertOrUpdateIsSearch(
+                                    listOf(
+                                        response.article?.toArticleCompany(isRandom = false)!!
                                     )
                                 )
                             }
                             SearchCategory.OTHER -> TODO()
                         }
-                            searchDao.insertSearch(response.toSearchHistory())
-                        }
+                        searchDao.insertSearch(response.toSearchHistory())
+                    }
                     }
                     }else{
                         val errorBodyString = success.errorBody()?.string()
                         errorBlock(errorBodyString)
                     }
                 },
-                onFailure = {
+                onFailure = {failure ->
 
                 }
             )

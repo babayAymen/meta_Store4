@@ -21,6 +21,7 @@ import com.aymen.metastore.model.entity.dto.RegisterRequest
 import com.aymen.metastore.model.entity.dto.CommandLineDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.dto.CompanyDto
+import com.aymen.metastore.model.entity.dto.InvitationDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderLineDto
 import com.aymen.metastore.model.entity.dto.RatingDto
 import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
@@ -163,6 +164,11 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun updateCompany(company: String, file: File) = companyRepository.updateCompany(company,file)
     override suspend fun updateImage(image: File) = companyRepository.updateImage(image)
+    override suspend fun checkRelation(id: Long, accountType: AccountType): Response<List<InvitationDto>> = companyRepository.checkRelation(
+        id,
+        accountType
+    )
+
     override fun getInventory(companyId: Long): Flow<PagingData<InventoryWithArticle>> {
         TODO("Not yet implemented")
     }
@@ -193,7 +199,11 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun deleteClient(relationId: Long) = clientRepository.deleteClient(relationId)
 
     override suspend fun getAllMyClientContaining(clientName: String,companyId : Long) = clientRepository.getAllMyClientContaining(clientName,companyId = companyId)
-    override suspend fun sendClientRequest(id: Long, type: Type) = clientRepository.sendClientRequest(id,type)
+    override suspend fun sendClientRequest(id: Long, type: Type, isDeleted: Boolean) = clientRepository.sendClientRequest(
+        id,
+        type,
+        isDeleted
+    )
     override suspend fun getAllClientContaining(search: String, searchType: SearchType, searchCategory: SearchCategory) = clientRepository.getAllClientContaining(search,searchType,searchCategory)
     override suspend fun saveHistory(category: SearchCategory, id: Long): Response<SearchHistoryDto> = clientRepository.saveHistory(category,id)
     override suspend fun deleteSearch(id: Long) = clientRepository.deleteSearch(id)
@@ -310,6 +320,8 @@ class GlobalRepositoryImpl  @Inject constructor
     ): Flow<PagingData<Invoice>> {
         TODO("Not yet implemented")
     }
+
+    override suspend fun deleteInvoiceById(invoiceId: Long) = invoiceRepository.deleteInvoiceById(invoiceId)
 
 
     override suspend fun sendOrder(orderList: List<PurchaseOrderLine>) = orderRepository.sendOrder(orderList)

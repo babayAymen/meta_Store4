@@ -40,17 +40,17 @@ class OrderLineDetailsRemoteMediator(
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
-                    getNextPageClosestToCurrentPosition(state)?.minus(1) ?: 0
+                     0
                 }
                 LoadType.PREPEND -> {
-                    val previousPage = getPreviousPageForTheFirstItem(state)
+                    val previousPage = getPreviousPageForTheFirstItem()
                     val previousePage = previousPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
                     previousePage
                 }
                 LoadType.APPEND -> {
-                    val nextPage = getNextPageForTheLasttItem(state)
+                    val nextPage = getNextPageForTheLasttItem()
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -58,36 +58,36 @@ class OrderLineDetailsRemoteMediator(
                 }
             }
             val response = api.getOrdersLineDetails(orderId ,currentPage, state.config.pageSize)
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
-            val prevPage = if (currentPage == 0) null else currentPage - 1
+            val endOfPaginationReached = response.last
+            val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    purchaseOrderLineDao.insertOrderLineKeys(response.map { article ->
+                    purchaseOrderLineDao.insertOrderLineKeys(response.content.map { article ->
                         OrderLineKeysEntity(
                             id = article.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage
                         )
                     })
-                    userDao.insertUser(response.map {user -> user.article?.company?.user?.toUser()})
-                    companyDao.insertCompany(response.map {company -> company.article?.company?.toCompany()})
-                    articleDao.insertArticle(response.map {article -> article.article?.article?.toArticle(isMy = true) })
-                    articleCompanyDao.insertArticle(response.map { it.article?.toArticleCompany(true)})
-                    userDao.insertUser(response.map { user -> user.purchaseorder?.person?.toUser() })
-                    userDao.insertUser(response.map { user -> user.purchaseorder?.company?.user?.toUser() })
-                    userDao.insertUser(response.map { user -> user.purchaseorder?.client?.user?.toUser() })
-                    companyDao.insertCompany(response.map { company -> company.purchaseorder?.company?.toCompany() })
-                    companyDao.insertCompany(response.map { company -> company.purchaseorder?.client?.toCompany() })
-                    purchaseOrderDao.insertOrder(response.map { order -> order.purchaseorder?.toPurchaseOrder() })
-                    room.userDao().insertUser(response.map { invoice -> invoice.invoice?.person?.toUser()})
-                    room.userDao().insertUser(response.map { invoice -> invoice.invoice?.client?.user?.toUser()})
-                    room.companyDao().insertCompany(response.map { invoice -> invoice.invoice?.client?.toCompany()})
-                    room.invoiceDao().insertInvoice(response.map { invoice -> invoice.invoice?.toInvoice(isInvoice = false)})
-                    purchaseOrderLineDao.insertOrderLine(response.map {line -> line.toPurchaseOrderLine()})
+                    userDao.insertUser(response.content.map {user -> user.article?.company?.user?.toUser()})
+                    companyDao.insertCompany(response.content.map {company -> company.article?.company?.toCompany()})
+                    articleDao.insertArticle(response.content.map {article -> article.article?.article?.toArticle(isMy = true) })
+                    articleCompanyDao.insertArticle(response.content.map { it.article?.toArticleCompany(true)})
+                    userDao.insertUser(response.content.map { user -> user.purchaseorder?.person?.toUser() })
+                    userDao.insertUser(response.content.map { user -> user.purchaseorder?.company?.user?.toUser() })
+                    userDao.insertUser(response.content.map { user -> user.purchaseorder?.client?.user?.toUser() })
+                    companyDao.insertCompany(response.content.map { company -> company.purchaseorder?.company?.toCompany() })
+                    companyDao.insertCompany(response.content.map { company -> company.purchaseorder?.client?.toCompany() })
+                    purchaseOrderDao.insertOrder(response.content.map { order -> order.purchaseorder?.toPurchaseOrder() })
+                    room.userDao().insertUser(response.content.map { invoice -> invoice.invoice?.person?.toUser()})
+                    room.userDao().insertUser(response.content.map { invoice -> invoice.invoice?.client?.user?.toUser()})
+                    room.companyDao().insertCompany(response.content.map { invoice -> invoice.invoice?.client?.toCompany()})
+                    room.invoiceDao().insertInvoice(response.content.map { invoice -> invoice.invoice?.toInvoice(isInvoice = false)})
+                    purchaseOrderLineDao.insertOrderLine(response.content.map {line -> line.toPurchaseOrderLine()})
 
                 } catch (ex: Exception) {
                     Log.e("error", "articlecompany ${ex.message}")
@@ -101,23 +101,13 @@ class OrderLineDetailsRemoteMediator(
         }
     }
 
-    private suspend fun getPreviousPageForTheFirstItem(state: PagingState<Int, PurchaseOrderLineWithPurchaseOrderOrInvoice>): Int? {
-        val loadResult = state.pages.firstOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.firstOrNull()
-        return entity?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it.purchaseOrderLine.purchaseOrderLineId!!).prevPage }
+    private suspend fun getPreviousPageForTheFirstItem(): Int? {
+        return purchaseOrderLineDao.getFirstOrderLineKey()?.prevPage
     }
 
-    private suspend fun getNextPageForTheLasttItem(state: PagingState<Int, PurchaseOrderLineWithPurchaseOrderOrInvoice>): Int? {
-        val loadResult = state.pages.lastOrNull { it.data.isNotEmpty() }
-        val entity = loadResult?.data?.lastOrNull()
-        return entity?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it.purchaseOrderLine.purchaseOrderLineId!!).nextPage }
-    }
-
-    private suspend fun getNextPageClosestToCurrentPosition(state: PagingState<Int, PurchaseOrderLineWithPurchaseOrderOrInvoice>): Int? {
-        val position = state.anchorPosition
-        val entity = position?.let { state.closestItemToPosition(it) }
-        return entity?.purchaseOrderLine?.purchaseOrderLineId?.let { purchaseOrderLineDao.getAllOrderLineRemoteKeys(it).nextPage }
-    }
+    private suspend fun getNextPageForTheLasttItem(): Int? {
+        return purchaseOrderLineDao.getLatestOrderLineKey()?.nextPage
+      }
 
     private suspend fun deleteCache(){
         purchaseOrderLineDao.clearOrderLineKeys()

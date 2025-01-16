@@ -91,19 +91,6 @@ init {
             }
 
                     getAllMyOrdersNotAccepted(id ?: 0)
-//            when (sharedViewModel.accountType.value) {
-//                AccountType.COMPANY -> {
-//                }
-//                AccountType.USER -> {
-//                    getAllMyOrdersNotAccepted(id ?: 0)
-//                }
-//                AccountType.META -> {}
-//                AccountType.NULL -> {}
-//                AccountType.SELLER -> {}
-//                AccountType.DELIVERY -> {
-//                    getAllMyOrdersNotAccepted(id ?: 0)
-//                }
-//            }
         }
     }
 

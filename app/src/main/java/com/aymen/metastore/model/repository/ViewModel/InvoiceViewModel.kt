@@ -205,7 +205,6 @@ class InvoiceViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             var id = 0L
             var invoiceRemoteKey = InvoiceRemoteKeysEntity(0,null,null)
-            Log.e("veftiondazncj","called 1")
             if(invoiceMode == InvoiceMode.CREATE) {
                 val lastInvoiceRemoteKey = invoiceDao.getLatestInvoiceRemoteKey()
                  id = if (lastInvoiceRemoteKey == null) 1 else lastInvoiceRemoteKey.id + 1
@@ -217,7 +216,6 @@ class InvoiceViewModel @Inject constructor(
                     prevPage = if (page == 0) null else page - 1,
                     nextPage = if (remain == 0) page + 1 else null
                 )
-                Log.e("veftiondazncj", "befrore invoice assignment")
                 val invoice = Invoice(
                     id = id,
                     code = lastInvoiceCode,
@@ -338,8 +336,10 @@ class InvoiceViewModel @Inject constructor(
             try {
                 val response = repository.accepteInvoice(invoiceId , status)
                 if(response.isSuccessful){
-                    room.invoiceDao().updateInvoiceStatus(invoiceId , status)
-                    room.invoiceDao().updateInvoiceStatus(invoiceId , status)
+                    if(status == Status.ACCEPTED)
+                        room.invoiceDao().updateInvoiceStatus(invoiceId , status)
+                    else
+                        room.invoiceDao().deleteInvoiceById(invoiceId)
                 }
             }catch (ex : Exception){
                 Log.e("accepteInvoice","exception : ${ex.message}")
@@ -355,6 +355,18 @@ class InvoiceViewModel @Inject constructor(
                 .collect{
                     _invoiceForSerch.value = it
                 }
+        }
+    }
+
+    fun deleteInvoiceById(invoiceId : Long){
+        viewModelScope.launch {
+            repository.deleteInvoiceById(invoiceId)
+        }
+    }
+
+    fun deleteInvoiceByIdLocally(invoiceId : Long) {
+        viewModelScope.launch {
+            room.invoiceDao().deleteInvoiceById(invoiceId)
         }
     }
 

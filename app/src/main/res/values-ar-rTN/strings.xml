@@ -63,12 +63,16 @@
     <string name="total_general">Total general: %1$s Dt</string>
     <string name="url_image_company">werehouse/image/%s/company/%s</string>
     <string name="url_image_article">werehouse/image/%s/article/%s</string>
+    <string name="payment">payment</string>
+    <string name="refuse">refuse</string>
+    <string name="add_category">"Add Category"</string>
 
     <string name="confirm">confirm</string>
     <string name="add_new_article">add new article</string>
     <string name="confirm_delation">confirm delation</string>
     <string name="sure_delation">Are you sure to delete this item?</string>
     <!--show item -->
+    <string name="category_screen">add category</string>
     <string name="invoice">invoice</string>
     <string name="provider">provider</string>
     <string name="subcategory">subcategory</string>

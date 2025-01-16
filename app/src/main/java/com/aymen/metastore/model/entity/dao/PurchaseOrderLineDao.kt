@@ -33,6 +33,10 @@ interface PurchaseOrderLineDao {
     @Query("DELETE FROM order_line_keys")
     suspend fun clearOrderLineKeys()
 
+    @Query("SELECT * FROM order_line_keys ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstOrderLineKey() : OrderLineKeysEntity?
+    @Query("SELECT * FROM order_line_keys ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestOrderLineKey() : OrderLineKeysEntity?
     @Query("DELETE FROM purchase_order_line WHERE purchaseOrderId = :purchaseOrderId")
     suspend fun clearOrderLine(purchaseOrderId : Long)
 

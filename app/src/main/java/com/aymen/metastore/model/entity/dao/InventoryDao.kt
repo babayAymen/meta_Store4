@@ -40,4 +40,8 @@ interface InventoryDao {
      @Query("DELETE FROM inventory_remote_keys_entity WHERE id = :id")
      suspend fun clearInventoryRemoteKeysById(id : Long)
 
+     @Query("SELECT * FROM inventory_remote_keys_entity ORDER BY id ASC LIMIT 1")
+     suspend fun getFirstAllRemoteKey() : InventoryRemoteKeysEntity?
+     @Query("SELECT * FROM inventory_remote_keys_entity ORDER BY id DESC LIMIT 1 ")
+     suspend fun getLatestAllRemoteKey() : InventoryRemoteKeysEntity?
 }

@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.Category
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.User
@@ -71,9 +73,12 @@ import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.ui.screen.admin.ReglementScreen
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.store.model.Enum.RoleEnum
+import com.aymen.store.model.Enum.Type
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun CompanyScreen(company: Company) {
@@ -89,27 +94,88 @@ fun CompanyScreen(company: Company) {
     val subCategories = subCategoryViewModel.companySubCategories.collectAsLazyPagingItems()
     val categories = categoryViewModel.companyCategories.collectAsLazyPagingItems()
     val randomArticles = articleViewModel.companyArticles.collectAsLazyPagingItems()
+    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
+    val myAccountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    var hisClient by remember {
+        mutableStateOf(false)
+    }
+    var hisProvider by remember {
+        mutableStateOf(false)
+    }
+    var hisParent by remember {
+        mutableStateOf(false)
+    }
+    var hisWorker by remember {
+        mutableStateOf(false)
+    }
+
+    var creditAsClient by remember {
+        mutableDoubleStateOf(0.0)
+    }
+    var creditAsProvider by remember {
+        mutableDoubleStateOf(0.0)
+    }
+    val relationList = clientViewModel.relationList
+        .map { list ->
+            list.map { invitation ->
+                invitation.client?.let {cli ->
+                    if(myAccountType == AccountType.USER) {
+                        if(invitation.type == Type.USER_SEND_CLIENT_COMPANY || invitation.type == Type.COMPANY_SEND_PROVIDER_USER)
+                            hisProvider = true
+                        else
+                            hisWorker = true
+//                        creditAsProvider = invitation.credit!!
+                    }
+                }
+                invitation.companyReceiver?.let {pro ->
+                    if(pro.id == company.id) {
+                        if(invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY)
+                            hisClient = true
+                        if(invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY)
+                            hisProvider = true
+//                        creditAsClient = invitation.credit!!
+                    }
+                }
+                invitation.companySender?.let {pro ->
+                    if(pro.id == company.id) {
+                        if(invitation.type == Type.COMPANY_SEND_PROVIDER_COMPANY)
+                            hisClient = true
+                        if(invitation.type == Type.COMPANY_SEND_CLIENT_COMPANY)
+                            hisProvider = true
+                    }
+                }
+
+            }
+        }.collectAsStateWithLifecycle(emptyList())
+
     val view by appViewModel.view
     val show by appViewModel.show
     var category by remember {
         mutableStateOf(Category())
     }
 
+
+
+
     if(subCategories.itemCount != 0) {
         category = subCategories.peek(0)?.category ?: Category()
     }
     val context = LocalContext.current
-    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     DisposableEffect(key1 = Unit) {
         onDispose {
             ratingViewModel.rating = false
             subCategoryViewModel.setSubCategory()
+            clientViewModel.setRelationList()
         }
     }
     LaunchedEffect(key1 = company) {
+            if(myAccountType == AccountType.USER && myUser.role == RoleEnum.WORKER  && company.id == myCompany.id)
+                hisWorker = true
         appViewModel.updateView("COMPANY_CONTENT")
         articleViewModel.getAllCompanyArticles(companyId = company.id?:0)
         ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
+        clientViewModel.checkRelation(id = company.id?:0, AccountType.COMPANY)
     }
     LaunchedEffect(key1 = categories) {
         if(categories.itemCount != 0){
@@ -140,7 +206,7 @@ fun CompanyScreen(company: Company) {
                         Row {
                             if (company.logo != null)
                                 ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                                else
+                            else
                                 notImage()
                             Icon(
                                 imageVector = Icons.Default.Verified,
@@ -157,6 +223,10 @@ fun CompanyScreen(company: Company) {
                                 sharedViewModel,
                                 clientViewModel,
                                 companyViewModel,
+                                hisClient,
+                                hisProvider,
+                                hisParent ,
+                                hisWorker,
                                 ratingViewModel,
                                 company,
                                 myCompany.isPointsSeller!!,
@@ -276,19 +346,22 @@ fun StarRating(
 }
 
 @Composable
-fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,
-                   ratingViewModel : RatingViewModel, company: Company, isPointsSeller: Boolean, appViewModel: AppViewModel, onRatingChanged: () -> Unit) {
+fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientViewModel, companyViewModel: CompanyViewModel,hisClient : Boolean, hisProvider : Boolean,
+                 hisParent : Boolean , hisWorker : Boolean  ,ratingViewModel : RatingViewModel, company: Company, isPointsSeller: Boolean, appViewModel: AppViewModel, onRatingChanged: () -> Unit) {
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
     Row {
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 2.dp)
-        ) {
-            AddTypeDialog(isOpen = false, company.id?:0, true) {
-                clientViewModel.sendClientRequest(company.id!!, it)
-            }
-        }
+            if((myCompany.id != company.id ) || (accountType == AccountType.USER && myUser.role == RoleEnum.WORKER))
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 2.dp)
+                ) {
+                    AddTypeDialog(isOpen = false, company.id?:0, true, hisClient,hisProvider, hisParent, hisWorker) {type , isDeleted ->
+                        clientViewModel.sendClientRequest(company.id!!, type, isDeleted)
+                    }
+                }
         if (accountType == AccountType.COMPANY && isPointsSeller) {
             Row(
                 modifier = Modifier.weight(1f)

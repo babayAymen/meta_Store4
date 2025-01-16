@@ -41,11 +41,13 @@ import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.app.MetaStore
 import com.aymen.store.dependencyInjection.TokenSerializer
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.model.NotificationMessage
 import com.aymen.metastore.model.webSocket.ChatClient
 import com.aymen.metastore.model.webSocket.WebSocketViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.ui.theme.MetaStoreTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.Serializable
 import javax.inject.Inject
 
 val Context.datastore: DataStore<AuthenticationResponse> by dataStore("setting.json", TokenSerializer)
@@ -88,12 +90,15 @@ class MainActivity : ComponentActivity() {
     private fun updateExtras(intent: Intent) {
         val extras = intent.extras
         if (extras != null) {
-            val map = extras.keySet().associateWith { extras.getString(it) }
+            val map = extras.keySet().associateWith { key ->
+                 extras.getString(key)
+            }
             extrasState.value = map
         } else {
             extrasState.value = emptyMap()
         }
     }
+
     private fun requestNotificationPermission() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
             val hasPermission = ContextCompat.checkSelfPermission(this,
@@ -137,7 +142,9 @@ private fun saveLanguage(context: Context, languageCode: String){
 @Composable
 fun Greeting(name: String,extrasState :  Map<String, Any?> , modifier: Modifier = Modifier) {
     Column {
-        Log.e("device","balance from main activity $extrasState")
+        val notificationMessage = extrasState["notificationMessage"] as? NotificationMessage
+        Log.e("device","balance from main activity $notificationMessage")
+
         MetaStore(extrasState)
     }
 }

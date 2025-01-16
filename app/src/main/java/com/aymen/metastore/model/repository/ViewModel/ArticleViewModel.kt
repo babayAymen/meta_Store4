@@ -15,6 +15,7 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.model.Article
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Comment
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.User

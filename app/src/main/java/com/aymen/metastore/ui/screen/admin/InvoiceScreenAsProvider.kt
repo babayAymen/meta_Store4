@@ -35,7 +35,7 @@ import com.aymen.store.model.Enum.RoleEnum
 
 //@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InvoiceScreenAsProvider() {
+fun InvoiceScreenAsProvider(asClient : Boolean) {
     val appViewModel: AppViewModel = hiltViewModel()
     val invoiceViewModel: InvoiceViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
@@ -43,7 +43,7 @@ fun InvoiceScreenAsProvider() {
     val listState = invoiceViewModel.listState
     val context = LocalContext.current
     var asProvider by remember {
-        mutableStateOf(true)
+        mutableStateOf(!asClient)
     }
     val view by appViewModel.view
     appViewModel.updateView("ALL")
@@ -162,6 +162,7 @@ fun InvoiceScreenAsProvider() {
                     }
                 if(asProvider){
                             val invoicesAsProvider = invoiceViewModel.invoices.collectAsLazyPagingItems()
+                            sharedViewModel.setInvoiceCountNotification(true)
                     when(view){
                         "ALL" ->{
                             invoiceViewModel.setFilter(PaymentStatus.ALL)
@@ -283,6 +284,7 @@ fun InvoiceScreenAsProvider() {
                 }
                 else{
                             val invoiceAsClient = invoiceViewModel.invoicesAsClient.collectAsLazyPagingItems()
+                            sharedViewModel.setInvoiceAsClientCountNotification(true)
                     when(view){
                         "ALL" ->{
                             invoiceViewModel.setFilter(PaymentStatus.ALL)

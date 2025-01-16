@@ -44,7 +44,9 @@ interface SubCategoryDao {
     suspend fun deleteSubCategoryById(id :Long)
     @Query("DELETE FROM sub_category_remote_keys_table WHERE id = :id")
     suspend fun deleteSubCategoryRemoteKey(id : Long)
-    @Query("SELECT * FROM sub_category_remote_keys_table ORDER BY id ASC LIMIT 1")
+    @Query("SELECT * FROM sub_category_remote_keys_table ORDER BY id DESC LIMIT 1")
     suspend fun getLatestSubCategoryRemoteKey(): SubCategoryRemoteKeysEntity?
+    @Query("SELECT * FROM sub_category_remote_keys_table ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstSubCategoryRemoteKey(): SubCategoryRemoteKeysEntity?
 
 }

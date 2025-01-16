@@ -71,7 +71,7 @@ fun ShoppingScreen() {
     val allMyOrdersNotAccepted = shoppingViewModel.allMyOrdersNotAccepted.collectAsLazyPagingItems()
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val myInvoicesAccepted = if(accountType == AccountType.USER)invoiceViewModel.invoicesAsClient.collectAsLazyPagingItems()else null
-
+    sharedViewModel.setOrderCountNotification(true)
     var order by remember {
         mutableStateOf(PurchaseOrder())
     }
@@ -103,9 +103,7 @@ fun ShoppingScreen() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column {
-
                             if (shoppingViewModel.orderArray.isNotEmpty()) {
-
                                 LazyColumn(
 
                                     modifier = Modifier.fillMaxWidth()
@@ -259,10 +257,12 @@ fun ShoppingScreen() {
                     ){
                         LazyColumn {
                             if(accountType == AccountType.USER) {
+                                Log.e("invoicenotaccepted","item count : ${myInvoicesAccepted?.itemCount}")
                                 items(count = myInvoicesAccepted?.itemCount!!,
                                     key = myInvoicesAccepted.itemKey { it.id!! }) { index ->
                                     val invoice = myInvoicesAccepted[index]
                                     if(invoice != null && invoice.status == Status.ACCEPTED) {
+                                        Log.e("invoicenotaccepted","item id : ${invoice.id}")
                                         InvoiceCard(
                                             invoice = invoice,
                                             appViewModel = appViewModel,
