@@ -76,7 +76,8 @@ data class ArticleCompany(
             article = article,
             isFav = isFav,
             likeNumber = likeNumber,
-            commentNumber = commentNumber
+            commentNumber = commentNumber,
+            isVisible = isVisible
 
         )
     }

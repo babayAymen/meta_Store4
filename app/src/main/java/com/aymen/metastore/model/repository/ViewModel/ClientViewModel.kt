@@ -71,8 +71,6 @@ class ClientViewModel @Inject constructor(
         _relationList.value = emptyList()
     }
     init {
-
-        Log.e("testtoviewmodel","client view model")
         getAllMyClient()
     }
 

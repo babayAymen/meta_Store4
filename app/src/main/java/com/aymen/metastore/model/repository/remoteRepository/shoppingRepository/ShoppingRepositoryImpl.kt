@@ -10,6 +10,6 @@ class ShoppingRepositoryImpl @Inject constructor(
     private  val api : ServiceApi
 ) : ShoppingRepository {
     override suspend fun test(order: PurchaseOrderLineDto) = api.test(order)
-    override suspend fun orderLineResponse(status: Status, id: Long, isAll: Boolean): Response<Double> = api.orderLineResponse(id , status, isAll)
+    override suspend fun orderLineResponse(status: Status, ids : List<Long>): Response<Double> = api.orderLineResponse( status, ids)
 
 }

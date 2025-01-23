@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.store.model.Enum.IconType
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
@@ -45,7 +46,6 @@ fun DashBoardScreen() {
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
-    val invoiceType = invoiceViewModel.invoiceMode
     val context = LocalContext.current
     val show by viewModel.show
     val asClient = viewModel.asClient
@@ -155,7 +155,7 @@ fun DashBoardScreen() {
             InvoiceScreenAsProvider(asClient)
         }
         "add invoice" -> {
-            AddInvoiceScreen(invoiceType)
+            AddInvoiceScreen()
         }
 
 

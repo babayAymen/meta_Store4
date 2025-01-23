@@ -12,6 +12,16 @@
     <string name="name_or_password_wrong">اسم المستخدم أو كلمة المرور غير صحيحة!</string>
 
 
+    <!--    company category -->
+    <string name="dairy">عطار</string>
+    <string name="butcher">جزار</string>
+    <string name="vegetable">خضار</string>
+    <string name="fish">سمك</string>
+    <string name="grocer">بقال</string>
+    <string name="cake">حلواني</string>
+    <string name="restautrant">مطعم</string>
+    <string name="poulterer">دجاج</string>
+    <string name="all">الكل</string>
 
     <string name="register">Register</string>
     <string name="create_an_account">Create an account</string>

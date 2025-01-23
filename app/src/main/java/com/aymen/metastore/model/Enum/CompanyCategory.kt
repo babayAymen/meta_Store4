@@ -13,4 +13,11 @@ enum class CompanyCategory {
 
     GROCER,
 
+    CAKE,
+
+    RESTAURANT,
+
+    POULTERER
+
+
 }

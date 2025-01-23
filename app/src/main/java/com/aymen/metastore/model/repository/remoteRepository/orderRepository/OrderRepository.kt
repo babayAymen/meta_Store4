@@ -25,4 +25,5 @@ interface OrderRepository {
 
      fun getAllOrdersLineByInvoiceId(companyId : Long ,invoiceId : Long): Flow<PagingData<PurchaseOrderLine>>
 
+    fun getAllOrdersNotDelivered(id : Long) : Flow<PagingData<PurchaseOrder>>
 }

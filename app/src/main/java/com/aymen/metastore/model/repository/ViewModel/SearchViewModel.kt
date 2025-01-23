@@ -161,11 +161,11 @@ class SearchViewModel @Inject constructor(
 
     fun getAllMyArticleContaining(articleLibel: String, searchType: SearchType) {
         viewModelScope.launch {
-            useCases.getAllMyArticleContaining(articleLibel, searchType, sharedViewModel.company.value.id!!)
+            useCases.getAllMyArticleContaining(articleLibel, searchType, sharedViewModel.company.value.id!!,true)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect {
-                    _searchArticles.value = it.map {article -> article.toArticleCompanyModel() }
+                    _searchArticles.value = it
                 }
         }
     }

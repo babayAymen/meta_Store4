@@ -6,5 +6,5 @@ data class PaymentForProviders (
     val status : Boolean? = false,
     val createdDate : String = "",
     val lastModifiedDate : String = "",
-    val purchaseOrderLine : PurchaseOrderLine? = null,
+    val purchaseOrder : PurchaseOrder? = null,
 )

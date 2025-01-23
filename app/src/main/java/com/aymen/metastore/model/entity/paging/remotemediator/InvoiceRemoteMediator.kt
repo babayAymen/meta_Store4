@@ -26,6 +26,7 @@ class InvoiceRemoteMediator(
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
     private val invoiceDao = room.invoiceDao()
+    private val purchaseOrderDao = room.purchaseOrderDao()
 
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH
@@ -81,6 +82,7 @@ class InvoiceRemoteMediator(
                     userDao.insertUser(response.content.map {user -> user.provider?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.client?.toCompany()})
                     companyDao.insertCompany(response.content.map {company -> company.provider?.toCompany()})
+                    purchaseOrderDao.insertOrder(response.content.map{ order -> order.purchaseOrder?.toPurchaseOrder()})
                     invoiceDao.insertInvoice(response.content.map {invoice -> invoice.toInvoice(isInvoice = true) })
 
                 } catch (ex: Exception) {

@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 
@@ -20,6 +21,13 @@ import com.aymen.store.model.Enum.Status
             entity = Company::class,
             parentColumns = ["companyId"],
             childColumns = ["clientId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = com.aymen.metastore.model.entity.room.entity.PurchaseOrder::class,
+            parentColumns = ["purchaseOrderId"],
+            childColumns = ["purchaseOrderId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         ),
@@ -50,12 +58,16 @@ data class Invoice(
     val lastModifiedDate : String? = null,
     val lastModifiedBy: String? = null,
     val createdBy: String? = null,
-    val isInvoice : Boolean?
+    val isInvoice : Boolean? = false,
+    val purchaseOrderId : Long? = null,
+    val asProvider : Boolean? = true
 ){
     fun toInvoice(user : com.aymen.metastore.model.entity.model.User?,
                   client : com.aymen.metastore.model.entity.model.Company?,
-                  provider : com.aymen.metastore.model.entity.model.Company): Invoice {
-        return com.aymen.metastore.model.entity.model.Invoice(
+                  provider : com.aymen.metastore.model.entity.model.Company,
+                  purchaseOrder : PurchaseOrder?
+                  ): Invoice {
+        return Invoice(
             id = id,
             code = code,
             tot_tva_invoice = tot_tva_invoice,
@@ -72,7 +84,11 @@ data class Invoice(
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
             lastModifiedBy = lastModifiedBy,
-            createdBy = createdBy
+            createdBy = createdBy,
+            isInvoice = isInvoice,
+            purchaseOrder = purchaseOrder,
+            asProvider = asProvider
+
         )
 
     }

@@ -74,17 +74,20 @@ class AllSearchRemoteMediator(
                         )
                     })
 
-                            userDao.insertUser( response.content.map{article -> article.article?.company?.user?.toUser()})
-                            companyDao.insertCompany(response.content.map{article -> article.article?.company?.toCompany()})
-                            articleDao.insertArticle(response.content.map { article -> article.article?.article?.toArticle(isMy = true) })
-                            articleCompanyDao.insertArticleForSearch(response.content.map { article -> article.article?.toArticleCompany(isRandom = true, isSearch = true) })
-                            userDao.insertUser(response.content.map { company -> company.company?.user?.toUser()})
-                            companyDao.insertCompany(response.content.map { company -> company.company?.toCompany() })
-                            userDao.insertUser(response.content.map { user -> user.user?.toUser() })
-                            searchHistoryDao.insertSearchHistory(response.content.map { search -> search.toSearchHistory() })
+                    response.content.map { search ->
+                        Log.e("searchlog","search : $search")
+                    }
+                            userDao.insertUser( response.content.mapNotNull{article -> article.article?.company?.user?.toUser()})
+                            companyDao.insertCompany(response.content.mapNotNull{article -> article.article?.company?.toCompany()})
+                            articleDao.insertArticle(response.content.mapNotNull{ article -> article.article?.article?.toArticle(isMy = true) })
+                            articleCompanyDao.insertArticleForSearch(response.content.mapNotNull{ article -> article.article?.toArticleCompany(isRandom = true, isSearch = true) })
+                            userDao.insertUser(response.content.mapNotNull{ company -> company.company?.user?.toUser()})
+                            companyDao.insertCompany(response.content.mapNotNull{ company -> company.company?.toCompany() })
+                            userDao.insertUser(response.content.mapNotNull{ user -> user.user?.toUser() })
+                            searchHistoryDao.insertSearchHistory(response.content.map{ search -> search.toSearchHistory() })
 
                 } catch (ex: Exception) {
-                    Log.e("error", ex.message.toString())
+                    Log.e("error", ex.toString())
                 }
             }
             MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)

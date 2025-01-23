@@ -1,5 +1,6 @@
 package com.aymen.metastore.ui.screen.user
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,8 +27,8 @@ import com.aymen.metastore.model.entity.model.Invitation
 import com.aymen.metastore.model.repository.ViewModel.InvetationViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.ShowImage
-import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.IMAGE_URL_COMPANY
 import com.aymen.metastore.util.IMAGE_URL_USER
 import com.aymen.store.model.Enum.AccountType
@@ -66,22 +67,19 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val myAccountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
-    val companyId by remember {
-        mutableLongStateOf(company.id ?: 0)
-    }
-    var actionaireName by remember {
+    var senderName by remember {
         mutableStateOf("")
     }
-    var adverbe by remember {
+    var receiverName by remember {
         mutableStateOf("")
     }
-    var adverbType by remember {
+    var receiverType by remember {
         mutableStateOf(AccountType.NULL)
     }
-    var adverbImage by remember {
+    var receiverImage by remember {
         mutableStateOf("")
     }
-    var adverbId by remember {
+    var receiverId by remember {
         mutableLongStateOf(0)
     }
     Row(
@@ -91,135 +89,108 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
 
         val type = when (invitation.type) {
             Type.USER_SEND_CLIENT_COMPANY -> {
-                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
-                    actionaireName = invitation.companyReceiver?.name ?: ""
-                    adverbe = invitation.client?.username ?: ""
-                    adverbType = AccountType.USER
-                    adverbImage = invitation.client?.image ?: ""
-                    adverbId = invitation.client?.id ?: 0
-                } else {
-                    actionaireName = invitation.client?.username ?: ""
-                    adverbe = invitation.companyReceiver?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companyReceiver?.logo ?: ""
-                    adverbId = invitation.companyReceiver?.user?.id ?: 0
-                }
-                "client"
+                    senderName = invitation.client?.username ?: ""
+                    receiverName = invitation.companyReceiver?.name ?: ""
+                    receiverType = AccountType.COMPANY
+                     "client"
             }
-
             Type.COMPANY_SEND_CLIENT_COMPANY -> {
-                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
-                    actionaireName = invitation.companyReceiver?.name ?: ""
-                    adverbe = invitation.companySender?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companySender?.logo ?: ""
-                    adverbId = invitation.companySender?.user?.id ?: 0
-                } else {
-                    actionaireName = invitation.companySender?.name ?: ""
-                    adverbe = invitation.companyReceiver?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companyReceiver?.logo ?: ""
-                    adverbId = invitation.companyReceiver?.user?.id ?: 0
-                }
-                "client"
+                    senderName = invitation.companySender?.name ?: ""
+                    receiverName = invitation.companyReceiver?.name ?: ""
+                    receiverType = AccountType.COMPANY
+                      "client"
             }
-
             Type.COMPANY_SEND_PROVIDER_USER -> {
-                if (invitation.companySender?.id == companyId && myAccountType == AccountType.COMPANY) {
-                    actionaireName = invitation.companySender?.name ?: ""
-                    adverbe = invitation.client?.username ?: ""
-                    adverbType = AccountType.USER
-                    adverbImage = invitation.client?.image ?: ""
-                    adverbId = invitation.client?.id ?: 0
-                } else {
-                    actionaireName = invitation.client?.username ?: ""
-                    adverbe = invitation.companySender?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companySender?.logo ?: ""
-                    adverbId = invitation.companySender?.user?.id ?: 0
-                }
+                    senderName = invitation.companySender?.name ?: ""
+                    receiverName = invitation.client?.username ?: ""
+                    receiverType = AccountType.USER
                 "provider"
             }
-
             Type.COMPANY_SEND_PROVIDER_COMPANY -> {
-                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
-                    actionaireName = invitation.companyReceiver?.name ?: ""
-                    adverbe = invitation.companySender?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companySender?.logo ?: ""
-                    adverbId = invitation.companySender?.user?.id ?: 0
-                } else {
-                    actionaireName = invitation.companySender?.name ?: ""
-                    adverbe = invitation.companyReceiver?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companyReceiver?.logo ?: ""
-                    adverbId = invitation.companyReceiver?.user?.id ?: 0
-                }
-                "provider"
+                    senderName = invitation.companySender?.name ?: ""
+                    receiverName = invitation.companyReceiver?.name ?: ""
+                    receiverType = AccountType.COMPANY
+                     "provider"
             }
-
-            Type.COMPANY_SEND_PARENT_COMPANY ->
-                "parent"
-
+            Type.COMPANY_SEND_PARENT_COMPANY -> "parent"
             Type.COMPANY_SEND_WORKER_USER -> {
-                if (invitation.companySender?.id == companyId && myAccountType == AccountType.COMPANY) {
-                    actionaireName = invitation.companySender?.name ?: ""
-                    adverbe = invitation.client?.username ?: ""
-                    adverbType = AccountType.USER
-                    adverbImage = invitation.client?.image ?: ""
-                    adverbId = invitation.client?.id ?: 0
-                } else {
-                    actionaireName = invitation.client?.username ?: ""
-                    adverbe = invitation.companySender?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companySender?.logo ?: ""
-                    adverbId = invitation.companySender?.user?.id ?: 0
-                }
-                "worker"
+                    senderName = invitation.companySender?.name ?: ""
+                    receiverName = invitation.client?.username ?: ""
+                    receiverType = AccountType.USER
+                     "worker"
             }
-
             Type.USER_SEND_WORKER_COMPANY -> {
-                if (invitation.companyReceiver?.id == companyId && myAccountType == AccountType.COMPANY) {
-                    actionaireName = invitation.companyReceiver?.name ?: ""
-                    adverbe = invitation.client?.username ?: ""
-                    adverbType = AccountType.USER
-                    adverbImage = invitation.client?.image ?: ""
-                    adverbId = invitation.client?.id ?: 0
-                } else {
-                    actionaireName = invitation.client?.username ?: ""
-                    adverbe = invitation.companyReceiver?.name ?: ""
-                    adverbType = AccountType.COMPANY
-                    adverbImage = invitation.companyReceiver?.logo ?: ""
-                    adverbId = invitation.companyReceiver?.user?.id ?: 0
-                }
-                "worker"
+                    senderName = invitation.client?.username ?: ""
+                    receiverName = invitation.companyReceiver?.name ?: ""
+                    receiverType = AccountType.COMPANY
+                      "worker"
             }
 
             Type.OTHER -> TODO()
             null -> TODO()
         }
+
+        receiverId = when {
+            myAccountType == AccountType.USER -> {
+                invitation.companyReceiver?.id ?: invitation.companySender?.id ?: 0
+            }
+            company.id == invitation.companyReceiver?.id -> {
+                invitation.client?.id ?: invitation.companySender?.id ?: 0
+            }
+            else -> {
+                invitation.companyReceiver?.id ?: invitation.client?.id ?: 0
+            }
+        }
+        receiverImage = when {
+            myAccountType == AccountType.USER -> {
+                invitation.companyReceiver?.logo ?: invitation.companySender?.logo ?: ""
+            }
+            company.id == invitation.companyReceiver?.id -> {
+                invitation.client?.image ?: invitation.companySender?.logo ?: ""
+            }
+            else -> {
+                invitation.companyReceiver?.logo ?: invitation.client?.image ?: ""
+            }
+        }
+
+
         val image = String.format(
-            if (adverbType == AccountType.USER) IMAGE_URL_USER else IMAGE_URL_COMPANY,
-            adverbImage,
-            adverbId
+            if (receiverType == AccountType.USER) IMAGE_URL_USER else IMAGE_URL_COMPANY,
+            receiverImage,
+            receiverId
         )
         Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             Row(modifier = Modifier.weight(0.2f)) {
-                if (adverbImage != "")
+                if (receiverImage != "")
                     ShowImage(image)
                 else
-                    notImage()
+                    NotImage()
             }
             Row(modifier = Modifier.weight(0.8f)) {
                 when (invitation.status) {
-                    Status.ACCEPTED -> Text("$actionaireName accepted $adverbe $type invitation")
-                    Status.REFUSED -> Text("$actionaireName refused $adverbe $type invitation")
-                    Status.CANCELLED -> Text("$actionaireName cancelled $adverbe $type invitation")
+                    Status.ACCEPTED -> {
+                        if(receiverName == company.name)
+                            Text("you have accepted $senderName $type invitation")
+                        else
+                            Text("$receiverName has accepted your $type invitation")
+                    }
+                    Status.REFUSED -> {
+                        if(receiverName == company.name)
+                            Text("you have refused $senderName $type invitation")
+                        else
+                            Text("$receiverName refused your $type invitation")
+                    }
+                    Status.CANCELLED -> {
+                        if(senderName == company.name)
+                            Text("you have cancelled $type invitation to $receiverName")
+                        else
+                            Text("$senderName has cancelled the $type invitation")
+                    }
                     Status.INWAITING -> {
                         Row {
-                            if (actionaireName == company.name) {
+                            if (senderName == company.name) {
                                 Column {
-                                    Text("you have sent $type invitation to $adverbe ")
+                                    Text("you have sent $type invitation to $receiverName ")
                                     ButtonSubmit(
                                         labelValue = "cacel",
                                         color = Color.Red,
@@ -230,8 +201,7 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
                                 }
                             } else {
                                 Column {
-
-                                    Text("$adverbe has sent $type invitation ")
+                                    Text("$senderName has sent $type invitation ")
                                     Row {
                                         Row(modifier = Modifier.weight(1f)) {
                                             ButtonSubmit(

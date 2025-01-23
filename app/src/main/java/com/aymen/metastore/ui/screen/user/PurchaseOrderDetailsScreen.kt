@@ -1,6 +1,7 @@
 package com.aymen.metastore.ui.screen.user
 
 import android.util.Log
+import androidx.collection.mutableLongListOf
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,25 +46,25 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
     var price by remember {
         mutableStateOf(BigDecimal.ZERO)
     }
-
+    val ids : MutableList<Long> = emptyList<Long>().toMutableList()
     val allMyOrdersLineDetails = shoppingViewModel.allMyOrdersLineDetails.collectAsLazyPagingItems()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = allMyOrdersLineDetails.itemCount) {
         shoppingViewModel.getAllMyOrdersLine(order.id!!)
         if (allMyOrdersLineDetails.itemCount != 0) {
-            Log.e("pricetotal", "price $price")
             val snapshot = allMyOrdersLineDetails.itemSnapshotList.items
             snapshot.forEach {line ->
+                if (line.status != Status.INWAITING) {
+                    hasWaitingStatus = false
+                }
+                ids += line.id!!
                 val prixArticle = BigDecimal(line.prixArticleTot!!)
                 val tva = BigDecimal(line.totTva!!)
-
-                Log.e("pricetotal", "price line $price")
                 price = price.add(prixArticle).add(tva)
-                Log.e("pricetotal", "p :   pr : $  price $price prixarticle : ${line.prixArticleTot} tva ${line.totTva}")
             }
             price = price.multiply(BigDecimal(0.9)).multiply(BigDecimal(0.2)).setScale(2,RoundingMode.HALF_UP)
-            Log.e("pricetotal", "price line $price")
         }
+
     }
 
     Surface(
@@ -74,68 +76,58 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
             LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if(order.company?.id == myCompany.id) {
                     item {
                         if (hasWaitingStatus) {
-                            Row {
-                                Row(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    ButtonSubmit(
-                                        labelValue = "Accept All",
-                                        color = Color.Green,
-                                        enabled = true,
+                            if (order.company?.id == myCompany.id) {
+                                Row {
+                                    Row(
+                                        modifier = Modifier.weight(1f)
                                     ) {
-                                        shoppingViewModel.orderLineResponse(
-                                            status = Status.ACCEPTED,
-                                            id = shoppingViewModel.Order.id!!,
-                                            isAll = true,
-                                            price.toDouble()
-                                        )
-                                        hasWaitingStatus = false
+                                        ButtonSubmit(
+                                            labelValue = "Accept All",
+                                            color = Color.Green,
+                                            enabled = true,
+                                        ) {
+                                            shoppingViewModel.orderLineResponse(
+                                                status = Status.ACCEPTED,
+                                                ids = ids,
+                                                price.toDouble()
+                                            )
+                                        }
+                                    }
+                                    Row(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        ButtonSubmit(
+                                            labelValue = "Refuse All",
+                                            color = Color.Red,
+                                            enabled = true,
+                                        ) {
+                                            shoppingViewModel.orderLineResponse(
+                                                status = Status.REFUSED,
+                                                ids = ids,
+                                                price.toDouble()
+                                            )
+                                        }
                                     }
                                 }
-                                Row(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    ButtonSubmit(
-                                        labelValue = "Refuse All",
-                                        color = Color.Red,
-                                        enabled = true,
-                                    ) {
-                                        shoppingViewModel.orderLineResponse(
-                                            status = Status.REFUSED,
-                                            id = shoppingViewModel.Order.id!!,
-                                            isAll = true,
-                                            price.toDouble()
-                                        )
-                                        hasWaitingStatus = false
+                            } else {
+                                    Row {
+                                        ButtonSubmit(
+                                            labelValue = "Cancel All",
+                                            color = Color.Red,
+                                            enabled = true
+                                        ) {
+                                            shoppingViewModel.orderLineResponse(
+                                                status = Status.CANCELLED,
+                                                ids = ids,
+                                                price.toDouble()
+                                            )
+                                        }
                                     }
-                                }
                             }
                         }
                     }
-                }else{
-                    if(hasWaitingStatus){
-                        item {
-                            Row {
-                                ButtonSubmit(
-                                    labelValue = "Cancel All",
-                                    color = Color.Red,
-                                    enabled = true
-                                ) {
-                                    shoppingViewModel.orderLineResponse(
-                                        status = Status.CANCELLED,
-                                        id = shoppingViewModel.Order.id!!,
-                                        isAll = true,
-                                        price.toDouble()
-                                    )
-                                    hasWaitingStatus = false
-                                }
-                            }
-                        }
-                    }
-                }
                 items(count = allMyOrdersLineDetails.itemCount,
                     key = allMyOrdersLineDetails.itemKey { it.id!! }
                 ) {index : Int ->
@@ -166,11 +158,9 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                                     val pa = BigDecimal(line.prixArticleTot)
                                                     val pra = pa.multiply(BigDecimal(0.9))
                                                     val pria = pra.multiply(BigDecimal(0.2))
-                                                    Log.e("pricetotal","p : $pa pr : $pra pri : $pria price $price")
                                                     shoppingViewModel.orderLineResponse(
                                                         status = Status.ACCEPTED,
-                                                        id = line.id!!,
-                                                        isAll = false,
+                                                        ids = listOf(line.id!!),
                                                         price.toDouble()
 
                                                     )
@@ -187,8 +177,7 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                                 ) {
                                                     shoppingViewModel.orderLineResponse(
                                                         status = Status.REFUSED,
-                                                        id = line.id!!,
-                                                        isAll = false,
+                                                        ids = listOf(line.id!!),
                                                         price.toDouble()
                                                     )
                                                 }
@@ -202,8 +191,7 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                         ) {
                                             shoppingViewModel.orderLineResponse(
                                                 status = Status.CANCELLED,
-                                                id = line.id!!,
-                                                isAll = false,
+                                                ids = listOf(line.id!!),
                                                 price.toDouble()
                                             )
                                         }

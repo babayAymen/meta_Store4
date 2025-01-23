@@ -12,6 +12,16 @@
     <string name="name_or_password_wrong">Le nom d\'utilisateur ou le mot de passe est incorrect !</string>
 
 
+    <!--    company category -->
+    <string name="dairy">SUPERETTE </string>
+    <string name="butcher">BOUCHER</string>
+    <string name="vegetable">LÉGUME</string>
+    <string name="fish">POISSON</string>
+    <string name="grocer">ÉPICIER</string>
+    <string name="cake">GÂTEAU</string>
+    <string name="restautrant">RESTAURANT</string>
+    <string name="poulterer">VOLAILLER</string>
+    <string name="all">TOUT</string>
 
     <string name="register">Register</string>
     <string name="create_an_account">Create an account</string>

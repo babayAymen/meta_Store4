@@ -67,6 +67,16 @@
     <string name="url_image_company">werehouse/image/%s/company/%s</string>
     <string name="url_image_article">werehouse/image/%s/article/%s</string>
 
+<!--    company category -->
+    <string name="dairy">DAIRY</string>
+    <string name="butcher">BUTCHER</string>
+    <string name="vegetable">VEGETABLE</string>
+    <string name="fish">FISH</string>
+    <string name="grocer">GROCER</string>
+    <string name="cake">CAKE</string>
+    <string name="restautrant">RESTAURANT</string>
+    <string name="poulterer">POULTERER</string>
+    <string name="all">ALL</string>
     <!--show item -->
     <string name="invoice">invoice</string>
     <string name="provider">provider</string>

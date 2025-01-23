@@ -12,17 +12,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.map
 import androidx.room.withTransaction
 import com.aymen.metastore.model.Enum.InvoiceDetailsType
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.CommandLineDto
-import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
@@ -34,9 +33,7 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
-import com.aymen.store.ui.screen.user.generatePDF
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,10 +55,13 @@ class InvoiceViewModel @Inject constructor(
 ) : ViewModel(){
 
     private val invoiceDao = room.invoiceDao()
+    private val purchaseOrderDao = room.purchaseOrderDao()
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
     private val commandLineDao = room.commandLineDao()
 
+    private val _invoiceMode : MutableStateFlow<InvoiceMode> = MutableStateFlow(InvoiceMode.CREATE)
+    val invoiceModeState : StateFlow<InvoiceMode> = _invoiceMode
     val listState = LazyListState()
     private val _ordersLine : MutableStateFlow<PagingData<PurchaseOrderLine>> = MutableStateFlow(PagingData.empty())
     val ordersLine: StateFlow<PagingData<PurchaseOrderLine>> get() = _ordersLine
@@ -69,32 +69,47 @@ class InvoiceViewModel @Inject constructor(
     val commandLineInvoice: StateFlow<PagingData<CommandLine>> get() = _commandLineInvoice
     private val _invoiceForSerch : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val invoiceForSearch : StateFlow<PagingData<Invoice>> = _invoiceForSerch
-    private val _allMyInvoiceNotAccepted : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
-    val allMyInvoiceNotAccepted: StateFlow<PagingData<Invoice>> get() = _allMyInvoiceNotAccepted
     var invoice by mutableStateOf(Invoice())
+    var purchaseOrder by mutableStateOf(PurchaseOrder())
     var lastInvoiceCode by mutableLongStateOf(0)
     var clientCompany by mutableStateOf(Company())
+    private val _providerCompany : MutableStateFlow<Company> = MutableStateFlow(Company())
+    val providerCompany : StateFlow<Company> = _providerCompany
     var clientUser by mutableStateOf(User())
     var clientType by mutableStateOf(AccountType.USER)
     var article by mutableStateOf(ArticleCompany())
     var commandLineDto by mutableStateOf(CommandLine())
-    private val _commandLineDtos :  MutableStateFlow<List<CommandLine>> = MutableStateFlow(emptyList())
-    val commandLine : StateFlow<List<CommandLine>> get() = _commandLineDtos
+    var asProvider by mutableStateOf(true)
+    private val _commandLines :  MutableStateFlow<List<CommandLine>> = MutableStateFlow(emptyList())
+    val commandLine : StateFlow<List<CommandLine>> get() = _commandLines
     var discount by mutableDoubleStateOf(0.0)
     val company by mutableStateOf(sharedViewModel.company.value)
-    var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
+//    var invoiceMode by mutableStateOf(InvoiceMode.CREATE)
     var invoiceType by mutableStateOf(InvoiceDetailsType.ORDER_LINE)
     private val _notAcceptedAsProvider : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val notAcceptedAsProvider: StateFlow<PagingData<Invoice>> get() = _notAcceptedAsProvider
     private val _notAcceptedAsClient : MutableStateFlow<PagingData<Invoice>> = MutableStateFlow(PagingData.empty())
     val notAcceptedAsClient: StateFlow<PagingData<Invoice>> get() = _notAcceptedAsClient
-    fun substructCommandsLine(){
-        _commandLineDtos.value = _commandLineDtos.value.minus(commandLineDto)
-    }
-    fun addCommandLine(commandLine: CommandLine){
-        _commandLineDtos.value = _commandLineDtos.value.plus(commandLine)
+    private val _invoicesNotDelivered : MutableStateFlow<PagingData<PurchaseOrder>> = MutableStateFlow(PagingData.empty())
+    val invoicesNotDelivered : StateFlow<PagingData<PurchaseOrder>> = _invoicesNotDelivered
+    private val _invoicesIDelivered : MutableStateFlow<PagingData<PurchaseOrder>> = MutableStateFlow(PagingData.empty())
+    val invoicesIDelivered : StateFlow<PagingData<PurchaseOrder>> = _invoicesIDelivered
+
+    fun setProviderCompany(provider : Company){
+        _providerCompany.value = provider
     }
 
+    fun substructCommandsLine(){
+        _commandLines.value = _commandLines.value.minus(commandLineDto)
+    }
+    fun addCommandLine(commandLine: CommandLine){
+        _commandLines.value = _commandLines.value.plus(commandLine)
+    }
+
+    fun setInvoiceMode(invoiceMode : InvoiceMode){
+        Log.e("textinvoice","invoice mode from set $invoiceMode")
+        _invoiceMode.value = invoiceMode
+    }
     fun startScan(onScan : (ArticleCompany?) ->Unit){
         viewModelScope.launch(Dispatchers.Main) {
             barcodeScanner.startScan().toString().also {
@@ -116,17 +131,22 @@ class InvoiceViewModel @Inject constructor(
         clientCompany = Company()
         clientUser = User()
         invoice = Invoice()
-        _commandLineDtos.value = emptyList()
+        _commandLines.value = emptyList()
         discount = 0.0
     }
 
+    fun remiseCommandLineToZero(){
+        _commandLineInvoice.value = PagingData.empty()
+    }
     private val _filter = MutableStateFlow(PaymentStatus.ALL)
     val filter : StateFlow<PaymentStatus> = _filter
 
     val invoices = _filter.flatMapLatest { filter->
+        Log.e("itemcountinvoice","filter : $filter")
         useCases.getAllInvoices(company.id!!,true,filter)
             .cachedIn(viewModelScope)
     }
+
 
     val invoicesAsClient = _filter.flatMapLatest {filter->
         val id = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
@@ -165,34 +185,47 @@ class InvoiceViewModel @Inject constructor(
             AccountType.COMPANY -> {
             }
             AccountType.USER -> {
-                getAllMyInvoiceAsClientAndStatus(Status.INWAITING,sharedViewModel.user.value.id?:0)
             }
             AccountType.META -> {}
             AccountType.NULL -> {}
             AccountType.SELLER -> {}
-            AccountType.DELIVERY -> TODO()
+            AccountType.DELIVERY -> {
+                getAllOrdersNotAcceptedAsDelivery(sharedViewModel.user.value.id?:0)
+            }
         }
         }
 
         }
     }
 
-    fun getAllMyInvoiceAsClientAndStatus(status : Status, id : Long){
+    private fun getAllOrdersNotAcceptedAsDelivery(id : Long){
         viewModelScope.launch {
-                useCases.getAllInvoicesAsClientAndStatus(id, status)
-                    .distinctUntilChanged()
-                    .cachedIn(viewModelScope)
-                    .collect {
-                        _allMyInvoiceNotAccepted.value =
-                            it
-                    }
+            useCases.getAllOrdersNotDelivered(id)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{invoice ->
+                    Log.e("tetsinvoice","view model collect is not delivery $invoice")
+                    _invoicesNotDelivered.value = invoice
+                }
+        }
+    }
+
+     fun getInvoicesIDelivered(){
+        viewModelScope.launch {
+            useCases.getInvoicesIdelevered()
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+            Log.e("tetsinvoice","view model collect isdelivery $it")
+                    _invoicesIDelivered.value = it
+                }
         }
     }
 
     fun getLastInvoiceCode(){
         viewModelScope.launch (Dispatchers.IO){
             try {
-                val invoiceCode = repository.getLastInvoiceCode()
+                val invoiceCode = repository.getLastInvoiceCode(asProvider)
                 if(invoiceCode.isSuccessful){
                     lastInvoiceCode = invoiceCode.body()!!
                 }
@@ -201,7 +234,7 @@ class InvoiceViewModel @Inject constructor(
             }
             }
     }
-    fun addInvoice(invoiceMode : InvoiceMode){
+    fun addInvoice(invoiceMode : InvoiceMode, asProvider : Boolean, invoicee : Invoice){
         viewModelScope.launch(Dispatchers.IO) {
             var id = 0L
             var invoiceRemoteKey = InvoiceRemoteKeysEntity(0,null,null)
@@ -230,7 +263,8 @@ class InvoiceViewModel @Inject constructor(
                     person = clientUser,
                     client = clientCompany,
                     provider = company,
-                    isInvoice = true
+                    isInvoice = true,
+                    asProvider = asProvider
                 )
 
                 Log.e("veftiondazncj", "before calling room ${commandLine.value[0].invoice}")
@@ -252,16 +286,17 @@ class InvoiceViewModel @Inject constructor(
                 }
             }
             Log.e("veftiondazncj","before calling repo")
-                val result : Result<Response<List<CommandLineDto>>> = runCatching {
+            _commandLines.value[0].invoice = invoicee
+            val result : Result<Response<List<CommandLineDto>>> = runCatching {
                     (clientCompany.id ?: clientUser.id)?.let {
-                        Log.e("veftiondazncj","called")
                         repository.addInvoice(
                             commandLineDtos = commandLine.value,
                             clientId = it,
                             invoiceCode = lastInvoiceCode,
                             discount = discount,
                             clientType = clientType,
-                            invoiceMode = invoiceMode
+                            invoiceMode = invoiceMode,
+                            asProvider = asProvider
                         )
                     }!!
                 }
@@ -305,8 +340,9 @@ class InvoiceViewModel @Inject constructor(
 
 
     fun getInvoiceDetails(){
-        val id = if(sharedViewModel.accountType.value == AccountType.USER) sharedViewModel.user.value.id else sharedViewModel.company.value.id
+        val id = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value.id else sharedViewModel.user.value.id
         viewModelScope.launch{
+            Log.e("tetsinvoice","invoice type : $invoiceType and my id : ${invoice.id}")
             when(invoiceType){
                 InvoiceDetailsType.COMMAND_LINE -> {
                     useCases.getAllCommandLineByInvoiceId(id!!, invoice.id!!)
@@ -318,7 +354,7 @@ class InvoiceViewModel @Inject constructor(
                 }
                 InvoiceDetailsType.ORDER_LINE -> {
                     _commandLineInvoice.value = PagingData.empty()
-                    useCases.getAllOrdersLineByInvoiceId(id!! ,invoice.id!!)
+                    useCases.getAllOrdersLineByInvoiceId(id!! ,purchaseOrder.id?:invoice.purchaseOrder?.id?:0L)
                         .distinctUntilChanged()
                         .cachedIn(viewModelScope)
                         .collect{
@@ -370,6 +406,50 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
+    fun acceptInvoiceAsDelivery(){
+        viewModelScope.launch {
+            val result : Result<Response<String>> = runCatching {
+                repository.acceptInvoiceAsDelivery(purchaseOrder.id!!)
+            }
+
+            Log.e("fold","success id ${purchaseOrder.id}")
+            result.fold(
+                onSuccess = { success ->
+                    Log.e("fold","success")
+                    purchaseOrderDao.makeInvoiceAsTeken(isTaken = true, invoiceId = purchaseOrder.id!!)
+                },
+                onFailure = { failure ->
+                    purchaseOrderDao.makeInvoiceAsTeken(isTaken = true, invoiceId = purchaseOrder.id!!)
+                    Log.e("fold","failure")
+                }
+            )
+        }
+    }
+
+    fun submitOrderDelivered(code : String){
+        viewModelScope.launch {
+            val result : Result<Response<String>> = runCatching {
+                repository.submitOrderDelivered(purchaseOrder.id!!, code)
+            }
+        }
+    }
+
+    fun setNeccessry(order: PurchaseOrder, clientType : AccountType,invoiceMode: InvoiceMode, invoiceDetailsType: InvoiceDetailsType){
+        purchaseOrder = order
+        this.clientType = clientType
+        discount = order.discount ?: 0.0
+        _invoiceMode.value = invoiceMode
+        invoiceType = invoiceDetailsType
+        invoice.provider = order.company
+        invoice.createdDate = order.createdDate
+        invoice.prix_invoice_tot = order.prix_order_tot
+        invoice.prix_article_tot = order.prix_article_tot
+        invoice.tot_tva_invoice = order.tot_tva
+        invoice.type = invoiceDetailsType
+        invoice.client = order.client
+        invoice.person = order.person
+        invoice.code = order.orderNumber
+    }
 
 
 }

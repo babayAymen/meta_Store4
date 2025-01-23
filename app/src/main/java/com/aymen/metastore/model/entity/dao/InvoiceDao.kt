@@ -13,6 +13,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.BuyHistoryRemoteKeysEnti
 import com.aymen.metastore.model.entity.room.remoteKeys.InCompleteRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoicesAsClientAndStatusRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InvoicesDeliveredRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotAcceptedRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotPayedRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.PayedRemoteKeysEntity
@@ -47,7 +48,6 @@ interface InvoiceDao {
 
  @Query("SELECT COUNT(*) FROM invoice WHERE isInvoice = :source")
  suspend fun getInvoiceCountBySource(source: Boolean): Int
-
 
  @Query("UPDATE invoice SET status = :newStatus WHERE id = :invoiceId")
     suspend fun updateInvoiceStatus(invoiceId: Long, newStatus: Status)
@@ -179,11 +179,12 @@ interface InvoiceDao {
      suspend fun getFirstInvoiceAsClientRemoteKey() : InvoicesAsClientAndStatusRemoteKeysEntity?
      @Query("SELECT * FROM invoice_as_client_and_status_remote_keys ORDER BY id DESC LIMIT 1 ")
      suspend fun getLatestInvoiceAsClientRemoteKey() : InvoicesAsClientAndStatusRemoteKeysEntity?
+
      @Transaction
      @Query("SELECT * FROM invoice WHERE providerId = :companyId ORDER BY lastModifiedDate DESC")
      fun getAllMyInvoiceAsProvider(companyId : Long): PagingSource<Int, InvoiceWithClientPersonProvider>
 
-     @Transaction
+ @Transaction
      @Query("SELECT * FROM invoice WHERE providerId = :companyId AND paid = :status ORDER BY lastModifiedDate DESC")
      fun getAllMyInvoiceAsProviderAndStatus(companyId : Long, status: PaymentStatus): PagingSource<Int, InvoiceWithClientPersonProvider>
 
@@ -238,4 +239,6 @@ interface InvoiceDao {
      @Query("UPDATE invoice SET paid = :paid , rest = :rest  WHERE id = :id")
      suspend fun updateInvoicePaidAndRest(id : Long, paid : PaymentStatus , rest : Double)
 
+     @Query("DELETE FROM invoice")
+     suspend fun clearAllTableInvoice()
 }

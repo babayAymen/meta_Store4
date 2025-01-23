@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
@@ -130,6 +131,7 @@ class SharedViewModel @Inject constructor(
         else
             _reglementNotificationCount.value += 1
     }
+
     init {
         viewModelScope.launch {
 

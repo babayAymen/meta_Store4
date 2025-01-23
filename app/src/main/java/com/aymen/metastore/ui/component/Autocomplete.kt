@@ -34,7 +34,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -65,6 +65,7 @@ import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.Enum.SearchType
+import com.aymen.store.model.repository.ViewModel.ProviderViewModel
 
 
 @Composable
@@ -181,20 +182,154 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                             ) { index: Int ->
                                 val client = clients[index]
                                 if (client != null) {
-                                client.client?.let { clt ->
-                                    ClientItem(client = clt) { selectedClient ->
-                                        clientname = selectedClient.name
-                                        invoiceViewModel.clientCompany = selectedClient
-                                        invoiceViewModel.clientType = AccountType.COMPANY
-                                        onClientSelected(true)
-                                        expanded = false
+                                    invoiceViewModel.setProviderCompany(client.provider!!)
+                                    client.client?.let { clt ->
+                                        ClientItem(client = clt) { selectedClient ->
+                                            clientname = selectedClient.name
+                                            invoiceViewModel.clientCompany = selectedClient
+                                            invoiceViewModel.clientType = AccountType.COMPANY
+                                            onClientSelected(true)
+                                            expanded = false
+                                        }
+                                    }
+                                    client.person?.let { clt ->
+                                        ClientUserItem(client = clt) { selectedClient ->
+                                            clientname = selectedClient.username!!
+                                            invoiceViewModel.clientUser = selectedClient
+                                            invoiceViewModel.clientType = AccountType.USER
+                                            onClientSelected(true)
+                                            expanded = false
+                                        }
                                     }
                                 }
-                                client.person?.let { clt ->
-                                    ClientUserItem(client = clt) { selectedClient ->
-                                        clientname = selectedClient.username!!
-                                        invoiceViewModel.clientUser = selectedClient
-                                        invoiceViewModel.clientType = AccountType.USER
+                            }
+                        } else {
+                            expanded = false
+                            onClientSelected(false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AutoCompleteProvider(update : Boolean, onClientSelected : (Boolean) -> Unit) {
+    val providerViewModel: ProviderViewModel = hiltViewModel()
+    val invoiceViewModel: InvoiceViewModel = hiltViewModel()
+
+    val clientType = invoiceViewModel.clientType
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    val clients = providerViewModel.virtualProviders.collectAsLazyPagingItems()
+    val provider by invoiceViewModel.providerCompany.collectAsStateWithLifecycle()
+    var providername by remember {
+        mutableStateOf("")
+    }
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+    var textFieldSize by remember { mutableStateOf(Size.Zero) }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    LaunchedEffect(key1 = update) {
+        if(update)
+            providername = provider.name
+    }
+    Column(
+        modifier = Modifier
+            .padding(30.dp)
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    expanded = false
+                }
+            )
+    ) {
+        Text(
+            text = "Provider",
+            modifier = Modifier.padding(start = 3.dp, bottom = 2.dp),
+            color = Color.Black,
+            fontWeight = FontWeight.Medium
+        )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp)
+                        .border(
+                            width = 1.8.dp,
+                            color = Color.Black,
+                            shape = RoundedCornerShape(15.dp)
+                        )
+                        .onGloballyPositioned {
+                            textFieldSize = it.size.toSize()
+                        }
+                        .focusRequester(focusRequester),
+                    value = providername,
+                    onValueChange = {
+                        onClientSelected(false)
+                        providername = it
+                        expanded = true
+                        if (it.isNotEmpty()) {
+                            providerViewModel.getAllMyProviders(it)
+                        }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color.Black
+                    ),
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 16.sp
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    ),
+                    singleLine = true,
+                    trailingIcon = {
+                        IconButton(onClick = { expanded = !expanded }) {
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowDropDown,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                )
+            }
+
+            AnimatedVisibility(visible = expanded) {
+                Card(
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp)
+                        .width(textFieldSize.width.dp),
+                    elevation = CardDefaults.cardElevation(10.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 150.dp)
+                    ) {
+                        if (providername.isNotEmpty()) {
+                            items(
+                                count = clients.itemCount,
+                                key = clients.itemKey { client -> client.id!! }
+                            ) { index: Int ->
+                                val client = clients[index]
+                                if (client != null) {
+                                client.provider?.let { clt ->
+                                    ClientItem(client = clt) { selectedClient ->
+                                        providername = selectedClient.name
+                                        invoiceViewModel.clientCompany = client.client!!
+                                        invoiceViewModel.setProviderCompany(selectedClient)
+                                        invoiceViewModel.clientType = AccountType.COMPANY
                                         onClientSelected(true)
                                         expanded = false
                                     }
@@ -211,6 +346,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
         }
     }
 }
+
 
 @Composable
 fun ClientItem(
@@ -253,7 +389,7 @@ fun ClientUserItem(
 
 ////////////////////////////////
 @Composable
-fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
+fun AutoCompleteArticle(update : Boolean, asProvider : Boolean, providerId : Long ,onSelcetArticle : (Boolean) -> Unit) {
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val focusRequester = remember { FocusRequester() }
@@ -327,7 +463,7 @@ fun AutoCompleteArticle(update : Boolean ,onSelcetArticle : (Boolean) -> Unit) {
                         onSelcetArticle(false)
                         expanded = true
                         if(it.isNotEmpty()){
-                        articleViewModel.getAllMyArticleContaining(it,SearchType.MY)
+                        articleViewModel.getAllMyArticleContaining(it,SearchType.MY, asProvider, providerId)
                         }
                     },
                     colors = TextFieldDefaults.colors(

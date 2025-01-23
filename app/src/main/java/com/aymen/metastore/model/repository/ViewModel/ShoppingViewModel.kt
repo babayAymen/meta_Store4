@@ -301,17 +301,13 @@ fun submitShopping() {
 
 
 
-    fun orderLineResponse(status: Status, id : Long, isAll : Boolean, price : Double){
+    fun orderLineResponse(status: Status, ids : List<Long>, price : Double){
         viewModelScope.launch(Dispatchers.IO) {
-            appViewModel.addCompanyBalance(price)
-            if (isAll) {
-                purchaseOrderDao.deleteByPurchaseOrderId(id)
-                 purchaseOrderDao.deleteOrderNotAcceptedKeysById(id)
-            } else {
-                purchaseOrderLineDao.changeStatusByLine(status,id)
+            ids.forEach {
+                purchaseOrderLineDao.changeStatusByLine(status,it)
             }
             val result : Result<Response<Double>> = runCatching{
-                repository.orderLineResponse(status,id,isAll)
+                repository.orderLineResponse(status,ids)
             }
             result.fold(
                 onSuccess = {success ->

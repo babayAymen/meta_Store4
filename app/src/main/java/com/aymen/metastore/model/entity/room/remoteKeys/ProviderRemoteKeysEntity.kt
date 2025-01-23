@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class ProviderRemoteKeysEntity(
     @PrimaryKey (autoGenerate = false) val id : Long,
     val prevPage : Int?,
-    val nextPage : Int?
+    val nextPage : Int?,
+    val isSearch : Boolean
 )

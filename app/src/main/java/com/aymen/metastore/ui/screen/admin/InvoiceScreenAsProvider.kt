@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,9 +32,9 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ClientDialog
 import com.aymen.metastore.ui.component.InvoiceCard
+import com.aymen.metastore.ui.component.ProviderDialog
 import com.aymen.store.model.Enum.RoleEnum
 
-//@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceScreenAsProvider(asClient : Boolean) {
     val appViewModel: AppViewModel = hiltViewModel()
@@ -46,7 +47,73 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
         mutableStateOf(!asClient)
     }
     val view by appViewModel.view
-    appViewModel.updateView("ALL")
+    var launchLaucheEffect by remember {
+        mutableStateOf("ALL")
+    }
+    var enabledAll by remember {
+        mutableStateOf(false)
+    }
+    var enabledPaid by remember {
+        mutableStateOf(true)
+    }
+    var enabledIncomplete by remember {
+        mutableStateOf(true)
+    }
+    var enabledNotPaid by remember {
+        mutableStateOf(true)
+    }
+    var enabledNotAccepted by remember {
+        mutableStateOf(true)
+    }
+    LaunchedEffect(key1 = launchLaucheEffect, key2 = asProvider) {
+        Log.e("azertyhgfdss","launcgh : $launchLaucheEffect , asprovider : $asProvider")
+        when(launchLaucheEffect){
+            "ALL" -> appViewModel.updateView("ALL")
+            "PAID" -> appViewModel.updateView("PAID")
+            "NOT_PAID" -> appViewModel.updateView("NOT_PAID")
+            "IN_COMPLETE" -> appViewModel.updateView("IN_COMPLETE")
+            "NOT_ACCEPTED" -> appViewModel.updateView("NOT_ACCEPTED")
+        }
+    }
+    LaunchedEffect(key1 = view) {
+        when(view){
+            "ALL" ->{
+                enabledAll = false
+                enabledPaid = true
+                enabledIncomplete = true
+                enabledNotPaid = true
+                enabledNotAccepted = true
+            }
+            "PAID" ->{
+                enabledAll = true
+                enabledPaid = false
+                enabledIncomplete = true
+                enabledNotPaid = true
+                enabledNotAccepted = true
+                }
+            "NOT_PAID" ->{
+                enabledAll = true
+                enabledPaid = true
+                enabledIncomplete = true
+                enabledNotPaid = false
+                enabledNotAccepted = true
+            }
+            "IN_COMPLETE" ->{
+                enabledAll = true
+                enabledPaid = true
+                enabledIncomplete = false
+                enabledNotPaid = true
+                enabledNotAccepted = true
+            }
+            "NOT_ACCEPTED" ->{
+                enabledAll = true
+                enabledPaid = true
+                enabledIncomplete = true
+                enabledNotPaid = true
+                enabledNotAccepted = false
+            }
+        }
+    }
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -56,32 +123,21 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(2.dp)
-                ) {
-                    ClientDialog(false, false) {
-                        invoiceViewModel.invoiceMode = InvoiceMode.CREATE
-                        appViewModel.updateShow("add invoice")
-                    }
-                }
                 if (user.role != RoleEnum.WORKER) {
 
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(2.dp)
-                ) {
-                    ButtonSubmit(
-                        labelValue = "get invoice as client",
-                        color = Color.Green,
-                        enabled = asProvider
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(2.dp)
                     ) {
-                        asProvider = false
-                        appViewModel.updateView("ALL")
+                        ButtonSubmit(
+                            labelValue = "get invoice as client",
+                            color = Color.Green,
+                            enabled = asProvider
+                        ) {
+                            asProvider = false
+                        }
                     }
-                }
 
                 }
                 Row(
@@ -95,21 +151,40 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                         enabled = !asProvider
                     ) {
                         asProvider = true
-                        appViewModel.updateView("ALL")
                     }
 
                 }
             }
                     Row {
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(2.dp)
+                        ) {if(asProvider)
+                            ClientDialog(false, false) {
+                                if(it) {
+                                    invoiceViewModel.asProvider = true
+                                    invoiceViewModel.setInvoiceMode(InvoiceMode.CREATE)
+                                    appViewModel.updateShow("add invoice")
+                                }
+                            }else
+                            ProviderDialog(false, false) {
+                                if(it) {
+                                    invoiceViewModel.asProvider = false
+                                    invoiceViewModel.setInvoiceMode(InvoiceMode.CREATE)
+                                    appViewModel.updateShow("add invoice")
+                                }
+                            }
+                        }
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
                                     labelValue = "all",
                                     color = Color.Green,
-                                    enabled = true
+                                    enabled = enabledAll
                                 ) {
-                                    appViewModel.updateView("ALL")
+                                    launchLaucheEffect = "ALL"
                                 }
                             }
                             Row(
@@ -118,9 +193,9 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 ButtonSubmit(
                                     labelValue = "paid",
                                     color = Color.Green,
-                                    enabled = true
+                                    enabled = enabledPaid
                                 ) {
-                                    appViewModel.updateView("PAID")
+                                    launchLaucheEffect = "PAID"
                                 }
                             }
                             Row(
@@ -129,10 +204,9 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 ButtonSubmit(
                                     labelValue = "in complete",
                                     color = Color.Green,
-                                    enabled = true
+                                    enabled = enabledIncomplete
                                 ) {
-
-                                    appViewModel.updateView("IN_COMPLETE")
+                                    launchLaucheEffect = "IN_COMPLETE"
                                 }
                             }
                             Row(
@@ -141,10 +215,9 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 ButtonSubmit(
                                     labelValue = "not paid",
                                     color = Color.Green,
-                                    enabled = true
+                                    enabled = enabledNotPaid
                                 ) {
-
-                                    appViewModel.updateView("NOT_PAID")
+                                    launchLaucheEffect = "NOT_PAID"
                                 }
                             }
                             Row(
@@ -153,9 +226,9 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 ButtonSubmit(
                                     labelValue = "not accepted",
                                     color = Color.Green,
-                                    enabled = true
+                                    enabled = enabledNotAccepted
                                 ) {
-                                    appViewModel.updateView("NOT_ACCEPTED")
+                                    launchLaucheEffect = "NOT_ACCEPTED"
                                     invoiceViewModel.getAllMyPaymentNotAccepted(asProvider)
                                 }
                             }
@@ -287,6 +360,8 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                             sharedViewModel.setInvoiceAsClientCountNotification(true)
                     when(view){
                         "ALL" ->{
+
+                            Log.e("viewmodelldn","view in screen is : $view")
                             invoiceViewModel.setFilter(PaymentStatus.ALL)
                             LazyColumn {
                                 items(count = invoiceAsClient.itemCount,

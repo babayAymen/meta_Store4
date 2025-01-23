@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
@@ -68,6 +69,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -154,6 +156,7 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
             articleViewModel.fetchRandomArticlesForHomePage(categoryName = CompanyCategory.ALL)
         }
     }
+
    LaunchedEffect(key1 = extra) {
        val notificationType = extra["notificationType"]
        val clientType = extra["clientType"]
@@ -230,6 +233,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val userRole = viewModel.userRole
     val historySelected by viewModel.historySelected
+    val historicView by viewModel.historicView
     var isPopupVisible by remember {
         mutableStateOf(false)
     }
@@ -461,6 +465,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
         },
         scrollBehavior =  scrollBehavior
     )
+    val art = stringResource(id = R.string.add_article_for_company)
     SystemBackButtonHandler {
         if (historySelected == selectedIcon && viewModel.currentScreen.value == IconType.HOME) {
 
@@ -477,7 +482,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
         }
         else{
             when(viewModel.show.value){
-                "add article" -> {
+                art -> {
                     viewModel.updateShow("article")
                 }
                 "add category" -> {
@@ -493,24 +498,22 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                     viewModel.updateShow("payment")
                 }
                 "add subCategory" -> {
-                    viewModel.updateShow("subCategory")
+                    viewModel.updateShow("subcategory")
                 }
                 "add invoice" -> {
                     if(viewModel.view.value == "buyhistory")
                     viewModel.updateShow("allHistory")
                     else
                     viewModel.updateShow("invoice")
-                }"add worker" -> {
+                }
+                "ADD_WORKER" -> {
                 viewModel.updateShow("worker")
             }
-                "add parent" -> {
+                "add parent" -> { // remove it
                     viewModel.updateShow("parent")
                 }
                 "as client" -> {
                     viewModel.updateShow("invoice")
-                }
-                "message" -> {
-                    viewModel.updateShow("conversation")
                 }
                 "orderLine" -> {
                 viewModel.updateShow("order")
@@ -525,6 +528,15 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                     viewModel.updateShow("article")
                 }
                 "REGLEMENT_SCREEN" -> viewModel.updateShow("REGLEMENT_FOR_PROVIDER")
+                "invoice" -> {
+                    when(viewModel.view.value){
+                        "ALL" -> viewModel.updateShow("dash")
+                        "PAID" -> viewModel.updateView(historicView,"ALL")
+                        "NOT_PAID" -> viewModel.updateView(historicView,"ALL")
+                        "IN_COMPLETE" -> viewModel.updateView(historicView,"ALL")
+                        "NOT_ACCEPTED" -> viewModel.updateView(historicView,"ALL")
+                    }
+                }
                 else -> {
                     viewModel.updateShow("dash")
                 }
@@ -582,13 +594,44 @@ fun ScreenByCategory(articleViewModel: ArticleViewModel) {
         horizontalArrangement = Arrangement.spacedBy(1.dp)
     ){
         items(CompanyCategory.entries) { categ ->
+            var categortyName = ""
             val imageResId = when (categ) {
-                CompanyCategory.DAIRY -> R.drawable.attar
-                CompanyCategory.FISH -> R.drawable.hout
-                CompanyCategory.GROCER -> R.drawable.boukoul
-                CompanyCategory.VEGETABLE -> R.drawable.khodhra
-                CompanyCategory.BUTCHER -> R.drawable.jazzar
-                CompanyCategory.ALL -> R.drawable.hstore
+                CompanyCategory.DAIRY -> {
+                    categortyName = stringResource(id = R.string.dairy)
+                    R.drawable.attar
+                }
+                CompanyCategory.FISH -> {
+                    categortyName = stringResource(id = R.string.fish)
+                    R.drawable.hout
+                }
+                CompanyCategory.GROCER -> {
+                    categortyName = stringResource(id = R.string.grocer)
+                    R.drawable.boukoul
+                }
+                CompanyCategory.VEGETABLE -> {
+                    categortyName = stringResource(id = R.string.vegetable)
+                    R.drawable.khodhra
+                }
+                CompanyCategory.BUTCHER -> {
+                    categortyName = stringResource(id = R.string.butcher)
+                    R.drawable.jazzar
+                }
+                CompanyCategory.ALL -> {
+                    categortyName = stringResource(id = R.string.all)
+                    R.drawable.hstore
+                }
+                CompanyCategory.CAKE -> {
+                    categortyName = stringResource(id = R.string.cake)
+                    R.drawable.cakeshop
+                }
+                CompanyCategory.RESTAURANT -> {
+                    categortyName = stringResource(id = R.string.restautrant)
+                    R.drawable.restaurant
+                }
+                CompanyCategory.POULTERER -> {
+                    categortyName = stringResource(id = R.string.restautrant)
+                    R.drawable.restaurant
+                }
             }
 
             val imagePainter: Painter = painterResource(id = imageResId)
@@ -618,7 +661,7 @@ fun ScreenByCategory(articleViewModel: ArticleViewModel) {
                     )
 
                     Spacer(modifier = Modifier.height(1.dp))
-                Text(text = categ.name)
+                Text(text = categortyName)
 
                 }
             }

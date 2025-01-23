@@ -2,7 +2,8 @@ package com.aymen.metastore.util
 
 const val PAGE_SIZE = 7
 const val PRE_FETCH_DISTANCE = 5
-const val BASE_URL = "http://192.168.1.5:8080/"
+//const val BASE_URL = "http://192.168.1.233:8080/" // panorama wifi
+const val BASE_URL = "http://192.168.1.5:8080/" //wifi darna
 //const val BASE_URL = "http://192.168.90.62:8080/"
  const val DATABASE_NAME = "meta_store_data_base"
 const val META_BASE_URL = "werehouse/meta"
@@ -15,6 +16,7 @@ const val SUBCATEGORY_BASE_URL = "werehouse/subcategory"
 const val POINT_BASE_URL = "werehouse/point"
 const val PAYMENT_BASE_URL = "werehouse/payment"
 const val INVOICE_BASE_URL = "werehouse/invoice"
+const val DELIVERY_BASE_URL = "werehouse/order_delivery"
 const val ORDER_BASE_URL = "werehouse/order"
 const val COMMANDLINE_BASE_URL = "werehouse/commandline"
 const val SEARCH_BASE_URL = "werehouse/search"

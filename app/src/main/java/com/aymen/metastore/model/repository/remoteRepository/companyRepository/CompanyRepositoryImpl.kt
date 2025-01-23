@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.repository.remoteRepository.companyRepository
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -51,13 +52,23 @@ class CompanyRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getAllMyProvider(id: Long): Flow<PagingData<ClientProviderRelation>> {
+    override fun getAllMyProvider(companyId: Long, isAll: Boolean, search : String?): Flow<PagingData<ClientProviderRelation>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 3),
             remoteMediator = ProviderRemoteMediator(
-                api = api, room = room, id = id
+                api = api, room = room, id = companyId, isAll = isAll, search = search
             ),
-            pagingSourceFactory = { clientProviderDao.getAllMyProviders(id)}
+            pagingSourceFactory = {
+                if(search != null) {
+                    clientProviderDao.getAllMyVirtualProvidersContaining(companyId,search)
+                }
+                else {
+                    if (isAll)
+                        clientProviderDao.getAllMyProviders(companyId)
+                    else
+                        clientProviderDao.getAllMyVirtualProviders(companyId)
+                }
+            }
         ).flow.map {
             it.map { article ->
                 article.toClientProviderRelation()

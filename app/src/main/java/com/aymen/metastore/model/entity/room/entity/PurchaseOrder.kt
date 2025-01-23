@@ -27,7 +27,13 @@ data class PurchaseOrder(
     val clientId: Long? = null,
     val userId: Long? = null,
     val createdDate : String? = "",
-    val orderNumber : Long? = 0
+    val orderNumber : Long? = 0,
+    val isDelivered : Boolean? = false,
+    val isTaken : Boolean? = false,
+    val discount : Double? = null,
+    val prix_order_tot : Double? = null,
+    val tot_tva : Double? = null,
+    val prix_article_tot : Double? = null,
 ){
     fun toPurchaseOrder(company: com.aymen.metastore.model.entity.model.Company?,
                         client: com.aymen.metastore.model.entity.model.Company?,
@@ -38,7 +44,13 @@ data class PurchaseOrder(
             client = client,
             person = user,
             createdDate = createdDate,
-            orderNumber = orderNumber
+            orderNumber = orderNumber,
+            isDelivered = isDelivered,
+            isTaken = isTaken,
+            discount = discount,
+            prix_order_tot = prix_order_tot,
+            tot_tva = tot_tva,
+            prix_article_tot = prix_article_tot
         )
     }
 }

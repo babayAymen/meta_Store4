@@ -52,6 +52,7 @@ class AppViewModel @Inject constructor(
 
     val isFirstRun: Boolean
 
+
     private var _user = MutableStateFlow(User())
     val user: StateFlow<User> get() = _user
 
@@ -70,8 +71,6 @@ class AppViewModel @Inject constructor(
             tracker.isFirstViewModelRun = false
             // Perform first-run initialization
         }
-        Log.d("ViewModelA", "Initialized. First: ${tracker.firstViewModelName}")
-Log.e("testtoviewmodel","app view model")
         // Observing changes to the location LiveData
         location.observeForever { newLocation ->
             logLocationChange(newLocation)
@@ -138,9 +137,6 @@ Log.e("testtoviewmodel","app view model")
     fun updateScreen(newValue: IconType) {
         _historySelected.value = currentScreen.value
         _currentScreen.value = newValue
-//        if(newValue == IconType.WALLET && show.value != "payment"){
-//            updateShow("payment")
-//        }
     }
     init {
         viewModelScope.launch {
@@ -183,9 +179,17 @@ Log.e("testtoviewmodel","app view model")
     fun updateShow(newValue: String){
         _show.value = newValue
     }
-    fun updateView(newValue: String){
+    fun updateView(newValue: String, history : String? = null){
+        if(history != null)
+            _historicView.value = history
+        else
+            _historicView.value = view.value
         _view.value = newValue
+        Log.e("viewmodelldn","new value : $newValue history : $history historicvalue : ${_historicView.value} and view current : ${view.value}")
     }
+
+    private val _historicView = mutableStateOf(view.value)
+    val historicView: State<String> get() = _historicView
 
 
 

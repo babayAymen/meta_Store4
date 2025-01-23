@@ -48,6 +48,7 @@ class ArticleCompanyRandomMediator(
                 }
                 LoadType.APPEND -> {
                     val nextPage = getNextPageForTheLasttItem()
+//                    Log.e("testRemotemediator","next page in append method : $nextPage")
                     val nextePage = nextPage ?: return MediatorResult.Success(
                         endOfPaginationReached = true
                     )
@@ -55,7 +56,10 @@ class ArticleCompanyRandomMediator(
                 }
             }
             val response = api.getRandomArticles(category,currentPage, state.config.pageSize)
+
+            response.content.map { article -> Log.e("testarticle","$article") }
             val endOfPaginationReached = response.last
+//            Log.e("testRemotemediator","endpaginationreached : $endOfPaginationReached response last : ${response.last}")
             val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 

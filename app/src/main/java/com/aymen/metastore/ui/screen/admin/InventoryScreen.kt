@@ -14,6 +14,7 @@ import androidx.paging.compose.itemKey
 import com.aymen.metastore.model.repository.ViewModel.InventoryViewModel
 import com.aymen.metastore.ui.component.InventoryCard
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_ARTICLE
 
 @Composable
 fun InventoryScreen() {
@@ -25,7 +26,6 @@ fun InventoryScreen() {
     ) {
         val inventories = inventoryViewModel.inventories.collectAsLazyPagingItems()
         LazyColumn {
-            Log.e("azertdhd","item count : ${inventories.itemCount}")
             items(
                 count = inventories.itemCount,
                 key = inventories.itemKey { it.id!! }) { index ->
@@ -33,7 +33,7 @@ fun InventoryScreen() {
                 if (inventory != null) {
                     InventoryCard(
                         inventory,
-                        image = "${BASE_URL}werehouse/image/${inventory.article?.article?.image}/article/${inventory.article?.company?.category!!.ordinal}"
+                        image = String.format(IMAGE_URL_ARTICLE,inventory.article?.article?.image,inventory.article?.article?.category!!.ordinal)
                     )
                 }
             }

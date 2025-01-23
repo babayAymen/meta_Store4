@@ -8,6 +8,6 @@ interface ShoppingRepository {
 
     suspend fun test(order : PurchaseOrderLineDto):Response<Void>
 
-    suspend fun orderLineResponse(status : Status, id : Long, isAll: Boolean) : Response<Double>
+    suspend fun orderLineResponse(status : Status, ids : List<Long>) : Response<Double>
 
 }

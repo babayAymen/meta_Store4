@@ -72,6 +72,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.InventoryRemoteKeysEntit
 import com.aymen.metastore.model.entity.room.remoteKeys.InvitationRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoiceRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.InvoicesAsClientAndStatusRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.InvoicesDeliveredRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.MessageRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotAcceptedRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.NotPayedRemoteKeysEntity
@@ -85,6 +86,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentPerDayRemot
 import com.aymen.metastore.model.entity.room.remoteKeys.PointsPaymentRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ProviderProfitHistoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ProviderRemoteKeysEntity
+import com.aymen.metastore.model.entity.room.remoteKeys.PurchaseOrderRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.RatingRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.RechargeRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ReglementForProviderRemoteKeys
@@ -104,8 +106,8 @@ ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRem
 NotAcceptedRemoteKeysEntity::class, ProviderProfitHistoryRemoteKeysEntity::class, PointsPaymentPerDayRemoteKeysEntity::class, AllInvoiceRemoteKeysEntity::class,
     PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class, InvoicesAsClientAndStatusRemoteKeysEntity::class, CompanyArticleRemoteKeysEntity::class
 , CommandLineByInvoiceRemoteKeysEntity::class, CommentArticleRemoteKeys::class, WorkerRemoteKeys::class, ReglementForProviderRemoteKeys::class, RatingRemoteKeys::class
-                   ,PaymentRemoteKeys::class
-                     ], version = 11, exportSchema = false)
+                   ,PaymentRemoteKeys::class, PurchaseOrderRemoteKeys::class, InvoicesDeliveredRemoteKeysEntity::class
+                     ], version = 21, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

@@ -6,7 +6,7 @@ import com.aymen.store.model.Enum.PrivacySetting
 import com.aymen.store.model.Enum.UnitArticle
 
 data class ArticleCompany (
-    val id : Long? = null,
+    var id : Long? = null,
     var unit: UnitArticle? = UnitArticle.U,
     var cost: Double? = 0.0,
     var quantity: Double? = 0.0,

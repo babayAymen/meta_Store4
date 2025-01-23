@@ -68,9 +68,9 @@ import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.ui.component.AddTypeDialog
 import com.aymen.metastore.ui.component.ArticleCardForSearch
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.SendPointDialog
 import com.aymen.metastore.ui.component.ShowImage
-import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.ui.screen.admin.ReglementScreen
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.model.Enum.RoleEnum
@@ -207,7 +207,7 @@ fun CompanyScreen(company: Company) {
                             if (company.logo != null)
                                 ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
                             else
-                                notImage()
+                                NotImage()
                             Icon(
                                 imageVector = Icons.Default.Verified,
                                 contentDescription = "verification account",

@@ -50,13 +50,13 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.metastore.model.repository.ViewModel.ClientViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
-import com.aymen.metastore.ui.component.notImage
+import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.model.Enum.Type
 import kotlinx.coroutines.flow.map
 
 @Composable
-fun UserScreen() {
+fun UserScreen() { // subtruct the quantity from article when you send an order
 
     val appViewModel: AppViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
@@ -91,7 +91,6 @@ fun UserScreen() {
                     else
                         hisWorker = true
                 }
-Log.e("afzgsfvsds","aze : $invitation")
             }
         }.collectAsStateWithLifecycle(emptyList())
 
@@ -113,7 +112,7 @@ Log.e("afzgsfvsds","aze : $invitation")
                     if (user.image != null)
                         ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
                     else
-                        notImage()
+                        NotImage()
 //                    Icon(
 //                        imageVector = Icons.Default.Verified,
 //                        contentDescription = "verification account",
@@ -160,6 +159,10 @@ Log.e("afzgsfvsds","aze : $invitation")
 fun UserDetails( clientViewModel: ClientViewModel, sharedViewModel: SharedViewModel,
                 ratingViewModel : RatingViewModel, user: User, hisClient : Boolean, hisWorker : Boolean, isMePointSeller : Boolean, onRatingChanged: () -> Unit) {
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    var rating by remember {
+        mutableStateOf(false)
+    }
+    Log.e("enabletorating","enable : ${ratingViewModel.enableToRating}  rating ${ratingViewModel.rating}")
     Row {
         Row(
             modifier = Modifier
@@ -186,7 +189,7 @@ fun UserDetails( clientViewModel: ClientViewModel, sharedViewModel: SharedViewMo
         Column (
             modifier = Modifier.weight(1.8f)
         ){
-            if (ratingViewModel.rating && ratingViewModel.enableToRating) {
+            if (rating && ratingViewModel.enableToRating) {
                 StarRating(
                     user.rate?.toInt()!!,
                     modifier = Modifier
@@ -197,7 +200,11 @@ fun UserDetails( clientViewModel: ClientViewModel, sharedViewModel: SharedViewMo
                     }
                 )
             }else{
-                Row {
+                Row (
+                    modifier = Modifier.clickable {
+                        rating = true
+                    }
+                ){
                     Text(text = user.rate?.toString()!!)
                     Icon(
                         imageVector = if(user.rate == 0.0)Icons.Outlined.StarOutline else if(user.rate == 5.0)Icons.Filled.Star else Icons.AutoMirrored.Filled.StarHalf ,

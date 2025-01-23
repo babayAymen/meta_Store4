@@ -57,6 +57,9 @@ class PaymentViewModel @Inject constructor(
     private val _paymentHistoric : MutableStateFlow<PagingData<Payment>> = MutableStateFlow(PagingData.empty())
     val paymentHistoric : StateFlow<PagingData<Payment>> get() = _paymentHistoric
 
+    fun setPaymentHistoric(){
+        _paymentHistoric.value = PagingData.empty()
+    }
     fun getAllMyPaymentsEspeceFromMetaByDate( date : String, finDate : String){
         val id = sharedViewModel.company.value.id
         viewModelScope.launch {
@@ -131,8 +134,6 @@ class PaymentViewModel @Inject constructor(
 
     fun getPaymentHystoricByInvoiceId(invoiceId : Long){
         viewModelScope.launch {
-            Log.e("paymenhystoric","fun called")
-
             useCases.getPaymentHystoricByInvoiceId(invoiceId)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)

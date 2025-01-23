@@ -84,16 +84,24 @@ class ArticleRepositoryImpl @Inject constructor
         }
     }
 
-    override fun getAllMyArticleContaining(libelle: String, searchType: SearchType, companyId : Long): Flow<PagingData<ArticleCompanyDto>> {
+    override fun getAllMyArticleContaining(
+        libelle: String,
+        searchType: SearchType,
+        companyId: Long,
+        asProvider: Boolean
+    ): Flow<PagingData<ArticleCompany>> {
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE, // Number of items per page
                 enablePlaceholders = false // Disable placeholders for unloaded pages
             ),
             pagingSourceFactory = {
-                AllArticlesContainingPagingSource(api, libelle, searchType,companyId)
+                AllArticlesContainingPagingSource(api, libelle, searchType,companyId, asProvider)
             }
-        ).flow
+        ).flow.map {
+            it.map { article -> article.toArticleCompanyModel() }
+
+        }
     }
     override fun getAllArticlesByCategor(companyId : Long, companyCategory : CompanyCategory) :Flow<PagingData<Article>>{
         return Pager(

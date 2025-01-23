@@ -23,7 +23,9 @@ data class InvoiceDto(
     val createdDate : String? = null,
     val lastModifiedDate : String? = null,
     val lastModifiedBy: String? = null,
-    val createdBy: String? = null
+    val createdBy: String? = null,
+    val purchaseOrder : PurchaseOrderDto? = null,
+    val asProvider : Boolean? = true
 ){
     fun toInvoice(isInvoice : Boolean) : Invoice {
 
@@ -45,7 +47,9 @@ data class InvoiceDto(
             lastModifiedDate = lastModifiedDate,
             lastModifiedBy = lastModifiedBy,
             createdBy = createdBy,
-            isInvoice = isInvoice
+            isInvoice = isInvoice,
+            purchaseOrderId = purchaseOrder?.id,
+            asProvider = asProvider
 
         )
     }
@@ -68,7 +72,9 @@ data class InvoiceDto(
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
             lastModifiedBy = lastModifiedBy,
-            createdBy = createdBy
+            createdBy = createdBy,
+            purchaseOrder = purchaseOrder?.toPurchaseOrderModel(),
+            asProvider =  asProvider
         )
     }
 }

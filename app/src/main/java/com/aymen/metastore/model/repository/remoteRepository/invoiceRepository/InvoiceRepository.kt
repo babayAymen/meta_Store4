@@ -9,7 +9,6 @@ import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.model.Invoice
-import com.aymen.metastore.model.entity.roomRelation.CommandLineWithInvoiceAndArticle
 import com.aymen.store.model.Enum.PaymentStatus
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
@@ -23,13 +22,15 @@ interface InvoiceRepository {
 
 
 //    suspend fun getAllMyInvoicesAsClient(companyId : Long) : Response<List<InvoiceDto>>
-    suspend fun getLastInvoiceCode():Response<Long>
+    suspend fun getLastInvoiceCode(asProvider : Boolean):Response<Long>
     suspend fun addInvoice(commandLineDtos : List<CommandLine>,
                            clientId : Long,
                            invoiceCode : Long,
                            discount : Double,
                            clientType :  AccountType,
-                           invoiceMode: InvoiceMode):Response<List<CommandLineDto>>
+                           invoiceMode: InvoiceMode,
+                           asProvider : Boolean
+    ):Response<List<CommandLineDto>>
 
     suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status):Response<List<InvoiceDto>>
 
@@ -37,4 +38,6 @@ interface InvoiceRepository {
     suspend fun getAllMyPaymentNotAccepted(companyId : Long) : Response<List<InvoiceDto>>
     fun searchInvoice(type : SearchPaymentEnum, text : String, companyId : Long) : Flow<PagingData<Invoice>>
     suspend fun deleteInvoiceById(invoiceId : Long) : Response<Void>
+    suspend fun acceptInvoiceAsDelivery(orderId : Long) : Response<String>
+    suspend fun submitOrderDelivered(orderId : Long, code : String) : Response<String>
 }

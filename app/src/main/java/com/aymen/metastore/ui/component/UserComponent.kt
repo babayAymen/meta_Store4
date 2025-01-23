@@ -21,16 +21,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -73,7 +71,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -83,7 +80,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -101,8 +97,6 @@ import com.aymen.metastore.model.Location.hasLocationPermission
 import com.aymen.metastore.model.Location.isGpsEnabled
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Company
-import com.aymen.metastore.model.entity.model.Conversation
-import com.aymen.metastore.model.entity.model.Message
 import com.aymen.metastore.model.entity.model.PaymentForProviders
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.store.model.Enum.Type
@@ -113,17 +107,17 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
-import com.aymen.metastore.util.ARTICLE_BASE_URL
+import com.aymen.metastore.model.repository.ViewModel.StateHandlerViewModel
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.IMAGE_URL_ARTICLE
 import com.aymen.metastore.util.IMAGE_URL_COMPANY
-import com.aymen.metastore.util.MESSAGE_BASE_URL
 import com.aymen.store.model.Enum.UnitArticle
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.google.gson.Gson
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.map
 import java.io.File
 import java.io.FileOutputStream
@@ -354,8 +348,18 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
     val categoryViewModel: CategoryViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
+    val stateViewModel : StateHandlerViewModel = hiltViewModel()
+    val scrollState = rememberLazyListState()
+    LaunchedEffect(Unit) {
+        scrollState.scrollToItem(stateViewModel.getScrollPosition())
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            stateViewModel.saveScrollPosition(scrollState.firstVisibleItemIndex)
+        }
+    }
     Row {
-        LazyColumn {
+        LazyColumn(state = scrollState) {
             items(
                 count = article.itemCount,
                 key = article.itemKey { article -> article.id!! },
@@ -382,7 +386,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                                         image = String.format(IMAGE_URL_COMPANY,art.company?.logo,art.company?.user?.id)
                                     )
                                 } else {
-                                   notImage()
+                                    NotImage()
                                 }
                                 Icon(
                                     imageVector = Icons.Default.Verified,
@@ -454,7 +458,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
 }
 
 @Composable
-fun notImage(modifier: Modifier = Modifier) {
+fun NotImage(modifier: Modifier = Modifier) {
     val painter: Painter =
         painterResource(id = R.drawable.emptyprofile)
     Image(
@@ -477,7 +481,7 @@ fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
                 onClicked()
             }
     ) {
-        ShowImage(image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.company?.category?.ordinal}")
+        ShowImage(image = String.format(IMAGE_URL_ARTICLE,article.article?.image,article.article?.category?.ordinal))
         NormalText(value = article.article?.libelle!!, aligne = TextAlign.Start)
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -1213,7 +1217,7 @@ fun BuyHistoryCard(paymentForProviders: PaymentForProviders){
             Column {
                 Text(text = paymentForProviders.giveenespece.toString())
                 Text(text = paymentForProviders.lastModifiedDate)
-                Text(text = paymentForProviders.purchaseOrderLine?.purchaseorder?.orderNumber.toString())
+                Text(text = paymentForProviders.purchaseOrder?.orderNumber.toString())
             }
         }
     }

@@ -45,6 +45,7 @@ import com.aymen.metastore.util.CATEGORY_BASE_URL
 import com.aymen.metastore.util.CLIENT_BASE_URL
 import com.aymen.metastore.util.COMMANDLINE_BASE_URL
 import com.aymen.metastore.util.COMPANY_BASE_URL
+import com.aymen.metastore.util.DELIVERY_BASE_URL
 import com.aymen.metastore.util.INVENTORY_BASE_URL
 import com.aymen.metastore.util.INVITATION_BASE_URL
 import com.aymen.metastore.util.INVOICE_BASE_URL
@@ -128,12 +129,13 @@ interface ServiceApi {
                            @Query("discount") discount : Double,
                            @Query("clientType") clientType : AccountType,
                            @Query("invoiceMode") invoiceMode: InvoiceMode,
-                           @Query("type") type: String
+                           @Query("type") type: String,
+                           @Query("asProvider") asProvider : Boolean
     ):Response<List<CommandLineDto>>
     @GET("$COMMANDLINE_BASE_URL/get_command_line/{companyId}")
     suspend fun getAllCommandLinesByInvoiceId(@Path("companyId") companyId : Long, @Query("invoiceId") invoiceId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<CommandLineDto>
     //////////////////////////////////////////////////////////////:order/////////////////////////////////////////////////////////////////
-    @GET("$ORDER_BASE_URL/get_purchaseorder_line_by_invoice_id/{companyId}")
+    @GET("$ORDER_BASE_URL/get_purchaseorder_line_by_order_id/{companyId}")
     suspend fun getAllMyOrdersLinesByInvoiceId(@Path("companyId") companyId : Long , @Query("invoiceId") invoiceId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): List<PurchaseOrderLineDto>
     @GET("$ORDER_BASE_URL/get_all_my_orders_not_accepted/{id}")
     suspend fun getAllMyOrdersNotAccepted(@Path("id") id : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<PurchaseOrderLineDto>
@@ -141,8 +143,12 @@ interface ServiceApi {
     suspend fun sendOrder(@Body orderList : List<PurchaseOrderLine>):Response<List<PurchaseOrderLineDto>>
     @POST("$ORDER_BASE_URL/test")
     suspend fun test(@Body order : PurchaseOrderLineDto): Response<Void>
-    @GET("$ORDER_BASE_URL/{id}/{status}/{isall}")
-    suspend fun orderLineResponse(@Path("id") id : Long, @Path("status") status : Status, @Path("isall") isAll: Boolean):Response<Double>
+
+    @POST("$ORDER_BASE_URL/orderResponse")
+    suspend fun orderLineResponse( @Query("status") status : Status, @Body ids: List<Long>):Response<Double>
+
+
+
     @GET("$ORDER_BASE_URL/get_all_my_lines/{companyId}")
     suspend fun getAllMyOrdersLine(@Path ("companyId") companyId : Long) : Response<List<PurchaseOrderLineDto>>
     @GET("$ORDER_BASE_URL/get_all_my_orders/{companyId}")
@@ -151,6 +157,14 @@ interface ServiceApi {
     suspend fun getAllMyOrdersLineByOrderId(@Path("orderId") orderId : Long) : Response<List<PurchaseOrderLineDto>>
     @GET("$ORDER_BASE_URL/get_by_order_id/{orderId}")
     suspend fun getOrdersLineDetails(@Path("orderId") orderId : Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): PaginatedResponse<PurchaseOrderLineDto>
+
+
+    @GET("$ORDER_BASE_URL/getOrderssNotDelivered/{id}")
+    suspend fun getAllOrdersNotAcceptedAsDelivery(@Path("id") id : Long , @Query("page") page : Int , @Query("pageSize") pageSize : Int) : PaginatedResponse<PurchaseOrderDto>
+
+    @GET("$ORDER_BASE_URL/acceptOrdersAsDelivery/{orderId}")
+    suspend fun acceptInvoiceAsDelivery(@Path("orderId") orderId: Long) : Response<String>
+
     /////////////////////////////////////////////////////////////invoice////////////////////////////////////////////////////////////////
     @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{id}") // a verfier maybe i donty use it
     suspend fun getAllBuyHistory(@Path("id")id : Long, @Query("page") page : Int, @Query("pageSize") pageSize : Int ) : PaginatedResponse<InvoiceDto>
@@ -169,11 +183,16 @@ interface ServiceApi {
     @GET("$INVOICE_BASE_URL/get_by_status_as_client/{id}")
     suspend fun getAllMyInvoicesAsClientAndStatus(@Path("id") id : Long, @Query("status") status: Status,@Query("page") page : Int, @Query("pageSize") pageSize : Int) : PaginatedResponse<InvoiceDto>
     @GET("$INVOICE_BASE_URL/getlastinvoice")
-    suspend fun getLastInvoiceCode():Response<Long>
+    suspend fun getLastInvoiceCode(@Query("asProvider") asProvider : Boolean):Response<Long>
     @DELETE("$INVOICE_BASE_URL/delete_by_id/{invoiceId}")
     suspend fun deleteInvoiceById(@Path("invoiceId") invoiceId : Long):Response<Void>
     @GET("$INVOICE_BASE_URL/response/{invoiceId}/{status}")
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
+    ////////////////////////////////////////////////// delivery /////////////////////////////////////////////////
+    @GET("$DELIVERY_BASE_URL/submitDeliveryOrder/{orderId}")
+    suspend fun submitOrderDelivered(@Path("orderId") orderId: Long, @Query("code") code : String) : Response<String>
+    @GET("$DELIVERY_BASE_URL/getInvoicesIDelivered")
+    suspend fun getInvoicesDeliveredByMe(@Query("page") page : Int , @Query("pageSize") pageSize: Int) : PaginatedResponse<PurchaseOrderDto>
     ////////////////////////////////////////////////////////////:point//////////////////////////////////////////////////////////:::
     @GET("$POINT_BASE_URL/get_all_my_as_company/{id}")
     suspend fun getAllMyPaymentsEspeceByDate(@Path("id") id : Long,@Query("date") date : String, @Query("findate") findate : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int):PaginatedResponse<PaymentForProvidersDto>
@@ -227,7 +246,8 @@ interface ServiceApi {
     @GET("$ARTICLE_BASE_URL/get_articles_by_category/{id}")
     suspend fun getAllArticlesByCategor(@Path("id") id: Long ,@Query("page") page : Int, @Query("pageSize") pageSize : Int ): PaginatedResponse<ArticleDto>
     @GET("$ARTICLE_BASE_URL/search/{id}")
-    suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
+    suspend fun getAllMyArticleContaining(@Path("id") companyId : Long ,@Query("search") search : String, @Query("searchType") searchType: SearchType,
+        @Query("asProvider") asProvider : Boolean,@Query("page") page : Int, @Query("pageSize")pageSize : Int) : List<ArticleCompanyDto>
     @POST("$ARTICLE_BASE_URL/sendComment")
     suspend fun sendComment(@Body comment : CommentDto):Response<Void>
     @GET("$ARTICLE_BASE_URL/{articleId}/{quantity}")
@@ -277,7 +297,9 @@ interface ServiceApi {
     @DELETE("$PROVIDER_BASE_URL/delete/{relationId}")
     suspend fun deleteProvider(@Path("relationId")relationId : Long) : Response<Void>
     @GET("$PROVIDER_BASE_URL/get_all_my/{companyId}")
-    suspend fun getAllMyProvider(@Path("companyId") companyId : Long,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<ClientProviderRelationDto>
+    suspend fun getAllMyProvider(@Path("companyId") companyId : Long, @Query("isAll") isAll : Boolean,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<ClientProviderRelationDto>
+    @GET("$PROVIDER_BASE_URL/get_all_my_virtual")
+    suspend fun getAllMyVirtualProviderContaining(@Query("search") search : String,@Query("page") page : Int, @Query("pageSize") pageSize : Int): PaginatedResponse<ClientProviderRelationDto>
 /////////////////////////////////////////////////////////////////////////////company///////////////////////////////////////////////////////////////////////////////::
     @GET("$COMPANY_BASE_URL/me")
     suspend fun getMeAsCompany(): Response<CompanyDto>

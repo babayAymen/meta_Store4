@@ -147,7 +147,7 @@ class GlobalRepositoryImpl  @Inject constructor
 
 
     override suspend fun addCompany(company: String, file : File) = companyRepository.addCompany(company, file)
-    override fun getAllMyProvider(companyId: Long): Flow<PagingData<ClientProviderRelation>> {
+    override fun getAllMyProvider(companyId: Long, isAll: Boolean, search: String?): Flow<PagingData<ClientProviderRelation>> {
         TODO("Not yet implemented")
     }
 
@@ -304,12 +304,22 @@ class GlobalRepositoryImpl  @Inject constructor
     }
 
 
-    override suspend fun getLastInvoiceCode() = invoiceRepository.getLastInvoiceCode()
+    override suspend fun getLastInvoiceCode(asProvider: Boolean) = invoiceRepository.getLastInvoiceCode(asProvider)
     override suspend fun addInvoice(
         commandLineDtos: List<CommandLine>,
         clientId: Long, invoiceCode: Long,
         discount: Double, clientType: AccountType,
-        invoiceMode: InvoiceMode): Response<List<CommandLineDto>> = invoiceRepository.addInvoice(commandLineDtos, clientId, invoiceCode,discount, clientType, invoiceMode)
+        invoiceMode: InvoiceMode,
+        asProvider: Boolean
+    ): Response<List<CommandLineDto>> = invoiceRepository.addInvoice(
+        commandLineDtos,
+        clientId,
+        invoiceCode,
+        discount,
+        clientType,
+        invoiceMode,
+        asProvider
+    )
     override suspend fun getAllMyInvoicesAsClientAndStatus(id : Long , status : Status) = invoiceRepository.getAllMyInvoicesAsClientAndStatus(id , status)
     override suspend fun accepteInvoice(invoiceId: Long, status: Status) = invoiceRepository.accepteInvoice(invoiceId, status)
      override suspend fun getAllMyPaymentNotAccepted(companyId: Long) = invoiceRepository.getAllMyPaymentNotAccepted(companyId)
@@ -322,11 +332,17 @@ class GlobalRepositoryImpl  @Inject constructor
     }
 
     override suspend fun deleteInvoiceById(invoiceId: Long) = invoiceRepository.deleteInvoiceById(invoiceId)
+    override suspend fun acceptInvoiceAsDelivery(orderId: Long) = invoiceRepository.acceptInvoiceAsDelivery(orderId)
+    override suspend fun submitOrderDelivered(orderId: Long, code: String) = invoiceRepository.submitOrderDelivered(orderId, code)
+
+    override fun getAllOrdersNotDelivered(id: Long): Flow<PagingData<PurchaseOrder>> {
+        TODO("Not yet implemented")
+    }
 
 
     override suspend fun sendOrder(orderList: List<PurchaseOrderLine>) = orderRepository.sendOrder(orderList)
     override suspend fun test(order: PurchaseOrderLineDto) = shoppingRepository.test(order)
-    override suspend fun orderLineResponse(status: Status, id: Long, isAll: Boolean): Response<Double> = shoppingRepository.orderLineResponse(status,id, isAll)
+    override suspend fun orderLineResponse(status: Status, ids : List<Long>): Response<Double> = shoppingRepository.orderLineResponse(status,ids)
     override fun getAllMyInvetations(companyId: Long): Flow<PagingData<Invitation>> {
         TODO("Not yet implemented")
     }
@@ -387,6 +403,9 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun getAllCommandLinesByInvoiceId(invoiceId: Long): Response<List<CommandLineDto>> = commandLineRepository.getAllCommandLinesByInvoiceId(invoiceId)
     override suspend fun addAsDelivery(userId: Long): Response<AccountType> = deliveryRepository.addAsDelivery(userId)
+    override fun getInvoicesIdelevered(): Flow<PagingData<PurchaseOrder>> {
+        TODO("Not yet implemented")
+    }
 
     override suspend fun SignIn(authenticationRequest: AuthenticationRequest) = signInRepository.SignIn(authenticationRequest)
     override suspend fun SignUp(registerRequest: RegisterRequest) = signInRepository.SignUp(registerRequest)
@@ -417,8 +436,9 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getAllMyArticleContaining(
         libelle: String,
         searchType: SearchType,
-        companyId: Long
-    ): Flow<PagingData<ArticleCompanyDto>> {
+        companyId: Long,
+        asProvider: Boolean
+    ): Flow<PagingData<ArticleCompany>> {
         TODO("Not yet implemented")
     }
 

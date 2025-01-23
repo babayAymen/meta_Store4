@@ -86,9 +86,18 @@ fun ShoppingScreen() {
     var restBalnace by remember {
         mutableStateOf(BigDecimal.ZERO)
     }
+    LaunchedEffect(key1 = accountType, key2 = Unit) {
+        if(accountType == AccountType.DELIVERY) {
+            appViewModel.updateShow("orderLine")
+            appViewModel.updateView("NOT_DELIVERED")
+        }
+    }
     when(show) {
-        "add invoice" -> AddInvoiceScreen(InvoiceMode.VERIFY)
-        "orderLine" -> OrderScreen()
+        "add invoice" -> {
+            invoiceViewModel.setInvoiceMode(InvoiceMode.VERIFY)
+            AddInvoiceScreen()
+        }
+        "orderLine" -> OrderScreen(invoiceViewModel, appViewModel)
         "orderLineDetails" -> PurchaseOrderDetailsScreen(order, shoppingViewModel)
         else -> {
             Surface(

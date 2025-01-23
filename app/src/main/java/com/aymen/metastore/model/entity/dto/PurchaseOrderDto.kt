@@ -9,7 +9,13 @@ data class PurchaseOrderDto(
     val client : CompanyDto? = null,
     val person : UserDto? = null,
     val createdDate : String? = null,
-    val orderNumber : Long? = 0
+    val orderNumber : Long? = 0,
+    val isDelivered : Boolean? = false,
+    val isTaken : Boolean? = false,
+    val discount : Double? = null,
+    val prix_order_tot : Double? = null,
+    val tot_tva : Double? = null,
+    val prix_article_tot : Double? = null,
 ){
     fun toPurchaseOrder() : PurchaseOrder {
 
@@ -19,7 +25,13 @@ data class PurchaseOrderDto(
             clientId = client?.id,
             userId = person?.id,
             createdDate = createdDate,
-            orderNumber = orderNumber
+            orderNumber = orderNumber,
+            isDelivered = isDelivered,
+            isTaken = isTaken,
+            discount = discount,
+            prix_order_tot = prix_order_tot,
+            tot_tva = tot_tva,
+            prix_article_tot = prix_article_tot
         )
     }
 
@@ -30,7 +42,13 @@ data class PurchaseOrderDto(
             client = client?.toCompanyModel(),
             person = person?.toUserModel(),
             createdDate = createdDate,
-            orderNumber = orderNumber
+            orderNumber = orderNumber,
+            isDelivered = isDelivered,
+            isTaken = isTaken,
+            discount = discount,
+            prix_order_tot = prix_order_tot,
+            tot_tva = tot_tva,
+            prix_article_tot = prix_article_tot
         )
     }
 }

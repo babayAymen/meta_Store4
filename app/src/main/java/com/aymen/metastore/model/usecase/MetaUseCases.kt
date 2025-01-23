@@ -41,5 +41,7 @@ data class MetaUseCases(
     val getRateeRating: GetRateeRating,
     val searchInvoice : SearchInvoice,
     val getPaymentHystoricByInvoiceId : GetPaymentHystoricByInvoiceId,
+    val getAllOrdersNotDelivered : GetAllOrdersNotAcceptedAsDelivery,
+    val getInvoicesIdelevered : GetInvoicesIdelevered
 
 )

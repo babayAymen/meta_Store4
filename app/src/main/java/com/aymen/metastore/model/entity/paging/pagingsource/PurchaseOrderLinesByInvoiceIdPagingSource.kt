@@ -21,7 +21,7 @@ class PurchaseOrderLinesByInvoiceIdPagingSource(
         return try {
         val response = api.getAllMyOrdersLinesByInvoiceId(companyId = companyId, invoiceId = invoiceId ,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
-            LoadResult.Page(
+        LoadResult.Page(
                 data = response.map { it.toPurchaseOrderLineModel() },
                 prevKey = if (currentPage == 0) null else currentPage - 1,
                 nextKey = if (endOfPaginationReached) null else currentPage + 1,

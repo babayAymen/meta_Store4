@@ -12,6 +12,16 @@
     <string name="name_or_password_wrong">اسمك والا كلمة السر غالطة زيد ثبت</string>
 
 
+    <!--    company category -->
+    <string name="dairy">عطار</string>
+    <string name="butcher">جزار</string>
+    <string name="vegetable">خضار</string>
+    <string name="fish">حوات</string>
+    <string name="grocer">توابلي</string>
+    <string name="cake">حلويات</string>
+    <string name="restautrant">مطعم</string>
+    <string name="poulterer">مزرعة</string>
+    <string name="all">الكل</string>
 
     <string name="register">Register</string>
     <string name="create_an_account">Create an account</string>

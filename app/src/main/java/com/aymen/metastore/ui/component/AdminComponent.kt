@@ -48,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -71,6 +70,7 @@ import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Inventory
 import com.aymen.metastore.model.entity.model.Invoice
+import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.PrivacySetting
@@ -83,6 +83,7 @@ import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.model.repository.ViewModel.PaymentViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.store.model.Enum.AccountType
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -92,14 +93,14 @@ import java.util.Locale
 
 
 @Composable
-fun Item(label : String) {
-    val viewModel : AppViewModel = viewModel()
+fun Item(label: String) {
+    val viewModel: AppViewModel = viewModel()
     Card(
         elevation = CardDefaults.cardElevation(6.dp),
         modifier = Modifier
             .padding(8.dp)
             .size(100.dp, 100.dp),
-        onClick = {viewModel.updateShow(label)}
+        onClick = { viewModel.updateShow(label) }
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -115,14 +116,19 @@ fun Item(label : String) {
 
 
 @Composable
-fun RadioButtons(onPrivacySelected: (PrivacySetting) -> Unit) {
+fun RadioButtons(privacy : PrivacySetting ,onPrivacySelected: (PrivacySetting) -> Unit) {
     val privacyOptions = listOf(
         PrivacySetting.PUBLIC,
         PrivacySetting.CLIENT,
         PrivacySetting.ONLY_ME
     )
+    val indexPrivacy = when(privacy){
+        PrivacySetting.ONLY_ME -> 2
+        PrivacySetting.CLIENT -> 1
+        else -> 0
+    }
 
-    val selectedPrivacyIndex = remember { mutableStateOf(0) }
+    val selectedPrivacyIndex = remember { mutableStateOf(indexPrivacy) }
 
     Row {
         privacyOptions.forEachIndexed { index, privacy ->
@@ -150,7 +156,7 @@ data class ToggleleableInfo(val isChecked: Boolean, val text: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun dropDownItems(unit : UnitArticle ,list: List<UnitArticle>):UnitArticle {
+fun dropDownItems(unit: UnitArticle, list: List<UnitArticle>): UnitArticle {
     var itemSelected by remember {
         mutableStateOf(unit)
     }
@@ -193,24 +199,28 @@ fun dropDownItems(unit : UnitArticle ,list: List<UnitArticle>):UnitArticle {
             }
         }
     }
-    return  itemSelected
+    return itemSelected
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCategory(category : Category? , pagingItems: LazyPagingItems<Category>, onSelected: (Category) -> Unit) {
+fun DropDownCategory(
+    category: Category?,
+    pagingItems: LazyPagingItems<Category>,
+    onSelected: (Category) -> Unit
+) {
     val categoryViewModel: CategoryViewModel = hiltViewModel()
     if (pagingItems.itemCount != 0) {
         var itemSelected by remember {
             mutableStateOf(
-             category
+                category
             )
         }
-        if(category?.id == null) {
-            itemSelected =  pagingItems.peek(0)
+        if (category?.id == null) {
+            itemSelected = pagingItems.peek(0)
         }
-        onSelected(itemSelected?:Category())
-     //   categoryViewModel.category = itemSelected
+        onSelected(itemSelected ?: Category())
+        //   categoryViewModel.category = itemSelected
         var isExpanded by remember {
             mutableStateOf(false)
         }
@@ -262,19 +272,24 @@ fun DropDownCategory(category : Category? , pagingItems: LazyPagingItems<Categor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownSubCategory(subCategory : SubCategory, list : LazyPagingItems<SubCategory>, categoryId : Long, onSelected : (SubCategory) -> Unit) {
+fun DropDownSubCategory(
+    subCategory: SubCategory,
+    list: LazyPagingItems<SubCategory>,
+    categoryId: Long,
+    onSelected: (SubCategory) -> Unit
+) {
 
-    val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
+    val subCategoryViewModel: SubCategoryViewModel = hiltViewModel()
     var itemSelectedLibell by remember {
         mutableStateOf(subCategory.libelle)
     }
     var itemSelected by remember {
         mutableStateOf(SubCategory())
     }
-    if(list.itemCount != 0){
+    if (list.itemCount != 0) {
         itemSelected = list.peek(0)!!
-        itemSelectedLibell = itemSelected.libelle?:""
-    }else{
+        itemSelectedLibell = itemSelected.libelle ?: ""
+    } else {
         itemSelected = SubCategory()
         itemSelectedLibell = "select sub category"
     }
@@ -295,7 +310,7 @@ fun DropDownSubCategory(subCategory : SubCategory, list : LazyPagingItems<SubCat
             ) {
                 TextField(
                     modifier = Modifier.menuAnchor(),
-                    value = itemSelectedLibell?:"select sub category",
+                    value = itemSelectedLibell ?: "select sub category",
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
@@ -328,14 +343,18 @@ fun DropDownSubCategory(subCategory : SubCategory, list : LazyPagingItems<SubCat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownCompany(provider : Company? ,list: LazyPagingItems<ClientProviderRelation>, onSelected: (Company) -> Unit) {
+fun DropDownCompany(
+    provider: Company?,
+    list: LazyPagingItems<ClientProviderRelation>,
+    onSelected: (Company) -> Unit
+) {
     val companyViewModel: CompanyViewModel = hiltViewModel()
     if (list.itemCount != 0) {
         var itemSelected by remember {
             mutableStateOf(provider)
         }
-        if(provider?.id == null) {
-            itemSelected =  list.peek(0)?.provider
+        if (provider?.id == null) {
+            itemSelected = list.peek(0)?.provider
         }
         onSelected(itemSelected!!)
         var isExpanded by remember {
@@ -365,18 +384,18 @@ fun DropDownCompany(provider : Company? ,list: LazyPagingItems<ClientProviderRel
                         onDismissRequest = { isExpanded = false }) {
                         for (index in 0 until list.itemCount) {
                             val relation = list.peek(index)
-                            if (relation != null){
-                            DropdownMenuItem(
-                                text = { Text(relation.provider?.name!!) },
-                                onClick = {
-                                    onSelected(relation.provider!!)
-                                    itemSelected = relation.provider
-                                    isExpanded = false
-                                    companyViewModel.providerId = itemSelected?.id ?: 0
-                                },
-                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                            )
-                        }
+                            if (relation != null) {
+                                DropdownMenuItem(
+                                    text = { Text(relation.provider?.name!!) },
+                                    onClick = {
+                                        onSelected(relation.provider!!)
+                                        itemSelected = relation.provider
+                                        isExpanded = false
+                                        companyViewModel.providerId = itemSelected?.id ?: 0
+                                    },
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                )
+                            }
                         }
                     }
                 }
@@ -389,55 +408,55 @@ fun DropDownCompany(provider : Company? ,list: LazyPagingItems<ClientProviderRel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownCompanyCategory(onSelected: (CompanyCategory) -> Unit) {
-        var itemSelected by remember {
-            mutableStateOf(CompanyCategory.DAIRY)
-        }
-        var isExpanded by remember {
-            mutableStateOf(false)
-        }
-        Box(modifier = Modifier.wrapContentHeight()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+    var itemSelected by remember {
+        mutableStateOf(CompanyCategory.DAIRY)
+    }
+    var isExpanded by remember {
+        mutableStateOf(false)
+    }
+    Box(modifier = Modifier.wrapContentHeight()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ExposedDropdownMenuBox(
+                expanded = isExpanded,
+                onExpandedChange = { isExpanded = !isExpanded }
             ) {
-                ExposedDropdownMenuBox(
-                    expanded = isExpanded,
-                    onExpandedChange = { isExpanded = !isExpanded }
-                ) {
-                    TextField(
-                        modifier = Modifier.menuAnchor(),
-                        value = itemSelected.toString(),
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
-                    )
+                TextField(
+                    modifier = Modifier.menuAnchor(),
+                    value = itemSelected.toString(),
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) }
+                )
 
-                    ExposedDropdownMenu(
-                        expanded = isExpanded,
-                        onDismissRequest = { isExpanded = false }) {
-                        CompanyCategory.entries.forEach { text ->
-                            DropdownMenuItem(
-                                text = { Text(text.toString()) },
-                                onClick = {
-                                    itemSelected = text
-                                    isExpanded = false
-                                    onSelected(text)
-                                },
-                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                            )
-                        }
+                ExposedDropdownMenu(
+                    expanded = isExpanded,
+                    onDismissRequest = { isExpanded = false }) {
+                    CompanyCategory.entries.forEach { text ->
+                        DropdownMenuItem(
+                            text = { Text(text.toString()) },
+                            onClick = {
+                                itemSelected = text
+                                isExpanded = false
+                                onSelected(text)
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        )
                     }
                 }
             }
         }
+    }
 
 }
 
 
 @Composable
-fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: () -> Unit) {
+fun ArticleCardForAdmin(article: ArticleCompany, image: String, onSelected: () -> Unit) {
     Row {
         Card(
             elevation = CardDefaults.cardElevation(6.dp),
@@ -448,24 +467,43 @@ fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: ()
                 }
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
-                    NormalText(value = article.article?.libelle?:"", aligne = TextAlign.Start)
+                ) {
+                    NormalText(value = article.article?.libelle ?: "", aligne = TextAlign.Start)
                     article.article?.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
                     NormalText(value = article.unit.toString(), aligne = TextAlign.Start)
                     NormalText(value = article.article?.tva.toString(), aligne = TextAlign.Start)
                     NormalText(value = article.sellingPrice.toString(), aligne = TextAlign.Start)
                     NormalText(value = article.quantity.toString(), aligne = TextAlign.Start)
                     NormalText(value = article.minQuantity.toString(), aligne = TextAlign.Start)
-                    article.article?.barcode?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    article.article?.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                    article.article?.barcode?.let {
+                        NormalText(
+                            value = it,
+                            aligne = TextAlign.Start
+                        )
+                    }
+                    article.article?.discription?.let {
+                        NormalText(
+                            value = it,
+                            aligne = TextAlign.Start
+                        )
+                    }
 
-                    Row (
+                    Row(
                         verticalAlignment = Alignment.CenterVertically
-                    ){
-                        article.article?.tva?.let { ShowPrice(cost = article.cost?:0.0, margin = article.sellingPrice!!, tva = it) }
-                        ArticleDetails(value = article.quantity.toString(), aligne = TextAlign.Start)
+                    ) {
+                        article.article?.tva?.let {
+                            ShowPrice(
+                                cost = article.cost ?: 0.0,
+                                margin = article.sellingPrice!!,
+                                tva = it
+                            )
+                        }
+                        ArticleDetails(
+                            value = article.quantity.toString(),
+                            aligne = TextAlign.Start
+                        )
                     }
                 }
                 Column(
@@ -483,38 +521,31 @@ fun ArticleCardForAdmin(article : ArticleCompany, image : String, onSelected: ()
 }
 
 @Composable
-fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (Double) -> Unit) {
-    var openDialog by remember { mutableStateOf(openDailoge) }
-    var quantity by remember {
-        mutableDoubleStateOf(0.0)
-    }
-    var rawInput by remember {
-        mutableStateOf("")
-    }
-    if (openDialog) {
+fun AddQuantityDialog(article: ArticleCompany, openDialog: Boolean, onSubmit: (Double) -> Unit) {
+    var openDialogState by remember { mutableStateOf(openDialog) }
+    var quantity by remember { mutableDoubleStateOf(0.0) }
+    var rawInput by remember { mutableStateOf("") }
+
+    if (openDialogState) {
         Dialog(
             onDismissRequest = {
-                openDialog = false
+                openDialogState = false
                 onSubmit(0.0)
             }
         ) {
             Surface(
                 modifier = Modifier
                     .padding(10.dp)
-                    .clip(RoundedCornerShape(10.dp)),
+                    .clip(RoundedCornerShape(10.dp))
             ) {
                 Column {
                     NormalText(value = "Add Quantity", aligne = TextAlign.Center)
                     Spacer(modifier = Modifier.padding(10.dp))
                     Row {
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
+                        Row(modifier = Modifier.weight(1f)) {
                             NormalText(value = article.article?.libelle!!, aligne = TextAlign.Start)
                         }
-                        Row (
-                            modifier = Modifier.weight(1f)
-                        ){
+                        Row(modifier = Modifier.weight(1f)) {
                             ShowImage(
                                 image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${
                                     article.company?.category?.ordinal
@@ -534,20 +565,20 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                         ),
                         onValueChange = {
                             if (article.unit == UnitArticle.U) {
-                                if (it.matches(Regex("^[0-9]*$"))) {
+                                if (it.matches(Regex("^-?[0-9]*$"))) {
                                     rawInput = it
                                     quantity = it.toDoubleOrNull() ?: 0.0
                                 }
                             } else {
-                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                if (it.matches(Regex("^-?[0-9]*[,.]?[0-9]*$"))) {
                                     val normalizedInput = it.replace(',', '.')
-
                                     if (normalizedInput.startsWith(".")) {
                                         rawInput = normalizedInput
                                         quantity = 0.0
                                     } else if (normalizedInput.endsWith(".")) {
                                         rawInput = normalizedInput
-                                        quantity = normalizedInput.dropLast(1).toDoubleOrNull() ?: 0.0
+                                        quantity =
+                                            normalizedInput.dropLast(1).toDoubleOrNull() ?: 0.0
                                     } else {
                                         rawInput = normalizedInput
                                         quantity = normalizedInput.toDoubleOrNull() ?: 0.0
@@ -555,25 +586,27 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
                                 }
                             }
                         },
-                                onImage = {}
-                    ) {
-
-                    }
+                        onImage = {}
+                    ){}
                     Row {
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            ButtonSubmit(labelValue = "Submit", color = Color.Green, enabled = true) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            ButtonSubmit(
+                                labelValue = "Submit",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
                                 onSubmit(quantity)
                             }
                         }
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                           ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
-                               openDialog = false
-                               onSubmit(0.0)
-                           }
+                        Row(modifier = Modifier.weight(1f)) {
+                            ButtonSubmit(
+                                labelValue = "Cancel",
+                                color = Color.Red,
+                                enabled = true
+                            ) {
+                                openDialogState = false
+                                onSubmit(0.0)
+                            }
                         }
                     }
                 }
@@ -581,8 +614,9 @@ fun addQuantityDailog(article: ArticleCompany, openDailoge: Boolean, onSubmit: (
         }
     }
 }
+
 @Composable
-fun CategoryCardForAdmin(category: Category, image : String) {
+fun CategoryCardForAdmin(category: Category, image: String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -592,11 +626,11 @@ fun CategoryCardForAdmin(category: Category, image : String) {
                 .padding(4.dp)
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
+                ) {
                     NormalText(value = category.libelle!!, aligne = TextAlign.Start)
-                    NormalText(value = category.code?:"without code", aligne = TextAlign.Start)
+                    NormalText(value = category.code ?: "without code", aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -604,10 +638,13 @@ fun CategoryCardForAdmin(category: Category, image : String) {
                         .weight(0.3f)
                         .align(Alignment.CenterVertically)
                 ) {
-                    if(category.image != null){
-                    ShowImage(image = image)
-                    }else{
-                        Image(painter = painterResource(id = R.drawable.empty), contentDescription = "category")
+                    if (category.image != null) {
+                        ShowImage(image = image)
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.empty),
+                            contentDescription = "category"
+                        )
                     }
                 }
 
@@ -618,11 +655,12 @@ fun CategoryCardForAdmin(category: Category, image : String) {
 }
 
 @Composable
-fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String, category: Category
+fun SubCategoryCardForAdmin(
+    subCategory: SubCategory, image: String, category: Category
 ) {
-   val cat by remember {
-       mutableStateOf(category)
-   }
+    val cat by remember {
+        mutableStateOf(category)
+    }
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -632,12 +670,12 @@ fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String, category: 
                 .padding(4.dp)
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
+                ) {
                     NormalText(value = subCategory.libelle!!, aligne = TextAlign.Start)
-                    NormalText(value = subCategory.code?:"without code", aligne = TextAlign.Start)
-                     NormalText(value = cat.libelle?:"", aligne = TextAlign.Start)
+                    NormalText(value = subCategory.code ?: "without code", aligne = TextAlign.Start)
+                    NormalText(value = cat.libelle ?: "", aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -645,10 +683,13 @@ fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String, category: 
                         .weight(0.3f)
                         .align(Alignment.CenterVertically)
                 ) {
-                    if(subCategory.image != null){
-                    ShowImage(image = image)
-                    }else{
-                        Image(painter = painterResource(id = R.drawable.empty), contentDescription = "category")
+                    if (subCategory.image != null) {
+                        ShowImage(image = image)
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.empty),
+                            contentDescription = "category"
+                        )
                     }
                 }
 
@@ -659,7 +700,7 @@ fun SubCategoryCardForAdmin(subCategory: SubCategory, image : String, category: 
 }
 
 @Composable
-fun InventoryCard(inventory: Inventory, image : String) {
+fun InventoryCard(inventory: Inventory, image: String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -669,12 +710,23 @@ fun InventoryCard(inventory: Inventory, image : String) {
                 .padding(4.dp)
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
-                    NormalText(value = inventory.article?.article?.libelle!!, aligne = TextAlign.Start)
-                    inventory.article.article?.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    NormalText(value = inventory.article.quantity.toString(), aligne = TextAlign.Start)
+                ) {
+                    NormalText(
+                        value = inventory.article?.article?.libelle!!,
+                        aligne = TextAlign.Start
+                    )
+                    inventory.article.article?.code?.let {
+                        NormalText(
+                            value = it,
+                            aligne = TextAlign.Start
+                        )
+                    }
+                    NormalText(
+                        value = inventory.article.quantity.toString(),
+                        aligne = TextAlign.Start
+                    )
 
                 }
                 Column(
@@ -702,19 +754,22 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
                 .padding(4.dp)
         ) {
             Row {
-             Column(
-                 modifier = Modifier.weight(2f)
-             ) {
+                Column(
+                    modifier = Modifier.weight(2f)
+                ) {
 
-            NormalText(value = article.libelle?:"", aligne = TextAlign.Start)
-            NormalText(value = article.tva.toString(), aligne = TextAlign.Start)
-            article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
-             }
-                Column (
+                    NormalText(value = article.libelle ?: "", aligne = TextAlign.Start)
+                    NormalText(value = article.tva.toString(), aligne = TextAlign.Start)
+                    article.discription?.let { NormalText(value = it, aligne = TextAlign.Start) }
+                }
+                Column(
                     modifier = Modifier.weight(1f)
-                ){
-                    ShowImage(image = "${BASE_URL}werehouse/image/${article.image}/article/${
-                        article.category?.ordinal}" )
+                ) {
+                    ShowImage(
+                        image = "${BASE_URL}werehouse/image/${article.image}/article/${
+                            article.category?.ordinal
+                        }"
+                    )
                 }
             }
             ButtonSubmit(labelValue = "add", color = Color.Green, enabled = true) {
@@ -725,7 +780,7 @@ fun ArticleCard(modifier: Modifier = Modifier, article: Article, onSelected: () 
 }
 
 @Composable
-fun ClientCard(client: ClientProviderRelation, image : String) {
+fun ClientCard(client: ClientProviderRelation, image: String) {
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -735,13 +790,26 @@ fun ClientCard(client: ClientProviderRelation, image : String) {
                 .padding(4.dp)
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
-                       client.client?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
-                       client.client?.let { it.code?.let { it1 -> NormalText(value = it1, aligne = TextAlign.Start) } }
-                    client.person?.username?.let { NormalText(value = it, aligne = TextAlign.Start) }
-                    NormalText(value = client.mvt.toString(), aligne = TextAlign.Start)
+                ) {
+                    client.client?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
+                    client.client?.let {
+                        it.code?.let { it1 ->
+                            NormalText(
+                                value = it1,
+                                aligne = TextAlign.Start
+                            )
+                        }
+                    }
+                    client.person?.username?.let {
+                        NormalText(
+                            value = it,
+                            aligne = TextAlign.Start
+                        )
+                    }
+                    NormalText(value = "mvt: ${client.mvt}", aligne = TextAlign.Start)
+                    NormalText(value = "credit: ${client.credit}", aligne = TextAlign.Start)
 
                 }
                 Column(
@@ -749,32 +817,20 @@ fun ClientCard(client: ClientProviderRelation, image : String) {
                         .weight(0.3f)
                         .align(Alignment.CenterVertically)
                 ) {
-                        Log.e("showImageclinetcard",image)
-                    if(client.client?.logo != null || client.person?.image != null){
-                    ShowImage(image = image)
-                    }else {
-                        val painter: Painter = painterResource(id = R.drawable.emptyprofile)
-                        Image(
-                            painter = painter,
-                            contentDescription = "empty photo profil",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(
-                                    RoundedCornerShape(10.dp)
-                                )
-                        )
-                    }
+                    if (client.client?.logo != null || client.person?.image != null) {
+                        ShowImage(image = image)
+                    } else
+                        NotImage()
                 }
 
             }
         }
-
     }
 }
 
 @Composable
-fun ProviderCard(provider: ClientProviderRelation, image : String) {
-    Log.e("providerCard","log image provider : $image")
+fun ProviderCard(provider: ClientProviderRelation, image: String) {
+    Log.e("providerCard", "log image provider : $image")
     Row(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -784,10 +840,10 @@ fun ProviderCard(provider: ClientProviderRelation, image : String) {
                 .padding(4.dp)
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
-                       provider.provider?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
+                ) {
+                    provider.provider?.let { NormalText(value = it.name, aligne = TextAlign.Start) }
                     //   client.client?.let { NormalText(value = it.code, aligne = TextAlign.Start) }
                     NormalText(value = provider.mvt.toString(), aligne = TextAlign.Start)
 
@@ -797,10 +853,10 @@ fun ProviderCard(provider: ClientProviderRelation, image : String) {
                         .weight(0.3f)
                         .align(Alignment.CenterVertically)
                 ) {
-                    if(provider.provider?.logo != null)
-                    ShowImage(image = image)
+                    if (provider.provider?.logo != null)
+                        ShowImage(image = image)
                     else
-                        notImage()
+                        NotImage()
                 }
 
             }
@@ -821,9 +877,9 @@ fun ParentCard(parent: Company) {
                 .padding(4.dp)
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
+                ) {
                     NormalText(value = parent.name, aligne = TextAlign.Start)
                     parent.code?.let { NormalText(value = it, aligne = TextAlign.Start) }
 
@@ -835,7 +891,18 @@ fun ParentCard(parent: Company) {
 }
 
 @Composable
-fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel, asProvider : Boolean) {
+fun InvoiceCard(
+    invoice: Invoice,
+    appViewModel: AppViewModel,
+    invoiceViewModel: InvoiceViewModel,
+    asProvider: Boolean
+) {
+    var clientType by remember {
+        mutableStateOf(AccountType.NULL)
+    }
+    var invoiceMode by remember {
+        mutableStateOf(InvoiceMode.UPDATE)
+    }
     Column(
         modifier = Modifier.padding(5.dp)
     ) {
@@ -845,40 +912,99 @@ fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: 
                 .padding(4.dp)
                 .clickable {
                     invoiceViewModel.invoice = invoice
-                    invoiceViewModel.discount = invoice.discount?:0.0
-                    invoiceViewModel.invoiceMode = InvoiceMode.UPDATE
+                    invoiceViewModel.clientType = clientType
+                    invoiceViewModel.discount = invoice.discount ?: 0.0
                     invoiceViewModel.invoiceType = invoice.type!!
                     if (invoice.type == InvoiceDetailsType.ORDER_LINE || invoice.status != Status.INWAITING || !asProvider) {
-                        invoiceViewModel.invoiceMode = InvoiceMode.VERIFY
+                        invoiceMode = InvoiceMode.VERIFY
                     }
+                    invoiceViewModel.setInvoiceMode(invoiceMode)
                     appViewModel.updateShow("add invoice")
                 }
         ) {
             Row {
-                Column (
+                Column(
                     modifier = Modifier.weight(0.7f)
-                ){
+                ) {
                     NormalText(value = invoice.code.toString(), aligne = TextAlign.Center)
-                    if(asProvider) {
-                        invoice.client?.let {
+                    invoice.client?.let {
+                        clientType = AccountType.COMPANY
                         NormalText(
                             value = it.name,
-                            aligne = TextAlign.Start
-                        )
-                        }
-                        invoice.person?.let {
-                            NormalText(
-                                value = it.username!!,
-                                aligne = TextAlign.Start
-                            )
-                        }
-                    }else {
-                        NormalText(
-                            value = invoice.provider?.name!!,
-                            aligne = TextAlign.Start
+                            aligne = TextAlign.End
                         )
                     }
+                    invoice.person?.let {
+                        clientType = AccountType.USER
+                        NormalText(
+                            value = it.username!!,
+                            aligne = TextAlign.End
+                        )
+                    }
+                    NormalText(
+                        value = invoice.provider?.name!!,
+                        aligne = TextAlign.Start
+                    )
                     NormalText(value = invoice.prix_invoice_tot.toString(), aligne = TextAlign.End)
+
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun PuchaseOrderCard(
+    order: PurchaseOrder,
+    appViewModel: AppViewModel,
+    invoiceViewModel: InvoiceViewModel,
+    asProvider: Boolean
+) {
+    var clientType by remember {
+        mutableStateOf(AccountType.NULL)
+    }
+    Column(
+        modifier = Modifier.padding(5.dp)
+    ) {
+        Card(
+            elevation = CardDefaults.cardElevation(6.dp),
+            modifier = Modifier
+                .padding(4.dp)
+                .clickable {
+                    invoiceViewModel.setNeccessry(
+                        order,
+                        clientType,
+                        InvoiceMode.VERIFY,
+                        InvoiceDetailsType.ORDER_LINE
+                    )
+                    appViewModel.updateShow("add invoice")
+                }
+        ) {
+            Row {
+                Column(
+                    modifier = Modifier.weight(0.7f)
+                ) {
+                    NormalText(value = order.orderNumber.toString(), aligne = TextAlign.Center)
+                    order.client?.let {
+                        clientType = AccountType.COMPANY
+                        NormalText(
+                            value = it.name,
+                            aligne = TextAlign.End
+                        )
+                    }
+                    order.person?.let {
+                        clientType = AccountType.USER
+                        NormalText(
+                            value = it.username!!,
+                            aligne = TextAlign.End
+                        )
+                    }
+                    NormalText(
+                        value = order.company?.name!!,
+                        aligne = TextAlign.Start
+                    )
+                    NormalText(value = order.prix_order_tot.toString(), aligne = TextAlign.End)
 
                 }
             }
@@ -891,13 +1017,14 @@ fun InvoiceCard(invoice: Invoice, appViewModel: AppViewModel, invoiceViewModel: 
 fun TableRowContent(item: CommandLine) {
     Row(modifier = Modifier.fillMaxWidth()) {
         TableColumnItem(item.article?.article?.libelle!!)
-        TableColumnItem(item.article?.article?.code?:"")
+        TableColumnItem(item.article?.article?.code ?: "")
         TableColumnItem(item.quantity.toString())
         TableColumnItem(item.article?.unit.toString())
         TableColumnItem(item.article?.article?.tva.toString())
         TableColumnItem(item.article?.cost.toString())
     }
 }
+
 @Composable
 fun TableColumnItem(text: String) {
     Column(
@@ -910,7 +1037,7 @@ fun TableColumnItem(text: String) {
 }
 
 @Composable
-fun ClientDialog(update : Boolean ,openDialoge : Boolean, onSubmit : () -> Unit) {
+fun ClientDialog(update: Boolean, openDialoge: Boolean, onSubmit: (Boolean) -> Unit) {
     var openDialog by remember {
         mutableStateOf(openDialoge)
     }
@@ -920,13 +1047,13 @@ fun ClientDialog(update : Boolean ,openDialoge : Boolean, onSubmit : () -> Unit)
     ButtonSubmit(labelValue = "Add invoice", color = Color.Green, enabled = true) {
         openDialog = true
     }
-    if(openDialog){
+    if (openDialog) {
         Dialog(
             onDismissRequest = {
                 openDialog = false
-                onSubmit()
+                onSubmit(false)
             }
-        ){
+        ) {
             Surface(
                 modifier = Modifier
                     .padding(10.dp)
@@ -934,27 +1061,31 @@ fun ClientDialog(update : Boolean ,openDialoge : Boolean, onSubmit : () -> Unit)
             ) {
                 Column {
                     Row {
-                AutoCompleteClient(update = update){
-                    clientExist = it
-                }
+                        AutoCompleteClient(update = update) {
+                            clientExist = it
+                        }
                     }
                     Row {
-                        Row (
+                        Row(
                             modifier = Modifier.weight(1f)
-                        ){
-                        ButtonSubmit(labelValue = "ok", color = Color.Green, enabled = clientExist) {
-                            onSubmit()
-                            openDialog = false
+                        ) {
+                            ButtonSubmit(
+                                labelValue = "ok",
+                                color = Color.Green,
+                                enabled = clientExist
+                            ) {
+                                onSubmit(true)
+                                openDialog = false
+                            }
                         }
-                        }
-                        Row (
+                        Row(
                             modifier = Modifier.weight(1f)
-                        ){
+                        ) {
 
-                        ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                           openDialog = false
-                            onSubmit()
-                        }
+                            ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
+                                openDialog = false
+                                onSubmit(false)
+                            }
                         }
                     }
                 }
@@ -964,8 +1095,68 @@ fun ClientDialog(update : Boolean ,openDialoge : Boolean, onSubmit : () -> Unit)
 }
 
 @Composable
-fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
-    val invoiceViewModel : InvoiceViewModel = viewModel()
+fun ProviderDialog(update: Boolean, openDialoge: Boolean, onSubmit: (Boolean) -> Unit) {
+    var openDialog by remember {
+        mutableStateOf(openDialoge)
+    }
+    var clientExist by remember {
+        mutableStateOf(false)
+    }
+    ButtonSubmit(labelValue = "Add invoice", color = Color.Green, enabled = true) {
+        openDialog = true
+    }
+    if (openDialog) {
+        Dialog(
+            onDismissRequest = {
+                openDialog = false
+                onSubmit(false)
+            }
+        ) {
+            Surface(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+            ) {
+                Column {
+                    Row {
+                        AutoCompleteProvider(update = update) {
+                            clientExist = it
+                        }
+                    }
+                    Row {
+                        Row(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            ButtonSubmit(
+                                labelValue = "ok",
+                                color = Color.Green,
+                                enabled = clientExist
+                            ) {
+                                onSubmit(true)
+                                openDialog = false
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.weight(1f)
+                        ) {
+
+                            ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
+                                openDialog = false
+                                onSubmit(false)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, providerId : Long, onSubmit: () -> Unit) {
+    val invoiceViewModel: InvoiceViewModel = viewModel()
     var openDialog by remember {
         mutableStateOf(openDialo)
     }
@@ -984,22 +1175,22 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
     var articleExist by remember {
         mutableStateOf(false)
     }
-    if(update){
+    if (update) {
         articleExist = true
         qte = invoiceViewModel.commandLineDto.quantity
-        dct = invoiceViewModel.commandLineDto.discount?:0.0
+        dct = invoiceViewModel.commandLineDto.discount ?: 0.0
     }
     val commandsLine by invoiceViewModel.commandLine.collectAsStateWithLifecycle()
     IconButton(onClick = { openDialog = true }) {
         Icon(Icons.Default.Add, contentDescription = "Favorite")
     }
-    if(openDialog){
+    if (openDialog) {
         Dialog(
             onDismissRequest = {
                 openDialog = false
                 onSubmit()
             }
-        ){
+        ) {
             Surface(
                 modifier = Modifier
                     .padding(10.dp)
@@ -1007,8 +1198,8 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
             ) {
                 Column {
                     Row {
-                            AutoCompleteArticle(update){
-                                articleExist = it
+                        AutoCompleteArticle(update, asProvider, providerId) {
+                            articleExist = it
                         }
                     }
                     Row {
@@ -1019,7 +1210,8 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                             maxLine = 1,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number,
-                                imeAction =  ImeAction.Next),
+                                imeAction = ImeAction.Next
+                            ),
                             onValueChange = {
                                 if (invoiceViewModel.article.unit == UnitArticle.U) {
                                     if (it.matches(Regex("^[0-9]*$"))) {
@@ -1030,7 +1222,45 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                                     if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                         val normalizedInput = it.replace(',', '.')
                                         quantity = normalizedInput
-                                        qte = if (normalizedInput.startsWith(".") && normalizedInput.endsWith(".")) {
+                                        qte =
+                                            if (normalizedInput.startsWith(".") && normalizedInput.endsWith(
+                                                    "."
+                                                )
+                                            ) {
+                                                0.0
+                                            } else if (normalizedInput.endsWith(".")) {
+                                                normalizedInput.let { inp ->
+                                                    if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                                }
+                                            } else {
+                                                normalizedInput.toDoubleOrNull() ?: 0.0
+                                            }
+                                    }
+                                }
+                            }, onImage = {}
+                        ) {
+
+                        }
+                    }
+                    Row {
+                        InputTextField(
+                            labelValue = discount,
+                            label = "Discount",
+                            singleLine = true,
+                            maxLine = 1,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Next
+                            ),
+                            onValueChange = {
+                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                    val normalizedInput = it.replace(',', '.')
+                                    discount = normalizedInput
+                                    dct =
+                                        if (normalizedInput.startsWith(".") && normalizedInput.endsWith(
+                                                "."
+                                            )
+                                        ) {
                                             0.0
                                         } else if (normalizedInput.endsWith(".")) {
                                             normalizedInput.let { inp ->
@@ -1039,80 +1269,67 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
                                         } else {
                                             normalizedInput.toDoubleOrNull() ?: 0.0
                                         }
-                                    }
                                 }
-                            }
-                            , onImage = {}
-                        ) {
-
-                        }
-                    }
-                    Row{
-                        InputTextField(
-                            labelValue = discount,
-                            label = "Discount",
-                            singleLine = true,
-                            maxLine = 1,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction =  ImeAction.Next),
-                            onValueChange = {
-                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
-                                    val normalizedInput = it.replace(',', '.')
-                                    discount = normalizedInput
-                                    dct = if (normalizedInput.startsWith(".") && normalizedInput.endsWith(".")) {
-                                        0.0
-                                    }else if (normalizedInput.endsWith(".")) {
-                                        normalizedInput.let { inp ->
-                                            if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
-                                        }
-                                    } else {
-                                        normalizedInput.toDoubleOrNull() ?: 0.0
-                                    }
-                                }
-                            }
-                            , onImage = {}
+                            }, onImage = {}
                         ) {
 
                         }
                     }
 
                     Row {
-                        Row (
+                        Row(
                             modifier = Modifier.weight(1f)
-                        ){
+                        ) {
 
-                            ButtonSubmit(labelValue = "ok", color = Color.Green, enabled = !(qte == 0.0 || !articleExist)) {
-                                    val command = invoiceViewModel.commandLineDto.copy()
-                                    command.quantity = qte
-                                    command.discount = dct
-                                    command.article = invoiceViewModel.article
-                                if(update) {
+                            ButtonSubmit(
+                                labelValue = "ok",
+                                color = Color.Green,
+                                enabled = !(qte == 0.0 || !articleExist)
+                            ) {
+                                val command = invoiceViewModel.commandLineDto.copy()
+                                command.quantity = qte
+                                command.discount = dct
+                                command.article = invoiceViewModel.article
+                                if (update) {
                                     invoiceViewModel.substructCommandsLine()
                                 }
-                                val totTva = BigDecimal(qte).multiply(BigDecimal(command.article?.article?.tva!!).multiply(BigDecimal( invoiceViewModel.article.sellingPrice!!)).divide(BigDecimal(100)))
-                                    command.totTva = totTva.setScale(2, RoundingMode.HALF_UP).toDouble()
+                                val totTva = BigDecimal(qte).multiply(
+                                    BigDecimal(command.article?.article?.tva!!).multiply(
+                                        BigDecimal(
+                                            invoiceViewModel.article.sellingPrice!!
+                                        )
+                                    ).divide(BigDecimal(100))
+                                )
+                                command.totTva = totTva.setScale(2, RoundingMode.HALF_UP).toDouble()
 
-                                val prixarticletot = BigDecimal(qte).multiply(BigDecimal(command.article?.sellingPrice!!)).multiply(
-                                    (BigDecimal(1).subtract((BigDecimal(command.discount!!).divide(BigDecimal(100))))))
-                                    command.prixArticleTot = prixarticletot.setScale(2, RoundingMode.HALF_UP).toDouble()
+                                val prixarticletot =
+                                    BigDecimal(qte).multiply(BigDecimal(command.article?.sellingPrice!!))
+                                        .multiply(
+                                            (BigDecimal(1).subtract(
+                                                (BigDecimal(command.discount!!).divide(
+                                                    BigDecimal(100)
+                                                ))
+                                            ))
+                                        )
+                                command.prixArticleTot =
+                                    prixarticletot.setScale(2, RoundingMode.HALF_UP).toDouble()
 
-                                    command.invoice?.code = invoiceViewModel.lastInvoiceCode
+                                command.invoice?.code = invoiceViewModel.lastInvoiceCode
                                 invoiceViewModel.addCommandLine(command)
-                                    invoiceViewModel.commandLineDto = CommandLine()
-                                    invoiceViewModel.article = ArticleCompany()
-                                    qte = 0.0
-                                    dct = 0.0
+                                invoiceViewModel.commandLineDto = CommandLine()
+                                invoiceViewModel.article = ArticleCompany()
+                                qte = 0.0
+                                dct = 0.0
                                 quantity = ""
                                 discount = ""
-                                    openDialog = false
-                                      onSubmit()
+                                openDialog = false
+                                onSubmit()
 
                             }
                         }
-                        Row (
+                        Row(
                             modifier = Modifier.weight(1f)
-                        ){
+                        ) {
 
                             ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
                                 onSubmit()
@@ -1127,7 +1344,11 @@ fun ArticleDialog(update : Boolean ,openDialo : Boolean, onSubmit: () -> Unit) {
 }
 
 @Composable
-fun ShowPaymentDailog(ttc: BigDecimal, openDailog: Boolean, onSelected: (BigDecimal,Boolean) -> Unit) {
+fun ShowPaymentDailog(
+    ttc: BigDecimal,
+    openDailog: Boolean,
+    onSelected: (BigDecimal, Boolean) -> Unit
+) {
     var openDialog by remember { mutableStateOf(openDailog) }
 
     var monyInput by remember { mutableStateOf("") }
@@ -1187,12 +1408,12 @@ fun ShowPaymentDailog(ttc: BigDecimal, openDailog: Boolean, onSelected: (BigDeci
                         ) {
                             Button(
                                 onClick = {
-                                     if (rest>BigDecimal.ZERO){
-                                        onSelected(mony,false)
-                                    }else{
-                                        onSelected(ttc,true)
+                                    if (rest > BigDecimal.ZERO) {
+                                        onSelected(mony, false)
+                                    } else {
+                                        onSelected(ttc, true)
                                     }
-                                          },
+                                },
                                 colors = ButtonDefaults.buttonColors(Color.Green),
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = isEnabled
@@ -1204,7 +1425,7 @@ fun ShowPaymentDailog(ttc: BigDecimal, openDailog: Boolean, onSelected: (BigDeci
                             modifier = Modifier.weight(1f)
                         ) {
                             Button(
-                                onClick = { onSelected(mony,false) },
+                                onClick = { onSelected(mony, false) },
                                 colors = ButtonDefaults.buttonColors(Color.Red),
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = !isEnabled
@@ -1220,7 +1441,13 @@ fun ShowPaymentDailog(ttc: BigDecimal, openDailog: Boolean, onSelected: (BigDeci
 }
 
 @Composable
-fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceViewModel : InvoiceViewModel, update : Boolean, onSubmit: () -> Unit) {
+fun ShowQuantityDailog(
+    article: ArticleCompany,
+    openDailog: Boolean,
+    invoiceViewModel: InvoiceViewModel,
+    update: Boolean,
+    onSubmit: () -> Unit
+) {
     var openDialog by remember { mutableStateOf(openDailog) }
     var qte by remember {
         mutableDoubleStateOf(0.0)
@@ -1238,23 +1465,23 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
         mutableStateOf(false)
     }
     val commandsLine by invoiceViewModel.commandLine.collectAsStateWithLifecycle()
-    if(openDialog){
+    if (openDialog) {
         Dialog(
             onDismissRequest = {
                 openDialog = false
                 onSubmit()
             }
         ) {
-            Box{
+            Box {
                 Column(modifier = Modifier.background(Color.White)) {
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
 
-                ShowImage(image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.article?.category?.ordinal}")
+                            ShowImage(image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.article?.category?.ordinal}")
                         }
-                        Row (modifier = Modifier.weight(2f)){
+                        Row(modifier = Modifier.weight(2f)) {
 
-                    Text(text = article.article?.libelle!!)
+                            Text(text = article.article?.libelle!!)
                         }
                     }
                     InputTextField(
@@ -1267,15 +1494,15 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                             imeAction = ImeAction.Next
                         ),
                         onValueChange = {
-                            if(article.unit == UnitArticle.U){
+                            if (article.unit == UnitArticle.U) {
                                 if (it.matches(Regex("^[0-9]*$"))) {
                                     quantity = it
                                     qte = it.toDoubleOrNull() ?: 0.0
                                 }
-                            }else if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                            } else if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                 val normalizedInput = it.replace(',', '.')
                                 quantity = normalizedInput
-                                qte = if(normalizedInput.startsWith(".")) 0.0
+                                qte = if (normalizedInput.startsWith(".")) 0.0
                                 else if (normalizedInput.endsWith(".")) {
                                     normalizedInput.let { inp ->
                                         if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
@@ -1286,7 +1513,7 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                             }
 
                             isEnabled = qte != 0.0
-                                        },
+                        },
                         onImage = {}
                     ) {
 
@@ -1304,7 +1531,7 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                             if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                 val normalizedInput = it.replace(',', '.')
                                 discount = normalizedInput
-                                dct = if(normalizedInput.startsWith(".")) 0.0
+                                dct = if (normalizedInput.startsWith(".")) 0.0
                                 else if (normalizedInput.endsWith(".")) {
                                     normalizedInput.let { inp ->
                                         if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
@@ -1313,23 +1540,29 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                                     normalizedInput.toDoubleOrNull() ?: 0.0
                                 }
                             }
-                                        },
+                        },
                         onImage = {}
                     ) {
 
                     }
                     Row {
                         Row(modifier = Modifier.weight(1f)) {
-                            ButtonSubmit(labelValue = "Ok", color = Color.Green, enabled = isEnabled) {
+                            ButtonSubmit(
+                                labelValue = "Ok",
+                                color = Color.Green,
+                                enabled = isEnabled
+                            ) {
                                 val command = invoiceViewModel.commandLineDto.copy()
                                 command.quantity = qte
                                 command.discount = dct
                                 command.article = article
-                                if(update) {
+                                if (update) {
                                     invoiceViewModel.substructCommandsLine()
                                 }
-                                command.totTva = qte * article.article?.tva!! * article.sellingPrice!! / 100
-                                command.prixArticleTot = qte * article.sellingPrice!!*(1-command.discount!!/100)
+                                command.totTva =
+                                    qte * article.article?.tva!! * article.sellingPrice!! / 100
+                                command.prixArticleTot =
+                                    qte * article.sellingPrice!! * (1 - command.discount!! / 100)
                                 command.invoice?.code = invoiceViewModel.lastInvoiceCode
                                 invoiceViewModel.addCommandLine(command)
                                 invoiceViewModel.commandLineDto = CommandLine()
@@ -1341,8 +1574,8 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
                                 onSubmit()
                             }
                         }
-                        Row (modifier = Modifier.weight(1f)){
-                            ButtonSubmit(labelValue = "Cancel", color = Color.Red , enabled = true) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            ButtonSubmit(labelValue = "Cancel", color = Color.Red, enabled = true) {
                                 openDialog = false
                                 onSubmit()
                             }
@@ -1355,12 +1588,11 @@ fun ShowQuantityDailog(article : ArticleCompany, openDailog : Boolean,invoiceVie
 
 }
 
-
 @Composable
-fun PermissionSettingsDialog(onDismiss : () -> Unit) {
+fun PermissionSettingsDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
-    AlertDialog(onDismissRequest =  onDismiss,
-        title =  {
+    AlertDialog(onDismissRequest = onDismiss,
+        title = {
             Text(text = "Permission Required")
         },
         text = {
@@ -1369,12 +1601,12 @@ fun PermissionSettingsDialog(onDismiss : () -> Unit) {
         confirmButton = {
             TextButton(onClick = {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.fromParts("package",context.packageName,null)
+                    data = Uri.fromParts("package", context.packageName, null)
                 }
                 context.startActivity(intent)
                 onDismiss()
             }) {
-                    Text(text = "Go to settings")
+                Text(text = "Go to settings")
             }
         },
         dismissButton = {
@@ -1387,7 +1619,7 @@ fun PermissionSettingsDialog(onDismiss : () -> Unit) {
 }
 
 @Composable
-fun DateFilterUI(paymentViewModel: PaymentViewModel, onDate : (String, String) -> Unit) {
+fun DateFilterUI(paymentViewModel: PaymentViewModel, onDate: (String, String) -> Unit) {
     // State to hold the selected date
     val selectedDate = remember { mutableStateOf("From date") }
     val finDate = remember { mutableStateOf("To date") }
@@ -1406,7 +1638,7 @@ fun DateFilterUI(paymentViewModel: PaymentViewModel, onDate : (String, String) -
             // Format the selected date as "yyyy-MM-dd"
             val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             selectedDate.value = format.format(calendar.time)
-            if(finDate.value == "To date"){
+            if (finDate.value == "To date") {
                 finDate.value = selectedDate.value
             }
             onDate(selectedDate.value, finDate.value)
@@ -1424,7 +1656,7 @@ fun DateFilterUI(paymentViewModel: PaymentViewModel, onDate : (String, String) -
             // Format the selected date as "yyyy-MM-dd"
             val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             finDate.value = format.format(calendar.time)
-            if(selectedDate.value == "To date"){
+            if (selectedDate.value == "To date") {
                 selectedDate.value = finDate.value
             }
             onDate(selectedDate.value, finDate.value)
@@ -1443,17 +1675,17 @@ fun DateFilterUI(paymentViewModel: PaymentViewModel, onDate : (String, String) -
     ) {
         Row {
 
-        Text(
-            text = selectedDate.value,
-            modifier = Modifier
-                .padding(8.dp)
-                .weight(1f)
-                .clickable {
-                    openDialog.value = true
-                }, // Open date picker on click
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Blue
-        )
+            Text(
+                text = selectedDate.value,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .weight(1f)
+                    .clickable {
+                        openDialog.value = true
+                    }, // Open date picker on click
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Blue
+            )
             Text(
                 text = finDate.value,
                 modifier = Modifier
@@ -1470,7 +1702,7 @@ fun DateFilterUI(paymentViewModel: PaymentViewModel, onDate : (String, String) -
         if (openDialog.value) {
             datePickerDialog.show()
         }
-        if(openFinDialog){
+        if (openFinDialog) {
             dateFinPickerDialog.show()
         }
 

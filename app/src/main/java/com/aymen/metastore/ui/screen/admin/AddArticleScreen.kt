@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -91,6 +92,8 @@ fun AddArticleScreen(){
             mutableStateOf(Category())
         }
         LaunchedEffect(key1 = Unit) {
+            providerViewModel.isAll = false
+            providerViewModel.getAllMyProviders()
             categoryViewModel.setFilter(company.id?:0)
         }
         LaunchedEffect(key1 = category) {
@@ -157,6 +160,9 @@ fun AddArticleScreen(){
         var provider by remember {
             mutableStateOf(Company())
         }
+        var articleId by remember {
+            mutableLongStateOf(0L)
+        }
         if(articleViewModel.upDate){
             val articlee by articleViewModel.articleCompany.collectAsStateWithLifecycle()
             articleCompany = articlee!!
@@ -170,14 +176,18 @@ fun AddArticleScreen(){
             unitItem = articlee?.unit!!
             quantity = if(articlee?.unit == UnitArticle.U)(articlee?.quantity?:0.0).toInt().toString() else (articlee?.quantity?:0.0).toString()
             privacy = articlee?.isVisible?:PrivacySetting.PUBLIC
-            category = articlee?.category!!
-            subCategory = articlee?.subCategory!!
+            category = articlee?.category?:Category()
+            subCategory = articlee?.subCategory?: SubCategory()
             provider = articlee?.provider!!
+            articleId = articlee?.id!!
+            Log.e("addarticletest","article company id : ${articleCompany.id}")
+            articleViewModel.upDate = false
         }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
+            Log.e("recompose","recompose : qte $qte quantity : $quantity ")
             items(1) {
                 Row(
                     modifier = Modifier.fillMaxSize()
@@ -421,7 +431,7 @@ fun AddArticleScreen(){
                         .fillMaxWidth()
                         .padding(top = 0.dp)
                 ) {
-                    RadioButtons { selectedPrivacy ->
+                    RadioButtons(privacy) { selectedPrivacy ->
                         privacy = selectedPrivacy
                     }
                 }
@@ -493,12 +503,14 @@ fun AddArticleScreen(){
                             articleCompany.unit = unitItem
                             articleCompany.isVisible = privacy
                             articleCompany.article = article
-                          //  articleCompany.company = company
+                            if(articleId != 0L)
+                            articleCompany.id = articleId
                             val photo = resolveUriToFile(image, context)
                             val articleJsonString = gson.toJson(articleCompany)
                             val projsonstring = gson.toJson(companyViewModel.myCompany)
                             val arstring = articleJsonString+projsonstring
-                            if(!articleViewModel.upDate) {
+
+                            if(articleCompany.id == null) {
                                 if (articleJsonString.isNotEmpty() && photo != null && article.id != null) {
 //                                articleViewModel.addArticle(articleCompany,articleJsonString, photo)
                                 } else {

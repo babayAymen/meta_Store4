@@ -34,6 +34,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
@@ -59,7 +60,6 @@ fun PaymentScreen() {
     val paymentViewModel: PaymentViewModel = hiltViewModel()
     val pointPaymentViewModel: PointsPaymentViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
-    val context = LocalContext.current
     val type by sharedViewModel.accountType.collectAsStateWithLifecycle()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
@@ -158,16 +158,16 @@ fun PaymentScreen() {
                                 }
                             }
                         }
-                        Row (modifier = Modifier.weight(1f)){
-                            ButtonSubmit(labelValue = "reglement", color = Color.Green, enabled =reglementInabled) {
-                                appViewModel.updateView("reglement")
-                            }
-                        }
+//                        Row (modifier = Modifier.weight(1f)){
+//                            ButtonSubmit(labelValue = "reglement", color = Color.Green, enabled =reglementInabled) {
+//                                appViewModel.updateView("reglement")
+//                            }
+//                        }
                     }
                 }
             }
             when (view) {
-                "payment" -> PaymentView(pointPaymentViewModel)
+                "payment" -> PaymentView(pointPaymentViewModel,company)
                 "buyhistory" -> {
                     BuyView(appViewModel, invoiceViewModel)
                 }
@@ -181,9 +181,7 @@ fun PaymentScreen() {
 }
 
 @Composable
-fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel) {
-    val context = LocalContext.current
-
+fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel , myCompany : Company ) {
     val allPaymentRecharge = pointPaymentViewModel.allMyPointsPaymentRecharge.collectAsLazyPagingItems()
     LazyColumn {
         items(count = allPaymentRecharge.itemCount,
@@ -191,18 +189,15 @@ fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel) {
         ) { index ->
             val pointPayment = allPaymentRecharge[index]
             if (pointPayment != null) {
-                SwipeToDeleteContainer(
-                    pointPayment,
-                    onDelete = {
-                        Log.e("aymenbabatdelete", "delete")
-                    },
-                    onUpdate = {
-                        Log.e("aymenbabatdelete", "delete")
-
-                    }
-                ) { pointPay ->
-                    Text(text = pointPay.provider?.name + " has sent " + pointPay.amount + " points for " + if (pointPay.clientUser?.username != null) pointPay.clientUser?.username else pointPay.clientCompany?.name)
+                val paymentDetails = if (pointPayment.provider?.id == myCompany.id) {
+                    "you have sent ${pointPayment.amount} DT for " +
+                            (pointPayment.clientUser?.username ?: pointPayment.clientCompany?.name ?: "")
+                } else {
+                    "${pointPayment.provider?.name} has sent you ${pointPayment.amount} DT"
                 }
+
+                Text(text = paymentDetails)
+
             }
         }
     }
@@ -341,7 +336,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
         }
         when (show) {
             "add invoice" ->{
-                AddInvoiceScreen(invoiceMode = InvoiceMode.VERIFY)
+                AddInvoiceScreen()
             }
             "allHistory" -> {
                         val listState = invoiceViewModel.listState
@@ -442,7 +437,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
             }
 
             "notaccepted" -> {
-                val notAccepted = invoiceViewModel.allMyInvoiceNotAccepted.collectAsLazyPagingItems()
+                val notAccepted = invoiceViewModel.notAcceptedAsProvider.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {

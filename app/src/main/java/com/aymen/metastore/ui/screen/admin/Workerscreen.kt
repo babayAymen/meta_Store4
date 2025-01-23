@@ -24,8 +24,8 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.repository.ViewModel.WorkerViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.ShowImage
-import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
@@ -50,7 +50,7 @@ fun WorkerScreen() {
             ){
 
                 ButtonSubmit(labelValue = "add new worker", color = Color.Green, enabled = true) { // form vertual worker
-                    appViewModel.updateShow("")
+                    appViewModel.updateShow("ADD_WORKER")
                 }
             }
             Row (
@@ -103,7 +103,7 @@ fun WorkerCard(worker: Worker, sharedViewModel: SharedViewModel) {
                 if(worker.user.image != null)
                 ShowImage(image = "${BASE_URL}werehouse/image/${worker.user.image}/user/${worker.user.id}")
                 else
-                    notImage()
+                    NotImage()
                 Text(text = worker.user.username!!)
             }
             Row {

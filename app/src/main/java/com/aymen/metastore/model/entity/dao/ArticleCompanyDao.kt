@@ -1,5 +1,6 @@
 package com.aymen.metastore.model.entity.dao
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
@@ -40,9 +41,9 @@ interface ArticleCompanyDao {
             val result = insert(listOf(article)).firstOrNull() ?: -1L
             if (result == -1L) { // Conflict occurred
                 val existingArticle = getArticleById(article.id!!) // Fetch the existing record
-
+Log.e("testarticle","article is exist is my: ${existingArticle?.isMy}")
                 if (existingArticle != null && article.isMy != existingArticle.isMy) {
-                    updateMy(article.id, article.isMy!!) // Update only if price differs
+                    updateMy(article.id, article.isMy!!, article.categoryId!! , article.subCategoryId!!) // Update only if price differs
                 }
             }
         }
@@ -57,15 +58,14 @@ interface ArticleCompanyDao {
                     updateForSearch(article.id , true)
                 }
             }
-
         }
     }
 
     @Query("UPDATE article_company SET isSearch = :isSearch WHERE id = :id")
     suspend fun updateForSearch(id : Long , isSearch : Boolean)
 
-    @Query("UPDATE article_company SET isMy = :isMy WHERE id = :id")
-    suspend fun updateMy(id : Long , isMy : Boolean)
+    @Query("UPDATE article_company SET isMy = :isMy, categoryId = :categoryId, subCategoryId = :subCategoryId WHERE id = :id")
+    suspend fun updateMy(id : Long , isMy : Boolean, categoryId : Long , subCategoryId : Long)
     @Upsert
     suspend fun insertForSearch(article: List<ArticleCompany>)
 
@@ -73,7 +73,7 @@ interface ArticleCompanyDao {
         article.filterNotNull()
             .takeIf { it.isNotEmpty() }
             ?.let {
-                insertOrUpdate(it)
+                insertOrUpdateIsSearch(it)
             }
     }
 

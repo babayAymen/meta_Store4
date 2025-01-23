@@ -52,10 +52,8 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ArticleCardForAdmin
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.LodingShape
-import com.aymen.metastore.ui.component.addQuantityDailog
-import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.ui.component.AddQuantityDialog
 import com.aymen.metastore.util.IMAGE_URL_ARTICLE
-import com.aymen.metastore.util.IMAGE_URL_COMPANY
 import com.aymen.store.model.Enum.RoleEnum
 import kotlinx.coroutines.delay
 
@@ -128,7 +126,7 @@ fun ArticleScreen() {
                                     addQuantity = true
                                 }
                                 if (addQuantity) {
-                                    addQuantityDailog(art, addQuantity) {quantity ->
+                                    AddQuantityDialog(art, addQuantity) { quantity ->
                                         if(quantity != 0.0) {
                                             articleViewModel.addQuantityArticle(
                                                 quantity,

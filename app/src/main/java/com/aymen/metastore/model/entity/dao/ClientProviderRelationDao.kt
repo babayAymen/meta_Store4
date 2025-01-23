@@ -38,13 +38,18 @@ interface ClientProviderRelationDao {
     suspend fun getProviderRemoteKey(id : Long): ProviderRemoteKeysEntity
     @Query("DELETE FROM provider_remote_keys")
     suspend fun clearProviderRemoteKeysTable()
-    @Query("SELECT * FROM provider_remote_keys ORDER BY id ASC LIMIT 1")
-    suspend fun getFirstProviderRemoteKey() : ProviderRemoteKeysEntity?
-    @Query("SELECT * FROM provider_remote_keys ORDER BY id DESC LIMIT 1")
-    suspend fun getLatestProviderRemoteKey() : ProviderRemoteKeysEntity?
+    @Query("DELETE FROM provider_remote_keys WHERE id = :id")
+    suspend fun clearProviderRemoteKeysTableById(id : Long)
+    @Query("SELECT * FROM provider_remote_keys WHERE isSearch = :isSearch ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstProviderRemoteKey(isSearch: Boolean) : ProviderRemoteKeysEntity?
+    @Query("SELECT * FROM provider_remote_keys WHERE isSearch = :isSearch ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestProviderRemoteKey(isSearch : Boolean) : ProviderRemoteKeysEntity?
     @Query("DELETE FROM client_provider_relation WHERE (clientId = :id OR userId = :id)")
     suspend fun clearAllProviderTable(id : Long)
-
+    @Query("DELETE FROM client_provider_relation WHERE providerId = :id")
+    suspend fun clearAllViertualProviders(id : Long)
+    @Query("SELECT cp.id FROM client_provider_relation AS cp JOIN company AS c ON cp.providerId = c.companyId WHERE c.`virtual` = 1")
+    suspend fun getAllIdsVirtualProviders() : List<Long>
 
     @Transaction
     @Query(
@@ -69,8 +74,18 @@ interface ClientProviderRelationDao {
 
 
     @Transaction
-    @Query("SELECT * FROM client_provider_relation WHERE (clientId = :id)") // without user id
+    @Query("SELECT * FROM client_provider_relation WHERE clientId = :id") // without user id
     fun getAllMyProviders(id : Long) : PagingSource<Int,CompanyWithCompanyOrUser>
+
+    @Transaction
+    @Query("SELECT * FROM client_provider_relation AS cp JOIN company c ON cp.providerId = c.companyId WHERE providerId = :id OR c.`virtual` = 1") // without user id
+    fun getAllMyVirtualProviders(id : Long) : PagingSource<Int,CompanyWithCompanyOrUser>
+
+    @Transaction
+    @Query("SELECT * FROM client_provider_relation AS cp JOIN company AS c ON cp.providerId = c.companyId WHERE" +
+            " (c.`virtual` = 1 OR (cp.providerId = cp.clientId AND cp.providerId = :id)) AND ( (c.name LIKE '%' || :search || '%') OR (c.code LIKE '%' || :search || '%'))"
+            )
+    fun getAllMyVirtualProvidersContaining(id : Long , search: String) : PagingSource<Int , CompanyWithCompanyOrUser>
 
     @Upsert
     fun insertKeys(keys : List<ClientProviderRemoteKeysEntity>)

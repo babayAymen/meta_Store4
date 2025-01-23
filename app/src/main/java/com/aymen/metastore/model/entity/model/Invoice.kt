@@ -11,22 +11,24 @@ data class Invoice (
 
     var code : Long? = null,
     val id : Long? = null,
-    val tot_tva_invoice : Double? = 0.0,
-    val prix_invoice_tot : Double? =0.0,
-    val prix_article_tot : Double? = 0.0,
+    var tot_tva_invoice : Double? = 0.0,
+    var prix_invoice_tot : Double? =0.0,
+    var prix_article_tot : Double? = 0.0,
     val discount : Double? = 0.0,
     val status : Status? = Status.INWAITING,
     var paid : PaymentStatus? = PaymentStatus.NOT_PAID,
-    val type : InvoiceDetailsType? = InvoiceDetailsType.COMMAND_LINE,
+    var type : InvoiceDetailsType? = InvoiceDetailsType.COMMAND_LINE,
     var rest : Double? = 0.0,
     var person : User? = null,
     var client : Company? = null,
     var provider : Company? = null,
-    val createdDate : String? = null,
+    var createdDate : String? = null,
     val lastModifiedDate : String? = null,
     val lastModifiedBy: String? = null,
     val createdBy: String? = null,
-    val isInvoice : Boolean? = false
+    val isInvoice : Boolean? = false,
+    val purchaseOrder : PurchaseOrder? = null,
+    val asProvider : Boolean? = true
 ){
     fun toInvoiceEntity() : Invoice {
         return Invoice(
@@ -47,7 +49,9 @@ data class Invoice (
             lastModifiedDate = lastModifiedDate,
             lastModifiedBy = lastModifiedBy,
             createdBy = createdBy,
-            isInvoice = isInvoice
+            isInvoice = isInvoice,
+            purchaseOrderId = purchaseOrder?.id,
+            asProvider = asProvider
 
             )
     }
@@ -70,7 +74,9 @@ data class Invoice (
             createdDate,
             lastModifiedDate,
             createdBy,
-            lastModifiedBy
+            lastModifiedBy,
+            purchaseOrder = purchaseOrder?.toPurchaseOrderDto(),
+            asProvider = asProvider
         )
     }
 }

@@ -71,6 +71,7 @@ class ArticleCompanyRemoteMediator(
                             previousPage = prevPage
                         )
                     })
+                    response.content.map { article -> Log.e("testarticle","$article") }
                     userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
                     companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
                     userDao.insertUser(response.content.map {user -> user.provider?.user?.toUser()})

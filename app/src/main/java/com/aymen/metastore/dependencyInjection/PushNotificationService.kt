@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import com.aymen.metastore.MainActivity
 import com.aymen.metastore.model.Enum.NotificationType
 import com.aymen.metastore.model.entity.model.NotificationMessage
+import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.screen.user.UserScreen
 import com.aymen.store.model.Enum.AccountType

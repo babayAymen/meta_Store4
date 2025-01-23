@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -83,10 +84,10 @@ import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ClientDialog
 import com.aymen.metastore.ui.component.DiscountTextField
 import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.ui.component.ShowPaymentDailog
 import com.aymen.metastore.ui.component.ShowQuantityDailog
-import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.IMAGE_URL_COMPANY
 import com.aymen.store.ui.screen.user.generateOrderPDF
@@ -98,26 +99,33 @@ import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
+fun AddInvoiceScreen() {
     val context = LocalContext.current
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val invoiceViewModel: InvoiceViewModel = hiltViewModel()
     val paymentViewModel: PaymentViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
+    val myAccountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    val asProvider = invoiceViewModel.asProvider
     val clientCompany = invoiceViewModel.clientCompany
     val clientUser = invoiceViewModel.clientUser
     val clientType = invoiceViewModel.clientType
     val currentDateTime = LocalDateTime.now()
     val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     var showDialog by remember { mutableStateOf(false) }
-
+    val invoiceMode by invoiceViewModel.invoiceModeState.collectAsStateWithLifecycle()
+    val provider by invoiceViewModel.providerCompany.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = Unit) {
-        if (invoiceMode == InvoiceMode.CREATE) {
-            invoiceViewModel.getLastInvoiceCode()
-        } else {
-            invoiceViewModel.getInvoiceDetails()
-            paymentViewModel.getPaymentHystoricByInvoiceId(invoiceId = invoiceViewModel.invoice.id!!)
+        invoiceViewModel.remiseCommandLineToZero()
+        when (invoiceMode) {
+                    InvoiceMode.CREATE ->  invoiceViewModel.getLastInvoiceCode()
+            else -> {
+                invoiceViewModel.getInvoiceDetails()
+                if(invoiceViewModel.invoice.type == InvoiceDetailsType.COMMAND_LINE)
+                paymentViewModel.getPaymentHystoricByInvoiceId(invoiceId = invoiceViewModel.invoice.id!!)
+            }
         }
     }
 
@@ -146,23 +154,24 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     val paymentHistoric = paymentViewModel.paymentHistoric.collectAsLazyPagingItems()
     var invoice =
         if (invoiceViewModel.invoice.type == InvoiceDetailsType.ORDER_LINE)
-            ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
+            ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice?:invoiceViewModel.invoice
         else
             commandLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
+
     var isMe by remember {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
     DisposableEffect(key1 = Unit) {
         onDispose {
             invoiceViewModel.remiseOrderLineToZero()
-            tottva = BigDecimal.ZERO
-            totprice = BigDecimal.ZERO
-            totgen = BigDecimal.ZERO
+            paymentViewModel.setPaymentHistoric()
             if(invoice?.status == Status.REFUSED && isMe)
                 invoiceViewModel.deleteInvoiceByIdLocally(invoice?.id!!)
         }
     }
     LaunchedEffect(key1 = ordersLineInvoice.itemCount, key2 = commandLineInvoice.itemCount) {
+        if(invoice?.provider?.id == myCompany.id)
+            isMe = true
         if (invoiceMode == InvoiceMode.UPDATE) {
             for (i in 0 until commandLineInvoice.itemCount) {
                 val commandLine = commandLineInvoice[i]
@@ -210,450 +219,228 @@ fun AddInvoiceScreen(invoiceMode : InvoiceMode) {
     var paid by remember {
         mutableStateOf(PaymentStatus.NOT_PAID)
     }
-
     var showButton by remember {
         mutableStateOf(true)
     }
-
-    val labels = listOf(
-        R.string.label,
-        R.string.code,
-        R.string.quantity,
-        R.string.unit,
-        R.string.tva,
-        R.string.prix_unit,
-        R.string.tot_tva,
-        R.string.prix_article_tot,
-        R.string.discount
-    )
-    when (invoiceMode) {
-        InvoiceMode.CREATE -> {
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(2.dp)
-            ) {
-                LazyColumn {
-                    item {
-                        MyCompanyDetails(myCompany)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.CenterHorizontally)
-                        ) {
-                            Column {
-                                Text(
-                                    text = invoiceViewModel.lastInvoiceCode.toString(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentWidth(Alignment.CenterHorizontally)
-                                )
-                                Text(
-                                    text = stringResource(
-                                        id = R.string.invoice_date,
-                                        formattedDate
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentWidth(Alignment.CenterHorizontally)
-                                )
-                                FeatureIcons(
-                                    invoiceViewModel,
-                                    context,
-                                    invoiceMode,
-                                    invoice?.paid,
-                                    isMe
-                                ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
-                                    showPaymentDailog = paymentDailog
-                                    showArticleDialog = articleDailog
-                                    showDialog = pdfDailog
-                                    showPaymentDialog = beforeSending
-                                }
-                                if (showDialog) generatePDF(context, commandsLine)
-                                if (showPaymentDialog) {
-                                    val invoiceText = stringResource(id = R.string.invoice)
-                                    ShowPaymentDailog(totgen, openDailog = true) { mony, payed ->
-                                        paid = if (payed) {
-                                            PaymentStatus.PAID
-                                        } else {
-                                            if (mony != BigDecimal.ZERO) {
-                                                PaymentStatus.INCOMPLETE
-                                            } else {
-                                                PaymentStatus.NOT_PAID
-                                            }
-                                        }
-                                        val invoicee = Invoice().copy()
-                                        invoicee.rest = mony.toDouble()
-                                        invoicee.paid = paid
-                                        invoicee.code = invoiceViewModel.lastInvoiceCode
-                                        invoicee.client = invoiceViewModel.clientCompany
-                                        invoicee.person = invoiceViewModel.clientUser
-                                        invoicee.provider = myCompany
-                                        for (x in commandsLine) {
-                                            x.invoice = invoicee
-                                        }
-
-                                        generatePDF(context, commandsLine)
-                                        invoiceViewModel.addInvoice(invoiceMode)
-                                        appViewModel.updateShow(invoiceText)
-                                    }
-                                }
-                            }
-                        }
-                        ClientDetails(clientType, clientCompany, clientUser)
-                        Column {
-                            LazyRow {
-                                item {
-                                    Column {
-                                        TableHeader(labels)
-                                        LazyColumn(modifier = Modifier.heightIn(max = 600.dp)) {
-                                            itemsIndexed(commandsLine) { index, commandLine ->
-                                                Row(
-                                                    modifier = Modifier
-                                                        .padding(1.dp)
-                                                        .width(800.dp)
-                                                        .clickable {
-                                                            articleIndex = index
-                                                            showArticleDialog = true
-                                                        }
-                                                ) {
-                                                    if (showArticleDialog && index == articleIndex) {
-                                                        invoiceViewModel.article =
-                                                            commandLine.article!!
-                                                        invoiceViewModel.commandLineDto =
-                                                            commandLine
-                                                        ArticleDialog(
-                                                            update = true,
-                                                            openDialo = true
-                                                        ) {
-                                                            showArticleDialog = false
-                                                        }
-                                                    }
-                                                    TableRow(commandLine)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            InvoiceFooter(
-                                invoiceViewModel = invoiceViewModel,
-                                tottva = tottva,
-                                totprice = totprice,
-                                totgen = totgen,
-                                invoiceMode
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        InvoiceMode.UPDATE -> {
-            if (invoice != null) {
-                LazyColumn {
-                    item {
-                        MyCompanyDetails(myCompany = invoice?.provider!!)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.CenterHorizontally)
-                        ) {
-                            Column {
-                                Text(
-                                    text = invoice?.code.toString(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentWidth(Alignment.CenterHorizontally)
-                                )
-                                Text(
-                                    text = stringResource(
-                                        id = R.string.invoice_date,
-                                        invoice?.createdDate!!
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentWidth(Alignment.CenterHorizontally)
-                                )
-                                FeatureIcons(
-                                    invoiceViewModel = invoiceViewModel,
-                                    context = context,
-                                    invoiceMode = invoiceMode,
-                                    invoice?.paid,
-                                    isMe
-                                ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
-                                    showPaymentDailog = paymentDailog
-                                    showArticleDialog = articleDailog
-                                    showDialog = pdfDailog
-                                    showPaymentDialog = beforeSending
-                                }
-                                if (showDialog) generatePDF(context, commandsLine)
-                                if (showPaymentDailog) {
-                                    PaymentDailog(isOpen = true) { amount ->
-                                        showPaymentDailog = false
-                                        if (amount != 0.0) {
-                                            val cash = CashModel()
-                                            cash.amount = amount
-                                            cash.invoice = invoice
-                                            paymentViewModel.sendRaglement(
-                                                invoice?.provider?.id!!,
-                                                cash
-                                            ){
-                                                invoice = it
-                                            }
-                                        }
-                                    }
-                                }
-                                if (showPaymentDialog) {
-                                    val invoiceText = stringResource(id = R.string.invoice)
-                                    ShowPaymentDailog(
-                                        totgen,
-                                        openDailog = true
-                                    ) { mony, payed ->
-                                        commandsLine[0].invoice?.rest =
-                                            mony.toDouble()
-                                        if (payed) {
-                                            commandsLine[0].invoice?.paid =
-                                                PaymentStatus.PAID
-                                        } else {
-                                            if (mony != BigDecimal.ZERO) {
-                                                commandsLine[0].invoice?.paid =
-                                                    PaymentStatus.INCOMPLETE
-                                            } else {
-                                                commandsLine[0].invoice?.paid =
-                                                    PaymentStatus.NOT_PAID
-                                            }
-                                        }
-                                        if(invoiceViewModel.clientUser == User() && invoiceViewModel.clientCompany == Company()) {
-                                            invoiceViewModel.clientUser = invoice?.person ?: User()
-                                            invoiceViewModel.clientCompany = invoice?.client ?: Company()
-                                        }
-                                        invoiceViewModel.addInvoice(invoiceMode)
-                                        appViewModel.updateShow(invoiceText)
-                                    }
-                                }
-                            }
-                        }
-                        ClientDetails(
-                            clientType = clientType,
-                            clientCompany = invoice?.client,
-                            clientUser = invoice?.person
-                        )
-
-                        if (commandsLine.isNotEmpty()) {
-                            LazyRow {
-                                item {
-                                    Column {
-                                        TableHeader(labels = labels)
-                                        LazyColumn(
-                                            modifier = Modifier.heightIn(max = 600.dp)
-                                        ) {
-                                            itemsIndexed(commandsLine) { index, commandLine ->
-                                                Row(
-                                                    modifier = Modifier
-                                                        .padding(3.dp)
-                                                        .width(800.dp)
-                                                        .clickable {
-                                                            articleIndex = index
-                                                            showArticleDialog = true
-                                                        }
-                                                ) {
-                                                    if (showArticleDialog && index == articleIndex) {
-                                                        invoiceViewModel.article =
-                                                            commandLine.article!!
-                                                        invoiceViewModel.commandLineDto =
-                                                            commandLine
-                                                        ArticleDialog(
-                                                            update = true,
-                                                            openDialo = true
-                                                        ) {
-                                                            showArticleDialog = false
-                                                        }
-                                                    }
-                                                    TableRow(commandLine = commandLine)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            InvoiceFooter(invoiceViewModel, tottva, totprice, totgen, invoiceMode)
-                        }
-                        LazyColumn(modifier = Modifier.heightIn(max = 600.dp)) {
-                            items(count = paymentHistoric.itemCount,
-                                key = paymentHistoric.itemKey { it.id!! }
-                            ) { index ->
-                                val payment = paymentHistoric[index]
-                                if (payment != null)
-                                    PaymentCard(payment)
-
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        InvoiceMode.VERIFY -> {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                item {
-                    MyCompanyDetails(myCompany = invoice?.provider ?: Company())
-                    Row(
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(2.dp)
+    ) {
+        LazyColumn (
+            modifier = Modifier.fillMaxSize()
+        ) {
+            item {
+                MyCompanyDetails(if (invoiceMode == InvoiceMode.CREATE) provider else invoice?.provider ?: Company())
+                Column {
+                    Text(
+                        text = if (invoiceMode == InvoiceMode.CREATE) invoiceViewModel.lastInvoiceCode.toString() else invoice?.code.toString(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentWidth(Alignment.CenterHorizontally)
-                    ) {
-                        Column {
-                            Text(
-                                text = invoice?.code.toString(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally)
-                            )
-                            Text(
-                                text = stringResource(
-                                    id = R.string.invoice_date,
-                                    invoice?.createdDate ?: ""
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally)
-                            )
-                            if (invoice?.status == Status.INWAITING) {
-                                if (invoice?.provider?.id != myCompany.id && showButton) {
-                                    isMe = false
-                                    Row {
-                                        Row(modifier = Modifier.weight(1f)) {
-                                            ButtonSubmit(
-                                                labelValue = stringResource(id = R.string.refuse),
-                                                color = Color.Red,
-                                                enabled = true
-                                            ) {
-                                                showButton = false
-                                                invoiceViewModel.accepteInvoice(
-                                                    invoice?.id!!,
-                                                    Status.REFUSED
-                                                )
-                                            }
-                                        }
-                                        Row(modifier = Modifier.weight(1f)) {
+                    )
+                    Text(
+                        text = stringResource(
+                            id = R.string.invoice_date,
+                            if (invoiceMode == InvoiceMode.CREATE) formattedDate else stringToLocalDateTime( invoice?.createdDate)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                    )
 
-                                            ButtonSubmit(
-                                                labelValue = stringResource(id = R.string.accept),
-                                                color = Color.Green,
-                                                enabled = true
-                                            ) {
-                                                showButton = false
-                                                invoiceViewModel.accepteInvoice(
-                                                    invoice?.id!!,
-                                                    Status.ACCEPTED
-                                                )
-                                            }
-                                        }
-                                    }
+                    if (invoice?.status != Status.REFUSED)
+                        FeatureIcons(
+                            invoiceViewModel, context, invoiceMode,
+                            invoice?.paid, isMe, myAccountType = myAccountType, asProvider = asProvider, provider.id!!
+                        ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
+                            showPaymentDailog = paymentDailog
+                            showArticleDialog = articleDailog
+                            showDialog = pdfDailog
+                            showPaymentDialog = beforeSending
+                        }
+                    else {
+                        Text(text = invoice?.status.toString())
+                        Toast.makeText(
+                            context,
+                            "this invoice is deleted",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        invoiceViewModel.deleteInvoiceById(invoice?.id!!)
+                    }
+                    if (invoice?.status == Status.INWAITING && (invoice?.client?.id == myCompany.id || invoice?.person?.id == myUser.id) && showButton) {
+                        Row {
+                            Row(modifier = Modifier.weight(1f)) {
+                                ButtonSubmit(
+                                    labelValue = stringResource(id = R.string.refuse),
+                                    color = Color.Red,
+                                    enabled = true
+                                ) {
+                                    showButton = false
+                                    invoiceViewModel.accepteInvoice(
+                                        invoice?.id!!,
+                                        Status.REFUSED
+                                    )
                                 }
                             }
-                            if (showPaymentDailog) {
-                                PaymentDailog(isOpen = true) { amount ->
-                                    showPaymentDailog = false
-                                    if (amount != 0.0) {
-                                        val cash = CashModel()
-                                        cash.amount = amount
-                                        cash.invoice = invoice
-                                        paymentViewModel.sendRaglement(
-                                            invoice?.provider?.id!!,
-                                            cash
-                                        ) {
-                                            invoice = it
-                                        }
-                                    }
+                            Row(modifier = Modifier.weight(1f)) {
+                                ButtonSubmit(
+                                    labelValue = stringResource(id = R.string.accept),
+                                    color = Color.Green,
+                                    enabled = true
+                                ) {
+                                    showButton = false
+                                    invoiceViewModel.accepteInvoice(
+                                        invoice?.id!!,
+                                        Status.ACCEPTED
+                                    )
                                 }
-                            }
-                            if(invoice?.status != Status.REFUSED)
-                            FeatureIcons(
-                                invoiceViewModel = invoiceViewModel,
-                                context = context,
-                                invoiceMode,
-                                invoice?.paid,
-                                isMe
-                            ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
-                                showDialog = pdfDailog
-                                showPaymentDailog = paymentDailog
-                                showArticleDialog = beforeSending
-                            }
-                            else {
-                                Text(text = invoice?.status.toString())
-                                Toast.makeText(context, "this invoice is deleted", Toast.LENGTH_SHORT).show()
-                                invoiceViewModel.deleteInvoiceById(invoice?.id!!)
                             }
                         }
                     }
-                    ClientDetails(
-                        clientType = clientType,
-                        clientCompany = invoice?.client,
-                        clientUser = invoice?.person
-                    )
-                    if (commandLineInvoice.itemCount != 0 || ordersLineInvoice.itemCount != 0) {
-                        LazyRow {
-                            item {
-                                Column {
-                                    TableHeader(labels = labels)
-                                    LazyColumn(
+
+                    if (showDialog) generatePDF(context, commandsLine)
+                    if (showPaymentDailog) {
+                        PaymentDailog(isOpen = true) { amount ->
+                            showPaymentDailog = false
+                            if (amount != 0.0) {
+                                val cash = CashModel()
+                                cash.amount = amount
+                                cash.invoice = invoice
+                                paymentViewModel.sendRaglement(
+                                    invoice?.provider?.id!!,
+                                    cash
+                                ) {
+                                    invoice = it
+                                }
+                            }
+                        }
+                    }
+                    if (showPaymentDialog) {
+                        val invoiceText = stringResource(id = R.string.invoice)
+                        ShowPaymentDailog(
+                            totgen,
+                            openDailog = true
+                        ) { mony, payed ->
+                            paid = if (payed) {
+                                PaymentStatus.PAID
+                            } else {
+                                if (mony != BigDecimal.ZERO) {
+                                    PaymentStatus.INCOMPLETE
+                                } else {
+                                    PaymentStatus.NOT_PAID
+                                }
+                            }
+                            val invoicee = Invoice().copy()
+                            invoicee.rest = mony.toDouble()
+                            invoicee.paid = paid
+                            invoicee.code = invoiceViewModel.lastInvoiceCode
+                            invoicee.client = if(invoiceViewModel.clientCompany.id != null)invoiceViewModel.clientCompany else null
+                            invoicee.person = if(invoiceViewModel.clientUser.id != null)invoiceViewModel.clientUser else null
+                            Log.e("invoiceperson","person : ${invoicee.person}")
+                            invoicee.provider = provider
+                            for (x in commandsLine) {
+                                x.invoice = invoicee
+                            }
+
+                            generatePDF(context, commandsLine)
+                            invoiceViewModel.addInvoice(invoiceMode, asProvider, invoicee)
+                            appViewModel.updateShow(invoiceText)
+                        }
+                    }
+
+                }
+                ClientDetails(
+                    clientType,
+                    if (invoiceMode == InvoiceMode.CREATE) clientCompany else invoice?.client,
+                    if (invoiceMode == InvoiceMode.CREATE) clientUser else invoice?.person
+                )
+
+                LazyRow {
+                    item {
+                        Column {
+                            TableHeader()
+                            LazyColumn(modifier = Modifier.heightIn(max = 600.dp)) {
+
+                                itemsIndexed(commandsLine) { index, commandLine ->
+                                    Column(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(max = 600.dp)
+                                            .padding(1.dp)
+                                            .width(800.dp)
+                                            .clickable {
+                                                articleIndex = index
+                                                showArticleDialog = true
+                                            }
                                     ) {
-                                        items(count = commandLineInvoice.itemCount,
+                                        if (showArticleDialog && index == articleIndex && invoiceMode != InvoiceMode.VERIFY) {
+                                            invoiceViewModel.article = commandLine.article!!
+                                            // il faux ajouter quantity
+                                            invoiceViewModel.commandLineDto = commandLine
+                                            ArticleDialog(
+                                                update = true,
+                                                openDialo = true,
+                                                asProvider,
+                                                provider.id!!
+                                            ) {
+                                                showArticleDialog = false
+                                            }
+                                        }
+                                        TableRow(commandLine = commandLine)
+                                    }
+                                }
+                                if (invoiceMode == InvoiceMode.VERIFY) {
+                                    when(invoice?.type){
+                                        InvoiceDetailsType.COMMAND_LINE -> items(count = commandLineInvoice.itemCount,
                                             key = commandLineInvoice.itemKey { it.id!! }) { index ->
                                             val commandLine = commandLineInvoice[index]
                                             if (commandLine != null) {
-                                                if(showDialog)
-                                                    generatePDF(context , commandsLine)
                                                 TableRow(commandLine = commandLine)
                                             }
                                         }
-                                    }
-                                    LazyColumn(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(max = 600.dp)
-                                    ) {
-                                        items(count = ordersLineInvoice.itemCount,
+                                        InvoiceDetailsType.ORDER_LINE ->  items(count = ordersLineInvoice.itemCount,
                                             key = ordersLineInvoice.itemKey { it.id!! }) { index ->
                                             val order = ordersLineInvoice[index]
                                             if (order != null) {
-                                                if(showDialog) {
+                                                if (showDialog) {
                                                     val purchaseOrderList =
                                                         ordersLineInvoice.itemSnapshotList.items
-                                                    generateOrderPDF(context, purchaseOrderList)
+                                                    generateOrderPDF(
+                                                        context,
+                                                        purchaseOrderList
+                                                    )
                                                 }
                                                 TableRowOrder(order)
                                             }
                                         }
+                                        null -> {}
                                     }
+
+
                                 }
                             }
                         }
                     }
                 }
-                item {
-                    InvoiceFooter(
-                        invoiceViewModel = invoiceViewModel,
-                        tottva = invoice?.tot_tva_invoice?.toBigDecimal(),
-                        totprice = invoice?.prix_article_tot?.toBigDecimal(),
-                        totgen = invoice?.prix_invoice_tot?.toBigDecimal(),
-                        invoiceMode
-                    )
+                if (invoiceMode == InvoiceMode.VERIFY) {
+                    tottva = invoice?.tot_tva_invoice?.toBigDecimal()
+                    totprice = invoice?.prix_article_tot?.toBigDecimal()
+                    totgen = invoice?.prix_invoice_tot?.toBigDecimal()
                 }
+                InvoiceFooter(
+                    invoiceViewModel = invoiceViewModel,
+                    tottva = tottva,
+                    totprice = totprice,
+                    totgen = totgen,
+                    invoiceMode
+                )
+            }
+            if (paymentHistoric.itemCount != 0) {
                 items(count = paymentHistoric.itemCount,
                     key = paymentHistoric.itemKey { it.id!! }
                 ) { index ->
                     val payment = paymentHistoric[index]
-                    if (payment != null)
+                    if (payment != null && payment.invoice?.id == invoice?.id)
                         PaymentCard(payment)
-
                 }
             }
         }
@@ -777,7 +564,19 @@ fun TableRowOrder(commandLine: PurchaseOrderLine) {
     }
 }
 @Composable
-fun TableHeader(labels : List<Int>) {
+fun TableHeader() {
+    val labels = listOf(
+        R.string.label,
+        R.string.code,
+        R.string.quantity,
+        R.string.unit,
+        R.string.tva,
+        R.string.prix_unit,
+        R.string.tot_tva,
+        R.string.prix_article_tot,
+        R.string.discount
+    )
+
     Row(
         modifier = Modifier
             .padding(1.dp)
@@ -796,7 +595,11 @@ fun TableHeader(labels : List<Int>) {
     }
 }
 @Composable
-fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMode : InvoiceMode, invoiceStatus : PaymentStatus?, isMe : Boolean, onSubmit: (Boolean, Boolean, Boolean, Boolean) -> Unit) {
+fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMode : InvoiceMode, invoiceStatus : PaymentStatus?, isMe : Boolean,
+                myAccountType: AccountType, asProvider  : Boolean, providerId : Long ,onSubmit: (Boolean, Boolean, Boolean, Boolean) -> Unit) {
+    var openDeliveryDialog by remember {
+        mutableStateOf(false)
+    }
     var article by remember {
         mutableStateOf(ArticleCompany())
     }
@@ -808,10 +611,10 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
             .fillMaxWidth()
             .wrapContentWidth(Alignment.CenterHorizontally)
     ) {
-        if(invoiceMode != InvoiceMode.VERIFY) {
-        ArticleDialog(update = false, openDialo = false) {
-            onSubmit(false, false, false, false)
-        }
+        if (invoiceMode != InvoiceMode.VERIFY) {
+            ArticleDialog(update = false, openDialo = false, asProvider,providerId) {
+                onSubmit(false, false, false, false)
+            }
             IconButton(
                 onClick = {
                     onSubmit(false, false, false, true)
@@ -851,26 +654,128 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
                 }
             }
         }
-        IconButton(onClick = { onSubmit(false, false,true, false) }
+        IconButton(onClick = { onSubmit(false, false, true, false) }
         ) {
             Icon(
                 painter = painterResource(R.drawable.baseline_picture_as_pdf_24),
                 contentDescription = stringResource(id = R.string.pdf)
             )
         }
-        if(invoiceStatus != PaymentStatus.PAID && invoiceMode != InvoiceMode.CREATE && isMe)
-        IconButton(onClick = { onSubmit(true, false, false, false) }) {
-            Icon(imageVector = Icons.Outlined.AccountBalanceWallet,
-                contentDescription = "payment icon")
+        if (invoiceStatus != PaymentStatus.PAID && invoiceMode != InvoiceMode.CREATE && isMe) {
+            IconButton(onClick = { onSubmit(true, false, false, false) }) {
+                Icon(
+                    imageVector = Icons.Outlined.AccountBalanceWallet,
+                    contentDescription = "payment icon"
+                )
+            }
         }
+        if (myAccountType == AccountType.DELIVERY) {
+            if (invoiceViewModel.purchaseOrder.isTaken == false)
+                ButtonSubmit(
+                    labelValue = stringResource(id = R.string.accept),
+                    color = Color.Green,
+                    enabled = true
+                ) {
+                    invoiceViewModel.acceptInvoiceAsDelivery()
+                }
+            else {
+                if(invoiceViewModel.purchaseOrder.isDelivered == false) {
+                    Row {
+                        Row(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            ButtonSubmit(
+                                labelValue = "Deliver Order",
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                openDeliveryDialog = true
+                            }
 
+                        }
+                        Row(
+                            modifier = Modifier.weight(1f)
+                        ) {
+
+                            ButtonSubmit(
+                                labelValue = "Reject Order",
+                                color = Color.Red,
+                                enabled = true
+                            ) {
+                                openDeliveryDialog = true
+                            }
+                        }
+                        if (openDeliveryDialog)
+                            DeliveryCodeDailog(isOpen = openDeliveryDialog) { closeDialog, deliverycode ->
+                                openDeliveryDialog = closeDialog
+                                if (deliverycode != "")
+                                    invoiceViewModel.submitOrderDelivered(deliverycode)
+                            }
+                    }
+                }
+            }
+        }
     }
+}
+
+@Composable
+fun DeliveryCodeDailog(isOpen: Boolean, onSubmit: (Boolean, String) -> Unit) {
+   if(isOpen) {
+       var text by remember {
+           mutableStateOf("")
+       }
+       var isEnabled by remember {
+           mutableStateOf(false)
+       }
+       Dialog(onDismissRequest = { onSubmit(false,"") }) {
+           Column {
+               InputTextField(
+                   labelValue = text,
+                   label = "delivery code",
+                   singleLine = true,
+                   maxLine = 1,
+                   keyboardOptions = KeyboardOptions(),
+                   onValueChange = { text = it
+                       isEnabled = text.length == 6
+                                   },
+                   onImage = {}
+               ) {
+
+               }
+               Row {
+                   Row(
+                       modifier = Modifier.weight(1f)
+                   ) {
+                       ButtonSubmit(
+                           labelValue = stringResource(id = R.string.accept),
+                           color = Color.Green,
+                           enabled = isEnabled
+                       ) {
+                           onSubmit(false,text)
+                       }
+                   }
+                   Row(
+                       modifier = Modifier.weight(1f)
+                   ) {
+                       ButtonSubmit(
+                           labelValue = stringResource(id = R.string.cancel),
+                           color = Color.Red,
+                           enabled = true
+                       ) {
+                           onSubmit(false,"")
+                       }
+                   }
+               }
+           }
+       }
+   }
 }
 @Composable
 fun ClientDetails(clientType: AccountType, clientCompany : Company? , clientUser : User?) {
     var showClientDialog by remember {
         mutableStateOf(false)
     }
+    Log.e("clienttest","client company : $clientCompany user : $clientUser type $clientType")
     Row {
         Column(
             modifier = Modifier.clickable {
@@ -883,14 +788,8 @@ fun ClientDetails(clientType: AccountType, clientCompany : Company? , clientUser
                 }
             }
             Text(text = if (clientType == AccountType.COMPANY) clientCompany?.name?:"" else clientUser?.username?:"")
-            Text(
-                text = if (clientType == AccountType.COMPANY) clientCompany?.phone
-                    ?: "" else clientUser?.phone ?: ""
-            )
-            Text(
-                text = if (clientType == AccountType.COMPANY) clientCompany?.address
-                    ?: "" else clientUser?.address ?: ""
-            )
+            Text(text = if (clientType == AccountType.COMPANY) clientCompany?.phone ?: "" else clientUser?.phone ?: "")
+            Text(text = if (clientType == AccountType.COMPANY) clientCompany?.address ?: "" else clientUser?.address ?: "")
         }
     }
 }
@@ -914,13 +813,10 @@ fun MyCompanyDetails(myCompany : Company) {
                 .padding(end = 2.dp), Arrangement.End
         ) {
             Column {
-                ShowImage(
-                    image = "${BASE_URL}${stringResource(id = R.string.warehouse)}/${
-                        stringResource(
-                            id = R.string.image
-                        )
-                    }/${myCompany.logo}/${stringResource(id = R.string.company)}/${myCompany.user?.id}"
-                )
+                if(myCompany.logo != null)
+                     ShowImage(image = String.format(IMAGE_URL_COMPANY,myCompany.logo,myCompany.user?.id))
+                else
+                    NotImage()
                 Text(text = myCompany.email ?: "")
                 myCompany.matfisc?.let { Text(text = it) }
             }
@@ -954,9 +850,13 @@ fun PaymentCard(payment : Payment) {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun stringToLocalDateTime(dateTimeString: String, format: String = "yyyy-MM-dd"): LocalDateTime {
-    val formatter = DateTimeFormatter.ofPattern(format)
-    return LocalDateTime.parse(dateTimeString, formatter)
+fun stringToLocalDateTime(dateTimeString: String?): String {
+    if(dateTimeString != null) {
+        val dateTime = LocalDateTime.parse(dateTimeString)
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        return dateTime.format(dateFormatter)
+    }else
+        return ""
 }
 @Composable
 fun PaymentDailog(isOpen : Boolean, onSubmit : (Double) -> Unit) {

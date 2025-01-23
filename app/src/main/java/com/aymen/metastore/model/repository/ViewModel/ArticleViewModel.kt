@@ -46,9 +46,10 @@ class ArticleViewModel @Inject constructor(
     private val useCases: MetaUseCases,
     private val appViewModel: AppViewModel,
     private val context: Context
-)
-    : ViewModel() {
+) : ViewModel() {
 
+    private val categoryDao = room.categoryDao()
+    private val subCategoryDao = room.subCategoryDao()
     val company: StateFlow<Company?> = sharedViewModel.company
     val user: StateFlow<User?> = sharedViewModel.user
     var companyId by mutableLongStateOf(0)
@@ -150,20 +151,20 @@ class ArticleViewModel @Inject constructor(
     fun deleteArticle(article: ArticleCompany){
         viewModelScope.launch(Dispatchers.IO) {
             val remoteKey = articleCompanyDao.getArticleRemoteKeysById(article.id!!)
-            val inventory = inventoryDao.getInventoryByArticleId(article.id)
+            val inventory = inventoryDao.getInventoryByArticleId(article.id!!)
             val remoteKeysInventory = inventory?.id?.let {
              inventoryDao.getInventoryRemoteKey(it)
             }
             room.withTransaction {
                 articleDao.updateArticleById(false , article.article?.id!!)
-            articleCompanyDao.clearArticleById(article.id)
-            articleCompanyDao.clearRemoteKeyById(article.id)
+            articleCompanyDao.clearArticleById(article.id!!)
+            articleCompanyDao.clearRemoteKeyById(article.id!!)
                 if(inventory != null){
-                inventoryDao.clearInventoryByArticleId(article.id)
+                inventoryDao.clearInventoryByArticleId(article.id!!)
                 inventoryDao.clearInventoryRemoteKeysById(inventory.id!!)
                 }
             }
-            val response = repository.deleteArticle(article.id)
+            val response = repository.deleteArticle(article.id!!)
             if(!response.isSuccessful){
                 articleCompanyDao.insertSigleArticle(article.toArticleCompanyEntity(true))
                 articleCompanyDao.insertSingleKey(remoteKey)
@@ -171,13 +172,13 @@ class ArticleViewModel @Inject constructor(
         }
     }
 
-        fun getAllMyArticleContaining(articleLibel: String, searchType: SearchType) {
+        fun getAllMyArticleContaining(articleLibel: String, searchType: SearchType, asProvider : Boolean , providerId : Long) {
             viewModelScope.launch {
-                useCases.getAllMyArticleContaining(articleLibel, searchType, company.value?.id!!)
+                useCases.getAllMyArticleContaining(articleLibel, searchType, providerId, asProvider)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect {
-                        _searchArticles.value = it.map {article -> article.toArticleCompanyModel() }
+                        _searchArticles.value = it
                 }
             }
         }
@@ -239,7 +240,9 @@ class ArticleViewModel @Inject constructor(
                                 articleCompanyDao.clearArticleCompanyRemoteKeyById(id)
                                 val serverArticle = success.body()
                                 if(serverArticle != null){
-                                room.articleCompanyDao().insertSigleArticle(serverArticle.toArticleCompany(true))
+                                    categoryDao.insertCategory(listOf(serverArticle.category?.toCategory(false)))
+                                    subCategoryDao.insertSubCategory(listOf(serverArticle.subCategory?.toSubCategory(false)))
+                                room.articleCompanyDao().insertArticle(listOf( serverArticle.toArticleCompany(true)))
                                 room.articleCompanyDao().insertSingleKey(remoteKey.copy(id = serverArticle.id!!))
                                 }
                             }

@@ -11,12 +11,14 @@ import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.model.entity.paging.remotemediator.OrderLineDetailsRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.OrderNotAcceptedRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.PurchaseOrderLinesByInvoiceIdPagingSource
+import com.aymen.metastore.model.entity.paging.remotemediator.PurchaseOrderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
+import com.aymen.metastore.util.PRE_FETCH_DISTANCE
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -37,7 +39,7 @@ class OrderRepositoryImpl @Inject constructor(
                 api = api, room = room,id = id
             ),
             pagingSourceFactory = {
-                purchaseOrderLineDao.getAllMyOrdersNotAccepted(Status.INWAITING)
+                purchaseOrderLineDao.getAllMyOrdersNotAccepted(Status.ACCEPTED)
             }
         ).flow.map {
             it.map { article ->
@@ -80,6 +82,18 @@ class OrderRepositoryImpl @Inject constructor(
         ).flow
     }
 
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getAllOrdersNotDelivered(id: Long): Flow<PagingData<PurchaseOrder>> {
+        return Pager(
+            config = PagingConfig(pageSize = PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = PurchaseOrderRemoteMediator(api, room, id),
+            pagingSourceFactory = { purchaseOrderDao.getInvoicesDelivered(isTaken = false) }
+        ).flow.map {
+            it.map { invoice ->
+                invoice.toPurchaseOrderWithCompanyAndUserOrClient()
+            }
+        }
+    }
     suspend fun insert(response : List<PurchaseOrderLineDto>){
 
         room.userDao().insertUser(response.map {user -> user.article?.company?.user?.toUser()})

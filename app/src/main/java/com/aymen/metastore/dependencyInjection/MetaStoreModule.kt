@@ -2,9 +2,12 @@ package com.aymen.metastore.dependencyInjection
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Bundle
 import android.util.Log
 import androidx.datastore.core.DataStore
+import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
+import androidx.savedstate.SavedStateRegistryOwner
 import com.aymen.metastore.accounttypedtodatastore
 import com.aymen.metastore.companydtodatastore
 import com.aymen.metastore.datastore
@@ -102,11 +105,13 @@ import com.aymen.store.model.repository.remoteRepository.subCategoryRepository.S
 import com.aymen.metastore.model.repository.remoteRepository.subCategoryRepository.SubCategoryRepositoryImpl
 import com.aymen.metastore.model.usecase.GetAllCommandLineByInvoiceId
 import com.aymen.metastore.model.usecase.GetAllCompanyArticles
+import com.aymen.metastore.model.usecase.GetAllOrdersNotAcceptedAsDelivery
 import com.aymen.metastore.model.usecase.GetAllSubCategoriesByCompanyId
 import com.aymen.metastore.model.usecase.GetAllWorkers
 import com.aymen.metastore.model.usecase.GetArticleComment
 import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCategory
 import com.aymen.metastore.model.usecase.GetCategoryTemp
+import com.aymen.metastore.model.usecase.GetInvoicesIdelevered
 import com.aymen.metastore.model.usecase.GetMyClientForAutocompleteClient
 import com.aymen.metastore.model.usecase.GetPaymentForProviderDetails
 import com.aymen.metastore.model.usecase.GetPaymentHystoricByInvoiceId
@@ -169,7 +174,7 @@ class MetaStoreModule {
                             clientRepository: ClientRepository, companyRepository: CompanyRepository,
                             invoiceRepository: InvoiceRepository, pointPaymentRepository: PointPaymentRepository,inventoryRepository: InventoryRepository,
                             invetationRepository: InvetationRepository, orderRepository: OrderRepository, paymentRepository: PaymentRepository,
-                            workerRepository : WorkerRepository, ratingRepository: RatingRepository): MetaUseCases{
+                            workerRepository : WorkerRepository, ratingRepository: RatingRepository, deliveryRepository: DeliveryRepository): MetaUseCases{
         return MetaUseCases(
             getPagingCategoryByCompany = GetPagingCategoryByCompany(repository = categoryRepository),
             getPagingSubCategoryByCompany = GetPagingSubCategoryByCompany(repository = subCategoryRepository),
@@ -210,7 +215,9 @@ class MetaStoreModule {
             getPaymentForProviderDetails = GetPaymentForProviderDetails(repository = pointPaymentRepository),
             getRateeRating = GetRateeRating(repository = ratingRepository),
             searchInvoice = SearchInvoice(repository = invoiceRepository),
-            getPaymentHystoricByInvoiceId = GetPaymentHystoricByInvoiceId(repository = paymentRepository)
+            getPaymentHystoricByInvoiceId = GetPaymentHystoricByInvoiceId(repository = paymentRepository),
+            getAllOrdersNotDelivered = GetAllOrdersNotAcceptedAsDelivery(repository = orderRepository),
+            getInvoicesIdelevered = GetInvoicesIdelevered(repository = deliveryRepository )
 
         )
     }
@@ -317,6 +324,7 @@ class MetaStoreModule {
                                ):SharedViewModel{
         return SharedViewModel(authDataStore, companyDtoDataStore, userDtoDataStore, room, context, accountTypeDataStore,tokenManager)
     }
+
 
     @Provides
     @Singleton
@@ -428,9 +436,10 @@ class MetaStoreModule {
     @Provides
     @Singleton
     fun provideDeliveryRepository(
-        serviceApi: ServiceApi
+        serviceApi: ServiceApi,
+        room : AppDatabase
     ): DeliveryRepository{
-        return DeliveryRepositoryImpl(serviceApi)
+        return DeliveryRepositoryImpl(serviceApi, room)
     }
     @Provides
     @Singleton

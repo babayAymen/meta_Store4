@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,9 @@ import com.aymen.metastore.util.BASE_URL
 fun ProviderScreen() {
     val appViewModel : AppViewModel = hiltViewModel()
     val providerViewModel : ProviderViewModel = hiltViewModel()
+    LaunchedEffect(key1 = Unit) {
+        providerViewModel.isAll = true
+    }
     val providers = providerViewModel.providers.collectAsLazyPagingItems()
     Surface(
         modifier = Modifier

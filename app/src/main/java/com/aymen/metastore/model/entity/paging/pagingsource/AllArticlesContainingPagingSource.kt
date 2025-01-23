@@ -11,7 +11,8 @@ class AllArticlesContainingPagingSource(
     private val api : ServiceApi,
     private val search : String,
     private val searchType: SearchType,
-    private val id : Long
+    private val id : Long,
+    private val asProvider : Boolean
 ) : PagingSource<Int, ArticleCompanyDto>(){
     override fun getRefreshKey(state: PagingState<Int, ArticleCompanyDto>): Int? {
         return state.anchorPosition
@@ -20,7 +21,7 @@ class AllArticlesContainingPagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ArticleCompanyDto> {
         return try {
         val currentPage = params.key ?: 0
-        val response = api.getAllMyArticleContaining(companyId = id, search = search, searchType = searchType ,page = currentPage, pageSize = PAGE_SIZE)
+        val response = api.getAllMyArticleContaining(companyId = id, search = search, searchType = searchType, asProvider = asProvider ,page = currentPage, pageSize = PAGE_SIZE)
         val endOfPaginationReached = response.isEmpty()
             LoadResult.Page(
                 data = response,

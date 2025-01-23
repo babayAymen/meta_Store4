@@ -53,26 +53,34 @@ class ProviderViewModel @Inject constructor(
     private val _providerForUpdate : MutableStateFlow<Company> = MutableStateFlow(Company())
     val providerForUpdate : StateFlow<Company> get() = _providerForUpdate
 
+    private val _myProvidersContainingForAutocomplete : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
+    val myProvidersContainingForAutocomplete : StateFlow<PagingData<ClientProviderRelation>> get() = _myProvidersContainingForAutocomplete
+
     var update by mutableStateOf(false)
 
     private val _providers : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
     val providers : StateFlow<PagingData<ClientProviderRelation>> get() = _providers
 
+    private val _virtualProviders : MutableStateFlow<PagingData<ClientProviderRelation>> = MutableStateFlow(PagingData.empty())
+    val virtualProviders : StateFlow<PagingData<ClientProviderRelation>> get() = _virtualProviders
+
     val companyId by mutableLongStateOf(0)
     val company : StateFlow<Company?> = MutableStateFlow(sharedViewModel.company.value)
-
+    var isAll by mutableStateOf(true)
     init {
         getAllMyProviders()
     }
-    fun getAllMyProviders(){
+    fun getAllMyProviders(search : String? = null){
         viewModelScope.launch {
             val id = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value.id else sharedViewModel.user.value.id
-            Log.e("provideridazeie","company id for probviders $id")
-            useCases.getAllMyProviders(id!!)
+            useCases.getAllMyProviders(id!!, isAll, search)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
                 .collect{
-                    _providers.value = it
+                    if(search == null)
+                        _providers.value = it
+                    else
+                        _virtualProviders.value = it
                 }
         }
     }
@@ -82,7 +90,7 @@ class ProviderViewModel @Inject constructor(
     }
     fun deleteProvider(item : ClientProviderRelation){
         viewModelScope.launch(Dispatchers.IO) {
-            var remoteKey = ProviderRemoteKeysEntity(0,null,null)
+            var remoteKey = ProviderRemoteKeysEntity(0,null,null,false)
             room.withTransaction {
                 remoteKey = clientProviderRelationDao.getProviderRemoteKey(item.id!!)
                 clientProviderRelationDao.deleteClientProviderRelationById(item.id)
@@ -142,6 +150,7 @@ class ProviderViewModel @Inject constructor(
                     id = id,
                     prevPage = if(page == 0) null else page,
                     nextPage = null,
+                    false
                 )
                 clientProviderRelationDao.insertSingleProviderRemoteKey(remoteKey)
             }
@@ -156,7 +165,8 @@ class ProviderViewModel @Inject constructor(
                             val remoteKeys = ProviderRemoteKeysEntity(
                                 id = serverResponse.id!!,
                                 prevPage = latestRemoteKey.prevPage,
-                                nextPage = null
+                                nextPage = null,
+                                false
                             )
                         room.withTransaction {
                             companyDao.deleteCompanyById(companyId)

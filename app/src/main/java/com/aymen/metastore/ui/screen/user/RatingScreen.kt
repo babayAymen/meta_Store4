@@ -36,8 +36,8 @@ import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.DividerComponent
+import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.ShowImage
-import com.aymen.metastore.ui.component.notImage
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.store.ui.navigation.RouteController
@@ -100,12 +100,14 @@ fun RatingScreen(mode: AccountType, company: Company?, user: User?) {
                     if (rate != null) {
                         rate.raterUser?.let { user ->
                             if(user.image != null) ShowImage(image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}")
-                            else notImage()
+                            else
+                                NotImage()
                         }
                         rate.raterCompany?.let { company ->
                             if(company.logo != null) {
                                 ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                            }else notImage()
+                            }else
+                                NotImage()
                         }
                         Text(text = rate.raterUser?.username ?: rate.raterCompany?.name ?: "", modifier = Modifier.clickable {
                             if(rate.raterUser != null){
