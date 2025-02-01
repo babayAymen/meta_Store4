@@ -23,6 +23,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.OrderNotAcceptedKeysEnti
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.metastore.util.ORDER
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
@@ -36,6 +37,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 @HiltViewModel
 class ShoppingViewModel @Inject constructor(
@@ -301,17 +303,29 @@ fun submitShopping() {
 
 
 
-    fun orderLineResponse(status: Status, ids : List<Long>, price : Double){
+    fun orderLineResponse(status: Status, ids : List<Long>, price : Double?=0.0){
         viewModelScope.launch(Dispatchers.IO) {
+            when(status){
+                Status.ACCEPTED -> {
+                    val priceForCompany = BigDecimal(price!!).multiply(BigDecimal(0.9).multiply(
+                        BigDecimal(0.2)
+                    )).setScale(2,RoundingMode.HALF_UP)
+                    Log.e("lohbaydehx","pricefor company $priceForCompany price $price")
+                    appViewModel.addCompanyBalance(priceForCompany.toDouble())
+                }
+                Status.CANCELLED -> appViewModel.addCompanyBalance(price!!)
+                else -> {}
+            }
             ids.forEach {
                 purchaseOrderLineDao.changeStatusByLine(status,it)
             }
+
             val result : Result<Response<Double>> = runCatching{
                 repository.orderLineResponse(status,ids)
             }
             result.fold(
                 onSuccess = {success ->
-                        appViewModel.updateShow("order")
+                        appViewModel.updateShow(ORDER)
                     val order = success.body()
                     if(order != null) {
                         appViewModel.updateCompanyBalance(order)

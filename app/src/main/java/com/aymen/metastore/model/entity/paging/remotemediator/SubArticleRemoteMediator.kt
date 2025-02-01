@@ -6,27 +6,25 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import com.aymen.metastore.model.entity.dao.PurchaseOrderDao
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
-import com.aymen.metastore.model.entity.room.remoteKeys.AllInvoiceRemoteKeysEntity
-import com.aymen.metastore.model.entity.room.remoteKeys.PurchaseOrderRemoteKeys
-import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
+import com.aymen.metastore.model.entity.room.remoteKeys.SubArticleRemoteKeys
+import com.aymen.metastore.model.entity.room.remoteKeys.SubCategoryRemoteKeysEntity
+import com.aymen.metastore.model.entity.roomRelation.SubArticleWithArticles
+import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
-import com.aymen.store.model.Enum.PaymentStatus
 
 @OptIn(ExperimentalPagingApi::class)
-class PurchaseOrderRemoteMediator(
+class SubArticleRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
-    private val id  : Long
-): RemoteMediator<Int , PurchaseOrderWithCompanyAndUserOrClient>() {
-
+    private val parentId : Long
+): RemoteMediator<Int , SubArticleWithArticles>() {
 
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
-    private val purchaseOrderDao = room.purchaseOrderDao()
+    private val articleDao = room.articleDao()
+    private val articleCompanyDao = room.articleCompanyDao()
+    private val subArticleDao = room.subArticleDao()
 
     override suspend fun initialize(): InitializeAction {
         return InitializeAction.LAUNCH_INITIAL_REFRESH
@@ -35,9 +33,8 @@ class PurchaseOrderRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, PurchaseOrderWithCompanyAndUserOrClient>
+        state: PagingState<Int, SubArticleWithArticles>
     ): MediatorResult {
-        Log.e("tetsinvoice","remote mediator purch")
         return try {
             val currentPage = when (loadType) {
                 LoadType.REFRESH -> {
@@ -60,55 +57,54 @@ class PurchaseOrderRemoteMediator(
                     nextePage
                 }
             }
-            val response = api.getAllOrdersNotAcceptedAsDelivery(id,currentPage, state.config.pageSize)
-            Log.e("orderderkeie","response : $response")
+
+            val response = api.getArticlesChilds(parentId,currentPage, state.config.pageSize)
             val endOfPaginationReached = response.last
-            val prevPage = if (response.first) null else currentPage - 1
-            val nextPage = if (endOfPaginationReached) null else currentPage + 1
+            val prevPage = if (response.first) null else response.number - 1
+            val nextPage = if (endOfPaginationReached) null else response.number + 1
 
             room.withTransaction {
                 try {
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
                     }
-                    purchaseOrderDao.insertPurchaseOrderRemoteKeys(response.content.map { article ->
-                        PurchaseOrderRemoteKeys(
+                    subArticleDao.insertKeys(response.content.map { article ->
+                        SubArticleRemoteKeys(
                             id = article.id!!,
                             nextPage = nextPage,
                             prevPage = prevPage
                         )
                     })
 
-                    userDao.insertUser(response.content.map {user -> user.person?.toUser()})
-                    userDao.insertUser(response.content.map {user -> user.client?.user?.toUser()})
-                    companyDao.insertCompany(response.content.map {company -> company.client?.toCompany()})
-                    userDao.insertUser(response.content.map {user -> user.company?.user?.toUser()})
-                    companyDao.insertCompany(response.content.map {company -> company.company?.toCompany()})
-                    purchaseOrderDao.insertOrder(response.content.map {order -> order.toPurchaseOrder() })
+                    articleDao.insertArticle(response.content.map { article -> article.childArticle?.article?.toArticle(true) })
+                    userDao.insertUser(response.content.map { articleCompany -> articleCompany.childArticle?.provider?.user?.toUser() })
+                    companyDao.insertCompany(response.content.map { articleCompany -> articleCompany.childArticle?.provider?.toCompany() })
+                    articleCompanyDao.insertArticle(response.content.map { articleCompany -> articleCompany.childArticle?.toArticleCompany(false) })
+                    subArticleDao.insertSubArticle(response.content.map { subArticle -> subArticle.toSubArticleEntity() })
+
 
                 } catch (ex: Exception) {
-                    Log.e("errorinvoice", ex.message.toString())
+                    Log.e("error", ex.message.toString())
                 }
             }
             MediatorResult.Success(endOfPaginationReached)
 
         } catch (ex: Exception) {
-            Log.e("errorinvoice", ex.message.toString())
             MediatorResult.Error(ex)
         }
     }
 
     private suspend fun getPreviousPageForTheFirstItem(): Int? {
-        return purchaseOrderDao.getFirstPurchaseOrderRemoteKey()?.prevPage
+        return subArticleDao.getFirstSubArticleRemoteKey()?.prevPage
     }
 
     private suspend fun getNextPageForTheLasttItem(): Int? {
-        return purchaseOrderDao.getLatestPurchaseOrderRemoteKey()?.nextPage
+        return subArticleDao.getLatestSubArticleRemoteKey()?.nextPage
     }
 
-    private suspend fun deleteCache(){
-        purchaseOrderDao.clearOrdersDelivered(false)
-        purchaseOrderDao.clearAllRemoteKeysTable()
 
+    private suspend fun deleteCache(){
+        subArticleDao.clearAllSubArticleTable()
+        subArticleDao.clearAllRemoteKeysTable()
     }
 }

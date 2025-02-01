@@ -12,15 +12,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.store.model.repository.ViewModel.ProviderViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.ProviderCard
+import com.aymen.metastore.util.ADD_PROVIDER
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
 
 @Composable
 fun ProviderScreen() {
@@ -42,8 +47,8 @@ fun ProviderScreen() {
                 modifier = Modifier.fillMaxWidth()
             ){
 
-                ButtonSubmit(labelValue = "Add New Provider", color = Color.Green, enabled = true) {
-                    appViewModel.updateShow("add provider")
+                ButtonSubmit(labelValue = stringResource(id = R.string.add_new_provider), color = Color.Green, enabled = true) {
+                    appViewModel.updateShow(ADD_PROVIDER)
                 }
             }
                LazyColumn {
@@ -60,13 +65,15 @@ fun ProviderScreen() {
                                onUpdate = {item ->
                                    providerViewModel.associateProviderForUpdate(item.provider!!)
                                    providerViewModel.update = true
-                                   appViewModel.updateShow("add provider")
+                                   appViewModel.updateShow(ADD_PROVIDER)
 
                                }
                            ) { prvd ->
                                ProviderCard(
                                    prvd,
-                                   image = "${BASE_URL}werehouse/image/${provider.provider?.logo}/company/" + if (provider.provider?.virtual == true) provider.client?.user?.id else provider.provider?.user?.id
+                                   image = String.format(IMAGE_URL_COMPANY,provider.provider?.logo,
+                                       if (provider.provider?.virtual == true) provider.client?.user?.id else provider.provider?.user?.id)
+
 
                                )
                            }

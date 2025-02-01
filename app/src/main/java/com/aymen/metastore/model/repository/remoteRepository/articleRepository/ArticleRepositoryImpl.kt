@@ -9,6 +9,7 @@ import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.SubArticleModel
 import com.aymen.metastore.model.entity.paging.pagingsource.AllArticlesContainingPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.ArticleCompanyRandomMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.ArticleCompanyRemoteMediator
@@ -16,6 +17,7 @@ import com.aymen.metastore.model.entity.paging.remotemediator.ArticleRemoteMedia
 import com.aymen.metastore.model.entity.paging.remotemediator.CompanyArticleRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.CompanyArticlesByCategoryOrSubCategoryPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.CommentArticleRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.SubArticleRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
@@ -50,6 +52,7 @@ class ArticleRepositoryImpl @Inject constructor
     private val companyDao = room.companyDao()
     private val userDao = room.userDao()
     private val articleDao = room.articleDao()
+    private val subArticleDao = room.subArticleDao()
 
     override fun getRandomArticles(categoryName: CompanyCategory, companyId: Long?): Flow<PagingData<ArticleCompany>> {
             return Pager(
@@ -217,6 +220,24 @@ class ArticleRepositoryImpl @Inject constructor
             }
         }
         return response
+    }
+
+    //////////////////////////////////////////////////////////  sub article ///////////////////////////////////////
+
+    override suspend fun addSubArticle(
+        subArticle: List<SubArticleModel>
+    ) = api.addSubArticle(subArticle)
+
+    override fun getArticlesChilds(parentId: Long): Flow<PagingData<SubArticleModel>> {
+        return Pager(
+            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+            remoteMediator = SubArticleRemoteMediator(api,room,parentId),
+            pagingSourceFactory = {
+                subArticleDao.getArticlesChilds( parentId = parentId)
+            }
+        ).flow.map {
+            it.map { subArticle -> subArticle.toSubArticleModel() }
+        }
     }
 
     private suspend fun insert(articleDetails : List<ArticleCompanyDto>){

@@ -19,18 +19,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.Invitation
 import com.aymen.metastore.model.repository.ViewModel.InvetationViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.util.CLIENT
 import com.aymen.metastore.util.IMAGE_URL_COMPANY
 import com.aymen.metastore.util.IMAGE_URL_USER
+import com.aymen.metastore.util.PARENT
+import com.aymen.metastore.util.PROVIDER
+import com.aymen.metastore.util.WORKER
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
@@ -92,38 +98,38 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
                     senderName = invitation.client?.username ?: ""
                     receiverName = invitation.companyReceiver?.name ?: ""
                     receiverType = AccountType.COMPANY
-                     "client"
+                     CLIENT
             }
             Type.COMPANY_SEND_CLIENT_COMPANY -> {
                     senderName = invitation.companySender?.name ?: ""
                     receiverName = invitation.companyReceiver?.name ?: ""
                     receiverType = AccountType.COMPANY
-                      "client"
+                CLIENT
             }
             Type.COMPANY_SEND_PROVIDER_USER -> {
                     senderName = invitation.companySender?.name ?: ""
                     receiverName = invitation.client?.username ?: ""
                     receiverType = AccountType.USER
-                "provider"
+                PROVIDER
             }
             Type.COMPANY_SEND_PROVIDER_COMPANY -> {
                     senderName = invitation.companySender?.name ?: ""
                     receiverName = invitation.companyReceiver?.name ?: ""
                     receiverType = AccountType.COMPANY
-                     "provider"
+                PROVIDER
             }
-            Type.COMPANY_SEND_PARENT_COMPANY -> "parent"
+            Type.COMPANY_SEND_PARENT_COMPANY -> PARENT
             Type.COMPANY_SEND_WORKER_USER -> {
                     senderName = invitation.companySender?.name ?: ""
                     receiverName = invitation.client?.username ?: ""
                     receiverType = AccountType.USER
-                     "worker"
+                WORKER
             }
             Type.USER_SEND_WORKER_COMPANY -> {
                     senderName = invitation.client?.username ?: ""
                     receiverName = invitation.companyReceiver?.name ?: ""
                     receiverType = AccountType.COMPANY
-                      "worker"
+                WORKER
             }
 
             Type.OTHER -> TODO()
@@ -170,29 +176,29 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
                 when (invitation.status) {
                     Status.ACCEPTED -> {
                         if(receiverName == company.name)
-                            Text("you have accepted $senderName $type invitation")
+                            Text(stringResource(id = R.string.your_accept,senderName,type))
                         else
-                            Text("$receiverName has accepted your $type invitation")
+                            Text(stringResource(id = R.string.his_accept,senderName,type))
                     }
                     Status.REFUSED -> {
                         if(receiverName == company.name)
-                            Text("you have refused $senderName $type invitation")
+                            Text(stringResource(id = R.string.your_refuse,senderName,type))
                         else
-                            Text("$receiverName refused your $type invitation")
+                            Text(stringResource(id = R.string.his_refuse,senderName,type))
                     }
                     Status.CANCELLED -> {
                         if(senderName == company.name)
-                            Text("you have cancelled $type invitation to $receiverName")
+                            Text(stringResource(id = R.string.your_canceled,type, receiverName))
                         else
-                            Text("$senderName has cancelled the $type invitation")
+                            Text(stringResource(id = R.string.his_canceled,senderName,type))
                     }
                     Status.INWAITING -> {
                         Row {
                             if (senderName == company.name) {
                                 Column {
-                                    Text("you have sent $type invitation to $receiverName ")
+                                    Text(stringResource(id = R.string.your_sent,type, receiverName) )
                                     ButtonSubmit(
-                                        labelValue = "cacel",
+                                        labelValue = stringResource(id = R.string.cancel),
                                         color = Color.Red,
                                         enabled = true
                                     ) {
@@ -201,11 +207,11 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
                                 }
                             } else {
                                 Column {
-                                    Text("$senderName has sent $type invitation ")
+                                    Text(stringResource(id = R.string.his_sent,senderName,type))
                                     Row {
                                         Row(modifier = Modifier.weight(1f)) {
                                             ButtonSubmit(
-                                                labelValue = "accept",
+                                                labelValue = stringResource(id = R.string.accept),
                                                 color = Color.Green,
                                                 enabled = true
                                             ) {
@@ -214,7 +220,7 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
                                         }
                                         Row(modifier = Modifier.weight(1f)) {
                                             ButtonSubmit(
-                                                labelValue = "refuse",
+                                                labelValue = stringResource(id = R.string.refuse),
                                                 color = Color.Red,
                                                 enabled = true
                                             ) {

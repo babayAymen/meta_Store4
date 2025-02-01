@@ -23,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
@@ -31,24 +30,24 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
-import androidx.hilt.navigation.compose.hiltViewModel
+import com.aymen.metastore.app.MetaStore
 import com.aymen.metastore.dependencyInjection.AccountTypeDtoSerializer
 import com.aymen.metastore.dependencyInjection.CompanyDtoSerializer
 import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.dependencyInjection.UserDtoSerializer
-import com.aymen.metastore.model.entity.model.Company
-import com.aymen.metastore.model.entity.model.User
-import com.aymen.metastore.app.MetaStore
-import com.aymen.store.dependencyInjection.TokenSerializer
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
+import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.NotificationMessage
+import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.webSocket.ChatClient
-import com.aymen.metastore.model.webSocket.WebSocketViewModel
+import com.aymen.store.dependencyInjection.TokenSerializer
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.ui.theme.MetaStoreTheme
+import com.google.android.gms.tasks.Task
+import com.google.firebase.installations.FirebaseInstallations
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.Serializable
 import javax.inject.Inject
+
 
 val Context.datastore: DataStore<AuthenticationResponse> by dataStore("setting.json", TokenSerializer)
 val Context.companydtodatastore: DataStore<Company> by dataStore("companydto.json", CompanyDtoSerializer)
@@ -69,6 +68,17 @@ class MainActivity : ComponentActivity() {
         val languageCode = getSavedLanguage(this)?: "en"
         setLanguage(this, languageCode)
         requestNotificationPermission()
+        FirebaseInstallations.getInstance().id
+            .addOnCompleteListener { task: Task<String> ->
+                if (task.isSuccessful) {
+                    val fid = task.result
+                    // Use this FID as a unique identifier for the device
+                    Log.d("FirebaseInstallationID", "FID: $fid")
+                } else {
+                    Log.e("FirebaseInstallationID", "Failed to retrieve FID", task.exception)
+                }
+            }
+
         enableEdgeToEdge()
         setContent {
             MetaStoreTheme {

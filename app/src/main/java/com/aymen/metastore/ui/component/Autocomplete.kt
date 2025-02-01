@@ -389,7 +389,7 @@ fun ClientUserItem(
 
 ////////////////////////////////
 @Composable
-fun AutoCompleteArticle(update : Boolean, asProvider : Boolean, providerId : Long ,onSelcetArticle : (Boolean) -> Unit) {
+fun AutoCompleteArticle(update : Boolean, asProvider : Boolean, providerId : Long ,onSelcetArticle : (ArticleCompany ,Boolean) -> Unit) {
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val focusRequester = remember { FocusRequester() }
@@ -460,7 +460,7 @@ fun AutoCompleteArticle(update : Boolean, asProvider : Boolean, providerId : Lon
                     value = articleLibel,
                     onValueChange ={
                         articleLibel = it
-                        onSelcetArticle(false)
+                        onSelcetArticle(ArticleCompany(),false)
                         expanded = true
                         if(it.isNotEmpty()){
                         articleViewModel.getAllMyArticleContaining(it,SearchType.MY, asProvider, providerId)
@@ -510,20 +510,11 @@ fun AutoCompleteArticle(update : Boolean, asProvider : Boolean, providerId : Lon
                                     key = articles.itemKey { client -> client.id!! },
                                     contentType = { articles.itemContentType { "articles" } }) { index: Int ->
                                     val article = articles[index]
-//                                    articles.filterNot { article ->
-//                                        invoiceViewModel.commandLineDtos.any { commandLineDto ->
-//                                            commandLineDto.article?.article?.libelle == article.article!!.libelle
-//                                        }
-//                                    }
-//                                        .sortedBy {
-//                                            it.article!!.libelle
-//                                        }
-//                                ) {
                                     ArticleItem(article = article!!) { art ->
                                         articleLibel = art.article!!.libelle?:""
                                         expanded = false
                                         invoiceViewModel.article = art
-                                        onSelcetArticle(true)
+                                        onSelcetArticle(art ,true)
                                     }
                                 }
                             }else{
@@ -531,28 +522,17 @@ fun AutoCompleteArticle(update : Boolean, asProvider : Boolean, providerId : Lon
                                     count = articles.itemCount,
                                     key = articles.itemKey{article -> article.id!!},
                                     contentType = {articles.itemContentType{"articles"}}
-//                                    articles
-//                                        .sortedBy {
-//                                            it.article!!.libelle
-//                                        }
                                 ) {index ->
                                     val article = articles[index]
                                     ArticleItem(article = article!!) { art ->
                                         articleLibel = art.article!!.libelle?:""
                                         expanded = false
                                         invoiceViewModel.article = art
-                                        onSelcetArticle(true)
+                                        onSelcetArticle(art,true)
                                     }
                                 }
                             }
                         }else{
-//                            items(
-//                                articles
-//                            ){
-//                                ArticleItem(article = com.aymen.metastore.model.entity.room.entity.Article()) { title ->
-//
-//                                }
-//                            }
                                     expanded = false
                         }
                     }

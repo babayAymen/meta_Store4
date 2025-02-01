@@ -18,11 +18,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.SearchHistory
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.SearchCategory
@@ -267,7 +269,7 @@ fun SearchBar(clickAction: (Boolean,String,Boolean) -> Unit) {
         var searchText by remember {
             mutableStateOf("")
         }
-    SearchField(label = "search",
+    SearchField(label = stringResource(id = R.string.search),
         labelValue = searchText,
         value = {
             searchText = it

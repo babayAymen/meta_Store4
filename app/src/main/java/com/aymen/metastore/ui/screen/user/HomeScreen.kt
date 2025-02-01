@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HomeWork
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.SavedSearch
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.GroupAdd
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.HomeWork
@@ -94,7 +97,60 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.ui.screen.admin.DashBoardScreen
+import com.aymen.metastore.util.ADD_ARTICLE
+import com.aymen.metastore.util.ADD_ARTICLE_FOR_COMPANY
+import com.aymen.metastore.util.ADD_CATEGORY
+import com.aymen.metastore.util.ADD_CLIENT
+import com.aymen.metastore.util.ADD_INVOICE
+import com.aymen.metastore.util.ADD_PARENT
+import com.aymen.metastore.util.ADD_PAYMENT
+import com.aymen.metastore.util.ADD_PROVIDER
+import com.aymen.metastore.util.ADD_SUBCATEGORY
+import com.aymen.metastore.util.ADD_WORKER
+import com.aymen.metastore.util.ALL
+import com.aymen.metastore.util.ALL_HISTORY
+import com.aymen.metastore.util.ARTICLE
+import com.aymen.metastore.util.AS_CLIENT
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.BUY_HISTORY
+import com.aymen.metastore.util.CLIENT
+import com.aymen.metastore.util.CLIENT_TYPE
+import com.aymen.metastore.util.DASH
+import com.aymen.metastore.util.FALSE
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
+import com.aymen.metastore.util.IMAGE_URL_USER
+import com.aymen.metastore.util.INVITATION
+import com.aymen.metastore.util.INVOICE
+import com.aymen.metastore.util.IN_COMPLETE
+import com.aymen.metastore.util.IS_SEND
+import com.aymen.metastore.util.META
+import com.aymen.metastore.util.NOTIFICATION_TYPE
+import com.aymen.metastore.util.NOT_ACCEPTED
+import com.aymen.metastore.util.NOT_PAID
+import com.aymen.metastore.util.ORDER
+import com.aymen.metastore.util.ORDER_LINE
+import com.aymen.metastore.util.PAID
+import com.aymen.metastore.util.PARENT
+import com.aymen.metastore.util.PAYMENT
+import com.aymen.metastore.util.POINT_ESPECE
+import com.aymen.metastore.util.PROFIT
+import com.aymen.metastore.util.PROVIDER
+import com.aymen.metastore.util.REGLEMENT_FOR_PROVIDER
+import com.aymen.metastore.util.REGLEMENT_SCREEN
+import com.aymen.metastore.util.SEARCH
+import com.aymen.metastore.util.SHOPPING
+import com.aymen.metastore.util.SUBCATEGORY
+import com.aymen.metastore.util.WORKER
+import com.aymen.metastore.util.all_histories_payment_for_provider
+import com.aymen.metastore.util.all_histories_payment_for_provider_by_date
+import com.aymen.metastore.util.all_profit_payment_for_provider_per_day
+import com.aymen.metastore.util.category
+import com.aymen.metastore.util.incomplete
+import com.aymen.metastore.util.notaccepted
+import com.aymen.metastore.util.notpayed
+import com.aymen.metastore.util.payed
+import com.aymen.metastore.util.profit_by_date
+import com.aymen.metastore.util.sum_of_profit_by_date
 import com.aymen.store.ui.screen.user.NotificationScreen
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
@@ -153,16 +209,16 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
             appViewModel.sendDeviceToken(token)
         }
         if(randomArticles.itemCount == 0) {
-            articleViewModel.fetchRandomArticlesForHomePage(categoryName = CompanyCategory.ALL)
+            articleViewModel.fetchRandomArticlesForHomePage(categoryName = articleViewModel.selectedCategory.value)
         }
     }
 
    LaunchedEffect(key1 = extra) {
-       val notificationType = extra["notificationType"]
-       val clientType = extra["clientType"]
-       val isSend = extra["isSend"]
+       val notificationType = extra[NOTIFICATION_TYPE]
+       val clientType = extra[CLIENT_TYPE]
+       val isSend = extra[IS_SEND]
        if (notificationType == NotificationType.PAYMENT.name) {
-           appViewModel.updateView("payment")
+           appViewModel.updateView(PAYMENT)
            appViewModel.updateScreen(IconType.WALLET)
        }
        if (notificationType == NotificationType.INVITATION.name)
@@ -171,9 +227,9 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
            appViewModel.updateScreen(IconType.SHOPPING)
        if (notificationType == NotificationType.INVOICE.name) {
            if(clientType == AccountType.COMPANY.name){
-               if(isSend == "false")
+               if(isSend == FALSE)
                     appViewModel.asClient = true
-               appViewModel.updateShow("invoice")
+               appViewModel.updateShow(INVOICE)
                appViewModel.updateScreen(IconType.COMPANY)
            }else
                appViewModel.updateScreen(IconType.SHOPPING)
@@ -184,7 +240,7 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection)
         ,
-        topBar = {
+        topBar = { // if i want to use bottom bar just change this to bottom bar
             MyTopBar(scrollBehavior, context, sharedViewModel,invoiceNotificationCount,orderNotificationCount,
                 invitationNotificationCount, paymentNotificationCount, reglementNotificationCount,invoiceAsClientNotificationCount)
         }
@@ -257,7 +313,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
     }
     TopAppBar(
         title = {
-            Text(text = "meta")
+            Text(text = META)
         },
         Modifier
             .clip(shape = RoundedCornerShape(topStart = 60.dp, topEnd = 60.dp))
@@ -278,7 +334,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                 ) {
                     Row(
                         modifier = Modifier
-                            .weight(0.8f)
+                            .weight(0.7f)
                             .clickable {
                                 opDialog = !opDialog
                             }
@@ -293,7 +349,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             Row {
                             if (company.logo != null ) {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}",
+                                    image = String.format(IMAGE_URL_COMPANY,company.logo, company.user?.id),
                                     35.dp
                                 )
                             } else {
@@ -305,7 +361,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             Row {
                             if (user.image != null) {
                                 ShowImage(
-                                    image = "${BASE_URL}werehouse/image/${user.image}/user/${user.id}",
+                                    image = String.format(IMAGE_URL_USER,user.image, user.id),
                                     35.dp
                                 )
                             } else {
@@ -316,9 +372,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         }
                     }
                     Row(
-                        modifier = Modifier.weight(0.3f)
+                        modifier = Modifier.weight(0.4f)
                     ) {
-                        Text(text = "${balance}TDN")
+                        Text(text = stringResource(id = R.string.balance,balance))
                     }
                     Row(
                         modifier = Modifier.weight(0.1f)
@@ -328,7 +384,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
-                                contentDescription = "menu",
+                                contentDescription = stringResource(id = R.string.menu),
                                 tint = Color.Black
                             )
                         }
@@ -351,7 +407,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             }
                             else if (accountType == AccountType.USER && user.role == RoleEnum.USER) {
                                 DropdownMenuItem(
-                                    text = { Text(text = "add company") },
+                                    text = { Text(text = stringResource(id = R.string.add_company)) },
                                     onClick = { RouteController.navigateTo(Screen.AddCompanyScreen) })
                             }
 
@@ -368,7 +424,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                                     })
                             }
                             LanguageSwither()
-                            DropdownMenuItem(text = { Text(text = "logout") }, onClick = {
+                            DropdownMenuItem(text = { Text(text = stringResource(id = R.string.logout)) }, onClick = {
                                 sharedViewModel.logout()
                             })
                         }
@@ -393,7 +449,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         onClick = {
                             viewModel.updateScreen(IconType.HOME)
                         },
-                        description = "home"
+                        description = stringResource(id = R.string.home)
                     )
                     if (accountType == AccountType.COMPANY) {
 
@@ -404,10 +460,10 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             iconUnselected = Icons.Outlined.HomeWork,
                             badgeCount = invoiceCount+invoiceAsClientCount,
                             onClick = {
-                                viewModel.updateShow("dash")
+                                viewModel.updateShow(DASH)
                                 viewModel.updateScreen(IconType.COMPANY)
                             },
-                            description = "company"
+                            description = stringResource(id = R.string.company)
                         )
                     }
                     IconWithBadge(
@@ -417,9 +473,10 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.ShoppingCart,
                         badgeCount = orderCount,
                         onClick = {
+                            viewModel.updateShow(SHOPPING)
                             viewModel.updateScreen(IconType.SHOPPING)
                         },
-                        description = "shopping"
+                        description = stringResource(id = R.string.shopping)
                     )
                     IconWithBadge(
                         iconType = IconType.WALLET,
@@ -430,11 +487,11 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         onClick = {
                             viewModel.updateScreen(IconType.WALLET)
                             if(accountType == AccountType.COMPANY && user.role == RoleEnum.WORKER){
-                                viewModel.updateView("buyhistory")
-                                viewModel.updateShow("allHistory")
-                            }else viewModel.updateView("payment")
+                                viewModel.updateShow(BUY_HISTORY)
+                                viewModel.updateView(ALL_HISTORY)
+                            }else viewModel.updateShow(PAYMENT)
                         },
-                        description = "wallet"
+                        description = stringResource(id = R.string.wallet)
                     )
                     IconWithBadge(
                         iconType = IconType.SEARCH,
@@ -444,8 +501,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         badgeCount = 0, // Example of a message badge
                         onClick = {
                             viewModel.updateScreen(IconType.SEARCH)
+                            viewModel.updateShow(SEARCH)
                         },
-                        description = "search"
+                        description = stringResource(id = R.string.search)
                     )
                     if(user.role != RoleEnum.WORKER || !isCompany ) {
                         IconWithBadge(
@@ -456,8 +514,9 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                             badgeCount = invitationCount,
                             onClick = {
                                 viewModel.updateScreen(IconType.USER)
+                                viewModel.updateShow(INVITATION)
                             },
-                            description = "user"
+                            description = stringResource(id = R.string.user)
                         )
                     }
                 }
@@ -465,80 +524,95 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
         },
         scrollBehavior =  scrollBehavior
     )
-    val art = stringResource(id = R.string.add_article_for_company)
     SystemBackButtonHandler {
         if (historySelected == selectedIcon && viewModel.currentScreen.value == IconType.HOME) {
 
             (context as? Activity)?.moveTaskToBack(true)
 
         }
-
-        if( viewModel.show.value == "dash" || viewModel.show.value == "payment" || viewModel.show.value == "order"){
+        val view by viewModel.view
+        val show by viewModel.show
+        if( show == DASH || show == PAYMENT || show == ORDER || show == SEARCH || show == INVITATION || show == SHOPPING){
             if(historySelected == IconType.COMPANY){
-                viewModel.updateShow("dash")
+                viewModel.updateShow(DASH)
             }
             viewModel.updateScreen(historySelected)
             viewModel._historySelected.value = IconType.HOME
         }
         else{
-            when(viewModel.show.value){
-                art -> {
-                    viewModel.updateShow("article")
+            when(show){
+                ADD_ARTICLE_FOR_COMPANY -> {
+                    viewModel.updateShow(ARTICLE)
                 }
-                "add category" -> {
-                    viewModel.updateShow("category")
+                ADD_CATEGORY -> {
+                    viewModel.updateShow(category)
                 }
-                "add client" -> {
-                    viewModel.updateShow("client")
+                ADD_CLIENT -> {
+                    viewModel.updateShow(CLIENT)
                 }
-                "add provider" -> {
-                    viewModel.updateShow("provider")
+                ADD_PROVIDER -> {
+                    viewModel.updateShow(PROVIDER)
                 }
-                "add payment" -> {
-                    viewModel.updateShow("payment")
+                ADD_PAYMENT -> {
+                    viewModel.updateShow(PAYMENT)
                 }
-                "add subCategory" -> {
-                    viewModel.updateShow("subcategory")
+                ADD_SUBCATEGORY -> {
+                    viewModel.updateShow(SUBCATEGORY)
                 }
-                "add invoice" -> {
-                    if(viewModel.view.value == "buyhistory")
-                    viewModel.updateShow("allHistory")
+                ADD_INVOICE -> {
+                    if(view == BUY_HISTORY)
+                    viewModel.updateShow(ALL_HISTORY)
                     else
-                    viewModel.updateShow("invoice")
+                    viewModel.updateShow(INVOICE)
                 }
-                "ADD_WORKER" -> {
-                viewModel.updateShow("worker")
+                ADD_WORKER -> {
+                viewModel.updateShow(WORKER)
             }
-                "add parent" -> { // remove it
-                    viewModel.updateShow("parent")
+                ADD_PARENT -> { // remove it
+                    viewModel.updateShow(PARENT)
                 }
-                "as client" -> {
-                    viewModel.updateShow("invoice")
+                AS_CLIENT -> {
+                    viewModel.updateShow(INVOICE)
                 }
-                "orderLine" -> {
-                viewModel.updateShow("order")
+                ORDER_LINE -> {
+                viewModel.updateShow(ORDER)
                 }
-                "pointespece" -> {
-                    viewModel.updateShow("payment")
+                POINT_ESPECE -> {
+                    viewModel.updateShow(PAYMENT)
                 }
-                "profit" -> {
-                    viewModel.updateShow("payment")
+                ADD_ARTICLE ->{
+                    viewModel.updateShow(ARTICLE)
                 }
-                "ADD_ARTICLE" ->{
-                    viewModel.updateShow("article")
+                REGLEMENT_SCREEN -> viewModel.updateShow(REGLEMENT_FOR_PROVIDER)
+                INVOICE -> {
+                    when(view){
+                        ALL -> viewModel.updateShow(DASH)
+                        PAID -> viewModel.updateView(historicView,ALL)
+                        NOT_PAID -> viewModel.updateView(historicView,ALL)
+                        IN_COMPLETE -> viewModel.updateView(historicView,ALL)
+                        NOT_ACCEPTED -> viewModel.updateView(historicView,ALL)
+                    }
                 }
-                "REGLEMENT_SCREEN" -> viewModel.updateShow("REGLEMENT_FOR_PROVIDER")
-                "invoice" -> {
-                    when(viewModel.view.value){
-                        "ALL" -> viewModel.updateShow("dash")
-                        "PAID" -> viewModel.updateView(historicView,"ALL")
-                        "NOT_PAID" -> viewModel.updateView(historicView,"ALL")
-                        "IN_COMPLETE" -> viewModel.updateView(historicView,"ALL")
-                        "NOT_ACCEPTED" -> viewModel.updateView(historicView,"ALL")
+                BUY_HISTORY ->{
+                    when(view){
+                        ALL_HISTORY -> viewModel.updateShow(PAYMENT)
+                        payed -> viewModel.updateView(historicView, ALL_HISTORY)
+                        incomplete -> viewModel.updateView(historicView,ALL_HISTORY)
+                        notpayed -> viewModel.updateView(historicView,ALL_HISTORY)
+                        notaccepted -> viewModel.updateView(historicView,ALL_HISTORY)
+                    }
+                }
+                PROFIT ->{
+                    when(view){
+                        all_histories_payment_for_provider ->viewModel.updateShow(PAYMENT)
+                        all_histories_payment_for_provider_by_date ->viewModel.updateView(historicView,all_histories_payment_for_provider)
+                        all_profit_payment_for_provider_per_day ->viewModel.updateView(historicView,all_histories_payment_for_provider)
+                        profit_by_date ->viewModel.updateView(historicView,all_histories_payment_for_provider)
+                        sum_of_profit_by_date ->viewModel.updateView(historicView,all_histories_payment_for_provider)
                     }
                 }
                 else -> {
-                    viewModel.updateShow("dash")
+                    viewModel.updateShow(DASH)
                 }
 
             }
@@ -588,11 +662,11 @@ fun IconWithBadge(
 
 @Composable
 fun ScreenByCategory(articleViewModel: ArticleViewModel) {
-
-    LazyRow (
-        modifier = Modifier.padding(3.dp),
+    val selectedCategory by articleViewModel.selectedCategory.collectAsStateWithLifecycle()
+    LazyRow(
+        modifier = Modifier.padding(3.dp,0.dp),
         horizontalArrangement = Arrangement.spacedBy(1.dp)
-    ){
+    ) {
         items(CompanyCategory.entries) { categ ->
             var categortyName = ""
             val imageResId = when (categ) {
@@ -600,34 +674,42 @@ fun ScreenByCategory(articleViewModel: ArticleViewModel) {
                     categortyName = stringResource(id = R.string.dairy)
                     R.drawable.attar
                 }
+
                 CompanyCategory.FISH -> {
                     categortyName = stringResource(id = R.string.fish)
                     R.drawable.hout
                 }
+
                 CompanyCategory.GROCER -> {
                     categortyName = stringResource(id = R.string.grocer)
                     R.drawable.boukoul
                 }
+
                 CompanyCategory.VEGETABLE -> {
                     categortyName = stringResource(id = R.string.vegetable)
                     R.drawable.khodhra
                 }
+
                 CompanyCategory.BUTCHER -> {
                     categortyName = stringResource(id = R.string.butcher)
                     R.drawable.jazzar
                 }
+
                 CompanyCategory.ALL -> {
                     categortyName = stringResource(id = R.string.all)
                     R.drawable.hstore
                 }
+
                 CompanyCategory.CAKE -> {
                     categortyName = stringResource(id = R.string.cake)
                     R.drawable.cakeshop
                 }
+
                 CompanyCategory.RESTAURANT -> {
                     categortyName = stringResource(id = R.string.restautrant)
                     R.drawable.restaurant
                 }
+
                 CompanyCategory.POULTERER -> {
                     categortyName = stringResource(id = R.string.restautrant)
                     R.drawable.restaurant
@@ -635,37 +717,49 @@ fun ScreenByCategory(articleViewModel: ArticleViewModel) {
             }
 
             val imagePainter: Painter = painterResource(id = imageResId)
-            Card(
-                onClick = {
-                    articleViewModel.fetchRandomArticlesForHomePage(categ)
-                },
-                modifier = Modifier
-                    .size(90.dp, 70.dp),
-            )
-            {
-                Column (
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Card(
+                    onClick = {
+                        articleViewModel.setSelectCategory(categ)
+                        articleViewModel.fetchRandomArticlesForHomePage(categ)
+                    },
+                    modifier = Modifier
+                        .size(90.dp, 70.dp),
+                )
+                {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
-                    Image(
-                        painter = imagePainter,
-                        contentDescription = "category image",
+                        Image(
+                            painter = imagePainter,
+                            contentDescription = stringResource(id = R.string.category),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .clip(
+                                    RoundedCornerShape(5.dp)
+                                ),
+                            contentScale = ContentScale.Crop
+                        )
+                        Spacer(modifier = Modifier.height(1.dp))
+                        Text(text = categortyName)
+                    }
+                }
+                if (selectedCategory == categ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDropDown,
+                        contentDescription = stringResource(id = R.string.triangle),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .clip(
-                                RoundedCornerShape(5.dp)
-                            ),
-                        contentScale = ContentScale.Crop
+                            .size(30.dp)
+                            .background(Color.Green)
                     )
-
-                    Spacer(modifier = Modifier.height(1.dp))
-                Text(text = categortyName)
-
                 }
             }
-            Spacer(modifier = Modifier.size(1.dp))
         }
     }
 }

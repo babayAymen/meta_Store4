@@ -24,10 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.store.model.Enum.CompanyCategory
 import com.aymen.store.model.Enum.IconType
@@ -37,6 +39,7 @@ import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.DropDownCompanyCategory
 import com.aymen.metastore.ui.component.InputTextField
 import com.aymen.metastore.ui.component.resolveUriToFile
+import com.aymen.metastore.util.DASH
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
@@ -134,7 +137,8 @@ fun AddCompanyScreen(update : Boolean) {
             ){
                 InputTextField(
                     labelValue = companyName,
-                    label = "name", singleLine = true,
+                    label = stringResource(id = R.string.name),
+                    singleLine = true,
                     maxLine = 1,
                     keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
@@ -148,7 +152,7 @@ fun AddCompanyScreen(update : Boolean) {
                 }
                 InputTextField(
                     labelValue = companyMatriculeFiscal,
-                    label = "matricule fiscal",
+                    label = stringResource(id = R.string.mat_fisc),
                     singleLine = true,
                     maxLine = 1,
                     keyboardOptions = KeyboardOptions(
@@ -164,7 +168,7 @@ fun AddCompanyScreen(update : Boolean) {
                 DropDownCompanyCategory {
                     companyCategory = it
                 }
-                InputTextField(labelValue = companyCapital, label = "capital", singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
+                InputTextField(labelValue = companyCapital, label = stringResource(id = R.string.capital), singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 ),
                     onValueChange = {capital ->
@@ -175,7 +179,7 @@ fun AddCompanyScreen(update : Boolean) {
 
                 }
                 ButtonSubmit(
-                    labelValue = "Cancel",
+                    labelValue = stringResource(id = R.string.cancel),
                     color = Color.Red
                     , enabled = true,
                     clickAction = {RouteController.navigateTo(Screen.HomeScreen)})
@@ -186,7 +190,7 @@ fun AddCompanyScreen(update : Boolean) {
                     .padding(horizontal = 2.dp)
             ) {
 
-                    InputTextField(labelValue = companyCode, label = "code", singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
+                    InputTextField(labelValue = companyCode, label = stringResource(id = R.string.code), singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     ),
                         onValueChange = {code  ->
@@ -196,7 +200,7 @@ fun AddCompanyScreen(update : Boolean) {
                     ){
 
                     }
-                InputTextField(labelValue = companyBankAccount, label = "bank account", singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
+                InputTextField(labelValue = companyBankAccount, label = stringResource(id = R.string.bank_account), singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 ),
                     onValueChange = {account ->
@@ -206,7 +210,7 @@ fun AddCompanyScreen(update : Boolean) {
                 ){
 
                 }
-                InputTextField(labelValue = companyaddress, label = "address", singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
+                InputTextField(labelValue = companyaddress, label = stringResource(id = R.string.address), singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 ),
                     onValueChange = {address ->
@@ -216,7 +220,7 @@ fun AddCompanyScreen(update : Boolean) {
                 ){
 
                 }
-                InputTextField(labelValue = companyPhone, label = "phone", singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
+                InputTextField(labelValue = companyPhone, label = stringResource(id = R.string.phone), singleLine = true, maxLine = 1, keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 ),
                     onValueChange = {phone ->
@@ -226,13 +230,13 @@ fun AddCompanyScreen(update : Boolean) {
                 ){
 
                 }
-                    ButtonSubmit(labelValue = "add photo", color = Color.Cyan, enabled = true, clickAction = {
+                    ButtonSubmit(labelValue = stringResource(id = R.string.add_photo), color = Color.Cyan, enabled = true, clickAction = {
                         singlePhotoPickerLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     })
                     ButtonSubmit(
-                        labelValue = "Submit",
+                        labelValue = stringResource(id = R.string.submit),
                         color = Color.Green
                         , enabled = true,
                         clickAction = {
@@ -282,7 +286,7 @@ fun AddCompanyScreen(update : Boolean) {
 
                 RouteController.navigateTo(Screen.HomeScreen)
                 appViewModel.updateScreen(IconType.COMPANY)
-                appViewModel.updateShow("dash")
+                appViewModel.updateShow(DASH)
             }
         }
     }

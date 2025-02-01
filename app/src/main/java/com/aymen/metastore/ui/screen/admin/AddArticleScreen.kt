@@ -17,6 +17,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.ArticleCompany
@@ -50,6 +52,7 @@ import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
+import com.aymen.metastore.ui.component.ArticleDialog
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.DropDownCategory
 import com.aymen.metastore.ui.component.DropDownCompany
@@ -62,20 +65,20 @@ import com.aymen.store.model.repository.ViewModel.ProviderViewModel
 import com.google.gson.Gson
 
 @Composable
-fun AddArticleScreen(){
+fun AddArticleScreen() {
     Surface(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(1.dp)
-    ){
-        val appViewModel : AppViewModel = hiltViewModel()
-        val categoryViewModel : CategoryViewModel = hiltViewModel()
-        val companyViewModel : CompanyViewModel = hiltViewModel()
-        val sharedViewModel : SharedViewModel = hiltViewModel()
-        val subCategoryViewModel : SubCategoryViewModel = hiltViewModel()
-        val articleViewModel : ArticleViewModel = hiltViewModel()
-        val providerViewModel : ProviderViewModel = hiltViewModel()
+    ) {
+        val appViewModel: AppViewModel = hiltViewModel()
+        val categoryViewModel: CategoryViewModel = hiltViewModel()
+        val companyViewModel: CompanyViewModel = hiltViewModel()
+        val sharedViewModel: SharedViewModel = hiltViewModel()
+        val subCategoryViewModel: SubCategoryViewModel = hiltViewModel()
+        val articleViewModel: ArticleViewModel = hiltViewModel()
+        val providerViewModel: ProviderViewModel = hiltViewModel()
         val company by sharedViewModel.company.collectAsStateWithLifecycle()
         val article = articleViewModel.article
         var image by remember {
@@ -83,23 +86,31 @@ fun AddArticleScreen(){
         }
         val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia(),
-            onResult = {uri -> image = uri }
+            onResult = { uri -> image = uri }
         )
         val categories = categoryViewModel.companyCategories.collectAsLazyPagingItems()
         val subcategories = subCategoryViewModel.allSubCategories.collectAsLazyPagingItems()
         val providers = providerViewModel.providers.collectAsLazyPagingItems()
+        val subArticlesChile = articleViewModel.subArticlesChilds.collectAsLazyPagingItems()
         var category by remember {
             mutableStateOf(Category())
         }
         LaunchedEffect(key1 = Unit) {
             providerViewModel.isAll = false
             providerViewModel.getAllMyProviders()
-            categoryViewModel.setFilter(company.id?:0)
+            categoryViewModel.setFilter(company.id ?: 0)
         }
         LaunchedEffect(key1 = category) {
-            subCategoryViewModel.getAllSubCategoriesByCategoryId(category.id?:0, sharedViewModel.company.value.id?:0)
+            subCategoryViewModel.getAllSubCategoriesByCategoryId(
+                category.id ?: 0,
+                sharedViewModel.company.value.id ?: 0
+            )
         }
-
+        DisposableEffect(key1 = Unit) {
+            onDispose {
+                articleViewModel.remiseAZeroSubArticle()
+            }
+        }
 
         var subCategory by remember {
             mutableStateOf(SubCategory())
@@ -163,31 +174,43 @@ fun AddArticleScreen(){
         var articleId by remember {
             mutableLongStateOf(0L)
         }
-        if(articleViewModel.upDate){
+        var upDate by remember {
+            mutableStateOf(false)
+        }
+        var isBought by remember {
+            mutableStateOf(true)
+        }
+        if (articleViewModel.upDate) {
+            articleViewModel.getArticlesChilds()
+            upDate = true
             val articlee by articleViewModel.articleCompany.collectAsStateWithLifecycle()
             articleCompany = articlee!!
-            minQuantity = if(articlee?.unit == UnitArticle.U)(articlee?.minQuantity?:0.0).toInt().toString() else (articlee?.minQuantity?:0.0).toString()
+            minQuantity =
+                if (articlee?.unit == UnitArticle.U) (articlee?.minQuantity ?: 0.0).toInt()
+                    .toString() else (articlee?.minQuantity ?: 0.0).toString()
             qte = articlee?.quantity!!
             minQte = articlee?.minQuantity!!
-            costFieald = (articlee?.cost?:0.0).toString()
+            costFieald = (articlee?.cost ?: 0.0).toString()
             cost = articlee?.cost!!
-            sellingPriceFieald = (articlee?.sellingPrice?:0.0).toString()
+            sellingPriceFieald = (articlee?.sellingPrice ?: 0.0).toString()
             sellingPrice = articlee?.sellingPrice!!
             unitItem = articlee?.unit!!
-            quantity = if(articlee?.unit == UnitArticle.U)(articlee?.quantity?:0.0).toInt().toString() else (articlee?.quantity?:0.0).toString()
-            privacy = articlee?.isVisible?:PrivacySetting.PUBLIC
-            category = articlee?.category?:Category()
-            subCategory = articlee?.subCategory?: SubCategory()
+            quantity = if (articlee?.unit == UnitArticle.U) (articlee?.quantity ?: 0.0).toInt()
+                .toString() else (articlee?.quantity ?: 0.0).toString()
+            privacy = articlee?.isVisible ?: PrivacySetting.PUBLIC
+            category = articlee?.category ?: Category()
+            subCategory = articlee?.subCategory ?: SubCategory()
             provider = articlee?.provider!!
             articleId = articlee?.id!!
-            Log.e("addarticletest","article company id : ${articleCompany.id}")
+            isBought = articlee?.isBought!!
             articleViewModel.upDate = false
         }
-
+        var showArticleDailog by remember {
+            mutableStateOf(false)
+        }
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            Log.e("recompose","recompose : qte $qte quantity : $quantity ")
             items(1) {
                 Row(
                     modifier = Modifier.fillMaxSize()
@@ -299,7 +322,7 @@ fun AddArticleScreen(){
                                         quantity = normalizedInput
                                         qte = if (normalizedInput.startsWith(".")) {
                                             0.0
-                                        }else{
+                                        } else {
                                             if (normalizedInput.endsWith(".")) {
                                                 normalizedInput.let { inp ->
                                                     if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
@@ -335,8 +358,8 @@ fun AddArticleScreen(){
                                         val normalizedInput = it.replace(',', '.')
                                         minQuantity = normalizedInput
                                         minQte = if (normalizedInput.startsWith(".")) {
-                                             0.0
-                                        }else if (normalizedInput.endsWith(".")) {
+                                            0.0
+                                        } else if (normalizedInput.endsWith(".")) {
                                             normalizedInput.let { inp ->
                                                 if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
                                             }
@@ -349,33 +372,34 @@ fun AddArticleScreen(){
                         ) {
 
                         }
-                        InputTextField(
-                            labelValue = costFieald,
-                            label = stringResource(id = R.string.cost),
-                            singleLine = true,
-                            maxLine = 1,
-                            KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Next
-                            ),
-                            onValueChange = {
-                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
-                                    val normalizedInput = it.replace(',', '.')
-                                    costFieald = normalizedInput
-                                    cost = if(normalizedInput.startsWith(".")) {
-                                        0.0
-                                    } else if (normalizedInput.endsWith(".")) {
-                                        normalizedInput.let { inp ->
-                                            if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                        if (isBought)
+                            InputTextField(
+                                labelValue = costFieald,
+                                label = stringResource(id = R.string.cost),
+                                singleLine = true,
+                                maxLine = 1,
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Next
+                                ),
+                                onValueChange = {
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        costFieald = normalizedInput
+                                        cost = if (normalizedInput.startsWith(".")) {
+                                            0.0
+                                        } else if (normalizedInput.endsWith(".")) {
+                                            normalizedInput.let { inp ->
+                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                            }
+                                        } else {
+                                            normalizedInput.toDoubleOrNull() ?: 0.0
                                         }
-                                    } else {
-                                        normalizedInput.toDoubleOrNull() ?: 0.0
                                     }
-                                }
-                            }, onImage = {}, true
-                        ) {
+                                }, onImage = {}, true
+                            ) {
 
-                        }
+                            }
                         InputTextField(
                             labelValue = sellingPriceFieald,
                             label = stringResource(id = R.string.selling_price),
@@ -389,7 +413,7 @@ fun AddArticleScreen(){
                                 if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
                                     val normalizedInput = it.replace(',', '.')
                                     sellingPriceFieald = normalizedInput
-                                    sellingPrice = if(normalizedInput.startsWith(".")) 0.0
+                                    sellingPrice = if (normalizedInput.startsWith(".")) 0.0
                                     else if (normalizedInput.endsWith(".")) {
                                         normalizedInput.let { inp ->
                                             if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
@@ -401,131 +425,187 @@ fun AddArticleScreen(){
                             }, onImage = {}, true
                         ) {
                         }
-                        if(false){
+                        if (false) {
                             Row {
                                 Checkbox(checked = isDiscounted,
                                     onCheckedChange = {
                                         isDiscounted = !isDiscounted
                                     })
-                                Text(text = "does this article have abality to discount?")
+                                Text(text = "Is this product bought?")
                             }
+                        }
+                        Row {
+                            Checkbox(checked = isBought,
+                                onCheckedChange = {
+                                    isBought = !isBought
+                                })
+                            Text(text = "does this product is bought?")
                         }
                     }
                 }
             }
-            item{
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Row(
+            item {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp, top = 10.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    Text(text = stringResource(id = R.string.visibility))
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 0.dp)
-                ) {
-                    RadioButtons(privacy) { selectedPrivacy ->
-                        privacy = selectedPrivacy
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, top = 10.dp)
+                    ) {
+                        Text(text = stringResource(id = R.string.visibility))
                     }
-                }
-                Row {
-                    val unitList = UnitArticle.entries
-                    unitItem = dropDownItems(unitItem,list = unitList)
-                }
-
-                Row {
-                    DropDownCategory(category,pagingItems = categories){
-                        category = it
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 0.dp)
+                    ) {
+                        RadioButtons(privacy) { selectedPrivacy ->
+                            privacy = selectedPrivacy
+                        }
                     }
-                }
+                    Row {
+                        val unitList = UnitArticle.entries
+                        unitItem = dropDownItems(unitItem, list = unitList)
+                    }
 
-                Row {
+                    Row {
+                        DropDownCategory(category, pagingItems = categories) {
+                            category = it
+                        }
+                    }
 
-                        DropDownSubCategory(subCategory ,list = subcategories,
-                            category.id?:0
-                        ){
+                    Row {
+
+                        DropDownSubCategory(
+                            subCategory, list = subcategories,
+                            category.id ?: 0
+                        ) {
                             subCategory = it
                         }
 
-                }
-                Row {
-                    DropDownCompany(provider = provider, list = providers){
-                        provider = it
                     }
-                }
-                if(false) {
-                ButtonSubmit(labelValue = stringResource(id = R.string.add_photo), color = Color.Cyan, enabled = true) {
-                    singlePhotoPickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
-                }
+                    Row {
+                        DropDownCompany(provider = provider, list = providers) {
+                            provider = it
+                        }
+                    }
+                    if (false) {
+                        ButtonSubmit(
+                            labelValue = stringResource(id = R.string.add_photo),
+                            color = Color.Cyan,
+                            enabled = true
+                        ) {
+                            singlePhotoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            AsyncImage(
+                                model = image,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxWidth(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        AsyncImage(
-                            model = image,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxWidth(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        val articleText = stringResource(id = R.string.article)
-                        ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
-                            appViewModel.updateShow(articleText)
-                        }
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-
-                        ButtonSubmit(labelValue = stringResource(id = R.string.submit), color = Color.Green, enabled = true) {
-                            articleCompany.quantity = qte
-                            articleCompany.minQuantity = minQte
-                            articleCompany.cost = cost
-                            articleCompany.sellingPrice = sellingPrice
-                            articleCompany.category = category
-                            articleCompany.subCategory = subCategory
-                            articleCompany.provider = provider
-                            articleCompany.unit = unitItem
-                            articleCompany.isVisible = privacy
-                            articleCompany.article = article
-                            if(articleId != 0L)
-                            articleCompany.id = articleId
-                            val photo = resolveUriToFile(image, context)
-                            val articleJsonString = gson.toJson(articleCompany)
-                            val projsonstring = gson.toJson(companyViewModel.myCompany)
-                            val arstring = articleJsonString+projsonstring
-
-                            if(articleCompany.id == null) {
-                                if (articleJsonString.isNotEmpty() && photo != null && article.id != null) {
-//                                articleViewModel.addArticle(articleCompany,articleJsonString, photo)
-                                } else {
-                                    articleViewModel.addArticleCompany(
-                                        articleCompany
-                                    )
-                                }
-                            }else{
-                                articleViewModel.updateArticle(articleCompany)
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            val articleText = stringResource(id = R.string.article)
+                            ButtonSubmit(
+                                labelValue = stringResource(id = R.string.cancel),
+                                color = Color.Red,
+                                enabled = true
+                            ) {
+                                appViewModel.updateShow(articleText)
                             }
                         }
-                    }
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
 
+                            ButtonSubmit(
+                                labelValue = stringResource(id = R.string.submit),
+                                color = Color.Green,
+                                enabled = true
+                            ) {
+                                articleCompany.quantity = qte
+                                articleCompany.minQuantity = minQte
+                                articleCompany.cost = cost
+                                articleCompany.sellingPrice = sellingPrice
+                                articleCompany.category = category
+                                articleCompany.subCategory = subCategory
+                                articleCompany.provider = provider
+                                articleCompany.unit = unitItem
+                                articleCompany.isVisible = privacy
+                                articleCompany.article = article
+                                articleCompany.isBought = isBought
+                                if (articleId != 0L) {
+                                    articleCompany.id = articleId
+                                }
+                                val photo = resolveUriToFile(image, context)
+                                val articleJsonString = gson.toJson(articleCompany)
+                                val projsonstring = gson.toJson(companyViewModel.myCompany)
+                                val arstring = articleJsonString + projsonstring
+
+                                if (articleCompany.id == null) {
+                                    if (articleJsonString.isNotEmpty() && photo != null && article.id != null) {
+//                                articleViewModel.addArticle(articleCompany,articleJsonString, photo)
+                                    } else {
+                                        articleViewModel.addArticleCompany(
+                                            articleCompany
+                                        )
+                                    }
+                                } else {
+                                    articleViewModel.updateArticle(articleCompany)
+                                }
+                            }
+                        }
+
+                    }
                 }
+
             }
+            if (upDate)
+                item {
+                    Column {
+                        ButtonSubmit(
+                            labelValue = stringResource(id = R.string.add_article),
+                            color = Color.Green,
+                            enabled = upDate
+                        ) {
+                            showArticleDailog = true
+                        }
+                        if (showArticleDailog)
+                            ArticleDialog(
+                                update = false,
+                                openDialo = showArticleDailog,
+                                asProvider = true,
+                                providerId = company.id!!,
+                                isSubArticle = true,
+                            ) { article, quantity ->
+                                showArticleDailog = false
+                                articleViewModel.addIdToSubArticleIds(article, quantity)
+                            }
+                    }
+                }
+            items(count = subArticlesChile.itemCount,
+                key = subArticlesChile.itemKey { it.id!! }
+            ) { index ->
+                val subArticleChild = subArticlesChile[index]
+                if (subArticleChild != null)
+
+                    Row {
+                        Text(text = "sub article ${subArticleChild.childArticle?.article?.libelle} with sub relation quantity")
+                    }
             }
         }
     }

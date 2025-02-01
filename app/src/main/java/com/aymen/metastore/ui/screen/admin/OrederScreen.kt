@@ -18,17 +18,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.store.model.repository.ViewModel.OrderViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.InvoiceCard
 import com.aymen.metastore.ui.component.PuchaseOrderCard
+import com.aymen.metastore.util.DELIVERED
+import com.aymen.metastore.util.NOT_DELIVERED
 import com.aymen.store.model.Enum.AccountType
 
 @Composable
@@ -57,7 +61,7 @@ fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel)
                                 modifier = Modifier.weight(1f)
                             ){
                                 ButtonSubmit(
-                                    labelValue = "delivered",
+                                    labelValue = stringResource(id = R.string.delivered),
                                     color = Color.Green,
                                     enabled = !isDelivered
                                 ) {
@@ -65,7 +69,9 @@ fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel)
                                         invoiceViewModel.getInvoicesIDelivered()
                                     }
                                     isDelivered = !isDelivered
-                                    appViewModel.updateView("DELIVERED")
+                                    appViewModel.updateView(
+                                        DELIVERED
+                                    )
                                 }
                             }
                             Row (
@@ -73,18 +79,18 @@ fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel)
                             ){
 
                                 ButtonSubmit(
-                                    labelValue = "still not delivered",
+                                    labelValue = stringResource(id = R.string.still_not_delivered),
                                     color = Color.Green,
                                     enabled = isDelivered
                                 ) {
                                     isDelivered = !isDelivered
-                                    appViewModel.updateView("NOT_DELIVERED")
+                                    appViewModel.updateView(NOT_DELIVERED)
                                 }
                             }
                         }
                     }
                     when (view) {
-                        "NOT_DELIVERED" -> {
+                        NOT_DELIVERED -> {
                             items(count = invoicesDontDelivered.itemCount,
                                 key = invoicesDontDelivered.itemKey { it.id!! }) { index ->
                                 val order = invoicesDontDelivered[index]
@@ -98,7 +104,7 @@ fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel)
                                 }
                             }
                         }
-                        "DELIVERED" -> {
+                        DELIVERED -> {
                             items(count = invoicesIDelivered.itemCount,
                                 key = invoicesIDelivered.itemKey { it.id!! }) { index ->
                                 val order = invoicesIDelivered[index]

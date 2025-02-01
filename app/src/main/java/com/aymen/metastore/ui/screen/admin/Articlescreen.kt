@@ -53,6 +53,7 @@ import com.aymen.metastore.ui.component.ArticleCardForAdmin
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.LodingShape
 import com.aymen.metastore.ui.component.AddQuantityDialog
+import com.aymen.metastore.util.ADD_ARTICLE_FOR_COMPANY
 import com.aymen.metastore.util.IMAGE_URL_ARTICLE
 import com.aymen.store.model.Enum.RoleEnum
 import kotlinx.coroutines.delay
@@ -106,7 +107,6 @@ fun ArticleScreen() {
                             mutableStateOf(false)
                         }
                         if(articleCompany != null) {
-                                val navText = stringResource(id = R.string.add_article_for_company)
                             SwipeToDeleteContainer(
                                 articleCompany,
                                 onDelete = {item ->
@@ -114,7 +114,7 @@ fun ArticleScreen() {
                                 },
                                 onUpdate = {item ->
                                     articleViewModel.assignarticleCompany(item)
-                                    appViewModel.updateShow(navText)
+                                    appViewModel.updateShow(ADD_ARTICLE_FOR_COMPANY)
 
                                 }
                             ) { article ->

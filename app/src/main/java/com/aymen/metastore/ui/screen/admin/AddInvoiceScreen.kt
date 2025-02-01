@@ -124,7 +124,7 @@ fun AddInvoiceScreen() {
             else -> {
                 invoiceViewModel.getInvoiceDetails()
                 if(invoiceViewModel.invoice.type == InvoiceDetailsType.COMMAND_LINE)
-                paymentViewModel.getPaymentHystoricByInvoiceId(invoiceId = invoiceViewModel.invoice.id!!)
+                paymentViewModel.getPaymentHystoricByInvoiceId(invoiceId = invoiceViewModel.invoice.id?:0)
             }
         }
     }
@@ -199,18 +199,15 @@ fun AddInvoiceScreen() {
             tottva = BigDecimal.ZERO
             totprice = BigDecimal.ZERO
             totgen = BigDecimal.ZERO
-            commandsLine.forEach {
-                tottva = tottva.add(BigDecimal(it.totTva ?: 0.0))
-                totprice = totprice.add(BigDecimal(it.prixArticleTot))
-                totgen = totprice.add(tottva)
+            invoiceViewModel.calculateInvoiceDetails(){tva , article , general ->
+                tottva = tva
+                totprice = article
+                totgen = general
             }
-
-            val discount = BigDecimal(invoiceViewModel.discount).divide(BigDecimal(100))
-            val totalWithDiscount =
-                (tottva.add(totprice)).subtract((tottva.add(totprice)).multiply(discount))
             totprice = totprice.setScale(2, RoundingMode.HALF_UP)
             tottva = tottva.setScale(2, RoundingMode.HALF_UP)
-            totgen = totalWithDiscount.setScale(2, RoundingMode.HALF_UP)
+            totgen = totgen.setScale(2, RoundingMode.HALF_UP)
+
         }
     }
     var articleIndex by remember {
@@ -252,7 +249,7 @@ fun AddInvoiceScreen() {
                     if (invoice?.status != Status.REFUSED)
                         FeatureIcons(
                             invoiceViewModel, context, invoiceMode,
-                            invoice?.paid, isMe, myAccountType = myAccountType, asProvider = asProvider, provider.id!!
+                            invoice?.paid, isMe, myAccountType = myAccountType, asProvider = asProvider, provider.id?:0
                         ) { paymentDailog, articleDailog, pdfDailog, beforeSending ->
                             showPaymentDailog = paymentDailog
                             showArticleDialog = articleDailog
@@ -339,6 +336,7 @@ fun AddInvoiceScreen() {
                             invoicee.person = if(invoiceViewModel.clientUser.id != null)invoiceViewModel.clientUser else null
                             Log.e("invoiceperson","person : ${invoicee.person}")
                             invoicee.provider = provider
+                            invoicee.discount = invoiceViewModel.discount
                             for (x in commandsLine) {
                                 x.invoice = invoicee
                             }
@@ -380,8 +378,9 @@ fun AddInvoiceScreen() {
                                                 update = true,
                                                 openDialo = true,
                                                 asProvider,
-                                                provider.id!!
-                                            ) {
+                                                provider.id!!,
+                                                isSubArticle = false
+                                            ) {art , bool ->
                                                 showArticleDialog = false
                                             }
                                         }
@@ -612,7 +611,7 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
             .wrapContentWidth(Alignment.CenterHorizontally)
     ) {
         if (invoiceMode != InvoiceMode.VERIFY) {
-            ArticleDialog(update = false, openDialo = false, asProvider,providerId) {
+            ArticleDialog(update = false, openDialo = false, asProvider,providerId, false) {art , bool ->
                 onSubmit(false, false, false, false)
             }
             IconButton(
@@ -685,7 +684,7 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
                             modifier = Modifier.weight(1f)
                         ) {
                             ButtonSubmit(
-                                labelValue = "Deliver Order",
+                                labelValue = stringResource(id = R.string.delivery_order),
                                 color = Color.Green,
                                 enabled = true
                             ) {
@@ -698,7 +697,7 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
                         ) {
 
                             ButtonSubmit(
-                                labelValue = "Reject Order",
+                                labelValue = stringResource(id = R.string.reject),
                                 color = Color.Red,
                                 enabled = true
                             ) {

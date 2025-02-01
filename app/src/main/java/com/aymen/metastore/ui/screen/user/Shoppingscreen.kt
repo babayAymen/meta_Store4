@@ -1,5 +1,6 @@
 package com.aymen.metastore.ui.screen.user
 
+import android.R.string
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -59,10 +60,21 @@ import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.util.Date
 
+    import android.provider.Settings;
+import androidx.compose.ui.res.stringResource
+import com.aymen.metastore.R
+import com.aymen.metastore.util.ADD_INVOICE
+import com.aymen.metastore.util.NOT_DELIVERED
+import com.aymen.metastore.util.ORDER_LINE
+import com.aymen.metastore.util.ORDER_LINE_DETAILS
+import com.aymen.metastore.util.SHOPPING
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ShoppingScreen() {
+    val context = LocalContext.current
+//    val String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+
     val shoppingViewModel : ShoppingViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
@@ -75,7 +87,6 @@ fun ShoppingScreen() {
     var order by remember {
         mutableStateOf(PurchaseOrder())
     }
-    val context = LocalContext.current
     val show by appViewModel.show
 
     var showFeesDialog by remember { mutableStateOf(false) }
@@ -88,18 +99,18 @@ fun ShoppingScreen() {
     }
     LaunchedEffect(key1 = accountType, key2 = Unit) {
         if(accountType == AccountType.DELIVERY) {
-            appViewModel.updateShow("orderLine")
-            appViewModel.updateView("NOT_DELIVERED")
+            appViewModel.updateShow(ORDER_LINE)
+            appViewModel.updateView(NOT_DELIVERED)
         }
     }
     when(show) {
-        "add invoice" -> {
+        ADD_INVOICE -> {
             invoiceViewModel.setInvoiceMode(InvoiceMode.VERIFY)
             AddInvoiceScreen()
         }
-        "orderLine" -> OrderScreen(invoiceViewModel, appViewModel)
-        "orderLineDetails" -> PurchaseOrderDetailsScreen(order, shoppingViewModel)
-        else -> {
+        ORDER_LINE -> OrderScreen(invoiceViewModel, appViewModel)
+        ORDER_LINE_DETAILS -> PurchaseOrderDetailsScreen(order, shoppingViewModel)
+        SHOPPING -> {
             Surface(
                 modifier = Modifier
                     .fillMaxSize()
@@ -135,7 +146,7 @@ fun ShoppingScreen() {
                                                 }) {
                                                     Icon(
                                                         imageVector = Icons.Default.Check,
-                                                        contentDescription = "send",
+                                                        contentDescription = stringResource(id = R.string.send),
                                                         tint = Color.Magenta
                                                     )
                                                 }
@@ -161,7 +172,7 @@ fun ShoppingScreen() {
                                                 }) {
                                                     Icon(
                                                         imageVector = Icons.Default.Remove,
-                                                        contentDescription = "remove",
+                                                        contentDescription = stringResource(id = R.string.remove),
                                                         tint = Color.Red
                                                     )
                                                 }
@@ -174,7 +185,7 @@ fun ShoppingScreen() {
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         ButtonSubmit(
-                                            labelValue = "Cancel All",
+                                            labelValue = stringResource(id = R.string.cancel_all),
                                             color = Color.Red,
                                             enabled = true
                                         ) {
@@ -185,7 +196,7 @@ fun ShoppingScreen() {
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         ButtonSubmit(
-                                            labelValue = "Send All",
+                                            labelValue = stringResource(id = R.string.send_all),
                                             color = Color.Green,
                                             enabled = true
                                         ) {
@@ -242,11 +253,13 @@ fun ShoppingScreen() {
                                       dateTime.toLocalDate()
                                     }
                                     Text(text =
-                                    if (orderLine.company?.id == myCompany.id && accountType == AccountType.COMPANY) "you have an order from ${orderLine.person?.username ?: orderLine.client?.name}" else "you have sent an order to ${orderLine.company?.name}",
+                                    if (orderLine.company?.id == myCompany.id && accountType == AccountType.COMPANY) stringResource(
+                                        id = R.string.your_order,orderLine.person?.username ?: orderLine.client?.name?:"")
+                                    else stringResource(id = R.string.your_sent_order,orderLine.company?.name?:""),
                                         modifier = Modifier.clickable {
                                             order = orderLine
                                             shoppingViewModel.Order = orderLine
-                                            appViewModel.updateShow("orderLineDetails")
+                                            appViewModel.updateShow(ORDER_LINE_DETAILS)
                                         }
                                     )
                                     Text(
@@ -266,12 +279,10 @@ fun ShoppingScreen() {
                     ){
                         LazyColumn {
                             if(accountType == AccountType.USER) {
-                                Log.e("invoicenotaccepted","item count : ${myInvoicesAccepted?.itemCount}")
                                 items(count = myInvoicesAccepted?.itemCount!!,
                                     key = myInvoicesAccepted.itemKey { it.id!! }) { index ->
                                     val invoice = myInvoicesAccepted[index]
                                     if(invoice != null && invoice.status == Status.ACCEPTED) {
-                                        Log.e("invoicenotaccepted","item id : ${invoice.id}")
                                         InvoiceCard(
                                             invoice = invoice,
                                             appViewModel = appViewModel,

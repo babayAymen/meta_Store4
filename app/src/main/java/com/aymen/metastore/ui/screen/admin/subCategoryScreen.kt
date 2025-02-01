@@ -9,15 +9,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.SubCategoryCardForAdmin
+import com.aymen.metastore.util.ADD_SUBCATEGORY
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_SUB_CATEGORY
 
 @Composable
 fun SubCategoryScreen() {
@@ -33,8 +37,8 @@ fun SubCategoryScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             item {
-                ButtonSubmit(labelValue = "Add Sub Category", color = Color.Green, enabled = true) {
-                    appViewModel.updateShow("add subCategory")
+                ButtonSubmit(labelValue = stringResource(id = R.string.add_sub_category), color = Color.Green, enabled = true) {
+                    appViewModel.updateShow(ADD_SUBCATEGORY)
                 }
             }
             items(
@@ -52,14 +56,13 @@ fun SubCategoryScreen() {
                         onUpdate = {item ->
                             subCategoryViewModel.update = true
                             subCategoryViewModel.assignSubCategoryForUpdate(item)
-                            appViewModel.updateShow("add subCategory")
+                            appViewModel.updateShow(ADD_SUBCATEGORY)
 
                         }
                     ) { subCategory ->
                         SubCategoryCardForAdmin(
                             subCategory = subCategory,
-                            image = "${BASE_URL}werehouse/image/" + (subCategory.image
-                                ?: "") + "/subcategory/${subCategory.company?.user?.id}",
+                            image = String.format(IMAGE_URL_SUB_CATEGORY,subCategory.image,subCategory.company?.user?.id),
                             subCategory.category!!
                         )
                     }

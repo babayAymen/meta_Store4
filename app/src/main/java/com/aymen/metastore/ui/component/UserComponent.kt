@@ -160,9 +160,10 @@ fun ShowImage(image: String, height: Dp? = null, width : Dp? = null, shape : Rou
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun ShowPrice(cost : Double, margin : Double, tva : Double){
-    val price = cost*(margin+tva)/100
-    val formattedPrice = String.format("%.2f", margin)
+fun ShowPrice( priceHt : Double, tva : Double){
+
+    val price = BigDecimal(priceHt).multiply(BigDecimal(1).add(BigDecimal(tva).divide(BigDecimal(100.0))))
+    val formattedPrice = String.format("%.2f", price)
     Text(text = "price: $formattedPrice TDN", fontSize = 14.sp, modifier = Modifier.padding(5.dp))
 }
 
@@ -246,7 +247,7 @@ fun InputTextField(labelValue: String, label:String, singleLine: Boolean, maxLin
             onValueChange = onValueChange,
             singleLine = singleLine,
             maxLines = maxLine,
-            leadingIcon = if (label == "Type a message" || label == "Type a comment") {
+            leadingIcon = if (label == "Type a comment") {
                 {
                     IconButton(onClick = {
                         singlePhotoPickerLauncher.launch(
@@ -259,7 +260,7 @@ fun InputTextField(labelValue: String, label:String, singleLine: Boolean, maxLin
             } else {
                 null
             },
-            trailingIcon = if (label == "Type a message" || label == "Type a comment") {
+            trailingIcon = if ( label == "Type a comment") {
                 {
                     IconButton(onClick = {
                         onImeAction(photo)
@@ -430,8 +431,7 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 ShowPrice(
-                                    cost = it.cost ?: 0.0,
-                                    margin = it.sellingPrice!!,
+                                    priceHt = it.sellingPrice!!,
                                     tva = art.article?.tva ?: 0.0
                                 )
                                 ArticleDetails(
@@ -487,8 +487,7 @@ fun ArticleCardForSearch(article: ArticleCompany, onClicked: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
                 ShowPrice(
-                    cost = article.cost?:0.0,
-                    margin = article.sellingPrice!!,
+                    priceHt = article.sellingPrice!!,
                     tva = article.article?.tva?:0.0
                 )
 
@@ -845,7 +844,8 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
             mutableStateOf(BigDecimal(0.0))
         }
         LaunchedEffect(key1 = shoppingViewModel.qte) {
-            cost = BigDecimal(shoppingViewModel.qte).multiply(BigDecimal(article.sellingPrice!!)).setScale(2, RoundingMode.HALF_UP)
+            val articelPriceTtc = BigDecimal(article.sellingPrice!!).multiply(BigDecimal(1).add(BigDecimal(article.article?.tva?:0.0).divide(BigDecimal(100)))).setScale(2,RoundingMode.HALF_UP)
+            cost = BigDecimal(shoppingViewModel.qte).multiply(articelPriceTtc).setScale(2, RoundingMode.HALF_UP)
             isCompany = accountType == AccountType.COMPANY
                 restBalance =
                     if (isCompany) {

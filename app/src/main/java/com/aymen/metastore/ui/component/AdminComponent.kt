@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -82,7 +84,9 @@ import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.model.repository.ViewModel.PaymentViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
+import com.aymen.metastore.ui.screen.admin.NavigationItem
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.article
 import com.aymen.store.model.Enum.AccountType
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -93,21 +97,21 @@ import java.util.Locale
 
 
 @Composable
-fun Item(label: String) {
+fun Item(label: NavigationItem) {
     val viewModel: AppViewModel = viewModel()
     Card(
         elevation = CardDefaults.cardElevation(6.dp),
         modifier = Modifier
             .padding(8.dp)
             .size(100.dp, 100.dp),
-        onClick = { viewModel.updateShow(label) }
+        onClick = { viewModel.updateShow(label.destination) }
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
 
             Text(
-                text = label,
+                text = stringResource(id = label.labelResId),
                 modifier = Modifier.align(Alignment.Center)
             )
         }
@@ -495,8 +499,7 @@ fun ArticleCardForAdmin(article: ArticleCompany, image: String, onSelected: () -
                     ) {
                         article.article?.tva?.let {
                             ShowPrice(
-                                cost = article.cost ?: 0.0,
-                                margin = article.sellingPrice!!,
+                                priceHt = article.sellingPrice!!,
                                 tva = it
                             )
                         }
@@ -1155,8 +1158,8 @@ fun ProviderDialog(update: Boolean, openDialoge: Boolean, onSubmit: (Boolean) ->
 
 
 @Composable
-fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, providerId : Long, onSubmit: () -> Unit) {
-    val invoiceViewModel: InvoiceViewModel = viewModel()
+fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, providerId : Long,isSubArticle : Boolean, onSubmit: (ArticleCompany, Double) -> Unit) {
+    val invoiceViewModel: InvoiceViewModel = hiltViewModel()
     var openDialog by remember {
         mutableStateOf(openDialo)
     }
@@ -1175,12 +1178,14 @@ fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, pro
     var articleExist by remember {
         mutableStateOf(false)
     }
+    var articleCompany by remember {
+        mutableStateOf(ArticleCompany())
+    }
     if (update) {
         articleExist = true
         qte = invoiceViewModel.commandLineDto.quantity
         dct = invoiceViewModel.commandLineDto.discount ?: 0.0
     }
-    val commandsLine by invoiceViewModel.commandLine.collectAsStateWithLifecycle()
     IconButton(onClick = { openDialog = true }) {
         Icon(Icons.Default.Add, contentDescription = "Favorite")
     }
@@ -1188,7 +1193,7 @@ fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, pro
         Dialog(
             onDismissRequest = {
                 openDialog = false
-                onSubmit()
+                onSubmit(ArticleCompany(),0.0)
             }
         ) {
             Surface(
@@ -1198,8 +1203,9 @@ fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, pro
             ) {
                 Column {
                     Row {
-                        AutoCompleteArticle(update, asProvider, providerId) {
-                            articleExist = it
+                        AutoCompleteArticle(update, asProvider, providerId) {article , exist ->
+                            articleExist = exist
+                            articleCompany = article
                         }
                     }
                     Row {
@@ -1242,40 +1248,41 @@ fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, pro
 
                         }
                     }
-                    Row {
-                        InputTextField(
-                            labelValue = discount,
-                            label = "Discount",
-                            singleLine = true,
-                            maxLine = 1,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Next
-                            ),
-                            onValueChange = {
-                                if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
-                                    val normalizedInput = it.replace(',', '.')
-                                    discount = normalizedInput
-                                    dct =
-                                        if (normalizedInput.startsWith(".") && normalizedInput.endsWith(
-                                                "."
-                                            )
-                                        ) {
-                                            0.0
-                                        } else if (normalizedInput.endsWith(".")) {
-                                            normalizedInput.let { inp ->
-                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                    if(!isSubArticle) {
+                        Row {
+                            InputTextField(
+                                labelValue = discount,
+                                label = "Discount",
+                                singleLine = true,
+                                maxLine = 1,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Next
+                                ),
+                                onValueChange = {
+                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+                                        val normalizedInput = it.replace(',', '.')
+                                        discount = normalizedInput
+                                        dct =
+                                            if (normalizedInput.startsWith(".") && normalizedInput.endsWith(
+                                                    "."
+                                                )
+                                            ) {
+                                                0.0
+                                            } else if (normalizedInput.endsWith(".")) {
+                                                normalizedInput.let { inp ->
+                                                    if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+                                                }
+                                            } else {
+                                                normalizedInput.toDoubleOrNull() ?: 0.0
                                             }
-                                        } else {
-                                            normalizedInput.toDoubleOrNull() ?: 0.0
-                                        }
-                                }
-                            }, onImage = {}
-                        ) {
+                                    }
+                                }, onImage = {}
+                            ) {
 
+                            }
                         }
                     }
-
                     Row {
                         Row(
                             modifier = Modifier.weight(1f)
@@ -1284,47 +1291,27 @@ fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, pro
                             ButtonSubmit(
                                 labelValue = "ok",
                                 color = Color.Green,
-                                enabled = !(qte == 0.0 || !articleExist)
+                                enabled = (qte != 0.0 && articleExist )
                             ) {
-                                val command = invoiceViewModel.commandLineDto.copy()
-                                command.quantity = qte
-                                command.discount = dct
-                                command.article = invoiceViewModel.article
-                                if (update) {
-                                    invoiceViewModel.substructCommandsLine()
+                                if(!isSubArticle) {
+                                    val command = invoiceViewModel.commandLineDto.copy()
+                                    command.quantity = qte
+                                    command.discount = dct
+                                    command.article = invoiceViewModel.article
+                                    if (update) {
+                                        invoiceViewModel.substructCommandsLine()
+                                    }
+                                    command.invoice?.code = invoiceViewModel.lastInvoiceCode
+                                    invoiceViewModel.addCommandLine(command)
+                                    invoiceViewModel.commandLineDto = CommandLine()
+                                    invoiceViewModel.article = ArticleCompany()
+                                    qte = 0.0
+                                    dct = 0.0
+                                    quantity = ""
+                                    discount = ""
+                                    openDialog = false
                                 }
-                                val totTva = BigDecimal(qte).multiply(
-                                    BigDecimal(command.article?.article?.tva!!).multiply(
-                                        BigDecimal(
-                                            invoiceViewModel.article.sellingPrice!!
-                                        )
-                                    ).divide(BigDecimal(100))
-                                )
-                                command.totTva = totTva.setScale(2, RoundingMode.HALF_UP).toDouble()
-
-                                val prixarticletot =
-                                    BigDecimal(qte).multiply(BigDecimal(command.article?.sellingPrice!!))
-                                        .multiply(
-                                            (BigDecimal(1).subtract(
-                                                (BigDecimal(command.discount!!).divide(
-                                                    BigDecimal(100)
-                                                ))
-                                            ))
-                                        )
-                                command.prixArticleTot =
-                                    prixarticletot.setScale(2, RoundingMode.HALF_UP).toDouble()
-
-                                command.invoice?.code = invoiceViewModel.lastInvoiceCode
-                                invoiceViewModel.addCommandLine(command)
-                                invoiceViewModel.commandLineDto = CommandLine()
-                                invoiceViewModel.article = ArticleCompany()
-                                qte = 0.0
-                                dct = 0.0
-                                quantity = ""
-                                discount = ""
-                                openDialog = false
-                                onSubmit()
-
+                                    onSubmit(articleCompany ,qte)
                             }
                         }
                         Row(
@@ -1332,7 +1319,7 @@ fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, pro
                         ) {
 
                             ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
-                                onSubmit()
+                                onSubmit(ArticleCompany(),0.0)
                                 openDialog = false
                             }
                         }

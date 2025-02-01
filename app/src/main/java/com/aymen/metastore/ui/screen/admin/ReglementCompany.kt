@@ -21,10 +21,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.ui.component.SearchField
@@ -44,7 +46,7 @@ fun ReglementCompany(modifier: Modifier = Modifier) {
         DropDownSearchPayment {
             searchPayment = it
         }
-        SearchField(label = "search",
+        SearchField(label = stringResource(id = R.string.search),
             labelValue = searchText,
             value = {
                 searchText = it

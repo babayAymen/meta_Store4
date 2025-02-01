@@ -74,7 +74,10 @@ interface PurchaseOrderDao {
     suspend fun clearInvoicesDeliveredRemoteKeysTable()
     @Transaction
     @Query("SELECT * FROM purchase_order where isTaken = :isTaken")
-    fun getInvoicesDelivered(isTaken : Boolean) : PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
+    fun getInvoicesNotDelivered(isTaken : Boolean) : PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
+    @Transaction
+    @Query("SELECT * FROM purchase_order where isDelivered = :isDelivered")
+    fun getInvoicesDelivered(isDelivered : Boolean) : PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
     @Query("UPDATE purchase_order SET isTaken = :isTaken WHERE purchaseOrderId = :invoiceId")
     suspend fun makeInvoiceAsTeken(isTaken: Boolean, invoiceId: Long)
     @Upsert

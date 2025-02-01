@@ -42,6 +42,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -142,7 +144,6 @@ class InvoiceViewModel @Inject constructor(
     val filter : StateFlow<PaymentStatus> = _filter
 
     val invoices = _filter.flatMapLatest { filter->
-        Log.e("itemcountinvoice","filter : $filter")
         useCases.getAllInvoices(company.id!!,true,filter)
             .cachedIn(viewModelScope)
     }
@@ -312,7 +313,8 @@ class InvoiceViewModel @Inject constructor(
                                     invoiceDao.deleteInvoiceById(id)
                                     invoiceDao.deleteInvoiceRemoteKeyById(id)
                                     commandLine.value.map { line ->
-                                        commandLineDao.deleteCommandLineById(line.id!!)
+                                       // commandLineDao.deleteCommandLineById(line.id!!)
+
                                     }
                                 }
                                 invoiceDao.insertInvoice(listOf(response[0].invoice?.toInvoice(true)))
@@ -320,6 +322,7 @@ class InvoiceViewModel @Inject constructor(
                                 response.map {res ->
                                     commandLineDao.insertCommandLine(listOf(res.toCommandLine()))
                                 }
+                                        Log.e("veftiondazncj","before calling repo mta3 verification")
                             }
                         }
                     }
@@ -336,9 +339,6 @@ class InvoiceViewModel @Inject constructor(
         }
 
     }
-
-
-
     fun getInvoiceDetails(){
         val id = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value.id else sharedViewModel.user.value.id
         viewModelScope.launch{
@@ -365,8 +365,6 @@ class InvoiceViewModel @Inject constructor(
 
         }
     }
-
-
     fun accepteInvoice(invoiceId : Long , status : Status){
         viewModelScope.launch (Dispatchers.IO){
             try {
@@ -382,7 +380,6 @@ class InvoiceViewModel @Inject constructor(
             }
         }
     }
-
     fun searchInvoice(type : SearchPaymentEnum, text : String){
         viewModelScope.launch {
             useCases.searchInvoice(type, text, sharedViewModel.company.value.id?:0)
@@ -393,19 +390,16 @@ class InvoiceViewModel @Inject constructor(
                 }
         }
     }
-
     fun deleteInvoiceById(invoiceId : Long){
         viewModelScope.launch {
             repository.deleteInvoiceById(invoiceId)
         }
     }
-
     fun deleteInvoiceByIdLocally(invoiceId : Long) {
         viewModelScope.launch {
             room.invoiceDao().deleteInvoiceById(invoiceId)
         }
     }
-
     fun acceptInvoiceAsDelivery(){
         viewModelScope.launch {
             val result : Result<Response<String>> = runCatching {
@@ -425,7 +419,6 @@ class InvoiceViewModel @Inject constructor(
             )
         }
     }
-
     fun submitOrderDelivered(code : String){
         viewModelScope.launch {
             val result : Result<Response<String>> = runCatching {
@@ -433,7 +426,6 @@ class InvoiceViewModel @Inject constructor(
             }
         }
     }
-
     fun setNeccessry(order: PurchaseOrder, clientType : AccountType,invoiceMode: InvoiceMode, invoiceDetailsType: InvoiceDetailsType){
         purchaseOrder = order
         this.clientType = clientType
@@ -451,5 +443,69 @@ class InvoiceViewModel @Inject constructor(
         invoice.code = order.orderNumber
     }
 
+    fun calculateInvoiceDetails(onFinish : (BigDecimal,BigDecimal,BigDecimal) -> Unit) {
+        val commandLine = commandLine.value
+        var totalPrice = BigDecimal.ZERO
+        var totalTax = BigDecimal.ZERO
+
+        // Step 1: Initial Calculation
+            val cent = BigDecimal(100.0)
+        commandLine.forEach { line ->
+            val articleSelling = BigDecimal(line.article?.sellingPrice!!)
+            val lineDiscount = BigDecimal(line.discount?:0.0)
+            val lineQte = BigDecimal(line.quantity)
+            val discountedPrice = articleSelling.subtract(articleSelling.multiply(lineDiscount).divide(cent).setScale(2,RoundingMode.HALF_UP))
+            val lineTotalPrice = discountedPrice.multiply(lineQte)
+            totalPrice = totalPrice.add(lineTotalPrice)
+            val articleTva = BigDecimal(line.article?.article?.tva?:0.0)
+            val lineTax = lineTotalPrice.multiply(articleTva.divide(cent).setScale(2,RoundingMode.HALF_UP))
+            totalTax = totalTax.add(lineTax)
+
+            line.prixArticleTot = lineTotalPrice.toDouble()
+            line.totTva = lineTax.toDouble()
+        }
+
+        // Total before applying the global discount
+        val subtotal = totalPrice.add(totalTax)
+
+        // Step 2: Apply Global Discount
+        val globalDiscount = BigDecimal(discount)
+        val discountAmount = subtotal.multiply(globalDiscount.divide(cent))
+        val globalDiscountFactor = BigDecimal.ONE.subtract(globalDiscount.divide(cent))
+
+        // Step 3: Recalculate Each Line with Global Discount
+        totalPrice = BigDecimal.ZERO
+        totalTax = BigDecimal.ZERO
+        commandLine.forEach { line ->
+            // Adjust the line total price with global discount
+            val prixArticleTotal = BigDecimal(line.prixArticleTot)
+            val adjustedLineTotal = prixArticleTotal.multiply(globalDiscountFactor)
+            line.prixArticleTot = adjustedLineTotal.toDouble()
+
+            // Recalculate VAT for the adjusted line total
+            val articleTva = BigDecimal(line.article?.article?.tva?:0.0)
+            val adjustedLineTax = adjustedLineTotal.multiply(articleTva.divide(cent).setScale(2,RoundingMode.HALF_UP))
+            line.totTva = adjustedLineTax.toDouble()
+
+            // Accumulate totals
+            totalPrice = totalPrice.add(adjustedLineTotal)
+            totalTax = totalTax.add(adjustedLineTax)
+        }
+
+        // Step 4: Final Invoice Total
+        val invoiceTotal = totalPrice.add(totalTax)
+
+        // Log or return values as needed
+        onFinish(totalTax,totalPrice,invoiceTotal)
+    }
 
 }
+
+
+
+
+
+
+
+
+

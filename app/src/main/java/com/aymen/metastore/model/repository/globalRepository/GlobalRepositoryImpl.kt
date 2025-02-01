@@ -41,6 +41,7 @@ import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.entity.model.PurchaseOrder
 import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.SearchHistory
+import com.aymen.metastore.model.entity.model.SubArticleModel
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.Worker
 import com.aymen.metastore.model.entity.room.entity.Article
@@ -115,6 +116,13 @@ class GlobalRepositoryImpl  @Inject constructor
     }
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long) = articleRepository.addQuantityArticle(quantity, articleId)
     override suspend fun updateArticle(article: ArticleCompanyDto) = articleRepository.updateArticle(article)
+    override suspend fun addSubArticle(
+        subArticle: List<SubArticleModel>
+    ) = articleRepository.addSubArticle(subArticle)
+
+    override fun getArticlesChilds(parentId: Long): Flow<PagingData<SubArticleModel>> {
+        TODO("Not yet implemented")
+    }
 
     override suspend fun addCategory(category: String, file: File?) = categoryRepository.addCategory(category, file)
     override suspend fun updateCategory(category: String, file: File?) = categoryRepository.updateCategory(category,file)

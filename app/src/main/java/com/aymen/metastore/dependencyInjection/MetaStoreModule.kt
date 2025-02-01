@@ -110,6 +110,7 @@ import com.aymen.metastore.model.usecase.GetAllSubCategoriesByCompanyId
 import com.aymen.metastore.model.usecase.GetAllWorkers
 import com.aymen.metastore.model.usecase.GetArticleComment
 import com.aymen.metastore.model.usecase.GetArticlesByCompanyAndCategoryOrSubCategory
+import com.aymen.metastore.model.usecase.GetArticlesChilds
 import com.aymen.metastore.model.usecase.GetCategoryTemp
 import com.aymen.metastore.model.usecase.GetInvoicesIdelevered
 import com.aymen.metastore.model.usecase.GetMyClientForAutocompleteClient
@@ -217,7 +218,8 @@ class MetaStoreModule {
             searchInvoice = SearchInvoice(repository = invoiceRepository),
             getPaymentHystoricByInvoiceId = GetPaymentHystoricByInvoiceId(repository = paymentRepository),
             getAllOrdersNotDelivered = GetAllOrdersNotAcceptedAsDelivery(repository = orderRepository),
-            getInvoicesIdelevered = GetInvoicesIdelevered(repository = deliveryRepository )
+            getInvoicesIdelevered = GetInvoicesIdelevered(repository = deliveryRepository ),
+            getArticlesChilds = GetArticlesChilds(repository = articleRepository)
 
         )
     }

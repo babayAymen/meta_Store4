@@ -124,7 +124,7 @@ init {
 
     fun getAllMyPointsPaymentRecharge() {
         viewModelScope.launch {
-                useCases.getAllRechargeHistory(id!!)
+                useCases.getAllRechargeHistory(id?:0)
                     .distinctUntilChanged()
                     .cachedIn(viewModelScope)
                     .collect {

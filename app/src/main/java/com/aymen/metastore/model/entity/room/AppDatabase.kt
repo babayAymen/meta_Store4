@@ -22,6 +22,7 @@ import com.aymen.metastore.model.entity.dao.PurchaseOrderDao
 import com.aymen.metastore.model.entity.dao.PurchaseOrderLineDao
 import com.aymen.metastore.model.entity.dao.RatingDao
 import com.aymen.metastore.model.entity.dao.SearchHistoryDao
+import com.aymen.metastore.model.entity.dao.SubArticleDao
 import com.aymen.metastore.model.entity.dao.SubCategoryDao
 import com.aymen.metastore.model.entity.dao.UserDao
 import com.aymen.metastore.model.entity.dao.WorkerDao
@@ -49,6 +50,7 @@ import com.aymen.metastore.model.entity.room.entity.RandomArticle
 import com.aymen.metastore.model.entity.room.entity.Rating
 import com.aymen.metastore.model.entity.room.entity.ReglementForProvider
 import com.aymen.metastore.model.entity.room.entity.SearchHistory
+import com.aymen.metastore.model.entity.room.entity.SubArticle
 import com.aymen.metastore.model.entity.room.entity.SubCategory
 import com.aymen.metastore.model.entity.room.entity.User
 import com.aymen.metastore.model.entity.room.entity.Worker
@@ -90,6 +92,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.PurchaseOrderRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.RatingRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.RechargeRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.ReglementForProviderRemoteKeys
+import com.aymen.metastore.model.entity.room.remoteKeys.SubArticleRemoteKeys
 import com.aymen.metastore.model.entity.room.remoteKeys.SubCategoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.WorkerRemoteKeys
 
@@ -97,8 +100,9 @@ import com.aymen.metastore.model.entity.room.remoteKeys.WorkerRemoteKeys
     Article::class, RandomArticle::class, ArticleCompany::class, bankTransfer::class, Bill::class, Cash::class, CommandLine::class,
     Comment::class, Conversation::class, Category::class, SubCategory::class, Invoice::class, ClientProviderRelation::class,
                      SearchHistory::class, Inventory::class, Invitation::class, Message::class, PaymentForProviders::class, PointsPayment::class,
-    ReglementForProvider::class,
-    PaymentForProviderPerDay::class, Rating::class, Worker::class, Payment::class, ArticleRemoteKeysEntity::class, CategoryRemoteKeysEntity::class, ClientProviderRemoteKeysEntity::class,
+    ReglementForProvider::class, SubArticle::class,
+    PaymentForProviderPerDay::class, Rating::class, Worker::class, Payment::class,
+    ArticleRemoteKeysEntity::class, CategoryRemoteKeysEntity::class, ClientProviderRemoteKeysEntity::class,
 ConversationRemoteKeysEntity::class, InventoryRemoteKeysEntity::class, InvitationRemoteKeysEntity::class, InvoiceRemoteKeysEntity::class, MessageRemoteKeysEntity::class,
  PointsPaymentRemoteKeysEntity::class, PointsPaymentForProviderRemoteKeysEntity::class, RechargeRemoteKeysEntity::class, SubCategoryRemoteKeysEntity::class,
 ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRemoteKeysEntity::class, ClientRemoteKeysEntity::class, ProviderRemoteKeysEntity::class,
@@ -106,8 +110,8 @@ ArtRemoteKeysEntity::class, ArticleCompanyRandomRKE::class, ArticleContainingRem
 NotAcceptedRemoteKeysEntity::class, ProviderProfitHistoryRemoteKeysEntity::class, PointsPaymentPerDayRemoteKeysEntity::class, AllInvoiceRemoteKeysEntity::class,
     PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class, InvoicesAsClientAndStatusRemoteKeysEntity::class, CompanyArticleRemoteKeysEntity::class
 , CommandLineByInvoiceRemoteKeysEntity::class, CommentArticleRemoteKeys::class, WorkerRemoteKeys::class, ReglementForProviderRemoteKeys::class, RatingRemoteKeys::class
-                   ,PaymentRemoteKeys::class, PurchaseOrderRemoteKeys::class, InvoicesDeliveredRemoteKeysEntity::class
-                     ], version = 21, exportSchema = false)
+                   ,PaymentRemoteKeys::class, PurchaseOrderRemoteKeys::class, InvoicesDeliveredRemoteKeysEntity::class,SubArticleRemoteKeys::class
+                     ], version = 25, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao
@@ -133,4 +137,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun workerDao() : WorkerDao
     abstract fun commentDao() : CommentDao
     abstract fun paymentDao() : PaymentDao
+    abstract fun subArticleDao() : SubArticleDao
 }

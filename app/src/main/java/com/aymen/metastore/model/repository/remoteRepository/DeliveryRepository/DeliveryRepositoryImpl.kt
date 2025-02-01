@@ -30,7 +30,7 @@ class DeliveryRepositoryImpl @Inject constructor(
             config = PagingConfig(pageSize = PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = InvoiceDeliveredRemoteMediator(api , room),
             pagingSourceFactory = {
-                purchaseOrderDao.getInvoicesDelivered(isTaken = true)
+                purchaseOrderDao.getInvoicesNotDelivered(isTaken = true) // from deliverd
             }
         ).flow.map {
             it.map { invoice ->

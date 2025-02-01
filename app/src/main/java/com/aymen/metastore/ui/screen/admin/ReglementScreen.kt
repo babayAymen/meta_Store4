@@ -26,6 +26,7 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.InputTextField
+import com.aymen.metastore.util.REGLEMENT_FOR_PROVIDER
 
 @Composable
 fun ReglementScreen(paymentForProviderPerDay: PaymentForProviderPerDay?, pointsPaymentViewModel: PointsPaymentViewModel, appViewModel : AppViewModel) {
@@ -33,6 +34,7 @@ fun ReglementScreen(paymentForProviderPerDay: PaymentForProviderPerDay?, pointsP
         pointsPaymentViewModel.getPaymentForProviderDetails(paymentForProviderPerDay?.id!!)
     }
     val reglementForProviderPerDay = pointsPaymentViewModel.paymentForProviderPerDay.collectAsLazyPagingItems()
+    val reglement = reglementForProviderPerDay.itemSnapshotList.items
     var amount by remember {
         mutableDoubleStateOf(0.0)
     }
@@ -40,8 +42,8 @@ fun ReglementScreen(paymentForProviderPerDay: PaymentForProviderPerDay?, pointsP
         mutableStateOf("")
     }
     Column {
-        Text(text = "name : ${paymentForProviderPerDay?.receiver?.name}")
-        Text(text = "rest : ${paymentForProviderPerDay?.rest}")
+        Text(text = stringResource(id = R.string.name ,paymentForProviderPerDay?.receiver?.name?:"" ))
+        Text(text = stringResource(id = R.string.rest_is,paymentForProviderPerDay?.rest.toString()))
         if(paymentForProviderPerDay?.rest != 0.0) {
             InputTextField(
                 labelValue = amountFieald,
@@ -68,28 +70,22 @@ fun ReglementScreen(paymentForProviderPerDay: PaymentForProviderPerDay?, pointsP
                 }, onImage = {}, true
             ) {
             }
-            ButtonSubmit(labelValue = "ok", color = Color.Green, enabled = true) {
-                appViewModel.updateShow("REGLEMENT_FOR_PROVIDER")
-                val reglement = ReglementForProviderModel(
+            ButtonSubmit(labelValue = stringResource(id = R.string.ok), color = Color.Green, enabled = true) {
+                appViewModel.updateShow(REGLEMENT_FOR_PROVIDER)
+                val reglemet = ReglementForProviderModel(
                     amount = amount,
                     paymentForProviderPerDay = paymentForProviderPerDay
                 )
-                pointsPaymentViewModel.sendReglement(reglement)
+                pointsPaymentViewModel.sendReglement(reglemet)
             }
         }
-        LazyColumn {
-            items(count = reglementForProviderPerDay.itemCount,
-                key = reglementForProviderPerDay.itemKey{it.id!!}
-                ){index ->
-                val reglmnt = reglementForProviderPerDay[index]
-                if(reglmnt != null){
-                    Text(text = "amount : ${reglmnt.amount} Dt")
-                    Text(text = "date : ${reglmnt.lastModifiedDate}")
-                }
+        reglement.forEach{reglmnt ->
+                    Text(text = stringResource(id = R.string.amount,reglmnt.amount.toString()) )
+                    Text(text = stringResource(id = R.string.date,reglmnt.lastModifiedDate?:"") )
             }
         }
     }
-}
+
 
 
 

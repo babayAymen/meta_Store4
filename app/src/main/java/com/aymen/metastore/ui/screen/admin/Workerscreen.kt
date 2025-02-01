@@ -15,10 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.Worker
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
@@ -26,7 +28,9 @@ import com.aymen.store.model.repository.ViewModel.WorkerViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.ShowImage
+import com.aymen.metastore.util.ADD_WORKER
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_USER
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 
@@ -49,8 +53,8 @@ fun WorkerScreen() {
                 modifier = Modifier.fillMaxWidth()
             ){
 
-                ButtonSubmit(labelValue = "add new worker", color = Color.Green, enabled = true) { // form vertual worker
-                    appViewModel.updateShow("ADD_WORKER")
+                ButtonSubmit(labelValue = stringResource(id = R.string.add_new_worker), color = Color.Green, enabled = true) { // form vertual worker
+                    appViewModel.updateShow(ADD_WORKER)
                 }
             }
             Row (
@@ -101,15 +105,15 @@ fun WorkerCard(worker: Worker, sharedViewModel: SharedViewModel) {
         Column {
             Row {
                 if(worker.user.image != null)
-                ShowImage(image = "${BASE_URL}werehouse/image/${worker.user.image}/user/${worker.user.id}")
+                ShowImage(image = String.format(IMAGE_URL_USER, worker.user.image, worker.user.id))
                 else
                     NotImage()
                 Text(text = worker.user.username!!)
             }
             Row {
-                worker.phone?.let { Text(text = "phone : $it") }
-                worker.address?.let { Text(text = "address : $it") }
-                Text(text = "created date : ${worker.createdDate}")
+                worker.phone?.let { Text(text = stringResource(id = R.string.phone,it)) }
+                worker.address?.let { Text(text = stringResource(id = R.string.address, it)) }
+                Text(text = stringResource(id = R.string.created_date,worker.createdDate))
             }
         }
     }

@@ -19,11 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.store.model.Enum.PaymentStatus
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
@@ -33,6 +35,12 @@ import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.ClientDialog
 import com.aymen.metastore.ui.component.InvoiceCard
 import com.aymen.metastore.ui.component.ProviderDialog
+import com.aymen.metastore.util.ADD_INVOICE
+import com.aymen.metastore.util.ALL
+import com.aymen.metastore.util.IN_COMPLETE
+import com.aymen.metastore.util.NOT_ACCEPTED
+import com.aymen.metastore.util.NOT_PAID
+import com.aymen.metastore.util.PAID
 import com.aymen.store.model.Enum.RoleEnum
 
 @Composable
@@ -68,44 +76,44 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
     LaunchedEffect(key1 = launchLaucheEffect, key2 = asProvider) {
         Log.e("azertyhgfdss","launcgh : $launchLaucheEffect , asprovider : $asProvider")
         when(launchLaucheEffect){
-            "ALL" -> appViewModel.updateView("ALL")
-            "PAID" -> appViewModel.updateView("PAID")
-            "NOT_PAID" -> appViewModel.updateView("NOT_PAID")
-            "IN_COMPLETE" -> appViewModel.updateView("IN_COMPLETE")
-            "NOT_ACCEPTED" -> appViewModel.updateView("NOT_ACCEPTED")
+            ALL -> appViewModel.updateView(ALL)
+            PAID -> appViewModel.updateView(PAID)
+            NOT_PAID -> appViewModel.updateView(NOT_PAID)
+            IN_COMPLETE -> appViewModel.updateView(IN_COMPLETE)
+            NOT_ACCEPTED -> appViewModel.updateView(NOT_ACCEPTED)
         }
     }
     LaunchedEffect(key1 = view) {
         when(view){
-            "ALL" ->{
+            ALL ->{
                 enabledAll = false
                 enabledPaid = true
                 enabledIncomplete = true
                 enabledNotPaid = true
                 enabledNotAccepted = true
             }
-            "PAID" ->{
+            PAID ->{
                 enabledAll = true
                 enabledPaid = false
                 enabledIncomplete = true
                 enabledNotPaid = true
                 enabledNotAccepted = true
                 }
-            "NOT_PAID" ->{
+            NOT_PAID ->{
                 enabledAll = true
                 enabledPaid = true
                 enabledIncomplete = true
                 enabledNotPaid = false
                 enabledNotAccepted = true
             }
-            "IN_COMPLETE" ->{
+            IN_COMPLETE ->{
                 enabledAll = true
                 enabledPaid = true
                 enabledIncomplete = false
                 enabledNotPaid = true
                 enabledNotAccepted = true
             }
-            "NOT_ACCEPTED" ->{
+            NOT_ACCEPTED ->{
                 enabledAll = true
                 enabledPaid = true
                 enabledIncomplete = true
@@ -131,7 +139,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                             .padding(2.dp)
                     ) {
                         ButtonSubmit(
-                            labelValue = "get invoice as client",
+                            labelValue = stringResource(id = R.string.get_invoice_as_client),
                             color = Color.Green,
                             enabled = asProvider
                         ) {
@@ -146,7 +154,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                         .padding(2.dp)
                 ) {
                     ButtonSubmit(
-                        labelValue = "get invoice as provider",
+                        labelValue = stringResource(id = R.string.get_invoice_as_provider),
                         color = Color.Green,
                         enabled = !asProvider
                     ) {
@@ -165,14 +173,14 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 if(it) {
                                     invoiceViewModel.asProvider = true
                                     invoiceViewModel.setInvoiceMode(InvoiceMode.CREATE)
-                                    appViewModel.updateShow("add invoice")
+                                    appViewModel.updateShow(ADD_INVOICE)
                                 }
                             }else
                             ProviderDialog(false, false) {
                                 if(it) {
                                     invoiceViewModel.asProvider = false
                                     invoiceViewModel.setInvoiceMode(InvoiceMode.CREATE)
-                                    appViewModel.updateShow("add invoice")
+                                    appViewModel.updateShow(ADD_INVOICE)
                                 }
                             }
                         }
@@ -180,55 +188,55 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
-                                    labelValue = "all",
+                                    labelValue = stringResource(id = R.string.all),
                                     color = Color.Green,
                                     enabled = enabledAll
                                 ) {
-                                    launchLaucheEffect = "ALL"
+                                    launchLaucheEffect = ALL
                                 }
                             }
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
-                                    labelValue = "paid",
+                                    labelValue = stringResource(id = R.string.paid),
                                     color = Color.Green,
                                     enabled = enabledPaid
                                 ) {
-                                    launchLaucheEffect = "PAID"
+                                    launchLaucheEffect = PAID
                                 }
                             }
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
-                                    labelValue = "in complete",
+                                    labelValue = stringResource(id = R.string.in_complete),
                                     color = Color.Green,
                                     enabled = enabledIncomplete
                                 ) {
-                                    launchLaucheEffect = "IN_COMPLETE"
+                                    launchLaucheEffect = IN_COMPLETE
                                 }
                             }
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
-                                    labelValue = "not paid",
+                                    labelValue = stringResource(id = R.string.not_paid),
                                     color = Color.Green,
                                     enabled = enabledNotPaid
                                 ) {
-                                    launchLaucheEffect = "NOT_PAID"
+                                    launchLaucheEffect = NOT_PAID
                                 }
                             }
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
-                                    labelValue = "not accepted",
+                                    labelValue = stringResource(id = R.string.not_accepted),
                                     color = Color.Green,
                                     enabled = enabledNotAccepted
                                 ) {
-                                    launchLaucheEffect = "NOT_ACCEPTED"
+                                    launchLaucheEffect = NOT_ACCEPTED
                                     invoiceViewModel.getAllMyPaymentNotAccepted(asProvider)
                                 }
                             }
@@ -237,7 +245,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                             val invoicesAsProvider = invoiceViewModel.invoices.collectAsLazyPagingItems()
                             sharedViewModel.setInvoiceCountNotification(true)
                     when(view){
-                        "ALL" ->{
+                        ALL ->{
                             invoiceViewModel.setFilter(PaymentStatus.ALL)
                             LazyColumn(state = listState,
                                 modifier = Modifier.fillMaxSize()
@@ -257,7 +265,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 }
                             }
                         }
-                        "PAID" ->{
+                        PAID ->{
                             invoiceViewModel.setFilter(PaymentStatus.PAID)
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
@@ -280,7 +288,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 }
                             }
                         }
-                        "NOT_PAID" -> {
+                        NOT_PAID -> {
                             invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
@@ -294,17 +302,17 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                             Text(text = invoice.code.toString())
                                             Spacer(modifier = Modifier.padding(6.dp))
                                             Text(
-                                                text = "client name :" + (invoice.client?.name
-                                                    ?: invoice.person?.username)
+                                                text = stringResource(id = R.string.client_name,invoice.client?.name
+                                                    ?: invoice.person?.username?:"")
                                             )
                                             Spacer(modifier = Modifier.padding(6.dp))
-                                            Text(text = "invoice date :" + invoice.lastModifiedDate)
+                                            Text(text = stringResource(id = R.string.invoice_date,invoice.lastModifiedDate?:""))
                                         }
                                     }
                                 }
                             }
                         }
-                        "IN_COMPLETE" ->{
+                        IN_COMPLETE ->{
                             invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
@@ -315,20 +323,20 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                     val invoice = invoicesAsProvider[index]
                                     if (invoice != null) {
                                         Row {
-                                            Text(text = "invoice code : " + invoice.code.toString())
+                                            Text(text =  stringResource(id = R.string.invoice_code, invoice.code.toString()))
                                             Spacer(modifier = Modifier.padding(6.dp))
                                             Text(
-                                                text = "client name : " + (invoice.person?.username
+                                                text = stringResource(id = R.string.client_name,invoice.person?.username
                                                     ?: invoice.client?.name!!)
                                             )
                                             Spacer(modifier = Modifier.padding(6.dp))
-                                            Text(text = "rest is : " + invoice.rest.toString())
+                                            Text(text = stringResource(id = R.string.rest_is, invoice.rest.toString()))
                                         }
                                     }
                                 }
                             }
                         }
-                        "NOT_ACCEPTED" ->{
+                        NOT_ACCEPTED ->{
                             val notAccepted = invoiceViewModel.notAcceptedAsProvider.collectAsLazyPagingItems()
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
@@ -342,11 +350,10 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                             Text(text = invoice.code.toString())
                                             Spacer(modifier = Modifier.padding(6.dp))
                                             Text(
-                                                text = "client name :" + (invoice.client?.name
-                                                    ?: invoice.person?.username)
-                                            )
+                                                text = stringResource(id = R.string.client_name,invoice.client?.name
+                                                    ?: invoice.person?.username?:""))
                                             Spacer(modifier = Modifier.padding(6.dp))
-                                            Text(text = "invoice date :" + invoice.lastModifiedDate)
+                                            Text(text = stringResource(id = R.string.invoice_date,invoice.lastModifiedDate?:""))
                                         }
                                     }
                                 }
@@ -359,7 +366,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                             val invoiceAsClient = invoiceViewModel.invoicesAsClient.collectAsLazyPagingItems()
                             sharedViewModel.setInvoiceAsClientCountNotification(true)
                     when(view){
-                        "ALL" ->{
+                        ALL ->{
 
                             Log.e("viewmodelldn","view in screen is : $view")
                             invoiceViewModel.setFilter(PaymentStatus.ALL)
@@ -374,7 +381,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 }
                             }
                         }
-                        "PAID" ->{
+                        PAID ->{
                             invoiceViewModel.setFilter(PaymentStatus.PAID)
                             LazyColumn {
                                 items(count = invoiceAsClient.itemCount,
@@ -387,7 +394,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 }
                             }
                         }
-                        "NOT_PAID" ->{
+                        NOT_PAID ->{
                             invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
                             LazyColumn {
                                 items(count = invoiceAsClient.itemCount,
@@ -400,7 +407,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 }
                             }
                         }
-                        "IN_COMPLETE" ->{
+                        IN_COMPLETE ->{
                             invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
                             LazyColumn {
                                 items(count = invoiceAsClient.itemCount,
@@ -413,7 +420,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 }
                             }
                         }
-                        "NOT_ACCEPTED" ->{
+                        NOT_ACCEPTED ->{
                             val notAccepted = invoiceViewModel.notAcceptedAsClient.collectAsLazyPagingItems()
                             LazyColumn {
                                 items(count = notAccepted.itemCount,

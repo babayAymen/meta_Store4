@@ -20,13 +20,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.entity.model.CommandLine
 import com.aymen.metastore.model.entity.model.PurchaseOrderLine
 import com.aymen.metastore.ui.screen.admin.stringToLocalDateTime
+import com.aymen.metastore.util.ADDRESS
+import com.aymen.metastore.util.CLIENT
+import com.aymen.metastore.util.CODE
+import com.aymen.metastore.util.CODE_INVOICE
+import com.aymen.metastore.util.COMPANY_NAME
+import com.aymen.metastore.util.DATE
+import com.aymen.metastore.util.DISCOUNT
+import com.aymen.metastore.util.EMAIL
+import com.aymen.metastore.util.ERROR_PDF
+import com.aymen.metastore.util.FILE_NAME
+import com.aymen.metastore.util.HT
+import com.aymen.metastore.util.LABEL
+import com.aymen.metastore.util.MAT_FISC
+import com.aymen.metastore.util.NAME
+import com.aymen.metastore.util.PDF_GENERATED
+import com.aymen.metastore.util.PHONE
+import com.aymen.metastore.util.PRICE_UNIT
+import com.aymen.metastore.util.QUANTITY
+import com.aymen.metastore.util.TOTTVA
+import com.aymen.metastore.util.TOT_ARTICLE
+import com.aymen.metastore.util.TTC
+import com.aymen.metastore.util.TVA
+import com.aymen.metastore.util.UNIT
 import com.aymen.store.model.repository.ViewModel.ShoppingViewModel
 import java.io.File
 import java.io.FileOutputStream
@@ -71,35 +96,35 @@ fun generatePDF(context: Context, commandsLine: List<CommandLine>) {
         val paint = Paint()
         paint.color = android.graphics.Color.BLACK
         paint.textSize = 20f
-        canvas?.drawText("company name : ${commandsLine[0].invoice?.provider?.name}", 20f, startY, paint)
-        canvas?.drawText("matricule fiscale : ${commandsLine[0].invoice?.provider?.matfisc?:"..."}", 400f, startY, paint)
+        canvas?.drawText(" $COMPANY_NAME ${commandsLine[0].invoice?.provider?.name}", 20f, startY, paint)
+        canvas?.drawText(" $MAT_FISC ${commandsLine[0].invoice?.provider?.matfisc?:"..."}", 400f, startY, paint)
         paint.textSize = 16f
         startY += 20f
-        canvas?.drawText("phone : ${commandsLine[0].invoice?.provider?.phone?:"..."}", 20f, startY, paint)
-        canvas?.drawText("address : ${commandsLine[0].invoice?.provider?.address?:"..."}", 400f, startY, paint)
+        canvas?.drawText("$PHONE ${commandsLine[0].invoice?.provider?.phone?:"..."}", 20f, startY, paint)
+        canvas?.drawText("$ADDRESS ${commandsLine[0].invoice?.provider?.address?:"..."}", 400f, startY, paint)
         startY += 20f
-        canvas?.drawText("emaile : ${commandsLine[0].invoice?.provider?.email?:"..."}", 20f, startY, paint)
+        canvas?.drawText("$EMAIL ${commandsLine[0].invoice?.provider?.email?:"..."}", 20f, startY, paint)
 
         startY += 40f
-        canvas?.drawText("invoice N° : ${commandsLine[0].invoice?.code?.toString()}", 200f, startY, paint)
+        canvas?.drawText("$CODE_INVOICE ${commandsLine[0].invoice?.code?.toString()}", 200f, startY, paint)
         startY += 20f
-        canvas?.drawText("invoice date : $date", 200f, startY, paint)
+        canvas?.drawText("$DATE $date", 200f, startY, paint)
         startY += 20f
-        canvas?.drawText("CLIENT :", 20f, startY, paint)
+        canvas?.drawText(CLIENT, 20f, startY, paint)
         startY += 20f
-        canvas?.drawText("name : ${commandsLine[0].invoice?.client?.name?: commandsLine[0].invoice?.person?.username}", 20f, startY, paint)
-        canvas?.drawText("address : ${commandsLine[0].invoice?.client?.address?: commandsLine[0].invoice?.person?.address?:"..."}", 400f, startY, paint)
+        canvas?.drawText("$NAME ${commandsLine[0].invoice?.client?.name?: commandsLine[0].invoice?.person?.username}", 20f, startY, paint)
+        canvas?.drawText("$ADDRESS ${commandsLine[0].invoice?.client?.address?: commandsLine[0].invoice?.person?.address?:"..."}", 400f, startY, paint)
 
         startY += 20f
-        canvas?.drawText("phone : ${commandsLine[0].invoice?.client?.phone?: commandsLine[0].invoice?.person?.phone?:"..."}", 20f, startY, paint)
-        canvas?.drawText("matricule fiscal : ${commandsLine[0].invoice?.client?.matfisc?:"..."}", 400f, startY, paint)
+        canvas?.drawText("$PHONE ${commandsLine[0].invoice?.client?.phone?: commandsLine[0].invoice?.person?.phone?:"..."}", 20f, startY, paint)
+        canvas?.drawText("$MAT_FISC ${commandsLine[0].invoice?.client?.matfisc?:"..."}", 400f, startY, paint)
 
         val startX = 20f
         startY += 90f
         val cellWidth = 60f
         val cellHeight = 40f
 
-        val headers = listOf("Label", "Code", "Qte", "U", "TVA", "Prix Unit", "Tot Tva", "Tot Article")+ if(isDiscounted) listOf( "Discount")else{
+        val headers = listOf(LABEL, CODE, QUANTITY, UNIT, TVA, PRICE_UNIT, TOTTVA, TOT_ARTICLE)+ if(isDiscounted) listOf( DISCOUNT)else{
             emptyList()
         }
         val numCols = headers.size
@@ -199,23 +224,23 @@ fun generatePDF(context: Context, commandsLine: List<CommandLine>) {
             if(commandsLine[0].invoice?.discount != null && commandsLine[0].invoice?.discount != 0.0) {
                 startY += 20f
                 canvas?.drawText(
-                    "discount : ${commandsLine[0].invoice?.discount}",
+                    "$DISCOUNT ${commandsLine[0].invoice?.discount}",
                     400f,
                     startY,
                     paint
                 )
             }
         startY += 20f
-        canvas?.drawText("Tot TVA : ${commandsLine[0].invoice?.tot_tva_invoice}", 400f, startY, paint)
+        canvas?.drawText("$TOTTVA ${commandsLine[0].invoice?.tot_tva_invoice}", 400f, startY, paint)
         startY += 20f
-        canvas?.drawText("HT : ${commandsLine[0].invoice?.prix_article_tot}", 400f, startY, paint)
+        canvas?.drawText("$HT ${commandsLine[0].invoice?.prix_article_tot}", 400f, startY, paint)
         startY += 20f
-        canvas?.drawText("TTC : ${commandsLine[0].invoice?.prix_invoice_tot}", 400f, startY, paint)
+        canvas?.drawText("$TTC ${commandsLine[0].invoice?.prix_invoice_tot}", 400f, startY, paint)
         // Finalize PDF
         pdfDocument.finishPage(page)
 
         // Save PDF
-        val pdfFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "MyInvoices")
+        val pdfFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_NAME)
         if (!pdfFolder.exists()) pdfFolder.mkdirs()
         val outputFile = File(pdfFolder, "${commandsLine[0].invoice?.code}.pdf")
         val fileOutputStream = FileOutputStream(outputFile)
@@ -223,11 +248,11 @@ fun generatePDF(context: Context, commandsLine: List<CommandLine>) {
         pdfDocument.close()
 
         Log.d("PDF", "PDF generated at: ${outputFile.absolutePath}")
-        Toast.makeText(context, "PDF Generated", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, PDF_GENERATED, Toast.LENGTH_SHORT).show()
 
     } catch (e: IOException) {
         Log.e("PDF", "Error generating PDF: ${e.message}")
-        Toast.makeText(context, "Error generating PDF", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, ERROR_PDF, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -246,49 +271,49 @@ fun generateOrderPDF(context: Context, commandsLine: List<PurchaseOrderLine>) {
         paint.textSize = 20f
 
         // Company and client info
-        canvas?.drawText("Company Name: ${commandsLine[0].invoice?.provider?.name}", 20f, startY, paint)
-        canvas?.drawText("Matricule Fiscale: ${commandsLine[0].invoice?.provider?.matfisc ?: "..."}", 400f, startY, paint)
+        canvas?.drawText("$COMPANY_NAME ${commandsLine[0].invoice?.provider?.name}", 20f, startY, paint)
+        canvas?.drawText("$MAT_FISC ${commandsLine[0].invoice?.provider?.matfisc ?: "..."}", 400f, startY, paint)
         paint.textSize = 16f
         startY += 20f
-        canvas?.drawText("Phone: ${commandsLine[0].invoice?.provider?.phone ?: "..."}", 20f, startY, paint)
-        canvas?.drawText("Address: ${commandsLine[0].invoice?.provider?.address ?: "..."}", 400f, startY, paint)
+        canvas?.drawText("$PHONE ${commandsLine[0].invoice?.provider?.phone ?: "..."}", 20f, startY, paint)
+        canvas?.drawText("$ADDRESS ${commandsLine[0].invoice?.provider?.address ?: "..."}", 400f, startY, paint)
         startY += 20f
-        canvas?.drawText("Email: ${commandsLine[0].invoice?.provider?.email ?: "..."}", 20f, startY, paint)
+        canvas?.drawText("$EMAIL ${commandsLine[0].invoice?.provider?.email ?: "..."}", 20f, startY, paint)
 
         startY += 40f
-        canvas?.drawText("Invoice N°: ${commandsLine[0].invoice?.code ?: "Unknown"}", 200f, startY, paint)
+        canvas?.drawText("$CODE_INVOICE ${commandsLine[0].invoice?.code ?: "Unknown"}", 200f, startY, paint)
         startY += 20f
-        canvas?.drawText("Invoice Date: $date", 200f, startY, paint)
+        canvas?.drawText("$DATE $date", 200f, startY, paint)
         startY += 20f
-        canvas?.drawText("CLIENT:", 20f, startY, paint)
+        canvas?.drawText(CLIENT, 20f, startY, paint)
         startY += 20f
         canvas?.drawText(
-            "Name: ${commandsLine[0].invoice?.client?.name ?: commandsLine[0].invoice?.person?.username}",
+            "$NAME ${commandsLine[0].invoice?.client?.name ?: commandsLine[0].invoice?.person?.username}",
             20f,
             startY,
             paint
         )
         canvas?.drawText(
-            "Address: ${commandsLine[0].invoice?.client?.address ?: commandsLine[0].invoice?.person?.address ?: "..."}",
+            "$ADDRESS ${commandsLine[0].invoice?.client?.address ?: commandsLine[0].invoice?.person?.address ?: "..."}",
             400f,
             startY,
             paint
         )
         startY += 20f
         canvas?.drawText(
-            "Phone: ${commandsLine[0].invoice?.client?.phone ?: commandsLine[0].invoice?.person?.phone ?: "..."}",
+            "$PHONE ${commandsLine[0].invoice?.client?.phone ?: commandsLine[0].invoice?.person?.phone ?: "..."}",
             20f,
             startY,
             paint
         )
-        canvas?.drawText("Matricule Fiscale: ${commandsLine[0].invoice?.client?.matfisc ?: "..."}", 400f, startY, paint)
+        canvas?.drawText("$MAT_FISC ${commandsLine[0].invoice?.client?.matfisc ?: "..."}", 400f, startY, paint)
 
         // Table Configuration
         val startX = 20f
         startY += 90f
         val cellWidth = 60f
         val cellHeight = 40f
-        val headers = listOf("Label", "Code", "Qte", "U", "TVA", "Prix Unit", "Tot Tva", "Tot Article")
+        val headers = listOf(LABEL, CODE, QUANTITY, UNIT, TVA, PRICE_UNIT, TOTTVA, TOT_ARTICLE)
         val numCols = headers.size
 
         paint.textSize = 14f
@@ -368,29 +393,29 @@ fun generateOrderPDF(context: Context, commandsLine: List<PurchaseOrderLine>) {
         // Totals
         startY += 20f
         paint.textSize = 16f
-        canvas?.drawText("Discount: ${commandsLine[0].invoice?.discount}", 400f, startY, paint)
+        canvas?.drawText("$DISCOUNT ${commandsLine[0].invoice?.discount}", 400f, startY, paint)
         startY += 20f
-        canvas?.drawText("Total TVA: ${commandsLine[0].invoice?.tot_tva_invoice}", 400f, startY, paint)
+        canvas?.drawText("$TOTTVA ${commandsLine[0].invoice?.tot_tva_invoice}", 400f, startY, paint)
         startY += 20f
-        canvas?.drawText("HT: ${commandsLine[0].invoice?.prix_article_tot}", 400f, startY, paint)
+        canvas?.drawText("$HT ${commandsLine[0].invoice?.prix_article_tot}", 400f, startY, paint)
         startY += 20f
-        canvas?.drawText("TTC: ${commandsLine[0].invoice?.prix_invoice_tot}", 400f, startY, paint)
+        canvas?.drawText("$TTC ${commandsLine[0].invoice?.prix_invoice_tot}", 400f, startY, paint)
 
         pdfDocument.finishPage(page)
 
         // Save PDF
-        val pdfFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "MyInvoices")
+        val pdfFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_NAME)
         if (!pdfFolder.exists()) pdfFolder.mkdirs()
         val outputFile = File(pdfFolder, "${commandsLine[0].invoice?.code}.pdf")
         val fileOutputStream = FileOutputStream(outputFile)
         pdfDocument.writeTo(fileOutputStream)
         pdfDocument.close()
 
-        Toast.makeText(context, "PDF Generated", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, PDF_GENERATED, Toast.LENGTH_SHORT).show()
 
     } catch (e: IOException) {
         Log.e("PDF", "Error generating PDF: ${e.message}")
-        Toast.makeText(context, "Error generating PDF", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, ERROR_PDF, Toast.LENGTH_SHORT).show()
     }
 }
 

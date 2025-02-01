@@ -22,6 +22,7 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.ui.component.ArticleCard
+import com.aymen.metastore.util.ADD_ARTICLE_FOR_COMPANY
 
 @Composable
 fun ArticlesScreenForCompanyByCategory(){
@@ -49,7 +50,7 @@ val articles = articleViewModel.articles.collectAsLazyPagingItems()
                     }
                     if (add) {
                         articleViewModel.upDate = false
-                        appViewModel.updateShow(stringResource(id = R.string.add_article_for_company))
+                        appViewModel.updateShow(ADD_ARTICLE_FOR_COMPANY)
                     }
                 }
             }

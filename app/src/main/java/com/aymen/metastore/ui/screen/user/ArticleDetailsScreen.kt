@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -52,6 +53,7 @@ import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.IMAGE_URL_ARTICLE
 import com.aymen.metastore.util.IMAGE_URL_COMPANY
+import com.aymen.metastore.util.VERIFICATION_ACCOUNT
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.Enum.Type
 import kotlinx.coroutines.flow.map
@@ -166,7 +168,7 @@ fun ArticleDetailsScreen() {
                         }
                         Icon(
                             imageVector = Icons.Default.Verified,
-                            contentDescription = "verification account",
+                            contentDescription = VERIFICATION_ACCOUNT,
                             tint = Color.Green
                         )
                         Text(text = company.name)
@@ -215,7 +217,7 @@ fun ArticleDetailsScreen() {
                     item {
 
                         Row {
-                            Text(text = if (company.name != "") company.name else "aymen babay")
+                            Text(text = company.name)
                             Text(text = articleViewModel.myComment)
                             DividerTextComponent()
                         }
@@ -227,7 +229,7 @@ fun ArticleDetailsScreen() {
 
                     InputTextField(
                         labelValue = comment,
-                        label = "Type a comment",
+                        label = stringResource(id = R.string.type_a_comment),
                         singleLine = false,
                         maxLine = 6,
                         keyboardOptions = KeyboardOptions(

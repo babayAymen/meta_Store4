@@ -26,12 +26,14 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.aymen.metastore.R
 import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.model.Company
@@ -49,6 +51,23 @@ import com.aymen.metastore.ui.component.InvoiceCard
 import com.aymen.metastore.ui.screen.admin.AddInvoiceScreen
 import com.aymen.metastore.ui.screen.admin.ReglementCompany
 import com.aymen.metastore.ui.screen.admin.SwipeToDeleteContainer
+import com.aymen.metastore.util.ADD_INVOICE
+import com.aymen.metastore.util.ALL
+import com.aymen.metastore.util.ALL_HISTORY
+import com.aymen.metastore.util.BUY_HISTORY
+import com.aymen.metastore.util.PAID
+import com.aymen.metastore.util.PAYMENT
+import com.aymen.metastore.util.PROFIT
+import com.aymen.metastore.util.REGLEMENT
+import com.aymen.metastore.util.all_histories_payment_for_provider
+import com.aymen.metastore.util.all_histories_payment_for_provider_by_date
+import com.aymen.metastore.util.all_profit_payment_for_provider_per_day
+import com.aymen.metastore.util.incomplete
+import com.aymen.metastore.util.notaccepted
+import com.aymen.metastore.util.notpayed
+import com.aymen.metastore.util.payed
+import com.aymen.metastore.util.profit_by_date
+import com.aymen.metastore.util.sum_of_profit_by_date
 import com.aymen.store.model.Enum.RoleEnum
 
 
@@ -64,7 +83,7 @@ fun PaymentScreen() {
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     sharedViewModel.setPaymentCountNotification(true)
-    val view by appViewModel.view
+    val show by appViewModel.show
     var rechargeInabled by remember {
         mutableStateOf(false)
     }
@@ -77,29 +96,29 @@ fun PaymentScreen() {
     var reglementInabled by remember {
         mutableStateOf(true)
     }
-    LaunchedEffect(key1 = view) {
-        when (view) {
-            "payment" -> {
+    LaunchedEffect(key1 = show) {
+        when (show) {
+            PAYMENT -> {
                 rechargeInabled = false
                 profitInabled = true
                 buyInabled = true
                 reglementInabled = true
             }
 
-            "buyhistory" -> {
+            BUY_HISTORY -> {
                 buyInabled = false
                 rechargeInabled = true
                 profitInabled = true
                 reglementInabled = true
             }
 
-            "profit" -> {
+            PROFIT -> {
                 profitInabled = false
                 rechargeInabled = true
                 buyInabled = true
                 reglementInabled = true
             }
-            "reglement" ->{
+            REGLEMENT ->{
                 reglementInabled = false
                 profitInabled = true
                 rechargeInabled = true
@@ -123,24 +142,24 @@ fun PaymentScreen() {
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
-                                    labelValue = "recharge history",
+                                    labelValue = stringResource(id = R.string.recharge_history),
                                     color = Color.Green,
                                     enabled = rechargeInabled
                                 ) {
-                                    appViewModel.updateView("payment")
+                                    appViewModel.updateShow(PAYMENT)
                                 }
                             }
                         Row( // buy history
                             modifier = Modifier.weight(1f)
                         ) {
                             ButtonSubmit(
-                                labelValue = "buy history",
+                                labelValue = stringResource(id = R.string.buy_history),
                                 color = Color.Green,
                                 enabled = buyInabled
                             ) {
                                 invoiceViewModel.setFilter(PaymentStatus.ALL)
-                                appViewModel.updateView("buyhistory")
-                                appViewModel.updateShow("allHistory")
+                                appViewModel.updateShow(BUY_HISTORY)
+                                appViewModel.updateView(ALL_HISTORY)
                             }
                         }
 
@@ -153,8 +172,8 @@ fun PaymentScreen() {
                                     color = Color.Green,
                                     enabled = profitInabled
                                 ) {
-                                    appViewModel.updateView("profit")
-                                    appViewModel.updateShow("all_histories_payment_for_provider")
+                                    appViewModel.updateShow(PROFIT)
+                                    appViewModel.updateView(all_histories_payment_for_provider)
                                 }
                             }
                         }
@@ -166,15 +185,15 @@ fun PaymentScreen() {
                     }
                 }
             }
-            when (view) {
-                "payment" -> PaymentView(pointPaymentViewModel,company)
-                "buyhistory" -> {
+            when (show) {
+                PAYMENT -> PaymentView(pointPaymentViewModel,company)
+                BUY_HISTORY -> {
                     BuyView(appViewModel, invoiceViewModel)
                 }
-                "profit" -> if (type == AccountType.COMPANY && company.metaSeller == true) {
+                PROFIT -> if (type == AccountType.COMPANY && company.metaSeller == true) {
                         ProfitView(pointPaymentViewModel, paymentViewModel, appViewModel)
                     }
-                "reglement" -> ReglementCompany()
+                REGLEMENT -> ReglementCompany()
             }
         }
     }
@@ -189,12 +208,11 @@ fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel , myCompany : Co
         ) { index ->
             val pointPayment = allPaymentRecharge[index]
             if (pointPayment != null) {
-                val paymentDetails = if (pointPayment.provider?.id == myCompany.id) {
-                    "you have sent ${pointPayment.amount} DT for " +
-                            (pointPayment.clientUser?.username ?: pointPayment.clientCompany?.name ?: "")
-                } else {
-                    "${pointPayment.provider?.name} has sent you ${pointPayment.amount} DT"
-                }
+                val paymentDetails = if (pointPayment.provider?.id == myCompany.id) stringResource(
+                    id = R.string.your_sent_point,pointPayment.amount.toString(),pointPayment.clientUser?.username ?: pointPayment.clientCompany?.name ?: ""
+                )
+                 else
+                     stringResource(id = R.string.his_sent_point,pointPayment.provider?.name?:"",pointPayment.amount?:"")
 
                 Text(text = paymentDetails)
 
@@ -206,7 +224,7 @@ fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel , myCompany : Co
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
-    val show by appViewModel.show
+    val view by appViewModel.view
     var paidInabled by remember {
         mutableStateOf(false)
     }
@@ -222,54 +240,60 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
     var allHistoryInabled by remember {
         mutableStateOf(false)
     }
-    when (show) {
-        "add invoice" -> {
+    when (view) {
+        ADD_INVOICE -> {
             allHistoryInabled = true
             paidInabled = true
             inCompleteInabled = true
             notPaidInabled = true
             notAcceptedInabled = true
         }
-        "payed" -> {
+        payed -> {
             allHistoryInabled = true
             paidInabled = false
             inCompleteInabled = true
             notPaidInabled = true
             notAcceptedInabled = true
+            invoiceViewModel.setFilter(PaymentStatus.PAID)
         }
 
-        "incomplete" -> {
+        incomplete -> {
             allHistoryInabled = true
             paidInabled = true
             inCompleteInabled = false
             notPaidInabled = true
             notAcceptedInabled = true
+            invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
         }
 
-        "notpayed" -> {
+        notpayed -> {
             allHistoryInabled = true
             paidInabled = true
             inCompleteInabled = true
             notPaidInabled = false
             notAcceptedInabled = true
+            invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
         }
 
-        "notaccepted" -> {
+        notaccepted -> {
             allHistoryInabled = true
             paidInabled = true
             inCompleteInabled = true
             notPaidInabled = true
             notAcceptedInabled = false
+            invoiceViewModel.getAllMyPaymentNotAccepted(true)
         }
 
-        "allHistory" -> {
+        ALL_HISTORY -> {
             allHistoryInabled = false
             paidInabled = true
             inCompleteInabled = true
             notPaidInabled = true
             notAcceptedInabled = true
+            invoiceViewModel.setFilter(PaymentStatus.ALL)
         }
     }
+
     val myAllInvoice = invoiceViewModel.invoices.collectAsLazyPagingItems()
     Column {
         Row {
@@ -277,68 +301,63 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "all",
+                    labelValue = stringResource(id = R.string.all),
                     color = Color.Green,
                     enabled = allHistoryInabled
                 ) {
-                    invoiceViewModel.setFilter(PaymentStatus.ALL)
-                    appViewModel.updateShow("allHistory")
+                    appViewModel.updateView(ALL_HISTORY)
                 }
             }
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "payed",
+                    labelValue = stringResource(id = R.string.paid),
                     color = Color.Green,
                     enabled = paidInabled
                 ) {
-                    appViewModel.updateShow("payed")
-                    invoiceViewModel.setFilter(PaymentStatus.PAID)
+                    appViewModel.updateView(payed)
                 }
             }
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "in compelete",
+                    labelValue = stringResource(id = R.string.in_complete),
                     color = Color.Green,
                     enabled = inCompleteInabled
                 ) {
-                    appViewModel.updateShow("incomplete")
-                    invoiceViewModel.setFilter(PaymentStatus.INCOMPLETE)
+                    appViewModel.updateView(incomplete)
                 }
             }
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "not payed",
+                    labelValue = stringResource(id = R.string.not_paid),
                     color = Color.Green,
                     enabled = notPaidInabled
                 ) {
-                    appViewModel.updateShow("notpayed")
-                    invoiceViewModel.setFilter(PaymentStatus.NOT_PAID)
+                    appViewModel.updateView(notpayed)
                 }
             }
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "not accepted yet",
+                    labelValue = stringResource(id = R.string.not_accepted_yet),
                     color = Color.Green,
                     enabled = notAcceptedInabled
                 ) {
-                    appViewModel.updateShow("notaccepted")
-                    invoiceViewModel.getAllMyPaymentNotAccepted(true)
+                    appViewModel.updateView(notaccepted)
                 }
             }
         }
-        when (show) {
-            "add invoice" ->{
+        when (view) {
+            ADD_INVOICE ->{
                 AddInvoiceScreen()
             }
-            "allHistory" -> {
+            ALL_HISTORY -> {
                         val listState = invoiceViewModel.listState
                         LazyColumn(
                             state = listState,
@@ -368,7 +387,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                             }
                         }
             }
-            "payed" -> {
+            payed -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -389,7 +408,7 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                     }
                 }
             }
-            "incomplete" -> {
+            incomplete -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -399,20 +418,18 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                         val invoice = myAllInvoice[index]
                         if (invoice != null) {
                             Row {
-                                Text(text = "invoice code : " + invoice.code.toString())
+                                Text(text = stringResource(id = R.string.invoice_code,invoice.code.toString()) )
                                 Spacer(modifier = Modifier.padding(6.dp))
                                 Text(
-                                    text = "client name : " + (invoice.person?.username
-                                        ?: invoice.client?.name!!)
-                                )
+                                    text = stringResource(id = R.string.client_name,invoice.person?.username ?: invoice.client?.name!!))
                                 Spacer(modifier = Modifier.padding(6.dp))
-                                Text(text = "rest is : " + invoice.rest.toString())
+                                Text(text = stringResource(id = R.string.rest_is,invoice.rest.toString())  )
                             }
                         }
                     }
                 }
             }
-            "notpayed" -> {
+            notpayed -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -425,18 +442,16 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                                 Text(text = invoice.code.toString())
                                 Spacer(modifier = Modifier.padding(6.dp))
                                 Text(
-                                    text = "client name :" + (invoice.client?.name
-                                        ?: invoice.person?.username)
+                                    text = stringResource(id = R.string.client_name,invoice.client?.name ?: invoice.person?.username.toString())
                                 )
                                 Spacer(modifier = Modifier.padding(6.dp))
-                                Text(text = "invoice date :" + invoice.lastModifiedDate)
+                                Text(text = stringResource(id = R.string.invoice_date,invoice.lastModifiedDate.toString()))
                             }
                         }
                     }
                 }
             }
-
-            "notaccepted" -> {
+            notaccepted -> {
                 val notAccepted = invoiceViewModel.notAcceptedAsProvider.collectAsLazyPagingItems()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
@@ -450,11 +465,11 @@ fun BuyView( appViewModel: AppViewModel, invoiceViewModel: InvoiceViewModel) {
                                 Text(text = invoice.code.toString())
                                 Spacer(modifier = Modifier.padding(6.dp))
                                 Text(
-                                    text = "client name :" + (invoice.client?.name
-                                        ?: invoice.person?.username)
+                                    text = stringResource(id = R.string.client_name,invoice.client?.name
+                                        ?: invoice.person?.username.toString())
                                 )
                                 Spacer(modifier = Modifier.padding(6.dp))
-                                Text(text = "invoice date :" + invoice.lastModifiedDate)
+                                Text(text = stringResource(id = R.string.invoice_date,invoice.lastModifiedDate.toString()))
                             }
                         }
                     }
@@ -479,7 +494,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
     var finalDate by remember {
         mutableStateOf("")
     }
-    val show by appViewModel.show
+    val view by appViewModel.view
     var allHistoryInabled by remember {
         mutableStateOf(false)
     }
@@ -495,36 +510,36 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
     var sumProfitInabled by remember {
         mutableStateOf(false)
     }
-    when (show) {
-        "all_histories_payment_for_provider" -> {
+    when (view) {
+        all_histories_payment_for_provider -> {
             allHistoryInabled = false
             allHistoryByDateInabled = true
             allProfitInabled = true
             allProfitByDateInabled = true
             sumProfitInabled = true
         }
-        "all_histories_payment_for_provider_by_date" -> {
+        all_histories_payment_for_provider_by_date -> {
             allHistoryInabled = true
             allHistoryByDateInabled = false
             allProfitInabled = true
             allProfitByDateInabled = true
             sumProfitInabled = true
         }
-        "all_profit_payment_for_provider_per_day" -> {
+        all_profit_payment_for_provider_per_day -> {
             allHistoryInabled = true
             allHistoryByDateInabled = true
             allProfitInabled = false
             allProfitByDateInabled = true
             sumProfitInabled = true
         }
-        "profit_by_date" -> {
+        profit_by_date -> {
             allHistoryInabled = true
             allHistoryByDateInabled = true
             allProfitInabled = true
             allProfitByDateInabled = false
             sumProfitInabled = true
         }
-        "sum_of_profit_by_date" -> {
+        sum_of_profit_by_date -> {
             allHistoryInabled = true
             allHistoryByDateInabled = true
             allProfitInabled = true
@@ -538,18 +553,18 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "all histories",
+                    labelValue = stringResource(id = R.string.all_histories),
                     color = Color.Green,
                     enabled = allHistoryInabled
                 ) {
-                    appViewModel.updateShow("all_histories_payment_for_provider")
+                    appViewModel.updateView(all_histories_payment_for_provider)
                 }
             }
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "history by date",
+                    labelValue = stringResource(id = R.string.history_by_date),
                     color = Color.Green,
                     enabled = allHistoryByDateInabled
                 ) {
@@ -557,29 +572,29 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                         beginDate,
                         finalDate
                     )
-                    appViewModel.updateShow("all_histories_payment_for_provider_by_date")
+                    appViewModel.updateView(all_histories_payment_for_provider_by_date)
                 }
             }
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "profit per day",
+                    labelValue = stringResource(id = R.string.profit_per_day),
                     color = Color.Green,
                     enabled = allProfitInabled
                 ) {
-                    appViewModel.updateShow("all_profit_payment_for_provider_per_day")
+                    appViewModel.updateView(all_profit_payment_for_provider_per_day)
                 }
             }
             Row(
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "profit by date",
+                    labelValue = stringResource(id = R.string.profit_by_date),
                     color = Color.Green,
                     enabled = allProfitByDateInabled
                 ) {
-                    appViewModel.updateShow("profit_by_date")
+                    appViewModel.updateView(profit_by_date)
                     pointPaymentViewModel.getMyHistoryProfitByDate(
                         beginDate,
                         finalDate
@@ -590,11 +605,11 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                 modifier = Modifier.weight(1f)
             ) {
                 ButtonSubmit(
-                    labelValue = "sum of profit by date",
+                    labelValue = stringResource(id = R.string.sum_of_profit_by_date),
                     color = Color.Green,
                     enabled = sumProfitInabled
                 ) {
-                    appViewModel.updateShow("sum_of_profit_by_date")
+                    appViewModel.updateView(sum_of_profit_by_date)
                     pointPaymentViewModel.getMyProfitByDate(
                         beginDate,
                         finalDate
@@ -611,8 +626,8 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
         Column (
             modifier = Modifier.fillMaxWidth()
         ){
-            when (show) {
-                "all_histories_payment_for_provider" -> {
+            when (view) {
+                all_histories_payment_for_provider -> {
                     val listState = pointPaymentViewModel.listState
                             LazyColumn(state = listState,
                                 modifier = Modifier.fillMaxSize()
@@ -631,7 +646,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                             }
                 }
 
-                "all_histories_payment_for_provider_by_date" ->{
+                all_histories_payment_for_provider_by_date->{
                     val allMyProfitsPerDay = paymentViewModel.paymentsEspeceByDate.collectAsLazyPagingItems()
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
@@ -648,7 +663,7 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                         }
                     }
                         }
-                "all_profit_payment_for_provider_per_day" ->{
+                all_profit_payment_for_provider_per_day ->{
                             val allMyProfitsPerDay = pointPaymentViewModel.allMyProfitsPerDay.collectAsLazyPagingItems()
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
@@ -664,13 +679,13 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                                         ) {
                                             profitPerDay.lastModifiedDate?.let { Text(text = it) }
                                             Spacer(modifier = Modifier.width(20.dp))
-                                            Text(text = "${profitPerDay.amount} dt")
+                                            Text(text = stringResource(id = R.string.dt,profitPerDay.amount.toString()) )
                                         }
                                     }
                                 }
                             }
                     }
-                "profit_by_date" -> {
+                profit_by_date -> {
                     val profitPerDayByDate = pointPaymentViewModel.allMyProfitsPerDayByDate.collectAsLazyPagingItems()
                     LazyColumn {
                         items(count = profitPerDayByDate.itemCount,
@@ -683,14 +698,14 @@ val sharedViewModel : SharedViewModel = hiltViewModel()
                                 ) {
                                     profit.lastModifiedDate?.let { Text(text = it) }
                                     Spacer(modifier = Modifier.width(20.dp))
-                                    Text(text = "${profit.amount} dt")
+                                    Text(text = stringResource(id = R.string.dt,profit.amount.toString()))
                                 }
                             }
 
                         }
                     }
                 }
-                "sum_of_profit_by_date" ->{
+                sum_of_profit_by_date ->{
                     val myProfit by pointPaymentViewModel.myProfits.collectAsStateWithLifecycle()
                         Text(text = myProfit)
                     }

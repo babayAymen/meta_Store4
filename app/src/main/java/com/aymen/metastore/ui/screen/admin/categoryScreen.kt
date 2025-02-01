@@ -25,6 +25,8 @@ import com.aymen.store.model.repository.ViewModel.CategoryViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.CategoryCardForAdmin
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.IMAGE_URL_CATEGORY
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
 
 @Composable
 fun CategoryScreen() {
@@ -77,8 +79,8 @@ fun CategoryScreen() {
                         ) { categoryItem ->
                             CategoryCardForAdmin(
                                 category = categoryItem,
-                                image = "${BASE_URL}werehouse/image/${if (category.image?.isNotEmpty() == true) category.image else ""}/category/${category.company?.user?.id}"
-                            )
+                                image =
+                                if(category.image != null) String.format(IMAGE_URL_CATEGORY,category.image,category.company?.user?.id) else "")
                         }
                     } else {
                         CircularProgressIndicator()

@@ -15,13 +15,14 @@ import androidx.room.withTransaction
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.model.Article
 import com.aymen.metastore.model.entity.model.ArticleCompany
-import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Comment
 import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.SubArticleModel
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.ArticleRemoteKeysEntity
 import com.aymen.metastore.model.usecase.MetaUseCases
+import com.aymen.metastore.util.ARTICLE
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
@@ -34,7 +35,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -59,6 +59,8 @@ class ArticleViewModel @Inject constructor(
     private val _companyArticles : MutableStateFlow<PagingData<ArticleCompany>> = MutableStateFlow(PagingData.empty())
     var companyArticles : StateFlow<PagingData<ArticleCompany>> = _companyArticles
 
+    private val _selectedCategory : MutableStateFlow<CompanyCategory> = MutableStateFlow(CompanyCategory.ALL)
+    val selectedCategory : StateFlow<CompanyCategory> = _selectedCategory
     private val _userComment = MutableStateFlow(User())
     val userComment: StateFlow<User> = _userComment
 
@@ -79,6 +81,10 @@ class ArticleViewModel @Inject constructor(
 
     private val _commentArticle : MutableStateFlow<PagingData<Comment>> = MutableStateFlow(PagingData.empty())
     val commentArticle : StateFlow<PagingData<Comment>> get() = _commentArticle
+    private val _subArticleChilds : MutableStateFlow<List<SubArticleModel>> = MutableStateFlow(emptyList())
+    val subArticleChilds : StateFlow<List<SubArticleModel>> = _subArticleChilds
+    private val _subArticlesChilds : MutableStateFlow<PagingData<SubArticleModel>> = MutableStateFlow(PagingData.empty())
+    val subArticlesChilds : StateFlow<PagingData<SubArticleModel>> = _subArticlesChilds
 
     var article by mutableStateOf(Article())
     var myComment by mutableStateOf("")
@@ -96,6 +102,10 @@ class ArticleViewModel @Inject constructor(
                     }
         }
         }
+    }
+
+    fun setSelectCategory(category : CompanyCategory){
+        _selectedCategory.value = category
     }
 
      fun fetchAllMyArticlesApi(companyId: Long) {
@@ -267,9 +277,9 @@ class ArticleViewModel @Inject constructor(
            val articleCompanyPrev = article
             room.articleCompanyDao().insertSigleArticle(article.toArticleCompanyEntity(isSync = true))
             val response = repository.updateArticle(article.toArticleCompanyDto())
+            addSubArticle()
             if(response.isSuccessful){
-
-                appViewModel.updateShow("article")
+                appViewModel.updateShow(ARTICLE)
             }else{
                 room.articleCompanyDao().insertSigleArticle(articleCompanyPrev.toArticleCompanyEntity(isSync = true))
             }
@@ -324,4 +334,48 @@ class ArticleViewModel @Inject constructor(
         }
     }
 
+    fun addIdToSubArticleIds(childArticle : ArticleCompany, qte : Double){
+        val subArticleModel = SubArticleModel(
+            parentArticle = articleCompany.value,
+            childArticle = childArticle,
+            quantity = qte
+
+        )
+        Log.e("atticleicompany","sub article $subArticleModel")
+        _subArticleChilds.value += subArticleModel
+    }
+
+    fun remiseAZeroSubArticle(){
+        _subArticleChilds.value = emptyList()
+    }
+    fun deleteIdFromSubArticleIds(id : Long){
+//        _subArticleChildIds.value -= id
+    }
+    fun addSubArticle(){
+        viewModelScope.launch {
+            val result : Result<Response<Void>> = runCatching {
+                repository.addSubArticle(subArticleChilds.value)
+            }
+            result.fold(
+                onSuccess = {success ->
+                _subArticleChilds.value = emptyList()
+
+                },
+                onFailure = {failure ->
+                _subArticleChilds.value = emptyList()
+
+                }
+            )
+        }
+    }
+    fun getArticlesChilds(){
+        viewModelScope.launch {
+            useCases.getArticlesChilds(articleCompany.value?.id!!)
+                .distinctUntilChanged()
+                .cachedIn(viewModelScope)
+                .collect{
+                    _subArticlesChilds.value = it
+                }
+        }
+    }
 }

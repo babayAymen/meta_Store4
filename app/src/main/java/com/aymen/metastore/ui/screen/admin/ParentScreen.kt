@@ -10,8 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
@@ -36,7 +38,7 @@ fun ParentScreen() {
                 modifier = Modifier.fillMaxWidth()
             ){
 
-                ButtonSubmit(labelValue = "get as client", color = Color.Green, enabled = true) {
+                ButtonSubmit(labelValue = stringResource(id = R.string.get_as_client), color = Color.Green, enabled = true) {
                     appViewModel.updateShow("")
                 }
             }

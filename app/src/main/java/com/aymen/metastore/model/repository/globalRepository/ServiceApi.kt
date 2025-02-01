@@ -33,11 +33,13 @@ import com.aymen.metastore.model.entity.dto.InvoiceDto
 import com.aymen.metastore.model.entity.dto.PaymentDto
 import com.aymen.metastore.model.entity.dto.PurchaseOrderDto
 import com.aymen.metastore.model.entity.dto.ReglementFoProviderDto
+import com.aymen.metastore.model.entity.dto.SubArticleDto
 import com.aymen.metastore.model.entity.dto.SubCategoryDto
 import com.aymen.metastore.model.entity.dto.TokenDto
 import com.aymen.metastore.model.entity.dto.UserDto
 import com.aymen.metastore.model.entity.dto.WorkerDto
 import com.aymen.metastore.model.entity.model.PaginatedResponse
+import com.aymen.metastore.model.entity.model.SubArticleModel
 import com.aymen.metastore.model.webSocket.fcm.SendMessageDto
 import com.aymen.metastore.util.ARTICLE_BASE_URL
 import com.aymen.metastore.util.AUTH_BASE_URL
@@ -258,6 +260,11 @@ interface ServiceApi {
     suspend fun getAllArticlesContaining(@Path("search") search : String, @Path("searchType") searchType: SearchType) : Response<List<ArticleCompanyDto>>
     @GET("$ARTICLE_BASE_URL/get_by_barcode")
     suspend fun getArticleByBarcode(@Query("barcode") barCode : String) : Response<ArticleCompanyDto>
+    ////////////////////////////////////////////////: sub article ////////////////////////////////////////////////////
+    @POST("$ARTICLE_BASE_URL/add_child")
+    suspend fun addSubArticle(@Body subArticle : List<SubArticleModel> ) :Response<Void>
+    @GET("$ARTICLE_BASE_URL/get_articles_child/{parentId}")
+    suspend fun getArticlesChilds(@Path("parentId") parentId :Long, @Query("page") page : Int , @Query("pageSize") pageSize: Int) : PaginatedResponse<SubArticleDto>
 /////////////////////////////////////////////////////////////////::client/////////////////////////////////////////////////////////////:
     @Multipart
     @POST("$CLIENT_BASE_URL/add")

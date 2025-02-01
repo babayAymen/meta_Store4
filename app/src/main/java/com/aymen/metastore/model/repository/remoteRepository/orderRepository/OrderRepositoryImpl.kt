@@ -87,7 +87,7 @@ class OrderRepositoryImpl @Inject constructor(
         return Pager(
             config = PagingConfig(pageSize = PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
             remoteMediator = PurchaseOrderRemoteMediator(api, room, id),
-            pagingSourceFactory = { purchaseOrderDao.getInvoicesDelivered(isTaken = false) }
+            pagingSourceFactory = { purchaseOrderDao.getInvoicesNotDelivered(isTaken = false) } // from not deliverd
         ).flow.map {
             it.map { invoice ->
                 invoice.toPurchaseOrderWithCompanyAndUserOrClient()

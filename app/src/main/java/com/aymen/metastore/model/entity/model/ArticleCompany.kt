@@ -25,6 +25,7 @@ data class ArticleCompany (
     var isEnabledToComment : Boolean? = false,
     val likeNumber : Long? = 0,
     val commentNumber : Long? = 0,
+    var isBought : Boolean?= true,
 ) {
     fun toArticleCompanyDto(): ArticleCompanyDto {
         return ArticleCompanyDto(
@@ -46,7 +47,7 @@ data class ArticleCompany (
             isEnabledToComment = isEnabledToComment,
             likeNumber = likeNumber,
             commentNumber = commentNumber,
-
+            isBought = isBought
         )
     }
     fun toArticleCompanyEntity(isSync : Boolean): ArticleCompany {
@@ -69,6 +70,7 @@ data class ArticleCompany (
             likeNumber = likeNumber,
             isSync = isSync,
             commentNumber = commentNumber,
+            isBought = isBought
 
         )
     }

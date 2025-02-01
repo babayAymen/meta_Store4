@@ -1,7 +1,9 @@
 package com.aymen.metastore.ui.screen.user
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Star
@@ -25,6 +28,7 @@ import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +47,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,6 +60,7 @@ import com.aymen.metastore.R
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.repository.ViewModel.RatingViewModel
@@ -68,16 +76,24 @@ import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.ui.component.AddTypeDialog
 import com.aymen.metastore.ui.component.ArticleCardForSearch
 import com.aymen.metastore.ui.component.ButtonSubmit
+import com.aymen.metastore.ui.component.InputTextField
 import com.aymen.metastore.ui.component.NotImage
 import com.aymen.metastore.ui.component.SendPointDialog
 import com.aymen.metastore.ui.component.ShowImage
 import com.aymen.metastore.ui.screen.admin.ReglementScreen
 import com.aymen.metastore.util.BASE_URL
+import com.aymen.metastore.util.COMPANY_CONTENT
+import com.aymen.metastore.util.IMAGE_URL_COMPANY
+import com.aymen.metastore.util.RATING_VIEW
+import com.aymen.metastore.util.REGLEMENT_FOR_PROVIDER
+import com.aymen.metastore.util.REGLEMENT_SCREEN
+import com.aymen.metastore.util.VERIFICATION_ACCOUNT
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.Enum.Type
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.map
 
 @Composable
@@ -103,19 +119,19 @@ fun CompanyScreen(company: Company) {
     var hisProvider by remember {
         mutableStateOf(false)
     }
-    var hisParent by remember {
+    val hisParent by remember {
         mutableStateOf(false)
     }
     var hisWorker by remember {
         mutableStateOf(false)
     }
-
-    var creditAsClient by remember {
-        mutableDoubleStateOf(0.0)
-    }
-    var creditAsProvider by remember {
-        mutableDoubleStateOf(0.0)
-    }
+//
+//    var creditAsClient by remember {
+//        mutableDoubleStateOf(0.0)
+//    }
+//    var creditAsProvider by remember {
+//        mutableDoubleStateOf(0.0)
+ //   }
     val relationList = clientViewModel.relationList
         .map { list ->
             list.map { invitation ->
@@ -154,14 +170,9 @@ fun CompanyScreen(company: Company) {
     var category by remember {
         mutableStateOf(Category())
     }
-
-
-
-
     if(subCategories.itemCount != 0) {
         category = subCategories.peek(0)?.category ?: Category()
     }
-    val context = LocalContext.current
     DisposableEffect(key1 = Unit) {
         onDispose {
             ratingViewModel.rating = false
@@ -172,7 +183,7 @@ fun CompanyScreen(company: Company) {
     LaunchedEffect(key1 = company) {
             if(myAccountType == AccountType.USER && myUser.role == RoleEnum.WORKER  && company.id == myCompany.id)
                 hisWorker = true
-        appViewModel.updateView("COMPANY_CONTENT")
+        appViewModel.updateShow(COMPANY_CONTENT)
         articleViewModel.getAllCompanyArticles(companyId = company.id?:0)
         ratingViewModel.enabledToCommentCompany(companyId = company.id?:0)
         clientViewModel.checkRelation(id = company.id?:0, AccountType.COMPANY)
@@ -188,126 +199,186 @@ fun CompanyScreen(company: Company) {
         }
     }
 
+    val gson = Gson()
+    var comment by remember { mutableStateOf("") }
 
+    val ratingg by remember {
+        mutableStateOf(
+            Rating(
+                rateeCompany = Company(),
+                rateeUser = User()
+            )
+        )
+    }
+
+    var imageHeight by remember { mutableStateOf(0.dp) }
+    var imageBitmap by remember { mutableStateOf<Uri?>(null) }
     val rating = ratingViewModel.rating
-    val listState = rememberLazyListState()
-    Surface(
+    var showBottomBar by remember {
+        mutableStateOf(false)
+    }
+    Scaffold(
+        bottomBar = {
+            if(show == "RATING_VIEW")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(8.dp)
+            ) {
+                // Input field for adding a comment
+                InputTextField(
+                    labelValue = comment,
+                    label = stringResource(id = R.string.type_a_comment),
+                    singleLine = false,
+                    maxLine = 6,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Send
+                    ),
+                    onValueChange = {
+                        comment = it
+                    },
+                    onImage = { bitmap ->
+                        imageHeight = 100.dp
+                        imageBitmap = bitmap
+                    }
+                ) {
+                    ratingg.comment = comment
+                    ratingg.rateValue = ratingViewModel.rate
+
+                    ratingViewModel.enableToRating = false
+                    val ratingJson = gson.toJson(ratingg)
+                    ratingViewModel.doRate(ratingg, ratingJson, it)
+                    comment = ""
+                    imageBitmap = null
+                }
+            }
+        },
         modifier = Modifier
             .fillMaxSize()
             .padding(3.dp, 36.dp, 3.dp, 3.dp)
-    ) {
-        when (view) {
-          "COMPANY_CONTENT" ->
-            Column {
-                LazyColumn(
-                    state = listState
-                ) {
-                    item {
-                        Row {
-                            if (company.logo != null)
-                                ShowImage(image = "${BASE_URL}werehouse/image/${company.logo}/company/${company.user?.id}")
-                            else
-                                NotImage()
-                            Icon(
-                                imageVector = Icons.Default.Verified,
-                                contentDescription = "verification account",
-                                tint = if (company.metaSeller == true) Color.Green else Color.Cyan
+    ) {padding ->
+        LazyColumn {
+            item {
+                Row {
+                    if (company.logo != null)
+                        ShowImage(
+                            image = String.format(
+                                IMAGE_URL_COMPANY,
+                                company.logo,
+                                company.user?.id
                             )
-                            Text(text = company.name)
+                        )
+                    else
+                        NotImage()
+                    Icon(
+                        imageVector = Icons.Default.Verified,
+                        contentDescription = VERIFICATION_ACCOUNT,
+                        tint = if (company.metaSeller == true) Color.Green else Color.Cyan
+                    )
+                    Text(text = company.name)
 
-                        }
-                        Row(
-                            modifier = Modifier.padding(2.dp)
-                        ) {
-                            CompanyDetails(
-                                sharedViewModel,
-                                clientViewModel,
-                                companyViewModel,
-                                hisClient,
-                                hisProvider,
-                                hisParent ,
-                                hisWorker,
-                                ratingViewModel,
-                                company,
-                                myCompany.isPointsSeller!!,
-                                appViewModel
-                            ) {
-                            }
-                        }
-                        Column {
-                            company.address?.let { it1 -> Text(text = it1) }
-                            company.phone?.let { it1 -> Text(text = it1) }
-                            company.email?.let { Text(text = it) }
-                            company.code?.let { it1 -> Text(text = it1) }
-                            company.matfisc?.let { it1 -> Text(text = it1) }
-                        }
-                    }
-                    if (!rating) {
-                        item {
-
-                            Column {
-                                ScreenByCompanyCategory(categories) { categ ->
-                                    category = categ
-                                    articleViewModel.getRandomArticlesByCategory(
-                                        categ.id!!,
-                                        categ.company?.id!!,
-                                        0
-                                    )
-                                    subCategoryViewModel.getAllSubCategoriesByCategoryId(
-                                        categoryId = categ.id ?: 0,
-                                        companyId = categ.company.id ?: 0
-                                    )
-                                }
-                                ScreenByCompanySubCategory(
-                                    items = subCategories,
-                                    category = category
-                                ) { categ ->
-                                    articleViewModel.getRandomArticlesByCategory(
-                                        0,
-                                        categ.company?.id!!,
-                                        categ.id!!
-                                    )
-                                }
-                            }
-                        }
-                        items(
-                            count = randomArticles.itemCount,
-                            key = randomArticles.itemKey { it.id!! }
-                        ) { index ->
-                            val article = randomArticles[index]
-                            if (article != null) {
-                                ArticleCardForSearch(article) {
-                                    companyViewModel.myCompany = article.company!!
-                                    articleViewModel.assignArticleCompany(article)
-                                    RouteController.navigateTo(Screen.ArticleDetailScreen)
-                                }
-                            }
-                        }
+                }
+                Row(
+                    modifier = Modifier.padding(2.dp)
+                ) {
+                    CompanyDetails(
+                        sharedViewModel,
+                        clientViewModel,
+                        companyViewModel,
+                        hisClient,
+                        hisProvider,
+                        hisParent,
+                        hisWorker,
+                        ratingViewModel,
+                        company,
+                        myCompany.isPointsSeller!!,
+                        appViewModel
+                    ) {
                     }
                 }
-                if (rating) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        RatingScreen(AccountType.COMPANY, company, null)
+                Column {
+                    company.address?.let { it1 -> Text(text = it1) }
+                    company.phone?.let { it1 -> Text(text = it1) }
+                    company.email?.let { Text(text = it) }
+                    company.code?.let { it1 -> Text(text = it1) }
+                    company.matfisc?.let { it1 -> Text(text = it1) }
+                }
+            }
+            item {
+                Column {
+                    ScreenByCompanyCategory(categories) { categ ->
+                        category = categ
+                        articleViewModel.getRandomArticlesByCategory(
+                            categ.id!!,
+                            categ.company?.id!!,
+                            0
+                        )
+                        subCategoryViewModel.getAllSubCategoriesByCategoryId(
+                            categoryId = categ.id ?: 0,
+                            companyId = categ.company.id ?: 0
+                        )
+                    }
+                    ScreenByCompanySubCategory(
+                        items = subCategories,
+                        category = category
+                    ) { categ ->
+                        articleViewModel.getRandomArticlesByCategory(
+                            0,
+                            categ.company?.id!!,
+                            categ.id!!
+                        )
                     }
                 }
             }
-            "REGLEMENT_FOR_PROVIDER" ->{
-                ReglementFeature(paymentViewModel = paymentViewModel , appViewModel = appViewModel, company = company)
+            when(show){
+                COMPANY_CONTENT -> items(
+                    count = randomArticles.itemCount,
+                    key = randomArticles.itemKey { it.id!! }){ index ->
+                    val article = randomArticles[index]
+                    if (article != null) {
+                        ArticleCardForSearch(article) {
+                            companyViewModel.myCompany = article.company!!
+                            articleViewModel.assignArticleCompany(article)
+                            RouteController.navigateTo(Screen.ArticleDetailScreen)
+                        }
+                    }
+                }
+                RATING_VIEW -> if (rating) {
+                    item {
+                            RatingScreen(
+                                accountType = AccountType.COMPANY,
+                                company = company,
+                                user = null,
+                                modifier = Modifier.padding(padding)
+                            )
+                    }
+                }
+                REGLEMENT_FOR_PROVIDER -> {
+                    item {
+                    ReglementFeature(
+                        paymentViewModel = paymentViewModel,
+                        appViewModel = appViewModel,
+                        company = company
+                    )
+                    }
+                }
             }
         }
     }
             SystemBackButtonHandler {
-                Log.e("backbutton","view: $view")
-                when(view){
-                    "COMPANY_CONTENT" ->  RouteController.navigateTo(Screen.HomeScreen)
-                    "REGLEMENT_FOR_PROVIDER" -> {
-                        when(show){
-                            "REGLEMENT_FOR_PROVIDER" -> appViewModel.updateView("COMPANY_CONTENT")
-                            "REGLEMENT_SCREEN" -> appViewModel.updateShow("REGLEMENT_FOR_PROVIDER")
+                Log.e("backbutton","view: $view show: $show")
+                when(show){
+                    COMPANY_CONTENT ->  RouteController.navigateTo(Screen.HomeScreen)
+                    REGLEMENT_FOR_PROVIDER -> {
+                        when(view){
+                            REGLEMENT_FOR_PROVIDER -> appViewModel.updateShow(COMPANY_CONTENT)
+                            REGLEMENT_SCREEN -> appViewModel.updateView(REGLEMENT_FOR_PROVIDER)
                         }
+                    }
+                    RATING_VIEW -> {
+                        appViewModel.updateShow(COMPANY_CONTENT)
                     }
 
                 }
@@ -332,7 +403,7 @@ fun StarRating(
         for (i in 1..starCount) {
             Icon(
                 imageVector = if (i <= rating) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                contentDescription = "rate",
+                contentDescription = stringResource(id = R.string.rate),
                 tint = if (i <= rating) Color.Yellow else Color.Gray,
                 modifier = Modifier
                     .size(24.dp)
@@ -376,7 +447,7 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
                 Row(modifier = Modifier.weight(1f)) {
                     if (!company.metaSeller!!) {
                         ButtonSubmit(
-                            labelValue = "make as meta seller",
+                            labelValue = stringResource(id = R.string.make_as_meta_seller),
                             color = Color.Green,
                             enabled = true
                         ) {
@@ -384,7 +455,7 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
                         }
                     } else {
                         ButtonSubmit(
-                            labelValue = "remove as meta seller",
+                            labelValue = stringResource(id = R.string.remove_as_meta_seller),
                             color = Color.Red,
                             enabled = true
                         ) {
@@ -396,7 +467,7 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
 
                     if (!company.isPointsSeller!!) {
                         ButtonSubmit(
-                            labelValue = "make as point seller",
+                            labelValue = stringResource(id = R.string.make_as_point_seller),
                             color = Color.Green,
                             enabled = true
                         ) {
@@ -404,7 +475,7 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
                         }
                     } else {
                         ButtonSubmit(
-                            labelValue = "remove as seller",
+                            labelValue = stringResource(id = R.string.remove_as_point_seller),
                             color = Color.Red,
                             enabled = true
                         ) {
@@ -414,12 +485,12 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
                 }
                 Row(modifier = Modifier.weight(1f)) {
                     ButtonSubmit(
-                        labelValue = "reglement",
+                        labelValue = stringResource(id = R.string.reglement),
                         color = Color.Green,
                         enabled = true
                     ) {
-                        appViewModel.updateView("REGLEMENT_FOR_PROVIDER")
-                        appViewModel.updateShow("REGLEMENT_FOR_PROVIDER")
+                        appViewModel.updateView(REGLEMENT_FOR_PROVIDER)
+                        appViewModel.updateShow(REGLEMENT_FOR_PROVIDER)
                     }
                 }
             }
@@ -428,6 +499,7 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
             modifier = Modifier
                 .weight(1.8f)
                 .clickable {
+                    appViewModel.updateShow(RATING_VIEW)
                     ratingViewModel.rating = !ratingViewModel.rating
                 }
         ) {
@@ -446,11 +518,11 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
                     Text(text = company.rate?.toString()!!)
                     Icon(
                         imageVector = if(company.rate == 0.0)Icons.Outlined.StarOutline else if(company.rate == 5.0)Icons.Filled.Star else Icons.AutoMirrored.Filled.StarHalf ,
-                        contentDescription = "rating"
+                        contentDescription = stringResource(id = R.string.rate)
                     )
                 }
             }
-            Text(text = company.raters?.toString()!! +" reviews")
+            Text(text = stringResource(id = R.string.reviews,company.raters?:0))
 
         }
     }
@@ -532,32 +604,27 @@ fun ReglementFeature(paymentViewModel: PointsPaymentViewModel, appViewModel: App
             paymentViewModel.getAllMyProfitsPerDay(company.id!!)
         }
     }
+    val payments = companyPayment.itemSnapshotList.items
 
     when(show){
-        "REGLEMENT_FOR_PROVIDER" -> {
-            LazyColumn {
-                items(count = companyPayment.itemCount,
-                    key = companyPayment.itemKey { it.id!! }
-                ) { index ->
-                    val payment = companyPayment[index]
-                    if (payment != null) {
+        REGLEMENT_FOR_PROVIDER -> {
+                payments.forEach { payment ->
                         Column(
                             modifier = Modifier.clickable {
-                                idx = index
-                                appViewModel.updateShow("REGLEMENT_SCREEN")
+//                                idx = payment // on va voire
+                                appViewModel.updateShow(REGLEMENT_SCREEN)
                             }
                         ) {
-                            Text(text = "name : ${payment.receiver?.name}")
-                            Text(text = "credit : ${payment.amount}")
-                            Text(text = "rest : ${payment.rest}")
-                        }
-                    }
+                            Text(text = stringResource(id = R.string.name ,payment.receiver?.name?:"" ))
+                            Text(text = stringResource(id = R.string.credit,payment.amount?:0))
+                            Text(text = stringResource(id = R.string.rest_is,payment.rest?:0))
                 }
             }
         }
-         "REGLEMENT_SCREEN" -> {
+        REGLEMENT_SCREEN -> {
             ReglementScreen(companyPayment[idx], paymentViewModel, appViewModel)
         }
          }
 }
 
+//molka
