@@ -15,7 +15,7 @@ data class Invoice (
     var prix_invoice_tot : Double? =0.0,
     var prix_article_tot : Double? = 0.0,
     var discount : Double? = 0.0,
-    val status : Status? = Status.INWAITING,
+    val status : Status? = Status.NULL,
     var paid : PaymentStatus? = PaymentStatus.NOT_PAID,
     var type : InvoiceDetailsType? = InvoiceDetailsType.COMMAND_LINE,
     var rest : Double? = 0.0,

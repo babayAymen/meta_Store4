@@ -28,6 +28,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -62,14 +63,13 @@ class AppViewModel @Inject constructor(
     val historySelected: State<IconType> get() = _historySelected
 
     var userRole by mutableStateOf(sharedViewModel.user.value.role)
-    var asClient by mutableStateOf(false)
+    var asClient by mutableStateOf(true)
     private val _location = MutableLiveData<Pair<Double, Double>>()
     val location: LiveData<Pair<Double, Double>> get() = _location
     init {  isFirstRun = tracker.isFirstViewModelRun
         if (isFirstRun) {
             tracker.firstViewModelName = "app view"
             tracker.isFirstViewModelRun = false
-            // Perform first-run initialization
         }
         // Observing changes to the location LiveData
         location.observeForever { newLocation ->
@@ -77,11 +77,16 @@ class AppViewModel @Inject constructor(
         }
     }
 
-
+    fun setEnabledGps(){
+        _enbledGps.value = true
+    }
     fun assignUser(user: User){
         _user.value = user
     }
+    private val _enbledGps = MutableStateFlow(false)
+    val enbaledGps : StateFlow<Boolean> = _enbledGps.asStateFlow()
     private fun logLocationChange(newLocation: Pair<Double, Double>) {
+
         val (latitude, longitude) = newLocation
         Intent(context, LocationService::class.java).apply {
             action = LocationService.ACTION_STOP
@@ -105,17 +110,29 @@ class AppViewModel @Inject constructor(
         _location.postValue(location)
     }
 
+    private val _isFirstLaunch = MutableStateFlow(false)
+    val isFirstLaunch: StateFlow<Boolean> = _isFirstLaunch.asStateFlow()
+
+    fun markFirstLaunch(){
+        _isFirstLaunch.value = false
+    }
     private fun assignCordination(latitude : Double, logitude : Double){
         viewModelScope.launch {
         accountTypeDataStore.data.collect { item ->
             when (item) {
                 AccountType.COMPANY -> companyDataStore.updateData { company ->
+                    sharedViewModel.assignCompanyy( company.copy(
+                        latitude = latitude,
+                        longitude = logitude
+                    ))
                     company.copy(
                         latitude = latitude,
                         longitude = logitude
                     )
                 }
                 AccountType.USER -> userDatastore.updateData { user ->
+                    sharedViewModel.assignUser(user.copy( latitude = latitude,
+                        longitude = logitude))
                     user.copy(
                         latitude = latitude,
                         longitude = logitude
@@ -126,6 +143,8 @@ class AppViewModel @Inject constructor(
                 AccountType.SELLER -> {}
                 AccountType.DELIVERY -> TODO()
             }
+            _isFirstLaunch.value = true
+            _enbledGps.value = false
         }
         }
     }
@@ -185,7 +204,6 @@ class AppViewModel @Inject constructor(
         else
             _historicView.value = view.value
         _view.value = newValue
-        Log.e("viewmodelldn","new value : $newValue history : $history historicvalue : ${_historicView.value} and view current : ${view.value}")
     }
 
     private val _historicView = mutableStateOf(view.value)

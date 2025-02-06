@@ -22,14 +22,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
+import androidx.credentials.CredentialManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aymen.metastore.app.MetaStore
 import com.aymen.metastore.dependencyInjection.AccountTypeDtoSerializer
 import com.aymen.metastore.dependencyInjection.CompanyDtoSerializer
@@ -43,9 +47,15 @@ import com.aymen.metastore.model.webSocket.ChatClient
 import com.aymen.store.dependencyInjection.TokenSerializer
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.ui.theme.MetaStoreTheme
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.SignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.installations.FirebaseInstallations
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 
@@ -60,10 +70,15 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var chatClient: ChatClient
 
-    private var extrasState = mutableStateOf<Map<String, Any?>>(emptyMap())
+    private lateinit var auth: FirebaseAuth
+    private lateinit var credentialManager: CredentialManager
+
+    private val _extrasState = MutableStateFlow<Map<String, Any?>>(emptyMap())
+    val extraState : StateFlow<Map<String , Any?>> = _extrasState
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         NetworkUtil.isOnline(this)
         val languageCode = getSavedLanguage(this)?: "en"
         setLanguage(this, languageCode)
@@ -79,13 +94,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+        updateExtras(intent)
         enableEdgeToEdge()
         setContent {
             MetaStoreTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "META",
-                        extrasState = extrasState.value,
+                        extraState = extraState,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -103,9 +119,9 @@ class MainActivity : ComponentActivity() {
             val map = extras.keySet().associateWith { key ->
                  extras.getString(key)
             }
-            extrasState.value = map
+            _extrasState.value = map
         } else {
-            extrasState.value = emptyMap()
+            _extrasState.value = emptyMap()
         }
     }
 
@@ -150,11 +166,11 @@ private fun saveLanguage(context: Context, languageCode: String){
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Greeting(name: String,extrasState :  Map<String, Any?> , modifier: Modifier = Modifier) {
+fun Greeting(name: String,extraState :  StateFlow<Map<String, Any?>> , modifier: Modifier = Modifier) {
+    val extrasState by extraState.collectAsStateWithLifecycle()
     Column {
-        val notificationMessage = extrasState["notificationMessage"] as? NotificationMessage
-        Log.e("device","balance from main activity $notificationMessage")
-
+//        val notificationMessage = extrasState["notificationMessage"] as? NotificationMessage
+//        Log.e("device","balance from main activity $notificationMessage")
         MetaStore(extrasState)
     }
 }

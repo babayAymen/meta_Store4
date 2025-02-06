@@ -6,6 +6,7 @@
     <string name="password">Password</string>
     <string name="forget_password">Forget Your Password?</string>
     <string name="login">Login</string>
+    <string name="add_invoice">Add invoice</string>
     <string name="dont_have_account">You do not have an account?</string>
     <string name="register_now">Register now!</string>
     <string name="register">Register</string>
@@ -69,6 +70,7 @@
     <string name="recharge_history">recharge history</string>
     <string name="send_all">Send All</string>
     <string name="delivery_order">submit Order</string>
+    <string name="return_order">return Order</string>
     <string name="reject">Reject Order</string>
     <string name="buy_history">buy history</string>
     <string name="triangle">triangle</string>
@@ -95,6 +97,9 @@
     <string name="your_refuse_order">you have refused %1$s order from %2$s</string>
     <string name="your_sent_order">you have sent an order to %1$s</string>
     <string name="rest_is">rest is : %1$s </string>
+    <string name="name_is">name is : %1$s </string>
+    <string name="credit_is">credit is : %1$s </string>
+    <string name="takin_still_not_delivered">my orders not delivered</string>
     <string name="delivered">delivered </string>
     <string name="add_delivery">add as delivery </string>
     <string name="rating">rating </string>
@@ -111,6 +116,7 @@
     <string name="add_new_worker">add new worker</string>
     <string name="created_date">created date : %1$s</string>
     <string name="type_a_comment">Type a comment</string>
+    <string name="add_more">add more</string>
     <string name="rate">rate</string>
     <string name="make_as_meta_seller">make as meta seller</string>
     <string name="remove_as_meta_seller">remove as meta seller</string>
@@ -141,6 +147,13 @@
     <string name="profit_per_day">profit per day</string>
     <string name="profit_by_date">profit by date</string>
     <string name="sum_of_profit_by_date">sum of profit by date</string>
+    <string name="your_username">your username</string>
+    <string name="get_code">get code</string>
+    <string name="verifCode">verify code</string>
+    <string name="user_name_wrong">sorry username or email was wrong</string>
+    <string name="there_is_problem">there is a problem please try again</string>
+    <string name="code_wrong">sorry code is wrong</string>
+
     <!--show item -->
     <string name="invoice">invoice</string>
     <string name="order">order</string>

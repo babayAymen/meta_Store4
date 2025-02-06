@@ -1,7 +1,5 @@
 package com.aymen.store.ui.screen.guest
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -44,7 +43,7 @@ import com.aymen.metastore.ui.component.NormalText
 import com.aymen.metastore.ui.component.PhoneField
 import com.aymen.metastore.ui.component.dropDownCompanyCategory
 import com.aymen.metastore.ui.component.emailField
-import com.aymen.metastore.ui.component.passwordTextField
+import com.aymen.metastore.ui.component.PasswordTextField
 import com.aymen.metastore.ui.component.textField
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
@@ -69,6 +68,9 @@ fun SignUpScreen() {
         mutableStateOf("")
     }
     var password by remember {
+        mutableStateOf("")
+    }
+    var repassword by remember {
         mutableStateOf("")
     }
     var email by remember {
@@ -137,22 +139,26 @@ fun SignUpScreen() {
                     labelValue = stringResource(id = R.string.phone),
                     Icons.Outlined.Phone
                 )
-                password = passwordTextField(
+                 PasswordTextField(
                     labelValue = stringResource(id = R.string.password),
                     Icons.Outlined.Lock,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next)
-                )
-                password = passwordTextField(
+                ){
+                     password = it
+                 }
+                 PasswordTextField(
                     labelValue = stringResource(id = R.string.re_password),
                     Icons.Outlined.Lock,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done)
-                )
+                ){
+                     repassword = it
+                 }
                 CheckBoxComponent(
                     value = stringResource(id = R.string.privacy_policy),
                     onTextSelected = {
                         RouteController.navigateTo(Screen.TermConditionScreen)
                     })
-                if (userName.isNotEmpty() && password.isNotEmpty() && email.isNotEmpty()) {
+                if (userName.isNotEmpty() && password.isNotEmpty() && email.isNotEmpty() && password == repassword) {
                     isEnabled = true
                 }
                 if (isEnabled) {
@@ -181,6 +187,7 @@ fun SignUpScreen() {
                 NormalText(value = stringResource(id = R.string.have_account), aligne = TextAlign.Center)
                 ClickableLoginTextComponent(
                     stringResource(id = R.string.login),
+                    Alignment.Center,
                     onTextSelected = {
                         RouteController.navigateTo(Screen.SignInScreen)
                     }

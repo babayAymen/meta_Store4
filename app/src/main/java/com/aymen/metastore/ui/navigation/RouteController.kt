@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 
 sealed class Screen{
     data object SignUpScreen : Screen()
+    data object PhoneSignInScreen : Screen()
+    data object ForgetPasswordScreen : Screen()
     data object TermConditionScreen : Screen()
     data object SignInScreen : Screen()
     data object HomeScreen : Screen()

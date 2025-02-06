@@ -94,9 +94,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                         )
                                     }
                                 }
-                                if (accountType != AccountType.USER) {
-
-                                    SearchTypeItem( searchType, searchCategory) {
+                                    SearchTypeItem( searchType, searchCategory,accountType) {
                                         searchType = it
                                         if(searchText != "") {
                                             searchViewModel.search(
@@ -105,9 +103,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                                                 searchText
                                             )
                                         }
-                                    }
                                 }
-
                                 when (searchCategory) {
                                     SearchCategory.COMPANY -> {
                                         val com =
@@ -305,10 +301,10 @@ fun SearchItem(item : SearchCategory,onClick : (SearchCategory) -> Unit) {
 }
 
 @Composable
-fun SearchTypeItem( item : SearchType, searchCategory: SearchCategory, onClick : (SearchType) -> Unit) {
+fun SearchTypeItem( item : SearchType, searchCategory: SearchCategory, accountType: AccountType, onClick : (SearchType) -> Unit) {
     LazyRow(Modifier.fillMaxWidth()) {
         items(SearchType.entries){
-            if(searchCategory == SearchCategory.COMPANY && (it == SearchType.CLIENT || it == SearchType.PROVIDER || it == SearchType.OTHER)){
+            if(searchCategory == SearchCategory.COMPANY &&((accountType == AccountType.COMPANY && (it == SearchType.CLIENT || it == SearchType.PROVIDER || it == SearchType.OTHER))|| (it == SearchType.PROVIDER || it == SearchType.OTHER))){
                 Text(text = it.toString(),
                     Modifier
                         .padding(end = 20.dp)
@@ -319,7 +315,7 @@ fun SearchTypeItem( item : SearchType, searchCategory: SearchCategory, onClick :
                 color = if(item == it) Color.Blue else Color.Black
             )
             }
-            if(searchCategory == SearchCategory.USER && (it == SearchType.CLIENT || it == SearchType.OTHER)){
+            if(accountType == AccountType.COMPANY && searchCategory == SearchCategory.USER && (it == SearchType.CLIENT || it == SearchType.OTHER)){
                 Text(text = it.toString(),
                     Modifier
                         .padding(end = 20.dp)
@@ -330,7 +326,7 @@ fun SearchTypeItem( item : SearchType, searchCategory: SearchCategory, onClick :
                     color = if(item == it) Color.Blue else Color.Black
                 )
             }
-            if(searchCategory == SearchCategory.ARTICLE && (it == SearchType.MY || it == SearchType.OTHER)){
+            if(accountType == AccountType.COMPANY && searchCategory == SearchCategory.ARTICLE && (it == SearchType.MY || it == SearchType.OTHER)){
                 Text(text = it.toString(),
                     Modifier
                         .padding(end = 20.dp)

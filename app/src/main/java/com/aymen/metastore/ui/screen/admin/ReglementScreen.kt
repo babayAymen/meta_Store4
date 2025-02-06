@@ -1,5 +1,6 @@
 package com.aymen.metastore.ui.screen.admin
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,6 +32,7 @@ import com.aymen.metastore.util.REGLEMENT_FOR_PROVIDER
 @Composable
 fun ReglementScreen(paymentForProviderPerDay: PaymentForProviderPerDay?, pointsPaymentViewModel: PointsPaymentViewModel, appViewModel : AppViewModel) {
     LaunchedEffect(key1 = Unit) {
+        Log.e("azdsqwxcd","c bon ja lil screen")
         pointsPaymentViewModel.getPaymentForProviderDetails(paymentForProviderPerDay?.id!!)
     }
     val reglementForProviderPerDay = pointsPaymentViewModel.paymentForProviderPerDay.collectAsLazyPagingItems()

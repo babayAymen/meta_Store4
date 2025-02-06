@@ -58,7 +58,7 @@ fun RatingScreen(
     user: User?,
     modifier: Modifier = Modifier
 ) {
-    val ratingViewModel : RatingViewModel = hiltViewModel() // Assume a ViewModel is available for ratings
+    val ratingViewModel : RatingViewModel = hiltViewModel()
     val allRating = ratingViewModel.allRating.collectAsLazyPagingItems()
     val ratings = allRating.itemSnapshotList.items
     var id by remember { mutableLongStateOf(0) }
@@ -105,15 +105,16 @@ fun RatingItem(rating: Rating) {
         Text(text = rating.comment ?: "", style = MaterialTheme.typography.bodySmall)
 
         // Rating Photo (if available)
-        rating.photo?.let { photo ->
+        if(rating.photo != null)
             AsyncImage(
-                model = String.format(IMAGE_URL_RATING, photo, rating.raterUser?.id),
+                model = String.format(IMAGE_URL_RATING, rating.photo, rating.raterCompany?.user?.id?:rating.raterUser?.id),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(80.dp)
                     .padding(vertical = 8.dp)
             )
-        }
+        else
+            NotImage()
     }
 }

@@ -117,14 +117,16 @@ fun AddInvoiceScreen() {
     var showDialog by remember { mutableStateOf(false) }
     val invoiceMode by invoiceViewModel.invoiceModeState.collectAsStateWithLifecycle()
     val provider by invoiceViewModel.providerCompany.collectAsStateWithLifecycle()
+   // val isScrollEnabled = remember { mutableStateOf(true) }
+    val invoiceee by invoiceViewModel.invoice.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = Unit) {
         invoiceViewModel.remiseCommandLineToZero()
         when (invoiceMode) {
                     InvoiceMode.CREATE ->  invoiceViewModel.getLastInvoiceCode()
             else -> {
                 invoiceViewModel.getInvoiceDetails()
-                if(invoiceViewModel.invoice.type == InvoiceDetailsType.COMMAND_LINE)
-                paymentViewModel.getPaymentHystoricByInvoiceId(invoiceId = invoiceViewModel.invoice.id?:0)
+                if(invoiceee.type == InvoiceDetailsType.COMMAND_LINE)
+                paymentViewModel.getPaymentHystoricByInvoiceId(invoiceId = invoiceee.id?:0)
             }
         }
     }
@@ -153,8 +155,8 @@ fun AddInvoiceScreen() {
     val commandLineInvoice = invoiceViewModel.commandLineInvoice.collectAsLazyPagingItems()
     val paymentHistoric = paymentViewModel.paymentHistoric.collectAsLazyPagingItems()
     var invoice =
-        if (invoiceViewModel.invoice.type == InvoiceDetailsType.ORDER_LINE)
-            ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice?:invoiceViewModel.invoice
+        if (invoiceee.type == InvoiceDetailsType.ORDER_LINE)
+            ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice?:invoiceee
         else
             commandLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
 
@@ -317,7 +319,8 @@ fun AddInvoiceScreen() {
                         val invoiceText = stringResource(id = R.string.invoice)
                         ShowPaymentDailog(
                             totgen,
-                            openDailog = true
+                            openDailog = true,
+                            onDismiss = {showPaymentDialog = false}
                         ) { mony, payed ->
                             paid = if (payed) {
                                 PaymentStatus.PAID
@@ -334,7 +337,6 @@ fun AddInvoiceScreen() {
                             invoicee.code = invoiceViewModel.lastInvoiceCode
                             invoicee.client = if(invoiceViewModel.clientCompany.id != null)invoiceViewModel.clientCompany else null
                             invoicee.person = if(invoiceViewModel.clientUser.id != null)invoiceViewModel.clientUser else null
-                            Log.e("invoiceperson","person : ${invoicee.person}")
                             invoicee.provider = provider
                             invoicee.discount = invoiceViewModel.discount
                             for (x in commandsLine) {
@@ -354,7 +356,9 @@ fun AddInvoiceScreen() {
                     if (invoiceMode == InvoiceMode.CREATE) clientUser else invoice?.person
                 )
 
-                LazyRow {
+                LazyRow(
+                    userScrollEnabled = myAccountType != AccountType.DELIVERY
+                ) {
                     item {
                         Column {
                             TableHeader()
@@ -425,6 +429,7 @@ fun AddInvoiceScreen() {
                     totprice = invoice?.prix_article_tot?.toBigDecimal()
                     totgen = invoice?.prix_invoice_tot?.toBigDecimal()
                 }
+                if(myAccountType != AccountType.DELIVERY)
                 InvoiceFooter(
                     invoiceViewModel = invoiceViewModel,
                     tottva = tottva,
@@ -669,7 +674,8 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
             }
         }
         if (myAccountType == AccountType.DELIVERY) {
-            if (invoiceViewModel.purchaseOrder.isTaken == false)
+            val purchaseOrder by invoiceViewModel.purchaseOrder.collectAsStateWithLifecycle()
+            if (purchaseOrder.isTaken == false)
                 ButtonSubmit(
                     labelValue = stringResource(id = R.string.accept),
                     color = Color.Green,
@@ -678,13 +684,13 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
                     invoiceViewModel.acceptInvoiceAsDelivery()
                 }
             else {
-                if(invoiceViewModel.purchaseOrder.isDelivered == false) {
+                if(purchaseOrder.isDelivered == false) {
                     Row {
                         Row(
                             modifier = Modifier.weight(1f)
                         ) {
                             ButtonSubmit(
-                                labelValue = stringResource(id = R.string.delivery_order),
+                                labelValue = stringResource(id = if(purchaseOrder.status != Status.REFUSED) R.string.delivery_order else R.string.return_order),
                                 color = Color.Green,
                                 enabled = true
                             ) {
@@ -692,20 +698,20 @@ fun FeatureIcons(invoiceViewModel: InvoiceViewModel, context: Context, invoiceMo
                             }
 
                         }
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
-
-                            ButtonSubmit(
-                                labelValue = stringResource(id = R.string.reject),
-                                color = Color.Red,
-                                enabled = true
+                        if(purchaseOrder.status != Status.REFUSED)
+                            Row(
+                                modifier = Modifier.weight(1f)
                             ) {
-                                openDeliveryDialog = true
+                                ButtonSubmit(
+                                    labelValue = stringResource(id = R.string.reject),
+                                    color = Color.Red,
+                                    enabled = true
+                                ) {
+                                    invoiceViewModel.userRejectOrder()
+                                }
                             }
-                        }
                         if (openDeliveryDialog)
-                            DeliveryCodeDailog(isOpen = openDeliveryDialog) { closeDialog, deliverycode ->
+                            DeliveryCodeDailog(isOpen = true) { closeDialog, deliverycode ->
                                 openDeliveryDialog = closeDialog
                                 if (deliverycode != "")
                                     invoiceViewModel.submitOrderDelivered(deliverycode)

@@ -1,6 +1,5 @@
 package com.aymen.metastore.ui.component
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -146,7 +145,7 @@ fun HeadingText(value : String){
 }
 
 @Composable
-fun textField(label : String ,labelValue : String, icon: ImageVector, value : (String) -> Unit){
+fun textField(label : String ,labelValue : String, icon: ImageVector, enable : Boolean? = true, value : (String) -> Unit){
 
     OutlinedTextField(
         modifier = Modifier
@@ -162,6 +161,7 @@ fun textField(label : String ,labelValue : String, icon: ImageVector, value : (S
         value = labelValue,
         onValueChange = value
         ,
+        enabled = enable?:true,
         leadingIcon = {
             Icon(
                 imageVector = icon,
@@ -227,7 +227,7 @@ fun PhoneField(labelValue : String, icon: ImageVector):String{
     return textValue
 }
 @Composable
-fun passwordTextField(labelValue : String, icon: ImageVector, keyboardOptions: KeyboardOptions):String{
+fun PasswordTextField(labelValue : String, icon: ImageVector, keyboardOptions: KeyboardOptions, onSubmit : (String) -> Unit){
     val localFocusManager = LocalFocusManager.current
     var password by remember {
         mutableStateOf("")
@@ -251,7 +251,10 @@ fun passwordTextField(labelValue : String, icon: ImageVector, keyboardOptions: K
             localFocusManager.clearFocus()
         },
         value = password,
-        onValueChange = { password = it },
+        onValueChange = {
+            password = it
+            onSubmit(password)
+                        },
         leadingIcon = {
             Icon(imageVector = icon, contentDescription = "")
         },
@@ -274,7 +277,6 @@ fun passwordTextField(labelValue : String, icon: ImageVector, keyboardOptions: K
         visualTransformation = if(showPassword.value) VisualTransformation.None else
             PasswordVisualTransformation()
     )
-    return password
 
 }
 
@@ -428,7 +430,7 @@ fun DividerComponent(){
 }
 
 @Composable
-fun ClickableLoginTextComponent(value: String, onTextSelected : (String) -> Unit){
+fun ClickableLoginTextComponent(value: String, contentAlignment : Alignment, onTextSelected : (String) -> Unit){
     val annoutatedString = buildAnnotatedString {
         withStyle(style = SpanStyle(color = Color.Green,textDecoration = TextDecoration.Underline, fontSize = 18.sp)){
             pushStringAnnotation(tag = value, annotation = value)
@@ -437,15 +439,14 @@ fun ClickableLoginTextComponent(value: String, onTextSelected : (String) -> Unit
     }
 
     Box(
-        modifier = Modifier.fillMaxWidth(), // Makes the Box take the full width
-        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = contentAlignment,
     ) {
         ClickableText(
             text = annoutatedString,
             onClick = { offset ->
                 annoutatedString.getStringAnnotations(offset, offset)
                     .firstOrNull()?.also { span ->
-                        Log.e("text clickable", "$span $value")
                         if (span.item == value) {
                             onTextSelected(span.item)
                         }

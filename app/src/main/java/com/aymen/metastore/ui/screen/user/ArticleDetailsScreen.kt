@@ -169,7 +169,7 @@ fun ArticleDetailsScreen() {
                         Icon(
                             imageVector = Icons.Default.Verified,
                             contentDescription = VERIFICATION_ACCOUNT,
-                            tint = Color.Green
+                            tint = if (company.metaSeller == true) Color.Green else Color.Cyan
                         )
                         Text(text = company.name)
 

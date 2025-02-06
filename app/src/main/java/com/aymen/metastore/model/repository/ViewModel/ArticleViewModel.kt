@@ -91,16 +91,24 @@ class ArticleViewModel @Inject constructor(
     var upDate by mutableStateOf(false)
     init {
         viewModelScope.launch {
-        sharedViewModel.accountType.collect { accountType ->
-                    if (accountType == AccountType.COMPANY) {
-                        sharedViewModel.company.collect { company ->
-                            company.id?.let { companyId ->
-                                fetchAllMyArticlesApi(companyId)
-                                getArticlesForCompanyByCompanyCategory(companyId, company.category!!)
-                            }
+            appViewModel.isFirstLaunch.collect { isFirst ->
+                if (isFirst) {
+                    fetchRandomArticlesForHomePage(selectedCategory.value)
+                    appViewModel.markFirstLaunch()
+                }
+            }
+        }
+        viewModelScope.launch {
+            sharedViewModel.accountType.collect { accountType ->
+                if (accountType == AccountType.COMPANY) {
+                    sharedViewModel.company.collect { company ->
+                        company.id?.let { companyId ->
+                            fetchAllMyArticlesApi(companyId)
+                            getArticlesForCompanyByCompanyCategory(companyId, company.category!!)
                         }
                     }
-        }
+                }
+            }
         }
     }
 
@@ -118,6 +126,8 @@ class ArticleViewModel @Inject constructor(
                 }
         }
     }
+
+
 
      fun fetchRandomArticlesForHomePage(categoryName : CompanyCategory) {
          val companyId = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value.id else null

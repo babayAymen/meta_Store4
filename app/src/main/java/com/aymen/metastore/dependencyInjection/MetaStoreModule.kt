@@ -301,8 +301,8 @@ class MetaStoreModule {
 
     @Provides
     @Singleton
-    fun providerInvoiceViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases, barcodeScanner: BarcodeScanner, context: Context): InvoiceViewModel {
-        return InvoiceViewModel(repository, room, sharedViewModel, useCases, barcodeScanner, context)
+    fun providerInvoiceViewModel(repository: GlobalRepository, room : AppDatabase, sharedViewModel: SharedViewModel, useCases: MetaUseCases, barcodeScanner: BarcodeScanner,appViewModel: AppViewModel, context: Context): InvoiceViewModel {
+        return InvoiceViewModel(repository, room, sharedViewModel, useCases, barcodeScanner, appViewModel, context)
     }
     @Provides
     @Singleton

@@ -18,31 +18,66 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.R
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
+import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.repository.ViewModel.OrderViewModel
 import com.aymen.metastore.ui.component.ButtonSubmit
 import com.aymen.metastore.ui.component.InvoiceCard
 import com.aymen.metastore.ui.component.PuchaseOrderCard
 import com.aymen.metastore.util.DELIVERED
+import com.aymen.metastore.util.MY_NOT_DELIVERED
 import com.aymen.metastore.util.NOT_DELIVERED
 import com.aymen.store.model.Enum.AccountType
 
 @Composable
-fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel) {
+fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel, sharedViewModel: SharedViewModel) {
     val invoicesIDelivered = invoiceViewModel.invoicesIDelivered.collectAsLazyPagingItems()
     val invoicesDontDelivered = invoiceViewModel.invoicesNotDelivered.collectAsLazyPagingItems()
+    val user by sharedViewModel.user.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val view by appViewModel.view
-    var isDelivered by remember {
+    var deliveredEnabled by remember {
+        mutableStateOf(true)
+    }
+    var notDeliveredEnabled by remember {
         mutableStateOf(false)
     }
+    var myNotDeliveredEnabled by remember {
+        mutableStateOf(true)
+    }
+   when(view){
+       "MY_NOT_DELIVERED" -> {
+           if(invoicesIDelivered.itemCount == 0) {
+               invoiceViewModel.getInvoicesIDelivered()
+           }
+           myNotDeliveredEnabled = false
+           deliveredEnabled = true
+           notDeliveredEnabled = true
+       }
+       "DELIVERED" -> {
+           if(invoicesIDelivered.itemCount == 0) {
+               invoiceViewModel.getInvoicesIDelivered()
+           }
+           myNotDeliveredEnabled = true
+           deliveredEnabled = false
+           notDeliveredEnabled = true
+       }
+       "NOT_DELIVERED" -> {
+           myNotDeliveredEnabled = true
+           deliveredEnabled = true
+           notDeliveredEnabled = false
+       }
+   }
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -63,12 +98,8 @@ fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel)
                                 ButtonSubmit(
                                     labelValue = stringResource(id = R.string.delivered),
                                     color = Color.Green,
-                                    enabled = !isDelivered
+                                    enabled = deliveredEnabled
                                 ) {
-                                    if(invoicesIDelivered.itemCount == 0) {
-                                        invoiceViewModel.getInvoicesIDelivered()
-                                    }
-                                    isDelivered = !isDelivered
                                     appViewModel.updateView(
                                         DELIVERED
                                     )
@@ -81,10 +112,21 @@ fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel)
                                 ButtonSubmit(
                                     labelValue = stringResource(id = R.string.still_not_delivered),
                                     color = Color.Green,
-                                    enabled = isDelivered
+                                    enabled = notDeliveredEnabled
                                 ) {
-                                    isDelivered = !isDelivered
                                     appViewModel.updateView(NOT_DELIVERED)
+                                }
+                            }
+                            Row (
+                                modifier = Modifier.weight(1f)
+                            ){
+
+                                ButtonSubmit(
+                                    labelValue = stringResource(id = R.string.takin_still_not_delivered),
+                                    color = Color.Green,
+                                    enabled = myNotDeliveredEnabled
+                                ) {
+                                    appViewModel.updateView(MY_NOT_DELIVERED)
                                 }
                             }
                         }
@@ -108,13 +150,36 @@ fun OrderScreen( invoiceViewModel: InvoiceViewModel, appViewModel: AppViewModel)
                             items(count = invoicesIDelivered.itemCount,
                                 key = invoicesIDelivered.itemKey { it.id!! }) { index ->
                                 val order = invoicesIDelivered[index]
-                                if (order != null) {
+                                if (order != null && order.isDelivered == true) {
                                     PuchaseOrderCard(
                                         order = order,
                                         appViewModel = appViewModel,
                                         invoiceViewModel = invoiceViewModel,
                                         asProvider = false
                                     )
+                                }
+                            }
+                        }
+                        MY_NOT_DELIVERED -> {
+                            items(count = invoicesIDelivered.itemCount,
+                                key = invoicesIDelivered.itemKey { it.id!! }) { index ->
+                                val order = invoicesIDelivered[index]
+                                if (order != null && order.isDelivered == false) {
+                                    invoiceViewModel.setMyOrdersNotDelivered(order)
+                                    PuchaseOrderCard(
+                                        order = order,
+                                        appViewModel = appViewModel,
+                                        invoiceViewModel = invoiceViewModel,
+                                        asProvider = false
+                                    )
+                                    ButtonSubmit(
+                                        labelValue = "tract",
+                                        color = Color.Green,
+                                        enabled = true
+                                    ) {
+                                //       invoiceViewModel.navigateToGoogleMaps(context = context , order.client?.latitude?:order.person?.latitude!!, order.client?.longitude?:order.person?.longitude!!)
+                                       invoiceViewModel.navigateOptimizedRoute(context = context , user.latitude!!, user.longitude!!)
+                                    }
                                 }
                             }
                         }

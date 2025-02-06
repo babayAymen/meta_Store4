@@ -233,6 +233,7 @@ fun InvetationCard(invitation : Invitation, onClicked: (Status) -> Unit) {
                         }
                     }
 
+                    Status.NULL -> {}
                     null -> TODO()
                 }
             }

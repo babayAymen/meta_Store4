@@ -1,6 +1,8 @@
 package com.aymen.metastore.model.entity.model
 
+import com.aymen.metastore.model.Enum.PaymentType
 import com.aymen.store.model.Enum.AccountType
+import com.aymen.store.model.Enum.Status
 import java.io.Serializable
 
 data class NotificationMessage (
@@ -16,4 +18,6 @@ data class NotificationMessage (
     var clientType : AccountType? = null,
     var isSend : Boolean ? = null,
     var isMeta : Boolean ? = null,
+    var status : Status ? = null,
+    var paymentType : PaymentType? = null
 ): Serializable

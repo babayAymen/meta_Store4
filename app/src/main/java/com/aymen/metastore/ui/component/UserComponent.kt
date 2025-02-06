@@ -75,6 +75,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -86,6 +87,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
@@ -107,6 +109,7 @@ import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
 import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
+import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
 import com.aymen.metastore.model.repository.ViewModel.StateHandlerViewModel
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.IMAGE_URL_ARTICLE
@@ -345,12 +348,15 @@ fun resolveUriToFile(uri: Uri?, context: Context): File? {
 fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
     val shoppingViewModel: ShoppingViewModel = hiltViewModel()
     val articleViewModel: ArticleViewModel = hiltViewModel()
-    val companyViewModel: CompanyViewModel = hiltViewModel()
+    val signInViewModel: SignInViewModel = hiltViewModel()
     val categoryViewModel: CategoryViewModel = hiltViewModel()
     val appViewModel: AppViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val stateViewModel : StateHandlerViewModel = hiltViewModel()
     val scrollState = rememberLazyListState()
+    val enabledGps by appViewModel.enbaledGps.collectAsStateWithLifecycle()
+    val triggerLocationCheck by signInViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
+    val triggerLocationCheck2 by appViewModel.showCheckLocationDialog.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         scrollState.scrollToItem(stateViewModel.getScrollPosition())
     }
@@ -451,6 +457,20 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                             }
                         }
                     }
+                }
+            }
+            item {
+                if(article.itemCount == 0) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                        if (triggerLocationCheck || triggerLocationCheck2)
+                            Text(text = "please enable GPS to see all our products")
+                        if (article.loadState.refresh == LoadState.Loading || enabledGps)
+                                LodingShape()
+                        }
                 }
             }
         }
@@ -825,17 +845,12 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
     if(openDialog){
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
-    val myCompanyBalance by sharedViewModel.company.map { it.balance }.collectAsStateWithLifecycle(0.0)
-    val myUserBalance by sharedViewModel.user.map { it.balance }.collectAsStateWithLifecycle(0.0)
+    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
 
     var isCompany by remember {
         mutableStateOf(false)
     }
-
-        LaunchedEffect(key1 = myUserBalance, key2 = myCompanyBalance) {
-            restBalance = if (isCompany) BigDecimal(myCompanyBalance!!).setScale(2, RoundingMode.HALF_UP)
-            else BigDecimal(myUserBalance!!).setScale(2, RoundingMode.HALF_UP)
-        }
     val gson = Gson()
 
     var balance by remember { mutableDoubleStateOf(0.0) }
@@ -843,20 +858,22 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
         var cost by remember {
             mutableStateOf(BigDecimal(0.0))
         }
-        LaunchedEffect(key1 = shoppingViewModel.qte) {
+        LaunchedEffect(key1 = shoppingViewModel.delivery) {
+            shoppingViewModel.calculateCost()
+        }
+        LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
             val articelPriceTtc = BigDecimal(article.sellingPrice!!).multiply(BigDecimal(1).add(BigDecimal(article.article?.tva?:0.0).divide(BigDecimal(100)))).setScale(2,RoundingMode.HALF_UP)
             cost = BigDecimal(shoppingViewModel.qte).multiply(articelPriceTtc).setScale(2, RoundingMode.HALF_UP)
             isCompany = accountType == AccountType.COMPANY
-                restBalance =
-                    if (isCompany) {
-                        balance = myCompanyBalance!!
-                        BigDecimal(myCompanyBalance!!).subtract(cost).subtract(shoppingViewModel.cost)
-                            .setScale(2, RoundingMode.HALF_UP)
-                    } else {
-                        balance = myUserBalance!!
-                        BigDecimal(myUserBalance!!).subtract(cost).subtract(shoppingViewModel.cost).setScale(2, RoundingMode.HALF_UP)
 
-                    }
+            balance = if (isCompany) {
+                myCompany.balance!!
+            } else {
+                myUser.balance!!
+            }
+
+            if(shoppingViewModel.delivery && cost.add(shoppingViewModel.cost) < BigDecimal(30)) cost = cost.add(BigDecimal(3))
+            restBalance = BigDecimal(balance).subtract(cost).subtract(shoppingViewModel.cost).setScale(2, RoundingMode.HALF_UP)
         }
 
         Dialog(
@@ -876,7 +893,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                     Row (
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ){
-                        ShowImage(image = "${BASE_URL}werehouse/image/${article.article?.image}/article/${article.company?.category!!.ordinal}")
+                        ShowImage(image = String.format(IMAGE_URL_ARTICLE,article.article?.image,article.article?.category!!.ordinal))
                         Column {
 
                         Text(text = if( restBalance!! <BigDecimal.ZERO || (shoppingViewModel.qte == 0.0 && restBalance!! <= 1.toBigDecimal())) "sold insufficient $restBalance DT" else "$restBalance DT")
@@ -886,7 +903,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                     Row {
                         InputTextField(
                             labelValue = shoppingViewModel.rawInput,
-                            label = "Quantity",
+                            label = stringResource(id = R.string.quantity),
                             singleLine = true,
                             maxLine = 1,
                             keyboardOptions = KeyboardOptions(
@@ -926,7 +943,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                     Row {
                         InputTextField(
                             labelValue = shoppingViewModel.comment,
-                            label = "comment",
+                            label = stringResource(id = R.string.type_a_comment),
                             singleLine = false,
                             maxLine = 3,
                             keyboardOptions = KeyboardOptions(
@@ -947,7 +964,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                                 modifier = Modifier.weight(1f)
                             ) {
                                 ButtonSubmit(
-                                    labelValue = "add more",
+                                    labelValue = stringResource(id = R.string.add_more),
                                     color = Color.Blue,
                                     enabled = true
                                 ) {
@@ -983,7 +1000,7 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
                             modifier = Modifier.weight(1f)
                         ){
 
-                            ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
+                            ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
                                 openDialog = false
                                 onClose(false)
                                 shoppingViewModel.remiseAZero()
@@ -1251,10 +1268,11 @@ fun LocationServiceDialog(
 }
 
 @Composable
-fun CheckLocation(type: AccountType, user: User?, company: Company, context: Context) {
+fun CheckLocation(type: AccountType, user: User?, company: Company, context: Context, appViewModel: AppViewModel) {
     var isOk by remember {
         mutableStateOf(false)
     }
+
     if ((type == AccountType.USER && (user?.latitude == 0.0 || user?.longitude == 0.0)) ||
         (type == AccountType.COMPANY && (company.latitude == 0.0 || company.longitude == 0.0))
     ) {
@@ -1281,6 +1299,7 @@ fun CheckLocation(type: AccountType, user: User?, company: Company, context: Con
         ) {
             isGpsEnabled = context.isGpsEnabled()
             if (isGpsEnabled) {
+                appViewModel.setEnabledGps()
                 dialogGps = false
             }
         }
@@ -1305,7 +1324,6 @@ fun CheckLocation(type: AccountType, user: User?, company: Company, context: Con
         DisposableEffect(Unit) {
             val intentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
             context.registerReceiver(gpsStatusReceiver, intentFilter)
-
             onDispose {
                 context.unregisterReceiver(gpsStatusReceiver)
             }
@@ -1313,9 +1331,9 @@ fun CheckLocation(type: AccountType, user: User?, company: Company, context: Con
 
         // Handle location permission and GPS dialogs
         if (dialogLocation) {
-            PermissionSettingsDialog {
-                dialogLocation = false
-            }
+//            PermissionSettingsDialog {
+//                dialogLocation = false
+//            }
         }
 
         if (dialogGps && !isGpsEnabled) {

@@ -252,6 +252,7 @@ fun submitShopping() {
     }
 
     fun remiseAZero(){
+        calculateCost()
         order = PurchaseOrderLine()
         qte = 0.0
         rawInput = ""
@@ -271,8 +272,10 @@ fun submitShopping() {
     fun calculateCost(){
         cost = BigDecimal.ZERO
         orderArray.forEach {
-            cost = cost.add(BigDecimal(it.article?.sellingPrice!!).multiply(BigDecimal(it.quantity!!)))
+            val articelPriceTtc = BigDecimal(it.article?.sellingPrice!!).multiply(BigDecimal(1).add(BigDecimal(it.article.article?.tva?:0.0).divide(BigDecimal(100)))).setScale(2,RoundingMode.HALF_UP)
+            cost = cost.add(articelPriceTtc.multiply(BigDecimal(it.quantity!!))).setScale(2,RoundingMode.HALF_UP)
         }
+        Log.e("testbalance","cost $cost")
     }
 
     fun getAllMyOrdersLine(orderId : Long) {
@@ -303,15 +306,18 @@ fun submitShopping() {
 
 
 
-    fun orderLineResponse(status: Status, ids : List<Long>, price : Double?=0.0){
+    fun orderLineResponse(status: Status, ids : List<Long>, price : Double?=0.0, withDelivery : Boolean){
         viewModelScope.launch(Dispatchers.IO) {
             when(status){
                 Status.ACCEPTED -> {
-                    val priceForCompany = BigDecimal(price!!).multiply(BigDecimal(0.9).multiply(
-                        BigDecimal(0.2)
-                    )).setScale(2,RoundingMode.HALF_UP)
-                    Log.e("lohbaydehx","pricefor company $priceForCompany price $price")
-                    appViewModel.addCompanyBalance(priceForCompany.toDouble())
+                    if(!withDelivery) {
+                        val priceForCompany = BigDecimal(price!!).multiply(
+                            BigDecimal(0.9).multiply(
+                                BigDecimal(0.2)
+                            )
+                        ).setScale(2, RoundingMode.HALF_UP)
+                        appViewModel.addCompanyBalance(priceForCompany.toDouble())
+                    }
                 }
                 Status.CANCELLED -> appViewModel.addCompanyBalance(price!!)
                 else -> {}

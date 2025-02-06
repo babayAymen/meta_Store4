@@ -44,12 +44,13 @@ import com.aymen.metastore.util.PAID
 import com.aymen.store.model.Enum.RoleEnum
 
 @Composable
-fun InvoiceScreenAsProvider(asClient : Boolean) {
+fun InvoiceScreenAsProvider() {
     val appViewModel: AppViewModel = hiltViewModel()
     val invoiceViewModel: InvoiceViewModel = hiltViewModel()
     val sharedViewModel: SharedViewModel = hiltViewModel()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val listState = invoiceViewModel.listState
+    val asClient = appViewModel.asClient
     val context = LocalContext.current
     var asProvider by remember {
         mutableStateOf(!asClient)
@@ -141,9 +142,9 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                         ButtonSubmit(
                             labelValue = stringResource(id = R.string.get_invoice_as_client),
                             color = Color.Green,
-                            enabled = asProvider
+                            enabled = !asProvider
                         ) {
-                            asProvider = false
+                            asProvider = true
                         }
                     }
 
@@ -156,9 +157,9 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                     ButtonSubmit(
                         labelValue = stringResource(id = R.string.get_invoice_as_provider),
                         color = Color.Green,
-                        enabled = !asProvider
+                        enabled = asProvider
                     ) {
-                        asProvider = true
+                        asProvider = false
                     }
 
                 }
@@ -168,7 +169,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(2.dp)
-                        ) {if(asProvider)
+                        ) {if(!asProvider)
                             ClientDialog(false, false) {
                                 if(it) {
                                     invoiceViewModel.asProvider = true
@@ -241,7 +242,7 @@ fun InvoiceScreenAsProvider(asClient : Boolean) {
                                 }
                             }
                     }
-                if(asProvider){
+                if(!asProvider){
                             val invoicesAsProvider = invoiceViewModel.invoices.collectAsLazyPagingItems()
                             sharedViewModel.setInvoiceCountNotification(true)
                     when(view){

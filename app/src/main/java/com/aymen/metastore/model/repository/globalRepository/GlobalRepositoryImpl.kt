@@ -15,6 +15,7 @@ import com.aymen.store.model.Enum.SearchType
 import com.aymen.store.model.Enum.Status
 import com.aymen.store.model.Enum.Type
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
+import com.aymen.metastore.model.entity.dto.AuthenticationResponse
 import com.aymen.metastore.model.entity.dto.CashDto
 import com.aymen.metastore.model.entity.dto.ClientProviderRelationDto
 import com.aymen.metastore.model.entity.dto.RegisterRequest
@@ -340,8 +341,9 @@ class GlobalRepositoryImpl  @Inject constructor
     }
 
     override suspend fun deleteInvoiceById(invoiceId: Long) = invoiceRepository.deleteInvoiceById(invoiceId)
-    override suspend fun acceptInvoiceAsDelivery(orderId: Long) = invoiceRepository.acceptInvoiceAsDelivery(orderId)
-    override suspend fun submitOrderDelivered(orderId: Long, code: String) = invoiceRepository.submitOrderDelivered(orderId, code)
+    override suspend fun acceptInvoiceAsDelivery(orderId: Long): Response<Boolean> = invoiceRepository.acceptInvoiceAsDelivery(orderId)
+    override suspend fun submitOrderDelivered(orderId: Long, code: String): Response<Boolean> = invoiceRepository.submitOrderDelivered(orderId, code)
+    override suspend fun userRejectOrder(orderId: Long) = invoiceRepository.userRejectOrder(orderId)
 
     override fun getAllOrdersNotDelivered(id: Long): Flow<PagingData<PurchaseOrder>> {
         TODO("Not yet implemented")
@@ -422,6 +424,23 @@ class GlobalRepositoryImpl  @Inject constructor
 
     override suspend fun getMyUserDetails() = signInRepository.getMyUserDetails()
     override suspend fun updateLocations(latitude: Double, logitude: Double) = signInRepository.updateLocations(latitude, logitude)
+    override suspend fun sendVerificationCodeViaEmail(
+        username: String,
+        email: String
+    ) = signInRepository.sendVerificationCodeViaEmail(username , email)
+
+    override suspend fun verificationCode(
+        username: String,
+        email: String,
+        code: String
+    ) = signInRepository.verificationCode(username , email , code )
+
+    override suspend fun changePassword(
+        username: String,
+        email: String,
+        password: String
+    ): Response<AuthenticationResponse> = signInRepository.changePassword(username, email , password)
+
     override suspend fun getRandomArticlesByCompanyCategory(categName : String) = articleRepository.getRandomArticlesByCompanyCategory(categName)
     override suspend fun getRandomArticlesByCategory(categoryId: Long, companyId : Long) = articleRepository.getRandomArticlesByCategory(categoryId, companyId)
       override suspend fun getRandomArticlesBySubCategory(

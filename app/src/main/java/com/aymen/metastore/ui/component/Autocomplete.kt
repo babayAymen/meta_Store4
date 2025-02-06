@@ -196,6 +196,7 @@ fun AutoCompleteClient(update : Boolean, onClientSelected : (Boolean) -> Unit) {
                                         ClientUserItem(client = clt) { selectedClient ->
                                             clientname = selectedClient.username!!
                                             invoiceViewModel.clientUser = selectedClient
+                                            Log.e("testinvoice","client user id ${selectedClient.id}")
                                             invoiceViewModel.clientType = AccountType.USER
                                             onClientSelected(true)
                                             expanded = false

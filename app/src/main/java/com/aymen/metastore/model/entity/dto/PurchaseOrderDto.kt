@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.entity.dto
 
 import com.aymen.metastore.model.entity.room.entity.PurchaseOrder
+import com.aymen.store.model.Enum.Status
 
 data class PurchaseOrderDto(
 
@@ -16,6 +17,8 @@ data class PurchaseOrderDto(
     val prix_order_tot : Double? = null,
     val tot_tva : Double? = null,
     val prix_article_tot : Double? = null,
+    val status : Status? = Status.NULL,
+    val deliveryCode : String? = null
 ){
     fun toPurchaseOrder() : PurchaseOrder {
 
@@ -31,7 +34,9 @@ data class PurchaseOrderDto(
             discount = discount,
             prix_order_tot = prix_order_tot,
             tot_tva = tot_tva,
-            prix_article_tot = prix_article_tot
+            prix_article_tot = prix_article_tot,
+            status = status,
+            deliveryCode = deliveryCode
         )
     }
 
@@ -48,7 +53,9 @@ data class PurchaseOrderDto(
             discount = discount,
             prix_order_tot = prix_order_tot,
             tot_tva = tot_tva,
-            prix_article_tot = prix_article_tot
+            prix_article_tot = prix_article_tot,
+            status = status,
+            deliveryCode = deliveryCode
         )
     }
 }

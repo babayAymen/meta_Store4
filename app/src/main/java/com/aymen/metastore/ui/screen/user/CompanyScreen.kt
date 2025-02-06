@@ -57,6 +57,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.aymen.metastore.R
+import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.entity.model.Category
 import com.aymen.metastore.model.entity.model.ClientProviderRelation
 import com.aymen.metastore.model.entity.model.Company
@@ -203,12 +204,7 @@ fun CompanyScreen(company: Company) {
     var comment by remember { mutableStateOf("") }
 
     val ratingg by remember {
-        mutableStateOf(
-            Rating(
-                rateeCompany = Company(),
-                rateeUser = User()
-            )
-        )
+        mutableStateOf(Rating())
     }
 
     var imageHeight by remember { mutableStateOf(0.dp) }
@@ -219,14 +215,13 @@ fun CompanyScreen(company: Company) {
     }
     Scaffold(
         bottomBar = {
-            if(show == "RATING_VIEW")
+            if(show == RATING_VIEW && ratingViewModel.enableToRating)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
                     .padding(8.dp)
             ) {
-                // Input field for adding a comment
                 InputTextField(
                     labelValue = comment,
                     label = stringResource(id = R.string.type_a_comment),
@@ -246,8 +241,16 @@ fun CompanyScreen(company: Company) {
                 ) {
                     ratingg.comment = comment
                     ratingg.rateValue = ratingViewModel.rate
-
+                    ratingg.rateeCompany = company
                     ratingViewModel.enableToRating = false
+                    ratingg.type = when(myAccountType) {
+                        AccountType.COMPANY -> RateType.COMPANY_RATE_COMPANY
+                        AccountType.USER -> RateType.USER_RATE_COMPANY
+                        AccountType.META -> RateType.META_RATE_USER
+                        AccountType.SELLER -> RateType.COMPANY_RATE_COMPANY
+                        AccountType.DELIVERY -> RateType.USER_RATE_COMPANY
+                        AccountType.NULL -> {null}
+                    }
                     val ratingJson = gson.toJson(ratingg)
                     ratingViewModel.doRate(ratingg, ratingJson, it)
                     comment = ""
@@ -368,7 +371,6 @@ fun CompanyScreen(company: Company) {
         }
     }
             SystemBackButtonHandler {
-                Log.e("backbutton","view: $view show: $show")
                 when(show){
                     COMPANY_CONTENT ->  RouteController.navigateTo(Screen.HomeScreen)
                     REGLEMENT_FOR_PROVIDER -> {
@@ -499,7 +501,10 @@ fun CompanyDetails( sharedViewModel: SharedViewModel, clientViewModel: ClientVie
             modifier = Modifier
                 .weight(1.8f)
                 .clickable {
-                    appViewModel.updateShow(RATING_VIEW)
+                    if(ratingViewModel.rating)
+                        appViewModel.updateShow(COMPANY_CONTENT)
+                    else
+                        appViewModel.updateShow(RATING_VIEW)
                     ratingViewModel.rating = !ratingViewModel.rating
                 }
         ) {
@@ -595,36 +600,43 @@ fun ScreenByCompanySubCategory(items : LazyPagingItems<SubCategory>, category : 
 @Composable
 fun ReglementFeature(paymentViewModel: PointsPaymentViewModel, appViewModel: AppViewModel, company : Company) {
     val companyPayment = paymentViewModel.allMyProfitsPerDay.collectAsLazyPagingItems()
-    val show by appViewModel.show
+    val view by appViewModel.view
     var idx by remember {
         mutableStateOf(-1)
     }
     LaunchedEffect(key1 = companyPayment) {
-        if(companyPayment.itemCount == 0){
+        if (companyPayment.itemCount == 0) {
             paymentViewModel.getAllMyProfitsPerDay(company.id!!)
         }
     }
     val payments = companyPayment.itemSnapshotList.items
 
-    when(show){
+    when (view) {
         REGLEMENT_FOR_PROVIDER -> {
-                payments.forEach { payment ->
-                        Column(
-                            modifier = Modifier.clickable {
-//                                idx = payment // on va voire
-                                appViewModel.updateShow(REGLEMENT_SCREEN)
-                            }
-                        ) {
-                            Text(text = stringResource(id = R.string.name ,payment.receiver?.name?:"" ))
-                            Text(text = stringResource(id = R.string.credit,payment.amount?:0))
-                            Text(text = stringResource(id = R.string.rest_is,payment.rest?:0))
+            payments.forEachIndexed {index , payment ->
+                Column(
+                    modifier = Modifier.clickable {
+                        idx = index
+                        Log.e("azdsqwxcd", "before clicked $view")
+                        appViewModel.updateView(REGLEMENT_SCREEN)
+                        Log.e("azdsqwxcd", "after clicked $view")
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.name_is, payment.receiver?.name ?: ""))
+                    Text(text = stringResource(id = R.string.credit_is, payment.amount ?: 0))
+                    Text(text = stringResource(id = R.string.rest_is, payment.rest ?: 0))
                 }
             }
         }
         REGLEMENT_SCREEN -> {
+            Log.e("azdsqwxcd", "show was change screen")
             ReglementScreen(companyPayment[idx], paymentViewModel, appViewModel)
         }
-         }
+        else -> {
+
+            Log.e("azdsqwxcd", "show was change screennnnnnnnn")
+        }
+    }
 }
 
 //molka

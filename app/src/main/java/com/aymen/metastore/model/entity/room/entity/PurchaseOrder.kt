@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aymen.metastore.model.entity.model.PurchaseOrder
+import com.aymen.store.model.Enum.Status
 
 @Entity(tableName = "purchase_order",
     foreignKeys = [
@@ -34,6 +35,8 @@ data class PurchaseOrder(
     val prix_order_tot : Double? = null,
     val tot_tva : Double? = null,
     val prix_article_tot : Double? = null,
+    val status : Status? = Status.NULL,
+    val deliveryCode : String? = null
 ){
     fun toPurchaseOrder(company: com.aymen.metastore.model.entity.model.Company?,
                         client: com.aymen.metastore.model.entity.model.Company?,
@@ -50,7 +53,9 @@ data class PurchaseOrder(
             discount = discount,
             prix_order_tot = prix_order_tot,
             tot_tva = tot_tva,
-            prix_article_tot = prix_article_tot
+            prix_article_tot = prix_article_tot,
+            status = status,
+            deliveryCode = deliveryCode
         )
     }
 }

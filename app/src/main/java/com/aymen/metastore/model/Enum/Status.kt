@@ -8,5 +8,7 @@ enum class Status {
 
     INWAITING,
 
-    CANCELLED
+    CANCELLED,
+
+    NULL
 }

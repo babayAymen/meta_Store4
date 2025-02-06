@@ -195,8 +195,9 @@ class InvoiceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteInvoiceById(invoiceId: Long) = api.deleteInvoiceById(invoiceId)
-    override suspend fun acceptInvoiceAsDelivery(orderId: Long) = api.acceptInvoiceAsDelivery(orderId)
-    override suspend fun submitOrderDelivered(orderId: Long, code: String) = api.submitOrderDelivered(orderId, code)
+    override suspend fun acceptInvoiceAsDelivery(orderId: Long): Response<Boolean> = api.acceptInvoiceAsDelivery(orderId)
+    override suspend fun submitOrderDelivered(orderId: Long, code: String): Response<Boolean> = api.submitOrderDelivered(orderId, code)
+    override suspend fun userRejectOrder(orderId: Long): Response<Void> = api.userRejectOrder(orderId)
 
 }
 

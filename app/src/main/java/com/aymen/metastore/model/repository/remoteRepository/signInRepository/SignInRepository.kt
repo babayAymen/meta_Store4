@@ -15,4 +15,7 @@ interface SignInRepository {
     suspend fun sendMyDeviceToken(token : TokenDto): Response<Void>
     suspend fun getMyUserDetails(): Response<UserDto>
      suspend fun updateLocations(latitude : Double , logitude : Double):Response<Void>
+     suspend fun sendVerificationCodeViaEmail(username : String , email : String) : Response<Boolean>
+     suspend fun verificationCode(username : String , email : String, code : String) : Response<Boolean>
+     suspend fun changePassword(username : String , email : String, password : String) : Response<AuthenticationResponse>
 }

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -79,7 +80,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aymen.metastore.LanguageSwither
 import com.aymen.metastore.R
+import com.aymen.metastore.model.Enum.InvoiceDetailsType
+import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.Enum.NotificationType
+import com.aymen.metastore.model.Enum.PaymentType
+import com.aymen.metastore.model.entity.model.Invoice
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.CompanyCategory
@@ -87,6 +92,7 @@ import com.aymen.store.model.Enum.IconType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.metastore.model.repository.ViewModel.AppViewModel
 import com.aymen.metastore.model.repository.ViewModel.ArticleViewModel
+import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
 import com.aymen.metastore.ui.component.ArticleCardForUser
 import com.aymen.metastore.ui.component.EmptyImage
@@ -116,22 +122,27 @@ import com.aymen.metastore.util.BUY_HISTORY
 import com.aymen.metastore.util.CLIENT
 import com.aymen.metastore.util.CLIENT_TYPE
 import com.aymen.metastore.util.DASH
+import com.aymen.metastore.util.DELIVERED
 import com.aymen.metastore.util.FALSE
 import com.aymen.metastore.util.IMAGE_URL_COMPANY
 import com.aymen.metastore.util.IMAGE_URL_USER
 import com.aymen.metastore.util.INVITATION
 import com.aymen.metastore.util.INVOICE
+import com.aymen.metastore.util.INVOICE_ID
 import com.aymen.metastore.util.IN_COMPLETE
 import com.aymen.metastore.util.IS_SEND
 import com.aymen.metastore.util.META
+import com.aymen.metastore.util.MY_NOT_DELIVERED
 import com.aymen.metastore.util.NOTIFICATION_TYPE
 import com.aymen.metastore.util.NOT_ACCEPTED
+import com.aymen.metastore.util.NOT_DELIVERED
 import com.aymen.metastore.util.NOT_PAID
 import com.aymen.metastore.util.ORDER
 import com.aymen.metastore.util.ORDER_LINE
 import com.aymen.metastore.util.PAID
 import com.aymen.metastore.util.PARENT
 import com.aymen.metastore.util.PAYMENT
+import com.aymen.metastore.util.PAYMENT_TYPE
 import com.aymen.metastore.util.POINT_ESPECE
 import com.aymen.metastore.util.PROFIT
 import com.aymen.metastore.util.PROVIDER
@@ -139,6 +150,7 @@ import com.aymen.metastore.util.REGLEMENT_FOR_PROVIDER
 import com.aymen.metastore.util.REGLEMENT_SCREEN
 import com.aymen.metastore.util.SEARCH
 import com.aymen.metastore.util.SHOPPING
+import com.aymen.metastore.util.STATUS
 import com.aymen.metastore.util.SUBCATEGORY
 import com.aymen.metastore.util.WORKER
 import com.aymen.metastore.util.all_histories_payment_for_provider
@@ -151,6 +163,7 @@ import com.aymen.metastore.util.notpayed
 import com.aymen.metastore.util.payed
 import com.aymen.metastore.util.profit_by_date
 import com.aymen.metastore.util.sum_of_profit_by_date
+import com.aymen.store.model.Enum.Status
 import com.aymen.store.ui.screen.user.NotificationScreen
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
@@ -179,6 +192,7 @@ fun HomeScreen(extra : Map<String , Any?>) {
 @Composable
 fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<String , Any?>) {
     val signInViewModel : SignInViewModel = hiltViewModel()
+    val invoiceViewModel : InvoiceViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val articleViewModel : ArticleViewModel = hiltViewModel()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
@@ -198,12 +212,13 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
     val invoiceAsClientNotificationCount by sharedViewModel.invoiceAsClientNotificationCount.collectAsStateWithLifecycle()
     if(triggerLocationCheck || triggerLocationCheck2) {
         if(type != AccountType.NULL) {
-            CheckLocation(type, user, company, context)
+            CheckLocation(type, user, company, context, appViewModel)
         }
     }
 //    val clipboardManager = LocalClipboardManager.current on cas ou i need clipboard
     val scope = rememberCoroutineScope()
     LaunchedEffect(key1 = Unit) {
+
         scope.launch{
             val token = Firebase.messaging.token.await()
             appViewModel.sendDeviceToken(token)
@@ -217,22 +232,74 @@ fun MyScaffold(context : Context, sharedViewModel: SharedViewModel, extra : Map<
        val notificationType = extra[NOTIFICATION_TYPE]
        val clientType = extra[CLIENT_TYPE]
        val isSend = extra[IS_SEND]
+       val status = extra[STATUS]
+       val paymentType = extra[PAYMENT_TYPE]
+       val invoiceId = extra[INVOICE_ID]
+       Log.e("testnotification","extra in home page $extra")
        if (notificationType == NotificationType.PAYMENT.name) {
-           appViewModel.updateView(PAYMENT)
-           appViewModel.updateScreen(IconType.WALLET)
+           if(paymentType == PaymentType.RECHARGE.name) {
+               appViewModel.updateScreen(IconType.WALLET)
+               appViewModel.updateShow(PAYMENT)
+           }
+           if(paymentType == PaymentType.PROFITS.name){
+               appViewModel.updateScreen(IconType.WALLET)
+               appViewModel.updateShow(PROFIT)
+           }
+           if(paymentType == PaymentType.META_REGLEMENT.name){
+               appViewModel.updateScreen(IconType.WALLET)
+               appViewModel.updateShow(PROFIT)
+               appViewModel.updateView(all_profit_payment_for_provider_per_day)
+           }
+           if(paymentType == PaymentType.INVOICE.name){
+                   invoiceViewModel.setInvoice(Invoice(id = invoiceId.toString().toLong()))
+               invoiceViewModel.getInvoiceDetails()
+               if(type == AccountType.COMPANY){
+                   appViewModel.asClient = true
+                   appViewModel.updateScreen(IconType.COMPANY)
+                   invoiceViewModel.clientType = type
+//                   invoiceViewModel.setInvoice(invoice)
+//                   invoiceViewModel.discount = invoice.discount ?: 0.0
+                   invoiceViewModel.invoiceType = InvoiceDetailsType.COMMAND_LINE
+                   invoiceViewModel.setInvoiceMode(InvoiceMode.VERIFY)
+                   appViewModel.updateShow(ADD_INVOICE)
+               }
+               if(clientType == AccountType.USER){
+                   appViewModel.updateScreen(IconType.SHOPPING)
+                   appViewModel.updateShow(ADD_INVOICE)
+                   invoiceViewModel.clientType = type
+                   invoiceViewModel.invoiceType = InvoiceDetailsType.COMMAND_LINE
+                   invoiceViewModel.setInvoiceMode(InvoiceMode.VERIFY)
+               }
+           }
        }
        if (notificationType == NotificationType.INVITATION.name)
            appViewModel.updateScreen(IconType.USER)
-       if (notificationType == NotificationType.ORDER.name)
-           appViewModel.updateScreen(IconType.SHOPPING)
-       if (notificationType == NotificationType.INVOICE.name) {
-           if(clientType == AccountType.COMPANY.name){
-               if(isSend == FALSE)
-                    appViewModel.asClient = true
-               appViewModel.updateShow(INVOICE)
-               appViewModel.updateScreen(IconType.COMPANY)
+       if (notificationType == NotificationType.ORDER.name) {
+                appViewModel.updateScreen(IconType.SHOPPING)
+           if(type == AccountType.DELIVERY){
+               appViewModel.updateShow(ORDER_LINE)
+               appViewModel.updateView(NOT_DELIVERED)
            }else
-               appViewModel.updateScreen(IconType.SHOPPING)
+                appViewModel.updateShow(SHOPPING)
+
+       }
+       if (notificationType == NotificationType.INVOICE.name) {
+           val isCompany = clientType == AccountType.COMPANY.name
+           if (status == Status.ACCEPTED.name || status == Status.REFUSED.name) {
+               if (isSend == true) {
+                   appViewModel.updateScreen(IconType.COMPANY)
+                   appViewModel.updateShow(INVOICE)
+                   appViewModel.asClient = false
+               } else {
+                   appViewModel.asClient = isCompany
+                   appViewModel.updateScreen(if (isCompany) IconType.COMPANY else IconType.SHOPPING)
+                   appViewModel.updateShow(if (isCompany) INVOICE else SHOPPING)
+               }
+           } else {
+               appViewModel.asClient = isCompany
+               appViewModel.updateScreen(if (isCompany) IconType.COMPANY else IconType.SHOPPING)
+               appViewModel.updateShow(if (isCompany) INVOICE else SHOPPING)
+           }
        }
    }
     Scaffold (
@@ -473,7 +540,11 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                         iconUnselected = Icons.Outlined.ShoppingCart,
                         badgeCount = orderCount,
                         onClick = {
-                            viewModel.updateShow(SHOPPING)
+                            if(accountType == AccountType.DELIVERY) {
+                                viewModel.updateShow(ORDER_LINE)
+                                viewModel.updateView(NOT_DELIVERED)
+                            }else
+                                viewModel.updateShow(SHOPPING)
                             viewModel.updateScreen(IconType.SHOPPING)
                         },
                         description = stringResource(id = R.string.shopping)
@@ -532,7 +603,7 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
         }
         val view by viewModel.view
         val show by viewModel.show
-        if( show == DASH || show == PAYMENT || show == ORDER || show == SEARCH || show == INVITATION || show == SHOPPING){
+        if( show == DASH || show == PAYMENT || show == ORDER|| view == NOT_DELIVERED || show == SEARCH || show == INVITATION || show == SHOPPING){
             if(historySelected == IconType.COMPANY){
                 viewModel.updateShow(DASH)
             }
@@ -560,10 +631,13 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                     viewModel.updateShow(SUBCATEGORY)
                 }
                 ADD_INVOICE -> {
+                    if(accountType == AccountType.DELIVERY) {
+                        viewModel.updateShow(ORDER_LINE)
+                    }else
                     if(view == BUY_HISTORY)
-                    viewModel.updateShow(ALL_HISTORY)
+                     viewModel.updateShow(ALL_HISTORY)
                     else
-                    viewModel.updateShow(INVOICE)
+                        viewModel.updateShow(INVOICE)
                 }
                 ADD_WORKER -> {
                 viewModel.updateShow(WORKER)
@@ -575,7 +649,10 @@ fun MyTopBar(scrollBehavior: TopAppBarScrollBehavior, context : Context,sharedVi
                     viewModel.updateShow(INVOICE)
                 }
                 ORDER_LINE -> {
-                viewModel.updateShow(ORDER)
+                    when(view){
+                        DELIVERED -> viewModel.updateView(historicView,NOT_DELIVERED)
+                        MY_NOT_DELIVERED -> viewModel.updateView(historicView,NOT_DELIVERED)
+                    }
                 }
                 POINT_ESPECE -> {
                     viewModel.updateShow(PAYMENT)

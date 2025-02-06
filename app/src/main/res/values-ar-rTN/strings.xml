@@ -160,6 +160,13 @@
     <string name="worker">الخدامة</string>
     <string name="update">update</string>
     <string name="parent">parent</string>
+
+
+    <string name="name_is">rest is : %1$s </string>
+    <string name="credit_is">rest is : %1$s </string>
+    <string name="takin_still_not_delivered">my orders not delivered</string>
+    <string name="return_order">return Order</string>
+    <string name="add_more">add more</string>
 </resources>
 
 

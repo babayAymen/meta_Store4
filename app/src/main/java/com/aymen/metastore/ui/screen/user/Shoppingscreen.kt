@@ -73,8 +73,6 @@ import com.aymen.metastore.util.SHOPPING
 @Composable
 fun ShoppingScreen() {
     val context = LocalContext.current
-//    val String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-
     val shoppingViewModel : ShoppingViewModel = hiltViewModel()
     val appViewModel : AppViewModel = hiltViewModel()
     val sharedViewModel : SharedViewModel = hiltViewModel()
@@ -97,18 +95,12 @@ fun ShoppingScreen() {
     var restBalnace by remember {
         mutableStateOf(BigDecimal.ZERO)
     }
-    LaunchedEffect(key1 = accountType, key2 = Unit) {
-        if(accountType == AccountType.DELIVERY) {
-            appViewModel.updateShow(ORDER_LINE)
-            appViewModel.updateView(NOT_DELIVERED)
-        }
-    }
     when(show) {
         ADD_INVOICE -> {
             invoiceViewModel.setInvoiceMode(InvoiceMode.VERIFY)
             AddInvoiceScreen()
         }
-        ORDER_LINE -> OrderScreen(invoiceViewModel, appViewModel)
+        ORDER_LINE -> OrderScreen(invoiceViewModel, appViewModel, sharedViewModel)
         ORDER_LINE_DETAILS -> PurchaseOrderDetailsScreen(order, shoppingViewModel)
         SHOPPING -> {
             Surface(
@@ -125,7 +117,6 @@ fun ShoppingScreen() {
                         Column {
                             if (shoppingViewModel.orderArray.isNotEmpty()) {
                                 LazyColumn(
-
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     itemsIndexed(shoppingViewModel.orderArray) { index, it ->
@@ -180,35 +171,44 @@ fun ShoppingScreen() {
                                         }
                                     }
                                 }
-                                Row {
-                                    Row(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        ButtonSubmit(
-                                            labelValue = stringResource(id = R.string.cancel_all),
-                                            color = Color.Red,
-                                            enabled = true
+                                Column {
+
+                                    Row {
+                                        Row(
+                                            modifier = Modifier.weight(1f)
                                         ) {
-                                            shoppingViewModel.returnAllMyMony()
+                                            ButtonSubmit(
+                                                labelValue = stringResource(id = R.string.cancel_all),
+                                                color = Color.Red,
+                                                enabled = true
+                                            ) {
+                                                shoppingViewModel.returnAllMyMony()
+                                            }
                                         }
-                                    }
-                                    Row(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        ButtonSubmit(
-                                            labelValue = stringResource(id = R.string.send_all),
-                                            color = Color.Green,
-                                            enabled = true
+                                        Row(
+                                            modifier = Modifier.weight(1f)
                                         ) {
-                                            if(shoppingViewModel.delivery && shoppingViewModel.cost <= BigDecimal(30)) {
-                                                restBalnace = BigDecimal(myCompany.balance!!).subtract(shoppingViewModel.cost).setScale(2,RoundingMode.HALF_UP)
-                                                isAll = true
-                                                showFeesDialog = true
+                                            ButtonSubmit(
+                                                labelValue = stringResource(id = R.string.send_all),
+                                                color = Color.Green,
+                                                enabled = true
+                                            ) {
+                                                if (shoppingViewModel.delivery && shoppingViewModel.cost <= BigDecimal(
+                                                        30
+                                                    )
+                                                ) {
+                                                    restBalnace =
+                                                        BigDecimal(myCompany.balance!!).subtract(
+                                                            shoppingViewModel.cost
+                                                        ).setScale(2, RoundingMode.HALF_UP)
+                                                    isAll = true
+                                                    showFeesDialog = true
+                                                }
                                             }
                                         }
                                     }
+                                    DividerComponent()
                                 }
-                                        DividerComponent()
                             }
                         }
                     }
@@ -233,7 +233,7 @@ fun ShoppingScreen() {
                                 }
                             }
                             item {
-                                DividerComponent()
+                              //  DividerComponent()
                             }
                         }
                     }
@@ -267,11 +267,8 @@ fun ShoppingScreen() {
                                         style = TextStyle(fontSize = 8.sp)
                                     )
                                 }
-                            }
-                            item {
                                 DividerComponent()
                             }
-
                         }
                     }
                     Row (// all my invoices those are accepted and orders also accepted

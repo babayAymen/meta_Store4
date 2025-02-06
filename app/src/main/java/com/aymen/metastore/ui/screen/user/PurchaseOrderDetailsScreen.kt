@@ -61,12 +61,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                     hasWaitingStatus = false
                 }
                 ids += line.id!!
-//                val prixArticle = BigDecimal(line.prixArticleTot!!)
-//                val tva = BigDecimal(line.totTva!!)
-//                price = price.add(prixArticle).add(tva)
+            Log.e("testorder","list ids $ids")
             }
-//            price = price.multiply(BigDecimal(0.9)).multiply(BigDecimal(0.2))
-//                .setScale(2, RoundingMode.HALF_UP)
         }
 
     }
@@ -92,10 +88,12 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                     color = Color.Green,
                                     enabled = true,
                                 ) {
+                                    hasWaitingStatus = false
                                     shoppingViewModel.orderLineResponse(
                                         status = Status.ACCEPTED,
                                         ids = ids,
-                                        price.toDouble()
+                                        price.toDouble(),
+                                        order.deliveryCode != null
                                     )
                                 }
                             }
@@ -107,9 +105,12 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                     color = Color.Red,
                                     enabled = true,
                                 ) {
+                                    hasWaitingStatus = false
                                     shoppingViewModel.orderLineResponse(
                                         status = Status.REFUSED,
-                                        ids = ids
+                                        ids = ids,
+                                        null,
+                                        order.deliveryCode != null
                                     )
                                 }
                             }
@@ -121,10 +122,12 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                 color = Color.Red,
                                 enabled = true
                             ) {
+                                hasWaitingStatus = false
                                 shoppingViewModel.orderLineResponse(
                                     status = Status.CANCELLED,
                                     ids = ids,
-                                    price.toDouble()
+                                    price.toDouble(),
+                                    order.deliveryCode != null
                                 )
                             }
                         }
@@ -161,7 +164,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                                 shoppingViewModel.orderLineResponse(
                                                     status = Status.ACCEPTED,
                                                     ids = listOf(line.id!!),
-                                                    price.toDouble()
+                                                    price.toDouble(),
+                                                    order.deliveryCode != null
 
                                                 )
                                             }
@@ -177,7 +181,9 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                             ) {
                                                 shoppingViewModel.orderLineResponse(
                                                     status = Status.REFUSED,
-                                                    ids = listOf(line.id!!)
+                                                    ids = listOf(line.id!!),
+                                                    null,
+                                                    order.deliveryCode != null
                                                 )
                                             }
                                         }
@@ -192,7 +198,8 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                         shoppingViewModel.orderLineResponse(
                                             status = Status.CANCELLED,
                                             ids = listOf(line.id!!),
-                                            price.toDouble()
+                                            price.toDouble(),
+                                            order.deliveryCode != null
                                         )
                                     }
                                 }
@@ -262,6 +269,7 @@ fun PurchaseOrderDetailsScreen(order : PurchaseOrder, shoppingViewModel: Shoppin
                                 }
                             }
 
+                            Status.NULL -> {}
                             null -> TODO()
                         }
                     }

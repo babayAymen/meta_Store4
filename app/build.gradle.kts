@@ -125,6 +125,12 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.messaging.ktx)
+    implementation ("androidx.credentials:credentials:1.2.0")
+    implementation ("androidx.credentials:credentials-play-services-auth:1.2.0")
+    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
+    implementation("com.google.firebase:firebase-core:21.1.1")
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
 }
 
 

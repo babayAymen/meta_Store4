@@ -70,7 +70,6 @@ fun DashBoardScreen() {
     val sharedViewModel : SharedViewModel = hiltViewModel()
     val user by sharedViewModel.user.collectAsStateWithLifecycle()
     val show by viewModel.show
-    val asClient = viewModel.asClient
     when (show) {
         DASH -> {
             Surface(
@@ -178,7 +177,7 @@ fun DashBoardScreen() {
                 }
             }
         INVOICE -> {
-            InvoiceScreenAsProvider(asClient)
+            InvoiceScreenAsProvider()
         }
         ADD_INVOICE -> {
             AddInvoiceScreen()

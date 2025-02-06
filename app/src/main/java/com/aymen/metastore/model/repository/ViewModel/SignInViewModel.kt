@@ -1,17 +1,19 @@
 package com.aymen.metastore.model.repository.ViewModel
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialResponse
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aymen.metastore.dependencyInjection.TokenManager
-import com.aymen.metastore.model.ViewModelRunTracker
 import com.aymen.metastore.model.entity.dto.AuthenticationRequest
 import com.aymen.metastore.model.entity.dto.AuthenticationResponse
 import com.aymen.metastore.model.entity.dto.RegisterRequest
@@ -22,13 +24,26 @@ import com.aymen.store.dependencyInjection.TokenUtils
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.RoleEnum
 import com.aymen.store.model.repository.globalRepository.GlobalRepository
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.FirebaseException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthMissingActivityForRecaptchaException
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import retrofit2.Response
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,26 +59,147 @@ class SignInViewModel @Inject constructor(
     private val tokenManager: TokenManager
 ): ViewModel() {
 
-    fun signIn(authenticationRequest: AuthenticationRequest, onSignInSuccess: (Boolean) -> Unit){
-        viewModelScope.launch (Dispatchers.IO){
-                try {
-                    val token = repository.SignIn(authenticationRequest)
-                    Log.e("token","token : ${token.body()}")
-                    if (token.isSuccessful) {
-                            tokenManager.saveToken(token.body()?.token!!) // Save new token dynamically
-                        getUserRole(token.body()?.token!!)
-                        storeToken(token.body()!!)
-                        onSignInSuccess(true)
-                    } else {
-                        onSignInSuccess(false)
-                    }
-                } catch (_ex: Exception) {
-                    Log.e("aymenbabaysignIn","clicked exeption : $_ex")
+    private val auth = Firebase.auth
+
+    private lateinit var authe: FirebaseAuth
+    private lateinit var credentialManager: CredentialManager
+
+//    fun startGoogleSignIn(context: Context) {
+//        authe = FirebaseAuth.getInstance()
+//        credentialManager = CredentialManager.create(context as Activity)
+//
+//        // Build the GoogleIdTokenCredential
+//        val googleIdTokenCredential = GoogleIdTokenCredential(
+//            idToken =  default_web_client_id // Use your Firebase Web Client ID
+//        )
+//
+//        // Build the GetCredentialRequest
+//        val request = GetCredentialRequest.Builder()
+//            .addCredentialOption(googleIdTokenCredential)
+//            .build()
+//
+//        // Launch the sign-in flow
+//        credentialManager.getCredential(
+//            request = request,
+//            activity = context,
+//            onSuccess = { response ->
+//                handleSignIn(response, context)
+//            },
+//            onFailure = { e ->
+//                // Handle error
+//                e.printStackTrace()
+//            }
+//        )
+//    }
+    private fun handleSignIn(response: GetCredentialResponse, context: Context) {
+        val credential = response.credential
+        if (credential is GoogleIdTokenCredential) {
+            val idToken = credential.idToken
+            firebaseAuthWithGoogle(idToken, context)
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String, context: Context) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(context as Activity) { task ->
+                if (task.isSuccessful) {
+                    // Sign-in success, get FCM token
+                    getFCMToken()
+                } else {
+                    // Sign-in failed
+                }
+            }
+    }
+    private fun getFCMToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                // Send token to your backend or handle it as needed
+                println("FCM Token: $token")
+            }
+        }
+    }
+    fun signInWithPhoneNumber(phoneNumber : String, context: Context){
+        val options = PhoneAuthOptions.newBuilder(auth)
+            .setPhoneNumber(phoneNumber)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(context as Activity)
+            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    signInWithCredential(credential)
                 }
 
+                override fun onVerificationFailed(e: FirebaseException) {
+                    Log.e("veriffailed","error : $e")
+
+                    when (e) {
+                        is FirebaseAuthInvalidCredentialsException -> {
+                            // Invalid request
+                        }
+
+                        is FirebaseTooManyRequestsException -> {
+                            // The SMS quota for the project has been exceeded
+                        }
+
+                        is FirebaseAuthMissingActivityForRecaptchaException -> {
+                            // reCAPTCHA verification attempted with null Activity
+                        }
+                    }
+                }
+
+                override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+                    Log.d("veriffailed", "onCodeSent:$verificationId")
+                    super.onCodeSent(verificationId, token)
+                }
+
+            })
+            .build()
+        PhoneAuthProvider.verifyPhoneNumber(options)
+    }
+
+    private fun signInWithCredential(credential: PhoneAuthCredential){
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if(task.isSuccessful){
+
+                }else{
+
+                }
+            }
+    }
+
+    fun signIn(authenticationRequest: AuthenticationRequest, onSignInSuccess: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result : Result<Response<AuthenticationResponse>> = runCatching {
+                repository.SignIn(authenticationRequest)
+            }
+            result.fold(
+                onSuccess = {success ->
+                    if(success.isSuccessful){
+                        val response = success.body()
+                        if(response != null){
+                            subSignIn(response)
+                            onSignInSuccess(true)
+                        }
+                    }else
+                        onSignInSuccess(false)
+                },
+                onFailure = {failure ->
+
+                }
+            )
         }
 
     }
+    private fun subSignIn(response : AuthenticationResponse){
+        viewModelScope.launch {
+        tokenManager.saveToken(response.token)
+        getUserRole(response.token)
+        storeToken(response)
+        }
+    }
+
     fun signUp(registerRequest: RegisterRequest, onSignUpSuccess: (Boolean) -> Unit){
         viewModelScope.launch(Dispatchers.IO)  {
                 try {
@@ -116,18 +252,13 @@ class SignInViewModel @Inject constructor(
                 getMyUserDetails()
             }
                 val response = repository.getMeAsCompany()
-                Log.e("token","company size : ${response.body()?.id}")
                 if(response.isSuccessful){
-                    Log.e("userrole","user role in get company 1 $userRole")
                     val company = response.body()!!
                    checkLocation(company.toCompanyModel(), null){
                        _showCheckLocationDialog.value = it
                    }
-                    Log.e("userrole","user role in get company 2 $userRole")
                     storeCompany(company.toCompanyModel())
-                    Log.e("userrole","user role in get company 3 $userRole")
                     if(userRole == RoleEnum.ADMIN) {
-                        Log.e("userrole","user role in get company 4 ${company.user}")
                         storeUser(company.user?.toUserModel()!!)
                         sharedViewModel.assignUser(company.user.toUserModel())
                     }
@@ -257,5 +388,65 @@ private fun storeToken(token: AuthenticationResponse) {
         }
     }
 
+    fun sendVerificationCodeViaEmail(username : String, email : String, isVerified : (Boolean) -> Unit){
+        viewModelScope.launch {
+        val result : Result<Response<Boolean>> = runCatching {
+            repository.sendVerificationCodeViaEmail(username , email)
+        }
+            result.fold(
+                onSuccess = {success ->
+                    if(success.isSuccessful) {
+                        val response = success.body()
+                        if (response != null)
+                            isVerified(response)
+                    }
+                },
+                onFailure = {failure ->
+
+                }
+            )
+        }
+    }
+    fun verificationCode(username : String, email : String, code : String, isVerified : (Boolean) -> Unit){
+        viewModelScope.launch {
+        val result : Result<Response<Boolean>> = runCatching {
+            repository.verificationCode(username , email, code)
+        }
+            result.fold(
+                onSuccess = {success ->
+                    if(success.isSuccessful) {
+                        val response = success.body()
+                        if (response != null)
+                            isVerified(response)
+                    }
+                },
+                onFailure = {failure ->
+
+                }
+            )
+        }
+    }
+    fun changePassword(username : String, email : String, password : String, isVerified : (Boolean) -> Unit){
+        viewModelScope.launch {
+        val result : Result<Response<AuthenticationResponse>> = runCatching {
+            repository.changePassword(username , email, password)
+        }
+            result.fold(
+                onSuccess = {success ->
+                    if(success.isSuccessful) {
+                        val response = success.body()
+                        if (response != null){
+                            subSignIn(response)
+                            isVerified(true)
+                        }
+                    }else
+                        isVerified(false)
+                },
+                onFailure = {failure ->
+
+                }
+            )
+        }
+    }
 
 }

@@ -85,6 +85,7 @@ import com.aymen.metastore.model.repository.ViewModel.InvoiceViewModel
 import com.aymen.metastore.model.repository.ViewModel.PaymentViewModel
 import com.aymen.metastore.model.repository.ViewModel.SubCategoryViewModel
 import com.aymen.metastore.ui.screen.admin.NavigationItem
+import com.aymen.metastore.util.ADD_INVOICE
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.article
 import com.aymen.store.model.Enum.AccountType
@@ -914,7 +915,7 @@ fun InvoiceCard(
             modifier = Modifier
                 .padding(4.dp)
                 .clickable {
-                    invoiceViewModel.invoice = invoice
+                    invoiceViewModel.setInvoice(invoice)
                     invoiceViewModel.clientType = clientType
                     invoiceViewModel.discount = invoice.discount ?: 0.0
                     invoiceViewModel.invoiceType = invoice.type!!
@@ -922,7 +923,7 @@ fun InvoiceCard(
                         invoiceMode = InvoiceMode.VERIFY
                     }
                     invoiceViewModel.setInvoiceMode(invoiceMode)
-                    appViewModel.updateShow("add invoice")
+                    appViewModel.updateShow(ADD_INVOICE)
                 }
         ) {
             Row {
@@ -981,7 +982,7 @@ fun PuchaseOrderCard(
                         InvoiceMode.VERIFY,
                         InvoiceDetailsType.ORDER_LINE
                     )
-                    appViewModel.updateShow("add invoice")
+                    appViewModel.updateShow(ADD_INVOICE)
                 }
         ) {
             Row {
@@ -1047,7 +1048,7 @@ fun ClientDialog(update: Boolean, openDialoge: Boolean, onSubmit: (Boolean) -> U
     var clientExist by remember {
         mutableStateOf(false)
     }
-    ButtonSubmit(labelValue = "Add invoice", color = Color.Green, enabled = true) {
+    ButtonSubmit(labelValue = stringResource(id = R.string.add_invoice), color = Color.Green, enabled = true) {
         openDialog = true
     }
     if (openDialog) {
@@ -1073,7 +1074,7 @@ fun ClientDialog(update: Boolean, openDialoge: Boolean, onSubmit: (Boolean) -> U
                             modifier = Modifier.weight(1f)
                         ) {
                             ButtonSubmit(
-                                labelValue = "ok",
+                                labelValue = stringResource(id = R.string.ok),
                                 color = Color.Green,
                                 enabled = clientExist
                             ) {
@@ -1085,7 +1086,7 @@ fun ClientDialog(update: Boolean, openDialoge: Boolean, onSubmit: (Boolean) -> U
                             modifier = Modifier.weight(1f)
                         ) {
 
-                            ButtonSubmit(labelValue = "cancel", color = Color.Red, enabled = true) {
+                            ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
                                 openDialog = false
                                 onSubmit(false)
                             }
@@ -1334,6 +1335,7 @@ fun ArticleDialog(update: Boolean, openDialo: Boolean, asProvider : Boolean, pro
 fun ShowPaymentDailog(
     ttc: BigDecimal,
     openDailog: Boolean,
+    onDismiss: () -> Unit,
     onSelected: (BigDecimal, Boolean) -> Unit
 ) {
     var openDialog by remember { mutableStateOf(openDailog) }
@@ -1355,6 +1357,7 @@ fun ShowPaymentDailog(
         Dialog(
             onDismissRequest = {
                 openDialog = false
+                onDismiss()
             }
         ) {
             Surface(

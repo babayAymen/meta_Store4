@@ -134,6 +134,7 @@ fun UserScreen() { // subtruct the quantity from article when you send an order
             .fillMaxSize()
             .padding(3.dp, 36.dp, 3.dp, 3.dp),
         bottomBar = {
+            if(ratingViewModel.enableToRating)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

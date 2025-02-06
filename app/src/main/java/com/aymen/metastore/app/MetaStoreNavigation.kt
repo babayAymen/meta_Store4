@@ -25,6 +25,8 @@ import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.metastore.ui.screen.admin.DashBoardScreen
+import com.aymen.metastore.ui.screen.guest.ForgetPasswordScreen
+import com.aymen.metastore.ui.screen.guest.PhoneSignInScreen
 import com.aymen.metastore.ui.screen.guest.SignInScreen
 import com.aymen.store.ui.screen.guest.SignUpScreen
 import com.aymen.store.ui.screen.guest.TermConditionScreen
@@ -53,6 +55,7 @@ fun MetaStore (extra :  Map<String, Any?>){
          }
 
     }
+Log.e("devicetoken","extra from meta store : ")
 Log.e("devicetoken","extra from meta store : $extra")
 
     Surface(
@@ -102,23 +105,15 @@ Log.e("devicetoken","extra from meta store : $extra")
 //                    MenuScreen()
                 }
 
-                is Screen.DashBoardScreen -> {
-                    DashBoardScreen()
-                }
-
+                is Screen.DashBoardScreen -> DashBoardScreen()
                 is Screen.CompanyScreen -> {
                     val company by sharedViewModel.hisCompany.collectAsStateWithLifecycle()
                     CompanyScreen(company = company)
                 }
-
-                is Screen.ArticleDetailScreen -> {
-                    ArticleDetailsScreen()
-                }
-
-                is Screen.UserScreen -> {
-                    UserScreen()
-                }
-
+                is Screen.ArticleDetailScreen -> ArticleDetailsScreen()
+                is Screen.UserScreen -> UserScreen()
+                is Screen.PhoneSignInScreen -> PhoneSignInScreen( )
+                is Screen.ForgetPasswordScreen -> ForgetPasswordScreen()
             }
         }
 

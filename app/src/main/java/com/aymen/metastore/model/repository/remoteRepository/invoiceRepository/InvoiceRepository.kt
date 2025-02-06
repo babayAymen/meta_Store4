@@ -38,6 +38,7 @@ interface InvoiceRepository {
     suspend fun getAllMyPaymentNotAccepted(companyId : Long) : Response<List<InvoiceDto>>
     fun searchInvoice(type : SearchPaymentEnum, text : String, companyId : Long) : Flow<PagingData<Invoice>>
     suspend fun deleteInvoiceById(invoiceId : Long) : Response<Void>
-    suspend fun acceptInvoiceAsDelivery(orderId : Long) : Response<String>
-    suspend fun submitOrderDelivered(orderId : Long, code : String) : Response<String>
+    suspend fun acceptInvoiceAsDelivery(orderId : Long) : Response<Boolean>
+    suspend fun submitOrderDelivered(orderId : Long, code : String) : Response<Boolean>
+    suspend fun userRejectOrder(orderId : Long) : Response<Void>
 }

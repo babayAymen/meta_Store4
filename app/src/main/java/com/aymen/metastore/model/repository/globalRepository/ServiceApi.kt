@@ -165,7 +165,7 @@ interface ServiceApi {
     suspend fun getAllOrdersNotAcceptedAsDelivery(@Path("id") id : Long , @Query("page") page : Int , @Query("pageSize") pageSize : Int) : PaginatedResponse<PurchaseOrderDto>
 
     @GET("$ORDER_BASE_URL/acceptOrdersAsDelivery/{orderId}")
-    suspend fun acceptInvoiceAsDelivery(@Path("orderId") orderId: Long) : Response<String>
+    suspend fun acceptInvoiceAsDelivery(@Path("orderId") orderId: Long) : Response<Boolean>
 
     /////////////////////////////////////////////////////////////invoice////////////////////////////////////////////////////////////////
     @GET("$INVOICE_BASE_URL/getMyInvoiceAsProvider/{id}") // a verfier maybe i donty use it
@@ -192,7 +192,9 @@ interface ServiceApi {
     suspend fun acceptInvoice(@Path("invoiceId") invoiceId : Long, @Path("status") status : Status) : Response<Void>
     ////////////////////////////////////////////////// delivery /////////////////////////////////////////////////
     @GET("$DELIVERY_BASE_URL/submitDeliveryOrder/{orderId}")
-    suspend fun submitOrderDelivered(@Path("orderId") orderId: Long, @Query("code") code : String) : Response<String>
+    suspend fun submitOrderDelivered(@Path("orderId") orderId: Long, @Query("code") code : String) : Response<Boolean>
+    @GET("$DELIVERY_BASE_URL/user_reject_order/{orderId}")
+    suspend fun userRejectOrder(@Path("orderId") orderId: Long) : Response<Void>
     @GET("$DELIVERY_BASE_URL/getInvoicesIDelivered")
     suspend fun getInvoicesDeliveredByMe(@Query("page") page : Int , @Query("pageSize") pageSize: Int) : PaginatedResponse<PurchaseOrderDto>
     ////////////////////////////////////////////////////////////:point//////////////////////////////////////////////////////////:::
@@ -340,6 +342,12 @@ interface ServiceApi {
     suspend fun getMyUserDetails():Response<UserDto>
     @POST("$AUTH_BASE_URL/register")
     suspend fun signUp(@Body registerRequest: RegisterRequest) : Response<AuthenticationResponse>
+    @POST("$AUTH_BASE_URL/verif_name_email")
+    suspend fun sendVerificationCodeViaEmail(@Query("username") username : String, @Query("email") email : String) : Response<Boolean>
+    @POST("$AUTH_BASE_URL/verif_code_name_email")
+    suspend fun verificationCode(@Query("username") username : String, @Query("email") email : String, @Query("code") code : String) : Response<Boolean>
+    @POST("$AUTH_BASE_URL/change_password")
+    suspend fun changePassword(@Query("username") username : String, @Query("email") email : String, @Query("password") password : String) : Response<AuthenticationResponse>
 ///////////////////////////////////////////////////////////////category/////////////////////////////////////////////////////////////
 
     @Multipart

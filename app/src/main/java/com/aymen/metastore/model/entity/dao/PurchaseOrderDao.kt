@@ -78,8 +78,8 @@ interface PurchaseOrderDao {
     @Transaction
     @Query("SELECT * FROM purchase_order where isDelivered = :isDelivered")
     fun getInvoicesDelivered(isDelivered : Boolean) : PagingSource<Int, PurchaseOrderWithCompanyAndUserOrClient>
-    @Query("UPDATE purchase_order SET isTaken = :isTaken WHERE purchaseOrderId = :invoiceId")
-    suspend fun makeInvoiceAsTeken(isTaken: Boolean, invoiceId: Long)
+    @Query("UPDATE purchase_order SET isTaken = 1 WHERE purchaseOrderId = :id")
+    suspend fun makeInvoiceAsTeken( id: Long)
     @Upsert
     fun insertInvoicesDeliveredKeys(keys : List<InvoicesDeliveredRemoteKeysEntity>)
 
@@ -89,6 +89,8 @@ interface PurchaseOrderDao {
     @Query("SELECT * FROM invoices_delivered_remote_keys ORDER BY id DESC LIMIT 1")
     suspend fun getLatestInvoicesDeliveredRemoteKey() : InvoicesDeliveredRemoteKeysEntity?
 
+    @Query("UPDATE purchase_order SET isDelivered = 1 WHERE purchaseOrderId = :id")
+    suspend fun updateDeliveryStatus(id : Long)
 }
 
 
