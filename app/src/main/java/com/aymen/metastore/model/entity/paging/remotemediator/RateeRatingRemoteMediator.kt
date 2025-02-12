@@ -6,6 +6,7 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
+import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.remoteKeys.RatingRemoteKeys
 import com.aymen.metastore.model.entity.roomRelation.RatingWithRater
@@ -17,7 +18,7 @@ class RateeRatingRemoteMediator(
     private val api : ServiceApi,
     private val room : AppDatabase,
     private val rateeId : Long,
-    private val type : AccountType
+    private val type : RateType
 ) : RemoteMediator<Int , RatingWithRater>() {
 
     private val userDao = room.userDao()

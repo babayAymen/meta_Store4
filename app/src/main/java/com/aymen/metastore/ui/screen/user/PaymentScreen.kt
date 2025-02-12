@@ -4,15 +4,25 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,11 +33,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
@@ -37,6 +56,7 @@ import com.aymen.metastore.R
 import com.aymen.metastore.dependencyInjection.NetworkUtil
 import com.aymen.metastore.model.Enum.InvoiceMode
 import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.PointsPayment
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.store.model.Enum.AccountType
 import com.aymen.store.model.Enum.PaymentStatus
@@ -51,6 +71,7 @@ import com.aymen.metastore.ui.component.InvoiceCard
 import com.aymen.metastore.ui.screen.admin.AddInvoiceScreen
 import com.aymen.metastore.ui.screen.admin.ReglementCompany
 import com.aymen.metastore.ui.screen.admin.SwipeToDeleteContainer
+import com.aymen.metastore.ui.screen.admin.stringToLocalDateTime
 import com.aymen.metastore.util.ADD_INVOICE
 import com.aymen.metastore.util.ALL
 import com.aymen.metastore.util.ALL_HISTORY
@@ -69,6 +90,8 @@ import com.aymen.metastore.util.payed
 import com.aymen.metastore.util.profit_by_date
 import com.aymen.metastore.util.sum_of_profit_by_date
 import com.aymen.store.model.Enum.RoleEnum
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -130,7 +153,7 @@ fun PaymentScreen() {
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(2.dp)
+            .padding(8.dp)
     ) {
         Column{
             if (type == AccountType.COMPANY && user.role != RoleEnum.WORKER) {
@@ -184,6 +207,8 @@ fun PaymentScreen() {
 //                        }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(18.dp))
             }
             when (show) {
                 PAYMENT -> PaymentView(pointPaymentViewModel,company)
@@ -199,26 +224,133 @@ fun PaymentScreen() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PaymentView( pointPaymentViewModel : PointsPaymentViewModel , myCompany : Company ) {
     val allPaymentRecharge = pointPaymentViewModel.allMyPointsPaymentRecharge.collectAsLazyPagingItems()
     LazyColumn {
+        item {
+            Text(text = stringResource(id = R.string.your_wallet), fontSize = 20.sp , fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(18.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(74.dp)
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFF2F2F2)),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(id = R.string.your_current_balance), fontSize = 14.sp , fontWeight = FontWeight.Medium, modifier = Modifier.
+                    padding(horizontal = 5.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ShowBalance(balance = BigDecimal(myCompany.balance!!).setScale(2,RoundingMode.HALF_UP))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+        }
+
         items(count = allPaymentRecharge.itemCount,
             key = allPaymentRecharge.itemKey { it.id!! }
         ) { index ->
             val pointPayment = allPaymentRecharge[index]
             if (pointPayment != null) {
-                val paymentDetails = if (pointPayment.provider?.id == myCompany.id) stringResource(
-                    id = R.string.your_sent_point,pointPayment.amount.toString(),pointPayment.clientUser?.username ?: pointPayment.clientCompany?.name ?: ""
-                )
-                 else
-                     stringResource(id = R.string.his_sent_point,pointPayment.provider?.name?:"",pointPayment.amount?:"")
+//                val paymentDetails = if (pointPayment.provider?.id == myCompany.id) stringResource(
+//                    id = R.string.your_sent_point,pointPayment.amount.toString(),pointPayment.clientUser?.username ?: pointPayment.clientCompany?.name ?: ""
+//                )
+//                 else
+//                     stringResource(id = R.string.his_sent_point,pointPayment.provider?.name?:"",pointPayment.amount?:"")
 
-                Text(text = paymentDetails)
+//                Text(text = paymentDetails)
 
+                PaymentCard(pointPayment)
+                Spacer(modifier = Modifier.height(18.dp))
             }
         }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun PaymentCard(pointPayment : PointsPayment) {
+    val amount = BigDecimal(pointPayment.amount!!)
+        .multiply(BigDecimal.ONE.add(BigDecimal(10).divide(BigDecimal(100)
+            .setScale(2,RoundingMode.HALF_UP)))).setScale(2,RoundingMode.HALF_UP)
+    Card(
+        elevation = CardDefaults.cardElevation(6.dp),
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .height(66.dp),
+        colors = CardColors(containerColor = Color(0xFFFFFFFF), contentColor = Color.Black, disabledContentColor = Color.White, disabledContainerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.information_circle),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = buildAnnotatedString {
+
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                        append(stringResource(id = R.string.you_received))
+                    }
+                    append(" : ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(amount.toString())
+                    }
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(stringResource(id = R.string.dt))
+                    }
+                    append(" ")
+                    append(stringResource(id = R.string.for_a))
+                    append(" : ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(pointPayment.amount.toString())
+                    }
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(stringResource(id = R.string.dt))
+                    }
+                    append(" ")
+                    append(stringResource(id = R.string.recharge))
+                },
+                modifier = Modifier
+                    .weight(1f) // Allows the text to take up available space
+                    .padding(horizontal = 3.dp),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp)) // Add spacing before date
+            Text(
+                text = stringToLocalDateTime(pointPayment.createdDate),
+                modifier = Modifier.align(Alignment.CenterVertically),
+                fontWeight = FontWeight.Light
+            )
+        }    }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)

@@ -114,6 +114,7 @@ fun CompanyScreen(company: Company) {
     val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
     val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
     val myAccountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var hisClient by remember {
         mutableStateOf(false)
     }
@@ -252,7 +253,7 @@ fun CompanyScreen(company: Company) {
                         AccountType.NULL -> {null}
                     }
                     val ratingJson = gson.toJson(ratingg)
-                    ratingViewModel.doRate(ratingg, ratingJson, it)
+                    ratingViewModel.doRate(ratingg, ratingJson, it, context)
                     comment = ""
                     imageBitmap = null
                 }
@@ -351,9 +352,8 @@ fun CompanyScreen(company: Company) {
                 RATING_VIEW -> if (rating) {
                     item {
                             RatingScreen(
-                                accountType = AccountType.COMPANY,
-                                company = company,
-                                user = null,
+                                rateType = RateType.COMPANY_RATE_COMPANY,
+                                rateeId = company.id!!,
                                 modifier = Modifier.padding(padding)
                             )
                     }

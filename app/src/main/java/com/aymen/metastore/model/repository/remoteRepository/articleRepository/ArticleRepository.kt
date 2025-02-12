@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.SubArticleModel
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
@@ -36,7 +37,7 @@ interface ArticleRepository {
     suspend fun getAllArticlesContaining(search : String, searchType: SearchType) : Response<List<ArticleCompanyDto>>
     suspend fun likeAnArticle(articleId : Long, isFav : Boolean) : Response<Void>
     suspend fun sendComment(comment : CommentDto) : Response<Void>
-     fun getArticleComments(articleId : Long) : Flow<PagingData<CommentWithArticleAndUserOrCompany>>
+//     fun getArticleComments(articleId : Long) : Flow<PagingData<Rating>>
     suspend fun addQuantityArticle(quantity : Double, articleId : Long) : Response<ArticleCompanyDto>
     suspend fun updateArticle(article : ArticleCompanyDto) : Response<ArticleCompanyDto>
 

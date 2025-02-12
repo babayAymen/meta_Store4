@@ -195,8 +195,15 @@ class AppViewModel @Inject constructor(
     private val _view = mutableStateOf("payed")
     val view : State<String> get() = _view
 
-    fun updateShow(newValue: String){
+    fun updateShow(newValue: String, history : String? = null){
+        if(history != null)
+            _historicShow.value = history
+        else
+            _historicShow.value = show.value
         _show.value = newValue
+    }
+    fun updateShowHistoric(newValue : String){
+        _historicShow.value = newValue
     }
     fun updateView(newValue: String, history : String? = null){
         if(history != null)
@@ -208,6 +215,9 @@ class AppViewModel @Inject constructor(
 
     private val _historicView = mutableStateOf(view.value)
     val historicView: State<String> get() = _historicView
+
+    private val _historicShow = mutableStateOf(show.value)
+    val historicShow: State<String> get() = _historicShow
 
 
 

@@ -41,12 +41,13 @@ class RatingViewModel @Inject constructor(
     private val room : AppDatabase,
     private val sharedViewModel: SharedViewModel,
     private val useCases : MetaUseCases,
-    private val context : Context
+    private val articleViewModel: ArticleViewModel
 ): ViewModel() {
 
     private val ratingDao = room.ratingDao()
     private val userDao = room.userDao()
     private val companyDao = room.companyDao()
+    private val articleCompanyDao = room.articleCompanyDao()
 
     var rate by mutableStateOf(0)
 
@@ -56,7 +57,7 @@ class RatingViewModel @Inject constructor(
     var rating by mutableStateOf(false)
     var enableToRating by mutableStateOf(false)
     var enableToComment by mutableStateOf(false)
-    fun getAllRating(id : Long, type : AccountType){
+    fun getAllRating(id : Long, type : RateType){
         viewModelScope.launch(Dispatchers.IO) {
                 useCases.getRateeRating(id , type)
                     .distinctUntilChanged()
@@ -69,7 +70,7 @@ class RatingViewModel @Inject constructor(
     }
 
 
-    fun doRate(ratingEntity : Rating ,ratingString : String, image : File?){
+    fun doRate(ratingEntity : Rating ,ratingString : String, image : File?, context : Context){
         viewModelScope.launch(Dispatchers.IO) {
                 val latestRemoteKey = ratingDao.getLatestRatingRemoteKey()
                 val latestId = if(latestRemoteKey == null) 1 else latestRemoteKey.id!!+1
@@ -96,6 +97,14 @@ class RatingViewModel @Inject constructor(
                     val newRateValue = (rateValue.add(BigDecimal(ratingEntity.rateValue!!))).divide(BigDecimal(ratersNumber).add(BigDecimal(1)),2,RoundingMode.HALF_UP).toDouble()
                     sharedViewModel.setHisUser(ratingEntity.rateeUser!!.copy(rate = newRateValue , rater = ratersNumber + 1))
                 }
+
+                RateType.COMPANY_RATE_ARTICLE,
+                RateType.USER_RATE_ARTICLE -> {
+                    val ratersNumber = ratingEntity.article?.raters
+                    val rateValue = BigDecimal(ratingEntity.article?.rate!!).multiply(BigDecimal(ratersNumber!!))
+                    val newRateValue = (rateValue.add(BigDecimal(ratingEntity.rateValue!!))).divide(BigDecimal(ratersNumber).add(BigDecimal(1)),2,RoundingMode.HALF_UP).toDouble()
+                    articleViewModel.setArticleCompanyRating(ratingEntity.article!!.copy(rate = newRateValue , raters = ratersNumber+1))
+                }
                 null -> {}
             }
             room.withTransaction {
@@ -115,13 +124,14 @@ class RatingViewModel @Inject constructor(
                             room.withTransaction {
                                 companyDao.insertCompany(listOf(response.rateeCompany?.toCompany()))
                                 userDao.insertUser(listOf(response.rateeUser?.toUser()))
+                                articleCompanyDao.insertArticle(listOf(response.article?.toArticleCompany(true)))
                                 ratingDao.insertRatingRemoteKeys(listOf(newRemoteKey.copy(id = response.id)))
                                 ratingDao.insertRating(listOf(response.toRating()))
                             }
                         }
                     }else{
                         val errorBodyString = success.errorBody()?.string()
-                        errorBlock(errorBodyString)
+                        errorBlock(errorBodyString, context)
                     }
                 },
                 onFailure = {failure ->
@@ -166,7 +176,7 @@ class RatingViewModel @Inject constructor(
         }
     }
 
-    private fun errorBlock(error : String?){
+    private fun errorBlock(error : String?, context: Context){
         viewModelScope.launch{
             val re = Gson().fromJson(error, ErrorResponse::class.java)
             withContext(Dispatchers.Main) {

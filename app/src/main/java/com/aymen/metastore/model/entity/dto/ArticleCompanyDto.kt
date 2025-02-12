@@ -27,6 +27,8 @@ data class ArticleCompanyDto(
     val isDeleted : Boolean?= false,
     val isBought : Boolean?= true,
     val commentNumber : Long? = 0,
+    val rate : Double? = null,
+    val raters : Int? = null
 ){
     fun toArticleCompany(isRandom : Boolean, isSearch : Boolean? = false, isMy : Boolean? = false): ArticleCompany {
     return ArticleCompany(
@@ -50,7 +52,9 @@ data class ArticleCompanyDto(
         isSearch = isSearch,
         commentNumber = commentNumber,
         isMy = isMy,
-        isBought = isBought
+        isBought = isBought,
+        rate = rate,
+        raters = raters
     )
     }
     fun toArticleCompanyModel():com.aymen.metastore.model.entity.model.ArticleCompany{
@@ -72,7 +76,9 @@ data class ArticleCompanyDto(
             isEnabledToComment = isEnabledToComment,
             likeNumber = likeNumber,
             commentNumber = commentNumber,
-            isBought = isBought
+            isBought = isBought,
+            raters = raters,
+            rate = rate
         )
     }
 }

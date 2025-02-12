@@ -53,22 +53,15 @@ import com.aymen.store.ui.navigation.Screen
 
 @Composable
 fun RatingScreen(
-    accountType: AccountType,
-    company: Company?,
-    user: User?,
+    rateType: RateType,
+    rateeId : Long,
     modifier: Modifier = Modifier
 ) {
     val ratingViewModel : RatingViewModel = hiltViewModel()
     val allRating = ratingViewModel.allRating.collectAsLazyPagingItems()
     val ratings = allRating.itemSnapshotList.items
-    var id by remember { mutableLongStateOf(0) }
-        LaunchedEffect(Unit) {
-        id = if (company != null) {
-            company.id!!
-        } else {
-            user?.id!!
-        }
-            ratingViewModel.getAllRating(id, accountType)
+    LaunchedEffect(Unit) {
+            ratingViewModel.getAllRating(rateeId, rateType)
     }
     DisposableEffect(key1 = Unit) {
         onDispose { ratingViewModel.rating = false }
@@ -93,18 +86,16 @@ fun RatingItem(rating: Rating) {
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        // User or Company details
         rating.raterUser?.let { user ->
             Text(text = user.username?:"", style = MaterialTheme.typography.bodySmall)
         }
         rating.raterCompany?.let { company ->
             Text(text = company.name, style = MaterialTheme.typography.bodySmall)
         }
-
-        // Rating Comment
+        rating.article?.let { article ->
+            Text(text = article.article?.libelle!!,style = MaterialTheme.typography.bodySmall)
+        }
         Text(text = rating.comment ?: "", style = MaterialTheme.typography.bodySmall)
-
-        // Rating Photo (if available)
         if(rating.photo != null)
             AsyncImage(
                 model = String.format(IMAGE_URL_RATING, rating.photo, rating.raterCompany?.user?.id?:rating.raterUser?.id),

@@ -133,7 +133,9 @@ class PaymentViewModel @Inject constructor(
     }
 
     fun getPaymentHystoricByInvoiceId(invoiceId : Long){
+        Log.e("veftiondazncj","get payment called")
         viewModelScope.launch {
+            Log.e("veftiondazncj","get payment called invoice id $invoiceId")
             useCases.getPaymentHystoricByInvoiceId(invoiceId)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)

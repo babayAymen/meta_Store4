@@ -8,5 +8,7 @@ enum class NotificationType {
 
     ORDER,
 
-    INVITATION
+    INVITATION,
+
+    RATING
 }

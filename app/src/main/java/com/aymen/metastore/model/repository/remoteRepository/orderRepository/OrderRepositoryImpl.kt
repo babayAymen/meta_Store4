@@ -13,8 +13,6 @@ import com.aymen.metastore.model.entity.paging.remotemediator.OrderNotAcceptedRe
 import com.aymen.metastore.model.entity.paging.pagingsource.PurchaseOrderLinesByInvoiceIdPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.PurchaseOrderRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderWithCompanyAndUserOrClient
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.store.model.Enum.Status
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
@@ -49,7 +47,7 @@ class OrderRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getPurchaqseOrderDetails(orderId: Long): Flow<PagingData<PurchaseOrderLineWithPurchaseOrderOrInvoice>>{
+    override fun getPurchaqseOrderDetails(orderId: Long): Flow<PagingData<PurchaseOrderLine>> {
         return Pager(
             config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = 2),
             remoteMediator = OrderLineDetailsRemoteMediator(
@@ -60,7 +58,7 @@ class OrderRepositoryImpl @Inject constructor(
             }
         ).flow.map {
             it.map { article ->
-                article
+                article.toPurchaseOrderineWithPurchaseOrderOrinvoice()
             }
         }
     }

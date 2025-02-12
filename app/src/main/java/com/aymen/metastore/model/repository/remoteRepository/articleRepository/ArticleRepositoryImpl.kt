@@ -9,6 +9,7 @@ import androidx.paging.map
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.CommentDto
 import com.aymen.metastore.model.entity.model.ArticleCompany
+import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.SubArticleModel
 import com.aymen.metastore.model.entity.paging.pagingsource.AllArticlesContainingPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.ArticleCompanyRandomMediator
@@ -17,11 +18,11 @@ import com.aymen.metastore.model.entity.paging.remotemediator.ArticleRemoteMedia
 import com.aymen.metastore.model.entity.paging.remotemediator.CompanyArticleRemoteMediator
 import com.aymen.metastore.model.entity.paging.pagingsource.CompanyArticlesByCategoryOrSubCategoryPagingSource
 import com.aymen.metastore.model.entity.paging.remotemediator.CommentArticleRemoteMediator
+import com.aymen.metastore.model.entity.paging.remotemediator.RateeRatingRemoteMediator
 import com.aymen.metastore.model.entity.paging.remotemediator.SubArticleRemoteMediator
 import com.aymen.metastore.model.entity.room.AppDatabase
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.repository.ViewModel.SharedViewModel
 import com.aymen.metastore.util.PAGE_SIZE
 import com.aymen.metastore.util.PRE_FETCH_DISTANCE
@@ -53,6 +54,7 @@ class ArticleRepositoryImpl @Inject constructor
     private val userDao = room.userDao()
     private val articleDao = room.articleDao()
     private val subArticleDao = room.subArticleDao()
+    private val ratingDao = room.ratingDao()
 
     override fun getRandomArticles(categoryName: CompanyCategory, companyId: Long?): Flow<PagingData<ArticleCompany>> {
             return Pager(
@@ -192,19 +194,19 @@ class ArticleRepositoryImpl @Inject constructor
     override suspend fun getAllArticlesContaining(search: String, searchType: SearchType) = api.getAllArticlesContaining(search,searchType)
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = api.likeAnArticle(articleId,isFav)
     override suspend fun sendComment(comment: CommentDto) = api.sendComment(comment)
-    override fun getArticleComments(articleId: Long): Flow<PagingData<CommentWithArticleAndUserOrCompany>> {
-        return Pager(
-            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
-            remoteMediator = CommentArticleRemoteMediator(
-                api = api, room = room,  articleId = articleId
-            ),
-            pagingSourceFactory = { articleCompanyDao.getArticleComments(articleId = articleId)}
-        ).flow.map {
-            it.map { article ->
-                article
-            }
-        }
-    }
+//    override fun getArticleComments(articleId: Long): Flow<PagingData<Rating>> {
+//        return Pager(
+//            config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
+//            remoteMediator = RateeRatingRemoteMediator(
+//                api = api, room = room,  rateeId = articleId
+//            ),
+//            pagingSourceFactory = { ratingDao.getArticleComments(articleId = articleId)}
+//        ).flow.map {
+//            it.map { article ->
+//                article.toRatingWithRater()
+//            }
+//        }
+//    }
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long): Response<ArticleCompanyDto> = api.addQuantityArticle(quantity, articleId)
 
     override suspend fun updateArticle(article: ArticleCompanyDto): Response<ArticleCompanyDto> {

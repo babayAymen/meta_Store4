@@ -154,7 +154,7 @@ class InvoiceViewModel @Inject constructor(
     }
 
     fun remiseCommandLineToZero(){
-        _commandLineInvoice.value = PagingData.empty()
+        _commandLineInvoice.value = PagingData.empty() // the cuase of remaining data
     }
     private val _filter = MutableStateFlow(PaymentStatus.ALL)
     val filter : StateFlow<PaymentStatus> = _filter
@@ -354,7 +354,7 @@ class InvoiceViewModel @Inject constructor(
     }
     fun getInvoiceDetails(){
         val id = if(accountType.value == AccountType.COMPANY) company.value.id else user.value.id
-        viewModelScope.launch{
+        viewModelScope.launch(Dispatchers.IO){
             when(invoiceType){
                 InvoiceDetailsType.COMMAND_LINE -> {
                     useCases.getAllCommandLineByInvoiceId(id!!, invoice.value.id!!)

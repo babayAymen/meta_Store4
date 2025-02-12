@@ -2,6 +2,7 @@ package com.aymen.store.model.repository.globalRepository
 
 import androidx.paging.PagingData
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.PointsPaymentDto
@@ -47,13 +48,11 @@ import com.aymen.metastore.model.entity.model.SubCategory
 import com.aymen.metastore.model.entity.model.Worker
 import com.aymen.metastore.model.entity.room.entity.Article
 import com.aymen.metastore.model.entity.roomRelation.ArticleWithArticleCompany
-import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
 import com.aymen.metastore.model.entity.roomRelation.CompanyWithCompanyOrUser
 import com.aymen.metastore.model.entity.roomRelation.InventoryWithArticle
 import com.aymen.metastore.model.entity.roomRelation.InvoiceWithClientPersonProvider
 import com.aymen.metastore.model.entity.roomRelation.PaymentForProvidersWithCommandLine
 import com.aymen.metastore.model.entity.roomRelation.PaymentPerDayWithProvider
-import com.aymen.metastore.model.entity.roomRelation.PurchaseOrderLineWithPurchaseOrderOrInvoice
 import com.aymen.metastore.model.entity.roomRelation.SubCategoryWithCategory
 import com.aymen.metastore.model.repository.remoteRepository.DeliveryRepository.DeliveryRepository
 import com.aymen.store.model.repository.remoteRepository.PointsPaymentRepository.PointPaymentRepository
@@ -112,9 +111,9 @@ class GlobalRepositoryImpl  @Inject constructor
     override suspend fun getAllArticlesContaining(search: String, searchType : SearchType) = articleRepository.getAllArticlesContaining(search, searchType)
     override suspend fun likeAnArticle(articleId: Long, isFav : Boolean) = articleRepository.likeAnArticle(articleId, isFav)
     override suspend fun sendComment(comment: CommentDto) = articleRepository.sendComment(comment)
-    override fun getArticleComments(articleId: Long): Flow<PagingData<CommentWithArticleAndUserOrCompany>>{
-        TODO()
-    }
+//    override fun getArticleComments(articleId: Long): Flow<PagingData<Rating>> {
+//        TODO()
+//    }
     override suspend fun addQuantityArticle(quantity: Double, articleId: Long) = articleRepository.addQuantityArticle(quantity, articleId)
     override suspend fun updateArticle(article: ArticleCompanyDto) = articleRepository.updateArticle(article)
     override suspend fun addSubArticle(
@@ -275,7 +274,7 @@ class GlobalRepositoryImpl  @Inject constructor
         TODO("Not yet implemented")
     }
 
-    override fun getPurchaqseOrderDetails(orderId: Long): Flow<PagingData<PurchaseOrderLineWithPurchaseOrderOrInvoice>> {
+    override fun getPurchaqseOrderDetails(orderId: Long): Flow<PagingData<PurchaseOrderLine>> {
         TODO("Not yet implemented")
     }
 
@@ -401,7 +400,7 @@ class GlobalRepositoryImpl  @Inject constructor
     override fun getPaymentForProviderDetails(paymentId: Long) = pointPaymentRepository.getPaymentForProviderDetails(paymentId)
 
 
-    override fun getAllMyRating(id: Long, type: AccountType) : Flow<PagingData<Rating>>{
+    override fun getAllMyRating(id: Long, type: RateType) : Flow<PagingData<Rating>>{
         TODO()
     }
      override suspend fun doRating(rating: String, image: File?): Response<RatingDto> = ratingRepository.doRating(rating, image)

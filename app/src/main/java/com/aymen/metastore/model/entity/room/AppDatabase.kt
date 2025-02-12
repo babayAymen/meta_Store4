@@ -111,7 +111,7 @@ NotAcceptedRemoteKeysEntity::class, ProviderProfitHistoryRemoteKeysEntity::class
     PointsPaymentPerDayByDateRemoteKeysEntity::class, AllSearchRemoteKeysEntity::class, InvoicesAsClientAndStatusRemoteKeysEntity::class, CompanyArticleRemoteKeysEntity::class
 , CommandLineByInvoiceRemoteKeysEntity::class, CommentArticleRemoteKeys::class, WorkerRemoteKeys::class, ReglementForProviderRemoteKeys::class, RatingRemoteKeys::class
                    ,PaymentRemoteKeys::class, PurchaseOrderRemoteKeys::class, InvoicesDeliveredRemoteKeysEntity::class,SubArticleRemoteKeys::class
-                     ], version = 28, exportSchema = false)
+                     ], version = 30, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun companyDao() : CompanyDao

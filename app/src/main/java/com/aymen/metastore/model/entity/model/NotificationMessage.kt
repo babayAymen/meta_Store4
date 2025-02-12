@@ -19,5 +19,6 @@ data class NotificationMessage (
     var isSend : Boolean ? = null,
     var isMeta : Boolean ? = null,
     var status : Status ? = null,
-    var paymentType : PaymentType? = null
+    var paymentType : PaymentType? = null,
+    var amount : Double ? = null
 ): Serializable

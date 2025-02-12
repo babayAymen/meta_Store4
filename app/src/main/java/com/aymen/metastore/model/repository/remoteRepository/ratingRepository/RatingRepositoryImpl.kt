@@ -5,6 +5,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.entity.dto.RatingDto
 import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.paging.remotemediator.RateeRatingRemoteMediator
@@ -29,18 +30,20 @@ class RatingRepositoryImpl @Inject constructor(
 
     private val ratingDao = room.ratingDao()
         @OptIn(ExperimentalPagingApi::class)
-        override fun getAllMyRating(rateeId : Long, type : AccountType): Flow<PagingData<Rating>>{
+        override fun getAllMyRating(rateeId: Long, type: RateType): Flow<PagingData<Rating>>{
             return Pager(
                 config = PagingConfig(pageSize= PAGE_SIZE, prefetchDistance = PRE_FETCH_DISTANCE),
                 remoteMediator = RateeRatingRemoteMediator(
-                    api = api, room = room, rateeId = rateeId , type = type
+                    api = api, room = room, rateeId = rateeId, type = type
                 ),
                 pagingSourceFactory = {
-                    if(type == AccountType.COMPANY){
-                    ratingDao.getAllRateeRatingCompany(rateeId = rateeId)
-                    }
-                    else{
-                    ratingDao.getAllRateeRatingUser(rateeId = rateeId)
+                    when(type){
+                        RateType.USER_RATE_COMPANY,
+                        RateType.COMPANY_RATE_COMPANY -> {ratingDao.getAllRateeRatingCompany(rateeId = rateeId)}
+                        RateType.COMPANY_RATE_USER,
+                        RateType.META_RATE_USER -> {ratingDao.getAllRateeRatingUser(rateeId = rateeId)}
+                        RateType.COMPANY_RATE_ARTICLE,
+                        RateType.USER_RATE_ARTICLE -> ratingDao.getArticleComments(articleId = rateeId)
                     }
                 }
             ).flow.map {

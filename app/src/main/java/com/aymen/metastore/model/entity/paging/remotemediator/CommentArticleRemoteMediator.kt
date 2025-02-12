@@ -11,6 +11,7 @@ import com.aymen.metastore.model.entity.room.remoteKeys.CategoryRemoteKeysEntity
 import com.aymen.metastore.model.entity.room.remoteKeys.CommentArticleRemoteKeys
 import com.aymen.metastore.model.entity.roomRelation.CategoryWithCompanyAndUser
 import com.aymen.metastore.model.entity.roomRelation.CommentWithArticleAndUserOrCompany
+import com.aymen.metastore.model.entity.roomRelation.RatingWithRater
 import com.aymen.metastore.model.repository.globalRepository.ServiceApi
 
 @OptIn(ExperimentalPagingApi::class)
@@ -18,7 +19,7 @@ class CommentArticleRemoteMediator(
     private val api: ServiceApi,
     private val room : AppDatabase,
     private val articleId : Long
-):RemoteMediator<Int, CommentWithArticleAndUserOrCompany>() {
+):RemoteMediator<Int, RatingWithRater>() {
 
     private val articleDao = room.articleDao()
     private val articleCompanyDao = room.articleCompanyDao()
@@ -32,7 +33,7 @@ class CommentArticleRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, CommentWithArticleAndUserOrCompany>
+        state: PagingState<Int, RatingWithRater>
     ): MediatorResult {
         return try {
             val currentPage = when (loadType) {

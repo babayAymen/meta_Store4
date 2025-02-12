@@ -43,11 +43,11 @@ class PushNotificationService  : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        Log.e("devicetoken","onMessageReceived fun called")
         val notificationMessage = NotificationMessage()
         if (message.data.isNotEmpty()) {
             notificationMessage.notificationType = message.data["type"] ?: "Default Title"
             notificationMessage.balnce = message.data["balance"]?.toDouble() ?: 0.0
+            notificationMessage.amount = message.data["amount"]?.toDouble() ?: 0.0
             notificationMessage.orderOrInvoiceId = message.data["id"]?.toLong()?:0
             notificationMessage.clientType = AccountType.valueOf( message.data["clientType"]?:"NULL")
             notificationMessage.isSend = ( message.data["isSend"]?:"false").toBoolean()
@@ -57,6 +57,7 @@ class PushNotificationService  : FirebaseMessagingService() {
             if(notificationMessage.balnce != 0.0 && notificationMessage.isMeta == false){
                 sharedViewModel.updateBalance(notificationMessage.balnce!!.toBigDecimal())
             }
+        Log.e("devicetoken","onMessageReceived fun called $notificationMessage")
             when(notificationMessage.notificationType) {
                 NotificationType.INVOICE.name -> if (notificationMessage.isSend == true) sharedViewModel.setInvoiceCountNotification(
                     false
@@ -101,7 +102,7 @@ private fun showNotification(notificationMessage : NotificationMessage) {
         )
         notificationManager.createNotificationChannel(channel)
     }
-
+    val requestCode = notificationMessage.orderOrInvoiceId.hashCode()
     val intent = Intent(this, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         putExtra(NOTIFICATION_TYPE, notificationMessage.notificationType)
@@ -111,9 +112,10 @@ private fun showNotification(notificationMessage : NotificationMessage) {
         putExtra(STATUS, notificationMessage.status.toString())
         putExtra(PAYMENT_TYPE, notificationMessage.paymentType.toString())
         putExtra(INVOICE_ID, notificationMessage.orderOrInvoiceId.toString())
+        putExtra("amount",notificationMessage.amount.toString())
     }
     val pendingIntent = PendingIntent.getActivity(
-        this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
     // Build the notification

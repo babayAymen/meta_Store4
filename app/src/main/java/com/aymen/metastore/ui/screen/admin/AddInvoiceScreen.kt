@@ -120,7 +120,8 @@ fun AddInvoiceScreen() {
    // val isScrollEnabled = remember { mutableStateOf(true) }
     val invoiceee by invoiceViewModel.invoice.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = Unit) {
-        invoiceViewModel.remiseCommandLineToZero()
+        if(invoiceee.type == InvoiceDetailsType.ORDER_LINE)
+            invoiceViewModel.remiseCommandLineToZero()
         when (invoiceMode) {
                     InvoiceMode.CREATE ->  invoiceViewModel.getLastInvoiceCode()
             else -> {
@@ -158,7 +159,7 @@ fun AddInvoiceScreen() {
         if (invoiceee.type == InvoiceDetailsType.ORDER_LINE)
             ordersLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice?:invoiceee
         else
-            commandLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice
+            commandLineInvoice.itemSnapshotList.items.firstOrNull()?.invoice?:invoiceee
 
     var isMe by remember {
         mutableStateOf(false)
@@ -172,6 +173,7 @@ fun AddInvoiceScreen() {
         }
     }
     LaunchedEffect(key1 = ordersLineInvoice.itemCount, key2 = commandLineInvoice.itemCount) {
+        Log.e("veftiondazncj","wsol count ${ commandLineInvoice.itemCount}")
         if(invoice?.provider?.id == myCompany.id)
             isMe = true
         if (invoiceMode == InvoiceMode.UPDATE) {

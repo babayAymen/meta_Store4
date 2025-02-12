@@ -39,4 +39,6 @@ interface RatingDao {
     suspend fun deleteRatingById(id : Long)
     @Query("DELETE FROM rating_remote_keys WHERE id = :id")
     suspend fun deleteRemoteKeyById(id : Long)
+    @Query("SELECT * FROM rating WHERE articleId = :articleId")
+    fun getArticleComments(articleId : Long) : PagingSource<Int , RatingWithRater>
 }

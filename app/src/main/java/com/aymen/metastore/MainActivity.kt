@@ -119,7 +119,9 @@ class MainActivity : ComponentActivity() {
             val map = extras.keySet().associateWith { key ->
                  extras.getString(key)
             }
+            Log.e("testnotification","before update ${extraState.value}")
             _extrasState.value = map
+            Log.e("testnotification","after update ${extraState.value}")
         } else {
             _extrasState.value = emptyMap()
         }

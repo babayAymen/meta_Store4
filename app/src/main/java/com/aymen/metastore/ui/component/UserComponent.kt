@@ -10,6 +10,7 @@ import android.location.LocationManager
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.widget.Space
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,8 +22,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -43,19 +47,25 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -76,11 +86,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.toLowerCase
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -111,6 +128,9 @@ import com.aymen.metastore.model.repository.ViewModel.CompanyViewModel
 import com.aymen.metastore.model.repository.ViewModel.PointsPaymentViewModel
 import com.aymen.metastore.model.repository.ViewModel.SignInViewModel
 import com.aymen.metastore.model.repository.ViewModel.StateHandlerViewModel
+import com.aymen.metastore.ui.screen.user.CustomSpacer
+import com.aymen.metastore.ui.screen.user.FreeDeliveryCard
+import com.aymen.metastore.ui.screen.user.ShowBalance
 import com.aymen.metastore.util.BASE_URL
 import com.aymen.metastore.util.IMAGE_URL_ARTICLE
 import com.aymen.metastore.util.IMAGE_URL_COMPANY
@@ -122,11 +142,13 @@ import com.aymen.store.ui.navigation.Screen
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.map
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.Locale
 
 
 @Composable
@@ -141,8 +163,8 @@ fun LodingShape(modifier: Modifier = Modifier) {
 
 @Composable
 fun ShowImage(image: String, height: Dp? = null, width : Dp? = null, shape : RoundedCornerShape? = null){
-    val imageHeight = height ?: 30.dp
-    val imageWidth = width ?: 30.dp
+    val imageHeight = height ?: 20.dp
+    val imageWidth = width ?: 20.dp
     val imageShape = shape ?: CircleShape
     AsyncImage(
         model = image,
@@ -151,8 +173,27 @@ fun ShowImage(image: String, height: Dp? = null, width : Dp? = null, shape : Rou
         onSuccess = {Log.e("showimage","success")},
         onError = {Log.e("showimage","error")},
         modifier = Modifier
-            .padding(5.dp)
+            .padding(2.dp)
             .size(height = imageHeight, width = imageWidth)
+            .clip(imageShape)
+        ,
+        contentScale = ContentScale.Crop,
+
+    )
+}
+@Composable
+fun ShowImageForHome(image: String, shape : RoundedCornerShape? = null, width: Dp){
+    val imageShape = shape ?: CircleShape
+    AsyncImage(
+        model = image,
+        contentDescription = "article image",
+        onLoading = {Log.e("showimage","loading")},
+        onSuccess = {Log.e("showimage","success")},
+        onError = {Log.e("showimage","error")},
+        modifier = Modifier
+            .padding(2.dp)
+            .fillMaxHeight()
+            .width(width)
             .clip(imageShape)
         ,
         contentScale = ContentScale.Crop,
@@ -167,7 +208,15 @@ fun ShowPrice( priceHt : Double, tva : Double){
 
     val price = BigDecimal(priceHt).multiply(BigDecimal(1).add(BigDecimal(tva).divide(BigDecimal(100.0))))
     val formattedPrice = String.format("%.2f", price)
-    Text(text = "price: $formattedPrice TDN", fontSize = 14.sp, modifier = Modifier.padding(5.dp))
+    Text( text = buildAnnotatedString {
+        withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+            append(formattedPrice)
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+            append(stringResource(id = R.string.dt))
+        }
+    },
+        fontSize = 16.sp)
 }
 
 @Composable
@@ -304,13 +353,13 @@ fun DiscountTextField(labelValue: String, label:String, singleLine: Boolean, max
 }
 
 @Composable
-fun ButtonSubmit(labelValue: String, color: Color,enabled:Boolean, clickAction: () -> Unit) {
+fun ButtonSubmit(labelValue: String, color: Color,enabled:Boolean, tintColor: Color? = Color.White, clickAction: () -> Unit) {
     Row {
     Button(
         onClick =  clickAction ,
         modifier = Modifier.weight(1f),
         contentPadding = PaddingValues(),
-        shape = RoundedCornerShape(50.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(color),
         enabled = enabled
     ) {
@@ -319,7 +368,8 @@ fun ButtonSubmit(labelValue: String, color: Color,enabled:Boolean, clickAction: 
         ){
             Text(text = labelValue,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = tintColor?:Color.White
             )
         }
     }
@@ -367,6 +417,26 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
     }
     Row {
         LazyColumn(state = scrollState) {
+            item {
+                Row (
+                    modifier = Modifier.padding(8.dp),
+                    Arrangement.SpaceEvenly
+                ){
+                    Row (
+                        modifier = Modifier.weight(1f)
+                    ){
+                     FreeDeliveryCard(firstLine = R.string.free_delivery, secondLine = R.string.over, thirdLine = R.string.dt,
+                        value = 30, Color(0xFFDFF7E5),Color(0xFF01BC59) ,painterResource(id = R.drawable.freedelivery) )
+                    }
+                    Row (
+                        modifier = Modifier.weight(1f)
+                    ) {
+
+                        FreeDeliveryCard(firstLine = R.string.all_year, secondLine = R.string.upto,R.string.percent,
+                        value = 15, Color(0xFF01BC59),Color.White,painterResource(id = R.drawable.discount_tag_02))
+                    }
+                }
+            }
             items(
                 count = article.itemCount,
                 key = article.itemKey { article -> article.id!! },
@@ -375,85 +445,143 @@ fun ArticleCardForUser(article : LazyPagingItems<ArticleCompany>) {
                 art?.let {
                     Card(
                         elevation = CardDefaults.cardElevation(6.dp),
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .height(160.dp)
                     ) {
-                        Row {
+                        Column {
                             Row(
                                 modifier = Modifier
-                                    .weight(0.8f)
-                                    .clickable {
-                                        categoryViewModel.setFilter(art.company?.id!!)
-                                        sharedViewModel.setHisCompany(art.company!!)
-                                        articleViewModel.companyId = it.company?.id!!
-                                        RouteController.navigateTo(Screen.CompanyScreen)
+                                    .height(100.dp)
+                                    .fillMaxWidth()
+                                    .weight(8f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(4f)
+                                        .clickable {
+                                            sharedViewModel.setHisCompany(art.company!!)
+                                            articleViewModel.assignArticleCompany(art)
+                                            RouteController.navigateTo(Screen.ArticleDetailScreen)
+                                        }
+                                ) {
+                                    // Article Image or Default Icon
+                                    if (art.article?.image.isNullOrEmpty()) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Article,
+                                            contentDescription = "article photo",
+                                            modifier = Modifier
+                                                .size(100.dp) // Adjust size as needed
+                                                .align(Alignment.Center) // Center alignment if no image
+                                        )
+                                    } else {
+                                        ShowImageForHome(
+                                            image = String.format(IMAGE_URL_ARTICLE, art.article?.image, art.article?.category?.ordinal),
+                                            shape = RoundedCornerShape(10.dp),
+                                            width = 125.dp
+                                        )
                                     }
-                            ) {
-                                if (art.company?.logo != null ) {
-                                    ShowImage(
-                                        image = String.format(IMAGE_URL_COMPANY,art.company?.logo,art.company?.user?.id)
-                                    )
-                                } else {
-                                    NotImage()
-                                }
-                                Icon(
-                                    imageVector = Icons.Default.Verified,
-                                    contentDescription = "verification account",
-                                    tint = if(art.company?.metaSeller == true) Color.Green else Color.Cyan
-                                )
-                                art.company?.let { it1 -> Text(text = it1.name) }
-                            }
-                            Row(
-                                modifier = Modifier.weight(0.2f)
-                            ) {
-                                Icon(imageVector = if (it.isFav == true) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = "favorite",
-                                    Modifier.clickable {
-                                        articleViewModel.makeItAsFav(it)
+                                    Row (
+                                        modifier = Modifier.align(Alignment.TopEnd)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (it.isFav == true) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                                            contentDescription = "favorite",
+                                            modifier = Modifier
+                                                .size(26.dp)
+                                                .background(
+                                                    Color.White,
+                                                    shape = CircleShape
+                                                )
+                                                .padding(4.dp)
+                                                .clickable {
+                                                    articleViewModel.makeItAsFav(it)
+                                                }
+                                        )
+                                        if (it.likeNumber != null) {
+                                            Text(
+                                                text = "${if (it.likeNumber >= 1_000_000L) it.likeNumber / 1_000_000L else if (it.likeNumber >= 1_000L) it.likeNumber / 1_000L else it.likeNumber} ${if (it.likeNumber >= 1_000_000L) "M" else if (it.likeNumber >= 1_000L) "K" else ""}",
+                                                modifier = Modifier
+                                                    .padding(4.dp)
+                                            )
+                                        }
                                     }
-                                )
-                                if (it.likeNumber != null) {
-                                    Text(text = "${if (it.likeNumber >= 1000000L) it.likeNumber.div(1000000L) else if (it.likeNumber >= 1000L) it.likeNumber.div(1000L) else it.likeNumber} ${if (it.likeNumber >= 1000000L) "M" else if (it.likeNumber >= 1000L) "K" else ""}")
+                                }
+
+                                Row (
+                                    modifier = Modifier.weight(6f)
+                                ){
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                    ) {
+                                        Row (
+                                            modifier = Modifier
+                                                .clickable {
+                                                    categoryViewModel.setFilter(art.company?.id!!)
+                                                    sharedViewModel.setHisCompany(art.company!!)
+                                                    articleViewModel.companyId = it.company?.id!!
+                                                    RouteController.navigateTo(Screen.CompanyScreen)
+                                                },
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ){
+                                            if (art.company?.logo != null ) {
+                                                ShowImage(
+                                                    image = String.format(IMAGE_URL_COMPANY,art.company?.logo,art.company?.user?.id)
+                                                )
+                                            } else {
+                                                NotImage()
+                                            }
+                                            Row {
+
+                                            art.company?.let { it1 -> Text(text = it1.name,fontSize = 14.sp) }
+                                            Icon(
+                                                imageVector = Icons.Default.Verified,
+                                                contentDescription = "verification account",
+                                                tint = if(art.company?.metaSeller == true) Color.Green else Color.Cyan,
+                                                modifier = Modifier.size(15.dp)
+                                            )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = art.article?.libelle!!,
+                                                modifier = Modifier
+                                                    .padding(2.dp)
+                                                    .fillMaxWidth()
+                                                ,
+                                                style = TextStyle(
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontFamily = FontFamily.Serif
+                                                )
+                                                , color = Color.Black,
+                                            )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        ShowPrice(
+                                            priceHt = it.sellingPrice!!,
+                                            tva = art.article?.tva ?: 0.0
+                                        )
+                                    }
+
                                 }
                             }
-                        }
-                        Column(
-                            modifier = Modifier.clickable {
-                                sharedViewModel.setHisCompany(art.company!!)
-                                articleViewModel.assignArticleCompany(art)
-                                RouteController.navigateTo(Screen.ArticleDetailScreen)
-                            }
-                        ) {
-                            if ( art.article?.image == "" || art.article?.image == null) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Article,
-                                    contentDescription = "article photo"
-                                )
-                            } else {
-                                ShowImage(image = String.format(IMAGE_URL_ARTICLE,art.article?.image,art.article?.category?.ordinal), 70.dp,240.dp,
-                                    RoundedCornerShape(10.dp))
-                            }
-                                NormalText(value = art.article?.libelle!!, aligne = TextAlign.Start)
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                ShowPrice(
-                                    priceHt = it.sellingPrice!!,
-                                    tva = art.article?.tva ?: 0.0
-                                )
-                                ArticleDetails(
-                                    value = it.quantity.toString(),
-                                    aligne = TextAlign.Start
-                                )
-                            }
-                        }
-                        if(art.company?.metaSeller==true) {
-                            Row {
-                                ShoppingDialog(
-                                    it,
-                                    "add to cart",
-                                    isOpen = false,
-                                    shoppingViewModel = shoppingViewModel
-                                ){}
+                            if(art.company?.metaSeller==true) {
+                                Row(
+                                    modifier = Modifier
+                                        .weight(2f)
+                                        .fillMaxWidth()
+                                ) {
+                                    ShoppingDialog(
+                                        it,
+                                        label = "add",
+                                        isOpen = false,
+                                        shoppingViewModel = shoppingViewModel,
+                                        null
+                                    ){}
+                                }
                             }
                         }
                     }
@@ -830,30 +958,66 @@ fun SendPointDialog(isOpen : Boolean, user: User, client : Company) {
 }
 
 @Composable
-fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel, onClose: (Boolean) -> Unit) {
+fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,shoppingViewModel : ShoppingViewModel, quantity : Double?,
+                    commentaire : String ? = "", onClose: (Boolean) -> Unit) {
     var openDialog by remember {
         mutableStateOf(isOpen)
     }
-    if(label != ""){
-    ButtonSubmit(labelValue = label, color = Color.Blue, enabled = true) {
-        openDialog = true
-    }
-    }
+
+    var rawInput by remember { mutableStateOf(quantity?:1) }
+    var qte by remember { mutableDoubleStateOf(quantity?:1.0) }
+    val oldqte by remember { mutableDoubleStateOf(quantity?:0.0) }
+    var comment by remember { mutableStateOf(commentaire) }
+    if(label != "")
+         Button(
+            onClick = {
+                shoppingViewModel.resetPurchaseOrderLine()
+                openDialog = true
+                      },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp, 1.dp)
+                .clip(shape = RoundedCornerShape(8.dp)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF01BC59),
+                contentColor = Color.White
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.shopping_basket_add_01),
+                contentDescription = null
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(id = R.string.add_to_cart),
+                style = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+            )
+
+        }
+
 
     var showFeesDialog by remember { mutableStateOf(false) }
      var restBalance by remember { mutableStateOf(BigDecimal.ZERO) }
-    if(openDialog){
-    val sharedViewModel : SharedViewModel = hiltViewModel()
-    val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
-    val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
-    val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
+    if(openDialog) {
+        val sharedViewModel: SharedViewModel = hiltViewModel()
+        val accountType by sharedViewModel.accountType.collectAsStateWithLifecycle()
+        val myCompany by sharedViewModel.company.collectAsStateWithLifecycle()
+        val myUser by sharedViewModel.user.collectAsStateWithLifecycle()
+        var isChaked by remember {
+            mutableStateOf(true)
+        }
+        var isCompany by remember {
+            mutableStateOf(false)
+        }
+        var enableButtons by remember {
+            mutableStateOf(true)
+        }
+        val gson = Gson()
 
-    var isCompany by remember {
-        mutableStateOf(false)
-    }
-    val gson = Gson()
-
-    var balance by remember { mutableDoubleStateOf(0.0) }
+        var balance by remember { mutableDoubleStateOf(0.0) }
 
         var cost by remember {
             mutableStateOf(BigDecimal(0.0))
@@ -861,9 +1025,18 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
         LaunchedEffect(key1 = shoppingViewModel.delivery) {
             shoppingViewModel.calculateCost()
         }
-        LaunchedEffect(key1 = shoppingViewModel.qte, key2 = shoppingViewModel.delivery) {
-            val articelPriceTtc = BigDecimal(article.sellingPrice!!).multiply(BigDecimal(1).add(BigDecimal(article.article?.tva?:0.0).divide(BigDecimal(100)))).setScale(2,RoundingMode.HALF_UP)
-            cost = BigDecimal(shoppingViewModel.qte).multiply(articelPriceTtc).setScale(2, RoundingMode.HALF_UP)
+        LaunchedEffect(key1 = qte, key2 = shoppingViewModel.delivery) {
+            val articelPriceTtc = BigDecimal(article.sellingPrice!!).multiply(
+                BigDecimal(1).add(
+                    BigDecimal(
+                        article.article?.tva ?: 0.0
+                    ).divide(BigDecimal(100))
+                )
+            ).setScale(2, RoundingMode.HALF_UP)
+            cost = BigDecimal(qte).multiply(articelPriceTtc)
+                .setScale(2, RoundingMode.HALF_UP)
+            val oldcost = BigDecimal(oldqte).multiply(articelPriceTtc)
+                .setScale(2, RoundingMode.HALF_UP)
             isCompany = accountType == AccountType.COMPANY
 
             balance = if (isCompany) {
@@ -871,162 +1044,482 @@ fun  ShoppingDialog(article : ArticleCompany, label: String, isOpen : Boolean,sh
             } else {
                 myUser.balance!!
             }
+             shoppingViewModel.deliveryFee =
+                 if (!shoppingViewModel.delivery ||
+                     cost.add(shoppingViewModel.cost) <= BigDecimal(0.00) ||
+                     cost.add(shoppingViewModel.cost).subtract(oldcost) >= BigDecimal(30)) BigDecimal.ZERO
+                 else BigDecimal(3)
+            restBalance = BigDecimal(balance).add(oldcost).subtract(cost).subtract(shoppingViewModel.cost)
+                .setScale(2, RoundingMode.HALF_UP)
 
-            if(shoppingViewModel.delivery && cost.add(shoppingViewModel.cost) < BigDecimal(30)) cost = cost.add(BigDecimal(3))
-            restBalance = BigDecimal(balance).subtract(cost).subtract(shoppingViewModel.cost).setScale(2, RoundingMode.HALF_UP)
+            enableButtons = restBalance.subtract(shoppingViewModel.deliveryFee) >= BigDecimal.ZERO
         }
 
         Dialog(
-            onDismissRequest = {openDialog = false
+            onDismissRequest = {
+                openDialog = false
                 shoppingViewModel.remiseAZero()
                 onClose(false)
             }
-        ){
+        ) {
             Surface(
                 modifier = Modifier
                     .padding(10.dp)
                     .clip(RoundedCornerShape(10.dp)),
             ) {
-                Column (
-                    modifier = Modifier.padding(2.dp)
-                ){
-                    Row (
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ){
-                        ShowImage(image = String.format(IMAGE_URL_ARTICLE,article.article?.image,article.article?.category!!.ordinal))
-                        Column {
-
-                        Text(text = if( restBalance!! <BigDecimal.ZERO || (shoppingViewModel.qte == 0.0 && restBalance!! <= 1.toBigDecimal())) "sold insufficient $restBalance DT" else "$restBalance DT")
-                            Text(text = article.article?.libelle!!)
+                Column {
+                    Row {
+                        Button(onClick = {
+                                openDialog = false
+                                onClose(false)
+                                shoppingViewModel.remiseAZero()
+                        },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = Color(0xFF01BC59)
+                            )                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.arrow_turn_backward),
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = stringResource(id = R.string.back), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
-                    Row {
-                        InputTextField(
-                            labelValue = shoppingViewModel.rawInput,
-                            label = stringResource(id = R.string.quantity),
-                            singleLine = true,
-                            maxLine = 1,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Decimal,
-                                imeAction = ImeAction.Next
-                            ),
-                            onValueChange = {
-                                if (article.unit == UnitArticle.U) {
-                                    if (it.matches(Regex("^[0-9]*$"))) {
-                                        shoppingViewModel.rawInput = it
-                                        shoppingViewModel.qte = it.toDoubleOrNull() ?: 0.0
-                                    }
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(5.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(text = stringResource(id = R.string.your_current_balance), fontSize = 14.sp , fontWeight = FontWeight.Medium, modifier = Modifier.padding(5.dp))
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ShowBalance(balance = restBalance)
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Row {
+
+                            Row(
+                                modifier = Modifier.height(70.dp)
+                            ) {
+                                if (article.article?.image.isNullOrEmpty()) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Article,
+                                        contentDescription = "article photo",
+                                        modifier = Modifier
+                                            .size(100.dp) // Adjust size as needed
+                                    )
                                 } else {
-                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
-                                        val normalizedInput = it.replace(',', '.')
-                                        shoppingViewModel.rawInput = normalizedInput
-                                        if (normalizedInput.startsWith(".")) {
-                                            shoppingViewModel.rawInput = normalizedInput
-                                            shoppingViewModel.qte = 0.0
-                                        } else
-                                        if (normalizedInput.endsWith(".")) {
-                                            shoppingViewModel.qte = normalizedInput.let { inp ->
-                                                if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
-                                            }
-                                        } else {
-                                            shoppingViewModel.qte = normalizedInput.toDoubleOrNull() ?: 0.0
+                                    ShowImageForHome(
+                                        image = String.format(
+                                            IMAGE_URL_ARTICLE,
+                                            article.article?.image,
+                                            article.article?.category?.ordinal
+                                        ),
+                                        shape = RoundedCornerShape(10.dp),
+                                        width = 125.dp
+                                    )
+                                }
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    if (article.company?.logo != null) {
+                                        ShowImage(
+                                            image = String.format(
+                                                IMAGE_URL_COMPANY,
+                                                article.company?.logo,
+                                                article.company?.user?.id
+                                            )
+                                        )
+                                    } else {
+                                        NotImage()
+                                    }
+                                    Row {
+
+                                        article.company?.let { it1 ->
+                                            Text(
+                                                text = it1.name,
+                                                fontSize = 14.sp
+                                            )
                                         }
+                                        Icon(
+                                            imageVector = Icons.Default.Verified,
+                                            contentDescription = "verification account",
+                                            tint = if (article.company?.metaSeller == true) Color.Green else Color.Cyan,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = article.article?.libelle!!,
+                                    modifier = Modifier
+                                        .padding(2.dp)
+                                        .fillMaxWidth(),
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = FontFamily.Serif
+                                    ),
+                                    color = Color.Black,
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                ShowPrice(
+                                    priceHt = article.sellingPrice!!,
+                                    tva = article.article?.tva ?: 0.0
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(text = stringResource(id = R.string.quantity_unit), fontSize = 14.sp, modifier = Modifier.padding(horizontal = 8.dp) ,
+                                fontWeight = FontWeight.Light)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    IconButton(onClick = {
+                                        if(qte >0)
+                                            qte -= 1
+                                        rawInput = qte.toString()
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.RemoveCircleOutline,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+                                Row(
+                                    modifier = Modifier.weight(4f)
+                                    , verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Row {
+                                    Text(text = qte.toString(), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                    }
+                                    Row {
+
+                                    if (article.unit == UnitArticle.U)
+                                        Text(text = stringResource(id = R.string.item), fontSize = 14.sp , fontWeight = FontWeight.Light)
+                                    else
+                                        Text(text = article.unit?.name?.lowercase(Locale.ROOT)!!, fontSize = 14.sp , fontWeight = FontWeight.Light)
+                                    }
+                                }
+                                Row(
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    IconButton(onClick = {
+                                        qte += 1
+                                        rawInput = qte.toString()
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.AddCircleOutline,
+                                            contentDescription = null
+                                        )
                                     }
                                 }
                             }
-                            , onImage = {}
-                            ,true
-                        ) {
-
                         }
                     }
-                    Row {
-                        InputTextField(
-                            labelValue = shoppingViewModel.comment,
-                            label = stringResource(id = R.string.type_a_comment),
-                            singleLine = false,
-                            maxLine = 3,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Done
-                            ),
-                            onValueChange = {
-                                shoppingViewModel.comment = it
-                            }
-                            , onImage = {}
-                            ,true
+                    Column {
+                        Text(text = stringResource(id = R.string.comment), fontSize = 14.sp , fontWeight = FontWeight.ExtraLight, modifier = Modifier.padding(horizontal = 8.dp))
+                        OutlinedTextField(value = comment!!, placeholder = {
+                            stringResource(
+                                id = R.string.type_a_comment
+                            )
+                        }, onValueChange = {
+                            comment = it
+                        },
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp)
                         ) {
-                        }
-                    }
-                    Row {
-                        if((restBalance!! >=BigDecimal.ZERO && shoppingViewModel.qte != 0.0) ) {
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
-                                ButtonSubmit(
-                                    labelValue = stringResource(id = R.string.add_more),
-                                    color = Color.Blue,
-                                    enabled = true
-                                ) {
-                                    openDialog = false
-                                    onClose(false)
-                                    shoppingViewModel.randomArticle = article
-                                    shoppingViewModel.submitShopping()
-                                     gson.toJson(shoppingViewModel.orderArray)
+                                Checkbox(checked = !shoppingViewModel.delivery, onCheckedChange = {
+                                    isChaked = !it
+                                    shoppingViewModel.delivery = !shoppingViewModel.delivery
+                                })
+                            }
+                            Row(
+                                modifier = Modifier.weight(9f)
+                            ) {
+                                Column {
+                                    Text(text = stringResource(id = R.string.self_pickup), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 5.dp))
+                                    Text(text = stringResource(id = R.string.self_pickup_phrase), fontSize = 12.sp, fontWeight = FontWeight.ExtraLight, modifier = Modifier.padding(horizontal = 5.dp))
                                 }
                             }
+                        }
+                        Row (
+
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        ){
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
-                                ButtonSubmit(
-                                    labelValue = "send",
-                                    color = Color.Green,
-                                    enabled = true
-                                ) {
+                                Checkbox(checked = shoppingViewModel.delivery, onCheckedChange = {
+                                    isChaked = it
+                                    shoppingViewModel.delivery = !shoppingViewModel.delivery
+                                })
+                            }
+                            Row(
+                                modifier = Modifier.weight(9f)
+                            ) {
+                                Column {
+                                    Text(text = stringResource(id = R.string.delivery), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 5.dp))
+                                    Text(text = stringResource(id = R.string.delivery_phrase), fontSize = 12.sp, fontWeight = FontWeight.ExtraLight, modifier = Modifier.padding(horizontal = 5.dp))
+                                }
+                            }
+                        }
+                    }
+                    CustomSpacer()
+                    Column (
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ){
+                        Text(
+                            text = buildAnnotatedString {
+                                append(stringResource(id = R.string.prix_tot))
+                                append(" ")
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                                    append(cost.toString())
+                                }
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                                    append(stringResource(id = R.string.dt))
+                                }
+                            },
+                            fontSize = 14.sp
+                        )
+                        CustomSpacer()
+                        Text(
+                            text = buildAnnotatedString {
+                                append(stringResource(id = R.string.delivery_fees))
+                                append(" ")
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                                    append(shoppingViewModel.deliveryFee.toString())
+                                }
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                                    append(stringResource(id = R.string.dt))
+                                }
+                            },
+                            fontSize = 14.sp
+                        )
+                    }
+                    CustomSpacer()
+
+                    Row (
+                        modifier = Modifier.padding(5.dp)
+                    ){
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(2.dp)
+                        ) {
+                            ButtonSubmit(
+                                labelValue = stringResource(id = R.string.buy_now),
+                                color = Color(0xFF01BC59),
+                                enabled = enableButtons
+                            ) {
                                     shoppingViewModel.randomArticle = article
-                                    shoppingViewModel.submitShopping()
-                                        openDialog = false
-                                    if(shoppingViewModel.delivery && shoppingViewModel.cost.add(cost) <= BigDecimal(30)) {
+                                    shoppingViewModel.submitShopping(qte , comment!!)
+                                    openDialog = false
+                                    if (shoppingViewModel.delivery && shoppingViewModel.cost.add(
+                                            cost
+                                        ) <= BigDecimal(30)
+                                    ) {
 
                                         showFeesDialog = true
-                                    }
-                                    else shoppingViewModel.sendOrder(-1,restBalance!!)
-
-                                }
+                                    } else shoppingViewModel.sendOrder()
 
                             }
                         }
                         Row (
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(2.dp)
                         ){
-
-                            ButtonSubmit(labelValue = stringResource(id = R.string.cancel), color = Color.Red, enabled = true) {
-                                openDialog = false
-                                onClose(false)
-                                shoppingViewModel.remiseAZero()
-                            }
-                        }
-
-                        }
-                        Row {
-                            CheckBoxComp(
-                                value = "Delivery",
-                                free = if(cost.add(shoppingViewModel.cost)>=BigDecimal(30))"free" else null,
-                                pay = if(cost.add(shoppingViewModel.cost)<BigDecimal(30) && shoppingViewModel.delivery && shoppingViewModel.qte != 0.0)" 3dt" else null,
-                                shoppingViewModel.delivery
-                            ) { isChecked ->
-                                shoppingViewModel.delivery = isChecked
+                            ButtonSubmit(labelValue = stringResource(id = R.string.keep_shopping), color = Color.White, enabled = enableButtons, Color.Black) {
+                                    openDialog = false
+                                    onClose(false)
+                                    shoppingViewModel.randomArticle = article
+                                    shoppingViewModel.submitShopping(qte , comment!!)
+                                    gson.toJson(shoppingViewModel.orderArray)
                             }
                         }
                     }
                 }
+//                Column(
+//                    modifier = Modifier.padding(2.dp)
+//                ) {
+//                    Row(
+//                        modifier = Modifier.align(Alignment.CenterHorizontally)
+//                    ) {
+//                        ShowImage(
+//                            image = String.format(
+//                                IMAGE_URL_ARTICLE,
+//                                article.article?.image,
+//                                article.article?.category!!.ordinal
+//                            )
+//                        )
+//                        Column {
+//
+//                            Text(text = if (restBalance!! < BigDecimal.ZERO || (shoppingViewModel.qte == 0.0 && restBalance!! <= 1.toBigDecimal())) "sold insufficient $restBalance DT" else "$restBalance DT")
+//                            Text(text = article.article?.libelle!!)
+//                        }
+//                    }
+//                    Row {
+//                        InputTextField(
+//                            labelValue = shoppingViewModel.rawInput,
+//                            label = stringResource(id = R.string.quantity),
+//                            singleLine = true,
+//                            maxLine = 1,
+//                            keyboardOptions = KeyboardOptions(
+//                                keyboardType = KeyboardType.Decimal,
+//                                imeAction = ImeAction.Next
+//                            ),
+//                            onValueChange = {
+//                                if (article.unit == UnitArticle.U) {
+//                                    if (it.matches(Regex("^[0-9]*$"))) {
+//                                        shoppingViewModel.rawInput = it
+//                                        shoppingViewModel.qte = it.toDoubleOrNull() ?: 0.0
+//                                    }
+//                                } else {
+//                                    if (it.matches(Regex("^[0-9]*[,.]?[0-9]*$"))) {
+//                                        val normalizedInput = it.replace(',', '.')
+//                                        shoppingViewModel.rawInput = normalizedInput
+//                                        if (normalizedInput.startsWith(".")) {
+//                                            shoppingViewModel.rawInput = normalizedInput
+//                                            shoppingViewModel.qte = 0.0
+//                                        } else
+//                                            if (normalizedInput.endsWith(".")) {
+//                                                shoppingViewModel.qte = normalizedInput.let { inp ->
+//                                                    if (inp.toDouble() % 1.0 == 0.0) inp.toDouble() else 0.0
+//                                                }
+//                                            } else {
+//                                                shoppingViewModel.qte =
+//                                                    normalizedInput.toDoubleOrNull() ?: 0.0
+//                                            }
+//                                    }
+//                                }
+//                            }, onImage = {}, true
+//                        ) {
+//
+//                        }
+//                    }
+//                    Row {
+//                        InputTextField(
+//                            labelValue = shoppingViewModel.comment,
+//                            label = stringResource(id = R.string.type_a_comment),
+//                            singleLine = false,
+//                            maxLine = 3,
+//                            keyboardOptions = KeyboardOptions(
+//                                keyboardType = KeyboardType.Text,
+//                                imeAction = ImeAction.Done
+//                            ),
+//                            onValueChange = {
+//                                shoppingViewModel.comment = it
+//                            }, onImage = {}, true
+//                        ) {
+//                        }
+//                    }
+//                    Row {
+//                        if ((restBalance!! >= BigDecimal.ZERO && shoppingViewModel.qte != 0.0)) {
+//                            Row(
+//                                modifier = Modifier.weight(1f)
+//                            ) {
+//                                ButtonSubmit(
+//                                    labelValue = stringResource(id = R.string.add_more),
+//                                    color = Color.Blue,
+//                                    enabled = true
+//                                ) {
+//                                    openDialog = false
+//                                    onClose(false)
+//                                    shoppingViewModel.randomArticle = article
+//                                    shoppingViewModel.submitShopping()
+//                                    gson.toJson(shoppingViewModel.orderArray)
+//                                }
+//                            }
+//                            Row(
+//                                modifier = Modifier.weight(1f)
+//                            ) {
+//                                ButtonSubmit(
+//                                    labelValue = "send",
+//                                    color = Color.Green,
+//                                    enabled = true
+//                                ) {
+//                                    shoppingViewModel.randomArticle = article
+//                                    shoppingViewModel.submitShopping()
+//                                    openDialog = false
+//                                    if (shoppingViewModel.delivery && shoppingViewModel.cost.add(
+//                                            cost
+//                                        ) <= BigDecimal(30)
+//                                    ) {
+//
+//                                        showFeesDialog = true
+//                                    } else shoppingViewModel.sendOrder(-1, restBalance!!)
+//
+//                                }
+//
+//                            }
+//                        }
+//                        Row(
+//                            modifier = Modifier.weight(1f)
+//                        ) {
+//
+//                            ButtonSubmit(
+//                                labelValue = stringResource(id = R.string.cancel),
+//                                color = Color.Red,
+//                                enabled = true
+//                            ) {
+//                                openDialog = false
+//                                onClose(false)
+//                                shoppingViewModel.remiseAZero()
+//                            }
+//                        }
+//
+//                    }
+//                    Row {
+//                        CheckBoxComp(
+//                            value = "Delivery",
+//                            free = if (cost.add(shoppingViewModel.cost) >= BigDecimal(30)) "free" else null,
+//                            pay = if (cost.add(shoppingViewModel.cost) < BigDecimal(30) && shoppingViewModel.delivery && shoppingViewModel.qte != 0.0) " 3dt" else null,
+//                            shoppingViewModel.delivery
+//                        ) { isChecked ->
+//                            shoppingViewModel.delivery = isChecked
+//                        }
+//                    }
+//                }
             }
         }
+    }
     if(showFeesDialog){
         ShowFeesDialog(isOpen = true) {submitfees ->
             if(submitfees) {
-                val balance = restBalance.subtract(BigDecimal((3)))
-                shoppingViewModel.sendOrder(-1, balance)
+                shoppingViewModel.sendOrder()
             }
             
             showFeesDialog = false
@@ -1155,37 +1648,167 @@ fun UpdateImageDialog(isOpen: Boolean, onClose: () -> Unit) {
 
 
 @Composable
-fun OrderShow(order: PurchaseOrderLine) {
-    val shoppingViewModel: ShoppingViewModel = hiltViewModel()
-    var showDialog by remember { mutableStateOf(false) }
-    Row {
-        Column(
-            modifier = Modifier
-                .clickable {
-                    showDialog = true
+fun OrderShow(order: PurchaseOrderLine, shoppingViewModel: ShoppingViewModel, myCompanyId : Long , onDelete : (Boolean, Long) -> Unit) {
+    val price = BigDecimal(order.quantity!!)
+        .multiply(BigDecimal(order.article?.sellingPrice!!))
+        .setScale(2, RoundingMode.HALF_UP)
+
+    val tvaRate = BigDecimal(order.article.article?.tva ?: 0.0)
+    val tvaAmount = price.multiply(tvaRate).divide(BigDecimal(100)).setScale(2, RoundingMode.HALF_UP)
+    val totalPrice = price.add(tvaAmount)
+    Column {
+        Spacer(modifier = Modifier.height(32.dp))
+        Row {
+
+            Row(
+                modifier = Modifier.height(70.dp)
+            ) {
+                if (order.article.article?.image.isNullOrEmpty()) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Article,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(100.dp)
+                    )
+                } else {
+                    ShowImageForHome(
+                        image = String.format(
+                            IMAGE_URL_ARTICLE,
+                            order.article.article?.image,
+                            order.article.article?.category?.ordinal
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        width = 125.dp
+                    )
                 }
-                .weight(0.9f)
-        ) {
-            order.article?.article?.let { Text(text = it.libelle?:"") }
-            Text(text = order.quantity.toString())
-            order.comment?.let { Text(text = it) }
-            if (showDialog) {
-                shoppingViewModel.randomArticle = order.article!!
-                shoppingViewModel.qte = order.quantity!!
-                shoppingViewModel.rawInput = order.quantity.toString()
-                shoppingViewModel.comment = order.comment?:""
-                shoppingViewModel.delivery = order.delivery!!
-                ShoppingDialog(
-                    article = order.article,
-                    label = "",
-                    isOpen = showDialog,
-                    shoppingViewModel = shoppingViewModel
-                ){
-                    showDialog = it
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    if (order.article.company?.logo != null) {
+                        ShowImage(
+                            image = String.format(
+                                IMAGE_URL_COMPANY,
+                                order.article.company?.logo,
+                                order.article.company?.user?.id
+                            )
+                        )
+                    } else {
+                        NotImage()
+                    }
+                    Row {
+
+                        order.article.company?.let { it1 ->
+                            Text(
+                                text = it1.name,
+                                fontSize = 14.sp
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Verified,
+                            contentDescription = "verification account",
+                            tint = if (order.article.company?.metaSeller == true) Color.Green else Color.Cyan,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
+                CustomSpacer()
+                Text(
+                    text = order.article.article?.libelle!!,
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .fillMaxWidth(),
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = FontFamily.Serif
+                    ),
+                    color = Color.Black,
+                )
+                CustomSpacer()
+            }
+        }
+        Row {
+            Column(
+                modifier = Modifier.weight(2f)
+            ) {
+                Text( text = buildAnnotatedString {
+                append(stringResource(id = R.string.quantity_unit))
+                append(" ")
+                withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                    append(order.quantity.toString())
+                }
+                append(" ")
+                withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                    append(order.article.unit?.name!!)
+                }
+            },
+                fontSize = 14.sp)
+                CustomSpacer()
+                Text( text = buildAnnotatedString {
+                    append(stringResource(id = R.string.total_price))
+                    append(" ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                        append(totalPrice.toString())
+                    }
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                        append(stringResource(id = R.string.dt))
+                    }
+                },
+                    fontSize = 14.sp)
+            }
+            Row(
+                modifier = Modifier.weight(1f)
+            ) {
+                if(order.id == null || order.article.company?.id != myCompanyId)
+                    IconButton(onClick = {
+                        onDelete(false, order.article.id!!)
+                    }) {
+                        Icon(painter = painterResource(id = R.drawable.edit), contentDescription = null )
+                    }
+
+                IconButton(onClick = {
+                    onDelete(true, order.article.id!!)
+                }) {
+                    Icon(painter = painterResource(id = R.drawable.delete), contentDescription = null, tint = Color(0xFFFE2A2A))
                 }
             }
         }
+        Spacer(modifier = Modifier.height(32.dp))
+        DividerComponent()
     }
+//    Row {
+//        Column(
+//            modifier = Modifier
+//                .clickable {
+//                    showDialog = true
+//                }
+//                .weight(0.9f)
+//        ) {
+//            order.article?.article?.let { Text(text = it.libelle?:"") }
+//            Text(text = order.quantity.toString())
+//            order.comment?.let { Text(text = it) }
+//            if (showDialog) {
+//                shoppingViewModel.randomArticle = order.article!!
+//                shoppingViewModel.delivery = order.delivery!!
+//                ShoppingDialog(
+//                    article = order.article,
+//                    label = "",
+//                    isOpen = showDialog,
+//                    shoppingViewModel = shoppingViewModel,
+//                    order.quantity,
+//                    order.comment
+//                ){
+//                    showDialog = it
+//                }
+//            }
+//        }
+//    }
 }
 
 @Composable
@@ -1206,20 +1829,6 @@ fun UserCard(user : User, appViewModel : AppViewModel, onClicked : () -> Unit) {
             onClicked()
         }
         )
-}
-
-@Composable
-fun EmptyImage(modifier: Modifier = Modifier) {
-    val painter: Painter = painterResource(id = R.drawable.emptyprofile)
-    Image(
-        painter = painter,
-        contentDescription = "empty photo profil",
-        modifier = Modifier
-            .size(30.dp)
-            .clip(
-                RoundedCornerShape(10.dp)
-            )
-    )
 }
 
 @Composable

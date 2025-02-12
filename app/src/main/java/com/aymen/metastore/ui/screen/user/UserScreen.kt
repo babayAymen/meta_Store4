@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -50,6 +51,7 @@ import com.aymen.store.ui.navigation.RouteController
 import com.aymen.store.ui.navigation.Screen
 import com.aymen.store.ui.navigation.SystemBackButtonHandler
 import com.aymen.metastore.R
+import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.entity.model.Company
 import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.User
@@ -75,6 +77,7 @@ fun UserScreen() { // subtruct the quantity from article when you send an order
     val ratingViewModel : RatingViewModel = hiltViewModel()
     val clientViewModel : ClientViewModel = hiltViewModel()
     val company by sharedViewModel.company.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val isPointSeller by remember {
         mutableStateOf(company.isPointsSeller)
     }
@@ -165,7 +168,7 @@ fun UserScreen() { // subtruct the quantity from article when you send an order
                     ratingg.raterCompany = company
                     ratingViewModel.enableToRating = false
                     val ratingJson = gson.toJson(ratingg)
-                    ratingViewModel.doRate(ratingg, ratingJson, it)
+                    ratingViewModel.doRate(ratingg, ratingJson, it, context)
                     comment = ""
                     imageBitmap = null
                 }
@@ -212,7 +215,7 @@ fun UserScreen() { // subtruct the quantity from article when you send an order
 
             user.email?.let { Text(text = it) }
         }
-            RatingScreen(AccountType.USER, null, user)
+            RatingScreen(RateType.COMPANY_RATE_USER, user.id!!)
         }
     }
 

@@ -17,6 +17,7 @@ import com.aymen.metastore.model.entity.model.Article
 import com.aymen.metastore.model.entity.model.ArticleCompany
 import com.aymen.metastore.model.entity.model.Comment
 import com.aymen.metastore.model.entity.model.Company
+import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.metastore.model.entity.model.SubArticleModel
 import com.aymen.metastore.model.entity.model.User
 import com.aymen.metastore.model.entity.room.AppDatabase
@@ -50,8 +51,9 @@ class ArticleViewModel @Inject constructor(
 
     private val categoryDao = room.categoryDao()
     private val subCategoryDao = room.subCategoryDao()
-    val company: StateFlow<Company?> = sharedViewModel.company
-    val user: StateFlow<User?> = sharedViewModel.user
+    val company: StateFlow<Company> = sharedViewModel.company
+    val user: StateFlow<User> = sharedViewModel.user
+    val accountType : StateFlow<AccountType> = sharedViewModel.accountType
     var companyId by mutableLongStateOf(0)
     private val _adminArticles : MutableStateFlow<PagingData<ArticleCompany>> = MutableStateFlow(PagingData.empty())
     var adminArticles : StateFlow<PagingData<ArticleCompany>> = _adminArticles
@@ -79,8 +81,8 @@ class ArticleViewModel @Inject constructor(
     private val _articleCompany : MutableStateFlow<ArticleCompany?> = MutableStateFlow(ArticleCompany())
     var articleCompany : StateFlow<ArticleCompany?>  = _articleCompany
 
-    private val _commentArticle : MutableStateFlow<PagingData<Comment>> = MutableStateFlow(PagingData.empty())
-    val commentArticle : StateFlow<PagingData<Comment>> get() = _commentArticle
+    private val _commentArticle : MutableStateFlow<PagingData<Rating>> = MutableStateFlow(PagingData.empty())
+    val commentArticle : StateFlow<PagingData<Rating>> get() = _commentArticle
     private val _subArticleChilds : MutableStateFlow<List<SubArticleModel>> = MutableStateFlow(emptyList())
     val subArticleChilds : StateFlow<List<SubArticleModel>> = _subArticleChilds
     private val _subArticlesChilds : MutableStateFlow<PagingData<SubArticleModel>> = MutableStateFlow(PagingData.empty())
@@ -115,6 +117,9 @@ class ArticleViewModel @Inject constructor(
     fun setSelectCategory(category : CompanyCategory){
         _selectedCategory.value = category
     }
+    fun setArticleCompanyRating(article : ArticleCompany){
+        _articleCompany.value = article
+    }
 
      fun fetchAllMyArticlesApi(companyId: Long) {
         viewModelScope.launch {
@@ -130,8 +135,9 @@ class ArticleViewModel @Inject constructor(
 
 
      fun fetchRandomArticlesForHomePage(categoryName : CompanyCategory) {
-         val companyId = if(sharedViewModel.accountType.value == AccountType.COMPANY) sharedViewModel.company.value.id else null
+         val companyId = if(accountType.value == AccountType.COMPANY) company.value.id else 0L
         viewModelScope.launch{
+            Log.e("testrandom","company $companyId")
             useCases.getRandomArticle(categoryName = categoryName, companyId)
                 .distinctUntilChanged()
                 .cachedIn(viewModelScope)
@@ -304,12 +310,12 @@ class ArticleViewModel @Inject constructor(
             }
         }
 
-        fun sendComment(comment : Comment) {
-            viewModelScope.launch(Dispatchers.IO) {
-                    repository.sendComment(comment.toCommentDto())
-
-            }
-        }
+//        fun sendComment(art : ArticleCompany, rate : Int) {
+//            val rating = Rating(comment = myComment, article = art, rateValue = rate)
+//            viewModelScope.launch(Dispatchers.IO) {
+//                    repository.sendComment(rating.toRatingDto())
+//            }
+//        }
 
         fun getAllArticleComments() {
             viewModelScope.launch(Dispatchers.IO) {
@@ -317,7 +323,7 @@ class ArticleViewModel @Inject constructor(
                         .distinctUntilChanged()
                         .cachedIn(viewModelScope)
                         .collect{
-                            _commentArticle.value = it.map { comment -> comment.toCommentModel() }
+                            _commentArticle.value = it
                         }
             }
         }

@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.repository.remoteRepository.ratingRepository
 
 import androidx.paging.PagingData
+import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.entity.dto.RatingDto
 import com.aymen.metastore.model.entity.model.Rating
 import com.aymen.store.model.Enum.AccountType
@@ -10,7 +11,7 @@ import java.io.File
 
 interface RatingRepository {
 
-     fun getAllMyRating(id : Long , type :AccountType ):Flow<PagingData<Rating>>
+     fun getAllMyRating(id : Long , type : RateType):Flow<PagingData<Rating>>
 
     suspend fun doRating( rating : String, image : File?):Response<RatingDto>
 

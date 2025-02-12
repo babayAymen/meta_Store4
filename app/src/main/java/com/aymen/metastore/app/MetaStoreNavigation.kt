@@ -36,6 +36,7 @@ import com.aymen.metastore.ui.screen.user.CompanyScreen
 import com.aymen.metastore.ui.screen.user.HomeScreen
 import com.aymen.store.ui.screen.user.NotificationScreen
 import com.aymen.metastore.ui.screen.user.PaymentScreen
+import com.aymen.metastore.ui.screen.user.ProfileScreen
 import com.aymen.metastore.ui.screen.user.ShoppingScreen
 import com.aymen.metastore.ui.screen.user.UserScreen
 
@@ -55,8 +56,6 @@ fun MetaStore (extra :  Map<String, Any?>){
          }
 
     }
-Log.e("devicetoken","extra from meta store : ")
-Log.e("devicetoken","extra from meta store : $extra")
 
     Surface(
         modifier = Modifier
@@ -102,7 +101,7 @@ Log.e("devicetoken","extra from meta store : $extra")
                 }
 
                 is Screen.MenuScreen -> {
-//                    MenuScreen()
+                    ProfileScreen()
                 }
 
                 is Screen.DashBoardScreen -> DashBoardScreen()

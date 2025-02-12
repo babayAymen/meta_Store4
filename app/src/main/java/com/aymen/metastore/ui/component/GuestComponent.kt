@@ -56,54 +56,14 @@ fun NormalText(value : String, aligne : TextAlign){
     Text(
         text = value,
         modifier = Modifier
-            .heightIn(min = 20.dp)
             .fillMaxWidth()
         ,
         style = TextStyle(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
             fontStyle = FontStyle.Normal
         )
         , color = Color.Black,
-        textAlign = aligne
-    )
-}
-
-@Composable
-fun ConversationText(value : String, aligne : TextAlign,maxLines: Int,
-                     overflow: TextOverflow = TextOverflow.Clip){
-    Text(
-        text = value,
-        modifier = Modifier
-            .heightIn(min = 20.dp)
-            .fillMaxWidth()
-        ,
-        style = TextStyle(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Normal,
-            fontStyle = FontStyle.Normal
-        )
-        , color = Color.Black,
-        textAlign = aligne,
-        maxLines = maxLines,
-        overflow = overflow
-    )
-}
-
-@Composable
-fun MessageText(value : String, aligne : TextAlign, color: Color){
-    Text(
-        text = value,
-        modifier = Modifier
-            .heightIn(min = 20.dp)
-            .fillMaxWidth(),
-        style = TextStyle(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Normal,
-            fontStyle = FontStyle.Normal
-        )
-        , color = color,
-        textAlign = aligne
     )
 }
 
@@ -422,6 +382,7 @@ fun DividerComponent(){
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(5.dp)
                 .weight(1f),
             thickness = 1.dp,
             color = Color.Gray

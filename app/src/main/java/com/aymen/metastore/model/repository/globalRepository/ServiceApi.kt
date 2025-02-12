@@ -1,6 +1,7 @@
 package com.aymen.metastore.model.repository.globalRepository
 
 import com.aymen.metastore.model.Enum.InvoiceMode
+import com.aymen.metastore.model.Enum.RateType
 import com.aymen.metastore.model.Enum.SearchPaymentEnum
 import com.aymen.metastore.model.entity.dto.ArticleCompanyDto
 import com.aymen.metastore.model.entity.dto.ArticleDto
@@ -92,7 +93,7 @@ interface ServiceApi {
      @GET("$LIKE_BASE_URL/{articleId}/{isFav}")
     suspend fun likeAnArticle(@Path("articleId") articleId : Long, @Path("isFav") isFav : Boolean):Response<Void>
     @GET("$RATE_BASE_URL/get_rate/{id}")
-    suspend fun getRate(@Path("id") id : Long, @Query("type") type : AccountType, @Query("page") page : Int , @Query("pageSize") pageSize : Int): PaginatedResponse<RatingDto>
+    suspend fun getRate(@Path("id") id : Long, @Query("type") type : RateType, @Query("page") page : Int , @Query("pageSize") pageSize : Int): PaginatedResponse<RatingDto>
     @Multipart
     @POST("$RATE_BASE_URL/do_rate")
     suspend fun doRating(@Query("ratingDto") rating : String, @Part image: MultipartBody.Part? = null):Response<RatingDto>

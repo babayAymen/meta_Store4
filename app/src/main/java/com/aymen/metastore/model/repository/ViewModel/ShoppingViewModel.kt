@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import retrofit2.Response
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -52,26 +53,22 @@ class ShoppingViewModel @Inject constructor(
 
     private val purchaseOrderDao = room.purchaseOrderDao()
     private val purchaseOrderLineDao = room.purchaseOrderLineDao()
-
-    var rawInput by mutableStateOf("")
-    var qte by mutableDoubleStateOf(0.0)
-    var comment by mutableStateOf("")
+//
+//    var rawInput by mutableStateOf("")
+//    var qte by mutableDoubleStateOf(1.0)
+//    var comment by mutableStateOf("")
     var order by mutableStateOf(PurchaseOrderLine())
 
     var orderArray by mutableStateOf(listOf<PurchaseOrderLine>())
 
-    var delivery by mutableStateOf(false)
-    var isAlready by mutableStateOf(false)
+    var delivery by mutableStateOf(true)
+    var deliveryFee by mutableStateOf(BigDecimal(3))
     var randomArticle by mutableStateOf(ArticleCompany())
 
-    private var _myCompany = MutableStateFlow(Company())
-    val myCompany: StateFlow<Company?> get() = _myCompany
+    val myCompany: StateFlow<Company> = sharedViewModel.company
+    val myUser: StateFlow<User> = sharedViewModel.user
 
-    private var _myUser = MutableStateFlow(User())
-    val myUser: StateFlow<User?> get() = _myUser
-
-    private val _accountType = MutableStateFlow(AccountType.USER)
-    val accountType: StateFlow<AccountType> = _accountType
+    val accountType: StateFlow<AccountType> = sharedViewModel.accountType
 
     private val _allMyOrdersLineDetails : MutableStateFlow<PagingData<PurchaseOrderLine>> = MutableStateFlow(PagingData.empty())
     val allMyOrdersLineDetails: StateFlow<PagingData<PurchaseOrderLine>> get() = _allMyOrdersLineDetails
@@ -99,18 +96,10 @@ init {
 }
     fun removeOrderById(index: Int, restore : Boolean) {
         orderArray = orderArray.toMutableList().also {
-            val quantity = it[index].quantity
-            val sellingPrice = it[index].article?.sellingPrice
-            var price = BigDecimal(quantity!!).multiply(BigDecimal(sellingPrice!!))
-            if(delivery && orderArray.size == 1 && restore){
-                price += BigDecimal(3)
-            }
             if(orderArray.size == 1){
-                delivery = false
+                delivery = true
             }
             it.removeAt(index)
-            qte = 0.0
-            rawInput = ""
         }
     }
 //    private fun startTimer() {
@@ -120,7 +109,7 @@ init {
 //            Log.e("starttimer","delivery is : $delivery")
 //        }
 //    }
-fun submitShopping() {
+fun submitShopping(qte : Double , comment : String) {
     val existingOrder = orderArray.find { it.article?.id == randomArticle.id }
 
     if (existingOrder != null) {
@@ -138,13 +127,24 @@ fun submitShopping() {
 }
 
 
-    fun sendOrder(index : Int, newBalance: BigDecimal){
-        calculateNotDiscountedArticlesCost(){// this implementation is for next app update
-            Log.e("costfromviemodel","is true or false : $it")
+    fun sendOrder(){
+        calculateNotDiscountedArticlesCost{// this implementation is for next app update
         }
+            Log.e("costfromviemodel","cost $cost my balance ${myCompany.value.balance!!}")
+        val oldBalance: BigDecimal
+        val newBalance: BigDecimal
+        if(delivery && cost<BigDecimal(30))
+            cost = cost.add(BigDecimal(3))
+        if(accountType.value == AccountType.COMPANY){
+            oldBalance = BigDecimal(myCompany.value.balance!!)
+            newBalance = oldBalance.subtract(cost).setScale(2,RoundingMode.HALF_UP)
+        }else{
+                oldBalance = BigDecimal(myUser.value.balance!!)
+                newBalance = oldBalance.subtract(cost).setScale(2,RoundingMode.HALF_UP)
+        }
+        sharedViewModel.updateBalance(newBalance)
         viewModelScope.launch (Dispatchers.IO){
             val listOfIds: MutableList<OrderNotAcceptedKeysEntity> = mutableListOf()
-            if(orderArray.isNotEmpty() && index == -1){
             orderArray.forEach { item ->
 
                 val latestOrderRemoteKey = purchaseOrderDao.getLatestOrderRemoteKey()
@@ -181,7 +181,7 @@ fun submitShopping() {
                                 article = item.article,
                                 quantity = item.quantity,
                                 comment = item.comment,
-                                delivery = item.delivery
+                                delivery = delivery
                             ).toPurchaseOrderLineEntity()
                         )
                     )
@@ -192,8 +192,7 @@ fun submitShopping() {
                     }
                     result.fold(
                         onSuccess = {success ->
-                            delivery = false
-                            sharedViewModel.updateBalance(newBalance)
+                            delivery = true
                             if(success.isSuccessful){
                                 val response = success.body()
                                 room.withTransaction {
@@ -212,27 +211,14 @@ fun submitShopping() {
                                     purchaseOrderLineDao.insertOrderLine(response.map { line -> line.toPurchaseOrderLine() })
                                     }
                                 }
+                            }else{
+
+                                sharedViewModel.updateBalance(oldBalance)
                             }
                         },
                         onFailure = {}
                     )
                 returnAllMyMony()
-            }else{
-                val newOrderArray = orderArray.toMutableList()
-                newOrderArray.retainAll { newOrderArray.indexOf(it) == index }
-                    val result : Result<Response<List<PurchaseOrderLineDto>>> = runCatching {
-                             repository.sendOrder(newOrderArray)
-                    }
-                    result.fold(
-                        onSuccess = {
-                            sharedViewModel.updateBalance(newBalance)
-                            removeOrderById(index, false)
-                        },
-                        onFailure = {
-                        }
-                    )
-            }
-            isAlready = false
         }
     }
 
@@ -254,17 +240,13 @@ fun submitShopping() {
     fun remiseAZero(){
         calculateCost()
         order = PurchaseOrderLine()
-        qte = 0.0
-        rawInput = ""
-        comment = ""
         randomArticle = ArticleCompany()
     }
 
     fun returnAllMyMony(){
         viewModelScope.launch {
              orderArray = emptyList()
-            isAlready = false
-            delivery = false
+            delivery = true
             cost = BigDecimal.ZERO
         }
     }
@@ -284,12 +266,20 @@ fun submitShopping() {
                  .distinctUntilChanged()
                  .cachedIn(viewModelScope)
                  .collect{order ->
-                 _allMyOrdersLineDetails.value = order.map { or -> or.toPurchaseOrderineWithPurchaseOrderOrinvoice() }
+                     isDeleted = false
+                    _allMyOrdersLineDetails.value = order
             }
         }
     }
+    var isDeleted  = false
 
-
+    fun resetPurchaseOrderLine(){
+            if (!isDeleted) {
+                isDeleted = true
+                orderArray = emptyList()
+            }
+        _allMyOrdersLineDetails.value = PagingData.empty()
+    }
 
 
     fun getAllMyOrdersNotAccepted(id : Long) {
@@ -331,7 +321,7 @@ fun submitShopping() {
             }
             result.fold(
                 onSuccess = {success ->
-                        appViewModel.updateShow(ORDER)
+                        appViewModel.updateView(ORDER)
                     val order = success.body()
                     if(order != null) {
                         appViewModel.updateCompanyBalance(order)

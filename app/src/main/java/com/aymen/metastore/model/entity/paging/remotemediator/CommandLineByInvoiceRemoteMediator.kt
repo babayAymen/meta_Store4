@@ -58,14 +58,19 @@ class CommandLineByInvoiceRemoteMediator(
                 }
             }
             val response = api.getAllCommandLinesByInvoiceId(companyId , invoiceId , currentPage, state.config.pageSize)
+            response.content.map {
+                Log.e("commandLineInvoice","$it")
+            }
             val endOfPaginationReached = response.last
             val prevPage = if (response.first) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
             room.withTransaction {
-                try {
+
                     if(loadType == LoadType.REFRESH){
                         deleteCache()
+                        Log.e("CommandLineInvoice", "deleteCache() called")
+
                     }
                     commandLineDao.insertCommandLineByInvoiceKeys(response.content.map { article ->
                         CommandLineByInvoiceRemoteKeysEntity(
@@ -75,24 +80,19 @@ class CommandLineByInvoiceRemoteMediator(
                         )
                     })
 
-
-                    userDao.insertUser(response.content.map {user -> user.article?.company?.user?.toUser()})
-                    companyDao.insertCompany(response.content.map {company -> company.article?.company?.toCompany()})
-                    articleDao.insertArticle(response.content.map {article -> article.article?.article?.toArticle(isMy = true)!! })
-                    articleCompanyDao.insertArticle(response.content.map { it.article?.toArticleCompany(false)})
-
-                    userDao.insertUser(response.content.map {user -> user.invoice?.person?.toUser()})
-                    userDao.insertUser(response.content.map {user -> user.invoice?.client?.user?.toUser()})
-                    userDao.insertUser(response.content.map {user -> user.invoice?.provider?.user?.toUser()})
-                    companyDao.insertCompany(response.content.map {company -> company.invoice?.client?.toCompany()})
-                    companyDao.insertCompany(response.content.map {company -> company.invoice?.provider?.toCompany()})
-                    invoiceDao.insertInvoice(response.content.map {invoice -> invoice.invoice?.toInvoice(isInvoice = true) })
-
+                    userDao.insertUser(response.content.mapNotNull  {user -> user.article?.company?.user?.toUser()})
+                    companyDao.insertCompany(response.content.mapNotNull  {company -> company.article?.company?.toCompany()})
+                    articleDao.insertArticle(response.content.map { article -> article.article?.article?.toArticle(isMy = true)!! })
+                    articleCompanyDao.insertArticle(response.content.mapNotNull  { it.article?.toArticleCompany(false)})
+                    userDao.insertUser(response.content.mapNotNull  {user -> user.invoice?.person?.toUser()})
+                    userDao.insertUser(response.content.mapNotNull  {user -> user.invoice?.client?.user?.toUser()})
+                    userDao.insertUser(response.content.mapNotNull  {user -> user.invoice?.provider?.user?.toUser()})
+                    companyDao.insertCompany(response.content.mapNotNull  {company -> company.invoice?.client?.toCompany()})
+                    companyDao.insertCompany(response.content.mapNotNull  {company -> company.invoice?.provider?.toCompany()})
+                    invoiceDao.insertInvoice(response.content.mapNotNull  {invoice -> invoice.invoice?.toInvoice(isInvoice = true) })
                     commandLineDao.insertCommandLine(response.content.map { line -> line.toCommandLine() })
+                    Log.e("commandLineInvoice","finish process")
 
-                } catch (ex: Exception) {
-                    Log.e("getAllOrdersLineByInvoiceId", ex.toString())
-                }
             }
             MediatorResult.Success(endOfPaginationReached)
 
